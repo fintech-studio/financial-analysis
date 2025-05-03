@@ -78,7 +78,6 @@ const Navigation = () => {
     { name: "投資組合", href: "/portfolio", icon: BriefcaseIcon },
     { name: "理財知識", href: "/education", icon: AcademicCapIcon },
     { name: "社群討論", href: "/community", icon: ChatBubbleLeftRightIcon },
-    { name: "設定", href: "/settings", icon: Cog6ToothIcon },
   ];
 
   const isActive = (path) => {
@@ -139,20 +138,6 @@ const Navigation = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-1">
-              {/* 搜索欄 */}
-              <form onSubmit={handleSearchSubmit} className="mr-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="搜尋市場、股票..."
-                    className="w-48 pl-9 pr-3 py-1.5 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <MagnifyingGlassIcon className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                </div>
-              </form>
-
               {navigationItems.map((item) => (
                 <div
                   key={item.name}
@@ -210,8 +195,20 @@ const Navigation = () => {
               ))}
             </div>
 
-            {/* User Menu & Notifications */}
+            {/* Search & User Menu */}
             <div className="hidden lg:flex items-center pl-4 space-x-4">
+              {/* 搜索欄 */}
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <input
+                  type="text"
+                  placeholder="搜尋市場、股票..."
+                  className="w-60 pl-9 pr-3 py-1.5 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <MagnifyingGlassIcon className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              </form>
+
               {/* 通知按鈕 */}
               <div className="relative" onClick={handleMenuClick}>
                 <button
