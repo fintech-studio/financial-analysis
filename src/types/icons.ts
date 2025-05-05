@@ -1,4 +1,6 @@
-import { IconProps } from "@heroicons/react/24/outline";
+import { SVGProps } from "react";
+
+export type IconProps = SVGProps<SVGSVGElement>;
 
 export interface IconConfig {
   icon: React.ForwardRefExoticComponent<IconProps>;

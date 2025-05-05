@@ -26,6 +26,7 @@ export interface ChartData {
   dates: string[];
   values: number[];
   volumes?: number[];
+  prices: number[];
 }
 
 export interface MarketMetric {
