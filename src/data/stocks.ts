@@ -1,4 +1,4 @@
-import { HotStock, ActiveStock, RecommendedStock } from "@/types/market";
+import { HotStock, RecommendedStock, ActiveStock } from "@/types/market";
 
 export const hotStocks: HotStock[] = [
   {

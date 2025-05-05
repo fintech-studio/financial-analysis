@@ -156,3 +156,10 @@ export interface RecommendedStock {
   performance: string;
   reason: string;
 }
+
+export interface ActiveStock {
+  symbol: string;
+  name: string;
+  volume: string;
+  volumeChange: string;
+}
