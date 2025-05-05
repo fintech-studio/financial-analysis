@@ -1,6 +1,12 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ChevronRightIcon, FireIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronRightIcon,
+  FireIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  MinusIcon,
+} from "@heroicons/react/24/solid";
 
 interface MarketCardProps {
   icon: React.ReactNode;
@@ -36,11 +42,11 @@ const MarketCard = ({
   function getTrendIcon(changePercent: string): React.ReactNode {
     const value = parseFloat(changePercent.replace("%", ""));
     if (value > 0) {
-      return <span className="text-green-500">▲</span>;
+      return <ArrowTrendingUpIcon className="h-5 w-5 text-green-500" />;
     } else if (value < 0) {
-      return <span className="text-red-500">▼</span>;
+      return <ArrowTrendingDownIcon className="h-5 w-5 text-red-500" />;
     } else {
-      return <span className="text-gray-500">—</span>;
+      return <MinusIcon className="h-5 w-5 text-gray-400" />;
     }
   }
 
@@ -68,10 +74,10 @@ const MarketCard = ({
         <span
           className={`${
             change.includes("+") ? "text-green-500" : "text-red-500"
-          } font-semibold flex items-center`}
+          } font-semibold flex items-center gap-1.5`}
         >
           {getTrendIcon(changePercent)}
-          <span className="ml-1">{changePercent}</span>
+          <span>{changePercent}</span>
         </span>
       </div>
       <div className="space-y-3 text-sm">
