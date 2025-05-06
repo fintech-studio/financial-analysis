@@ -123,9 +123,9 @@ const Navigation = () => {
               href="/"
               className="flex items-center space-x-2 text-xl font-bold hover:text-blue-600 transition-colors"
             >
-              <span className="text-blue-600">投資</span>
+              {/* <span className="text-blue-600">投資</span> */}
               <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                助手
+                智富黑洞 錢包失重
               </span>
             </Link>
           </div>
