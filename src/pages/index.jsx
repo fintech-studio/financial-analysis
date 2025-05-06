@@ -59,13 +59,11 @@ const HomePage = () => {
 
       <HotStockTable stocks={hotStocks} />
 
+      <RecommendationsSection stocks={recommendedStocks} />
+
       <IndustrySection sectors={sectorPerformance} />
 
       <EducationSection contents={EDUCATION_CONTENTS} />
-
-      <RecommendationsSection stocks={recommendedStocks} />
-
-      <NFTSection categories={marketOverview.nft.categories} />
     </div>
   );
 };
