@@ -25,7 +25,7 @@ const SentimentSection: React.FC<SentimentSectionProps> = ({ sentiment }) => {
             <p className="mt-2 text-gray-600">掌握市場投資氛圍與情緒指標</p>
           </div>
           <Link
-            href="/market-analysis/sentiment"
+            href="/market-analysis/market-sentiment"
             className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
           >
             查看完整分析
