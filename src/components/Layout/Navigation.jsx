@@ -114,255 +114,230 @@ const Navigation = () => {
   };
 
   return (
-    <>
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 h-16 transition-all duration-300 ${
-          scrolled ? "bg-white/90 backdrop-blur-md shadow-md" : "bg-white"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link
-                href="/"
-                className="flex items-center space-x-2 text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors duration-200"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span className="text-blue-600">投資</span>
-                <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                  助手
-                </span>
-              </Link>
-            </div>
+    <nav className="nav-responsive">
+      <div className="container-responsive">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 text-xl font-bold hover:text-blue-600 transition-colors"
+            >
+              <span className="text-blue-600">投資</span>
+              <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                助手
+              </span>
+            </Link>
+          </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1">
-              {navigationItems.map((item) => (
-                <div
-                  key={item.name}
-                  className="relative group"
-                  onClick={handleMenuClick}
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-1">
+            {navigationItems.map((item) => (
+              <div
+                key={item.name}
+                className="relative group"
+                onClick={handleMenuClick}
+              >
+                <Link
+                  href={item.href}
+                  className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 group ${
+                    isActive(item.href)
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                  }`}
                 >
-                  <Link
-                    href={item.href}
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 group ${
+                  <item.icon
+                    className={`h-5 w-5 mr-1.5 transition-colors duration-200 ${
                       isActive(item.href)
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                        ? "text-blue-500"
+                        : "text-gray-400 group-hover:text-blue-500"
                     }`}
-                  >
-                    <item.icon
-                      className={`h-5 w-5 mr-1.5 transition-colors duration-200 ${
+                  />
+                  <span>{item.name}</span>
+                  {item.children && (
+                    <ChevronDownIcon
+                      className={`h-4 w-4 ml-1 transition-transform duration-200 ${
                         isActive(item.href)
-                          ? "text-blue-500"
-                          : "text-gray-400 group-hover:text-blue-500"
+                          ? "text-blue-500 group-hover:rotate-180"
+                          : "text-gray-400 group-hover:text-blue-500 group-hover:rotate-180"
                       }`}
                     />
-                    <span>{item.name}</span>
-                    {item.children && (
-                      <ChevronDownIcon
-                        className={`h-4 w-4 ml-1 transition-transform duration-200 ${
-                          isActive(item.href)
-                            ? "text-blue-500 group-hover:rotate-180"
-                            : "text-gray-400 group-hover:text-blue-500 group-hover:rotate-180"
-                        }`}
-                      />
-                    )}
-                  </Link>
+                  )}
+                </Link>
 
-                  {/* Dropdown Menu */}
-                  {item.children && (
-                    <div className="absolute left-0 mt-1 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left">
-                      <div className="py-1">
-                        {item.children.map((subItem) => (
-                          <Link
-                            key={subItem.name}
-                            href={subItem.href}
-                            className={`block px-4 py-2.5 text-sm transition-colors duration-200 ${
-                              isActive(subItem.href)
-                                ? "text-blue-600 bg-blue-50 font-medium"
-                                : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
-                            }`}
-                          >
-                            {subItem.name}
-                          </Link>
-                        ))}
-                      </div>
+                {/* Dropdown Menu */}
+                {item.children && (
+                  <div className="absolute left-0 mt-1 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left">
+                    <div className="py-1">
+                      {item.children.map((subItem) => (
+                        <Link
+                          key={subItem.name}
+                          href={subItem.href}
+                          className={`block px-4 py-2.5 text-sm transition-colors duration-200 ${
+                            isActive(subItem.href)
+                              ? "text-blue-600 bg-blue-50 font-medium"
+                              : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                          }`}
+                        >
+                          {subItem.name}
+                        </Link>
+                      ))}
                     </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* 搜尋欄 */}
+            <div className="relative ml-4">
+              <form onSubmit={handleSearchSubmit}>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="搜尋市場、股票..."
+                    className="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    className="absolute inset-y-0 left-0 pl-3 flex items-center"
+                  >
+                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* 通知按鈕 */}
+            <div className="relative ml-4" onClick={handleMenuClick}>
+              <button
+                onClick={handleNotificationClick}
+                className="flex items-center space-x-2 p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
+              >
+                <div className="relative">
+                  <BellIcon className="h-6 w-6" />
+                  {notifications.some((n) => !n.read) && (
+                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-red-500 rounded-full"></span>
                   )}
                 </div>
-              ))}
-            </div>
+              </button>
 
-            {/* Search & User Menu */}
-            <div className="hidden lg:flex items-center pl-4 space-x-4">
-              {/* 搜索欄 */}
-              <form onSubmit={handleSearchSubmit} className="relative">
-                <input
-                  type="text"
-                  placeholder="搜尋市場、股票..."
-                  className="w-60 pl-9 pr-3 py-1.5 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <MagnifyingGlassIcon className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </form>
-
-              {/* 通知按鈕 */}
-              <div className="relative" onClick={handleMenuClick}>
-                <button
-                  onClick={handleNotificationClick}
-                  className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                >
-                  <div className="relative">
-                    <BellIcon className="h-6 w-6 text-gray-500 hover:text-gray-700" />
-                    {notifications.some((n) => !n.read) && (
-                      <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+              {/* 通知下拉選單 */}
+              {isNotificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none py-1">
+                  <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
+                    <span className="font-medium">通知</span>
+                    <button
+                      onClick={markAllAsRead}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      標記全部已讀
+                    </button>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`px-4 py-3 hover:bg-gray-50 ${
+                            !notification.read ? "bg-blue-50" : ""
+                          }`}
+                        >
+                          <p className="text-sm text-gray-900">
+                            {notification.text}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-sm text-gray-500">
+                        沒有新通知
+                      </div>
                     )}
                   </div>
-                </button>
-
-                {/* 通知下拉選單 */}
-                {isNotificationsOpen && (
-                  <div className="absolute right-0 mt-2 w-72 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform origin-top-right z-50">
-                    <div className="p-3 border-b border-gray-100">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-sm font-medium text-gray-900">
-                          通知
-                        </h3>
-                        <button
-                          onClick={markAllAsRead}
-                          className="text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          標記全部已讀
-                        </button>
-                      </div>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      {notifications.length > 0 ? (
-                        notifications.map((notification) => (
-                          <div
-                            key={notification.id}
-                            className={`p-3 hover:bg-gray-50 ${
-                              notification.read ? "" : "bg-blue-50"
-                            }`}
-                          >
-                            <p className="text-sm text-gray-700">
-                              {notification.text}
-                            </p>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="p-3 text-center text-sm text-gray-500">
-                          沒有新通知
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-2 border-t border-gray-100">
-                      <Link
-                        href="/notifications"
-                        className="block text-center text-xs text-blue-600 hover:text-blue-800 p-1"
-                      >
-                        查看所有通知
-                      </Link>
-                    </div>
+                  <div className="border-t border-gray-100 px-4 py-2">
+                    <Link
+                      href="/notifications"
+                      className="block text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      查看所有通知
+                    </Link>
                   </div>
-                )}
-              </div>
-
-              {/* 用戶選單 */}
-              <div className="relative" onClick={handleMenuClick}>
-                <button
-                  onClick={() => {
-                    setIsUserMenuOpen(!isUserMenuOpen);
-                    setIsNotificationsOpen(false);
-                  }}
-                  className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                >
-                  <div className="rounded-full bg-gray-100 p-0.5 hover:bg-gray-200">
-                    <UserCircleIcon className="h-7 w-7 text-gray-600" />
-                  </div>
-                </button>
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 transform origin-top-right z-50">
-                    <div className="py-1 border-b border-gray-100">
-                      <div className="px-4 py-2">
-                        <div className="text-sm font-medium text-gray-900">
-                          使用者
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          user@example.com
-                        </div>
-                      </div>
-                    </div>
-                    <div className="py-1">
-                      <Link
-                        href="/profile"
-                        className={`flex items-center px-4 py-2.5 text-sm transition-colors duration-200 ${
-                          isActive("/profile")
-                            ? "text-blue-600 bg-blue-50 font-medium"
-                            : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        個人資料
-                      </Link>
-                      <Link
-                        href="/settings"
-                        className={`flex items-center px-4 py-2.5 text-sm transition-colors duration-200 ${
-                          isActive("/settings")
-                            ? "text-blue-600 bg-blue-50 font-medium"
-                            : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        設定
-                      </Link>
-                      <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:text-blue-600 hover:bg-gray-50">
-                        登出
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
-            {/* Mobile menu button */}
-            <div className="lg:hidden flex items-center space-x-2">
-              {/* 移動版搜尋按鈕 */}
-              <button className="p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100">
-                <MagnifyingGlassIcon className="h-6 w-6" />
-              </button>
-
-              {/* 移動版通知按鈕 */}
-              <button className="p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
-                <BellIcon className="h-6 w-6" />
-                {notifications.some((n) => !n.read) && (
-                  <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500 ring-1 ring-white"></span>
-                )}
-              </button>
-
+            {/* 個人選單 */}
+            <div className="relative ml-4" onClick={handleMenuClick}>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsMobileMenuOpen(!isMobileMenuOpen);
+                  setIsUserMenuOpen(!isUserMenuOpen);
+                  setIsNotificationsOpen(false);
                 }}
-                className="inline-flex items-center justify-center p-2 rounded-lg text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors duration-200"
+                className="flex items-center space-x-2 p-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg"
               >
-                <span className="sr-only">開啟主選單</span>
-                {isMobileMenuOpen ? (
-                  <XMarkIcon className="block h-6 w-6" />
-                ) : (
-                  <Bars3Icon className="block h-6 w-6" />
-                )}
+                <UserCircleIcon className="h-6 w-6" />
+                <span className="text-sm">使用者</span>
+                <ChevronDownIcon
+                  className={`h-4 w-4 transition-transform duration-200 ${
+                    isUserMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
+
+              {/* 個人選單下拉內容 */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 py-1">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">使用者</p>
+                    <p className="text-sm text-gray-500">user@example.com</p>
+                  </div>
+                  <div className="py-1">
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      個人資料
+                    </Link>
+                    <Link
+                      href="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      設定
+                    </Link>
+                    <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      登出
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Mobile menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200 shadow-lg animate-fadeIn">
-            {/* 移動版搜索欄 */}
+          {/* Mobile Navigation */}
+          <div className="lg:hidden flex items-center space-x-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMobileMenuOpen(!isMobileMenuOpen);
+              }}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+            >
+              {isMobileMenuOpen ? (
+                <XMarkIcon className="block h-6 w-6" />
+              ) : (
+                <Bars3Icon className="block h-6 w-6" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden">
+          <div className="spacing-responsive bg-white shadow-lg animate-fade-in">
             <div className="p-4 border-b border-gray-200">
               <form onSubmit={handleSearchSubmit}>
                 <div className="relative">
@@ -468,9 +443,9 @@ const Navigation = () => {
               </div>
             </div>
           </div>
-        )}
-      </nav>
-    </>
+        </div>
+      )}
+    </nav>
   );
 };
 

@@ -29,9 +29,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 
-           transition-colors duration-200 focus:outline-none focus:ring-2 
-           focus:ring-blue-500 focus:ring-offset-2;
+    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors;
   }
 
   .btn-secondary {
@@ -41,9 +39,7 @@
   }
 
   .btn-outline {
-    @apply border-2 border-blue-600 text-blue-600 px-4 py-2 rounded-lg 
-           hover:bg-blue-50 transition-colors duration-200 focus:outline-none 
-           focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+    @apply inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors;
   }
 
   .input-field {
@@ -145,6 +141,15 @@
     @apply bg-gray-300 rounded-full hover:bg-gray-400;
   }
 
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   /* 新增文字行數限制 */
   .line-clamp-1 {
     display: -webkit-box;
@@ -224,4 +229,94 @@
 
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out forwards;
+}
+
+@layer utilities {
+  /* 自適應容器 */
+  .container-responsive {
+    @apply w-full mx-auto px-4;
+    @apply sm:px-6 sm:max-w-[640px];
+    @apply md:max-w-[768px];
+    @apply lg:max-w-[1024px];
+    @apply xl:max-w-[1280px];
+  }
+
+  /* 響應式網格系統 */
+  .grid-responsive {
+    @apply grid grid-cols-1 gap-4;
+    @apply sm:grid-cols-2 sm:gap-6;
+    @apply lg:grid-cols-3 lg:gap-8;
+    @apply xl:grid-cols-4;
+  }
+
+  /* 響應式間距 */
+  .spacing-responsive {
+    @apply p-4;
+    @apply sm:p-6;
+    @apply lg:p-8;
+  }
+
+  /* 響應式字體大小 */
+  .text-responsive {
+    @apply text-base;
+    @apply sm:text-lg;
+    @apply lg:text-xl;
+  }
+
+  /* 響應式卡片 */
+  .card-responsive {
+    @apply rounded-lg shadow-sm;
+    @apply hover:shadow-md transition-shadow;
+    @apply sm:hover:scale-[1.02] transform transition-transform;
+  }
+
+  /* 滾動條美化 */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 響應式容器 */
+  .container-responsive {
+    @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
+    max-width: 1280px;
+  }
+
+  /* 響應式陰影 */
+  .shadow-responsive {
+    @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  /* 響應式轉場效果 */
+  .transition-responsive {
+    @apply transition-all duration-200 ease-in-out;
+  }
+}
+
+/* 自定義斷點配置 */
+@custom-media --viewport-sm (min-width: 640px);
+@custom-media --viewport-md (min-width: 768px);
+@custom-media --viewport-lg (min-width: 1024px);
+@custom-media --viewport-xl (min-width: 1280px);
+
+/* 響應式動畫 */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-fade-in {
+    @apply transition-opacity duration-300 ease-in-out;
+  }
+
+  .animate-slide-up {
+    @apply transition-transform duration-300 ease-out;
+  }
+}
+
+/* 移動優先的導航列 */
+.nav-responsive {
+  @apply fixed top-0 w-full z-50;
+  @apply bg-white/90 backdrop-blur-md shadow-sm;
+  @apply transition-all duration-300;
 }

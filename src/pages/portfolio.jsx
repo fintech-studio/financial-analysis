@@ -401,103 +401,118 @@ const Portfolio = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 頁面標題區域 */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">我的投資組合</h1>
-            <div className="flex space-x-4">
-              <button className="btn-outline flex items-center bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <BanknotesIcon className="h-5 w-5 mr-2" />
-                現金管理
-              </button>
-              <button className="btn-primary flex items-center bg-indigo-600 border border-transparent rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                <PlusIcon className="h-5 w-5 mr-2" />
-                新增交易
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 導航標籤 */}
-      <div className="border-b border-gray-200 bg-white">
+      {/* 頁面標題區 */}
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`${
-                  activeTab === tab.id
-                    ? "border-indigo-500 text-indigo-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
-              >
-                <tab.icon className="h-5 w-5 mr-2" />
-                {tab.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
+          <div className="h-16 md:h-20 flex items-center justify-between pt-4 md:pt-6">
+            <div className="flex items-center">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                我的投資組合
+              </h1>
+            </div>
 
-      {/* 主要內容區域 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "overview" && (
-          <div className="space-y-6">
-            <Summary data={portfolioData.summary} />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <StockChart data={portfolioData.chartData} />
-              </div>
-              <div>
-                <Recommendations />
-              </div>
+            {/* 操作按鈕 */}
+            <div className="flex items-center gap-2 md:gap-4">
+              <button className="inline-flex items-center justify-center p-2 md:px-4 md:py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+                <BanknotesIcon className="h-5 w-5 text-gray-600" />
+                <span className="hidden md:inline ml-2">現金管理</span>
+              </button>
+              <button className="inline-flex items-center justify-center p-2 md:px-4 md:py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors">
+                <PlusIcon className="h-5 w-5" />
+                <span className="hidden md:inline ml-2">新增交易</span>
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      </header>
 
-        {activeTab === "allocation" && (
-          <AssetAllocation data={portfolioAnalysis} />
-        )}
+      {/* 導航標籤 - 使用橫向滾動 */}
+      <nav className="bg-white border-b border-gray-200 sticky top-16 md:top-20 z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="overflow-x-auto scrollbar-none">
+            <div className="flex px-4 sm:px-6 lg:px-8 min-w-max">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    flex items-center py-4 px-4 border-b-2 font-medium text-sm whitespace-nowrap
+                    transition-colors duration-200
+                    ${
+                      activeTab === tab.id
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }
+                  `}
+                >
+                  <tab.icon className="h-5 w-5 mr-2" />
+                  {tab.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </nav>
 
-        {activeTab === "holdings" && (
-          <Holdings
-            data={portfolioData}
-            onSort={handleSort}
-            sortConfig={sortConfig}
-            onSelectStock={handleSelectStock}
-          />
-        )}
+      {/* 內容區域 */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="space-y-6">
+          {activeTab === "overview" && (
+            <div className="space-y-6">
+              <Summary data={portfolioData.summary} />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
+                  <StockChart data={portfolioData.chartData} />
+                </div>
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <Recommendations />
+                </div>
+              </div>
+            </div>
+          )}
 
-        {activeTab === "performance" && <Performance stats={portfolioStats} />}
+          {/* 其他分頁內容使用網格布局 */}
+          {activeTab !== "overview" && (
+            <div className="grid grid-cols-1 gap-6">
+              {activeTab === "allocation" && (
+                <AssetAllocation data={portfolioAnalysis} />
+              )}
+              {activeTab === "holdings" && (
+                <Holdings
+                  data={portfolioData}
+                  onSort={handleSort}
+                  sortConfig={sortConfig}
+                  onSelectStock={handleSelectStock}
+                />
+              )}
+              {activeTab === "performance" && (
+                <Performance stats={portfolioStats} />
+              )}
+              {activeTab === "notifications" && <Notifications />}
+              {activeTab === "recommendations" && (
+                <AIRecommendations
+                  data={aiAnalysisData}
+                  portfolio={portfolioData}
+                  stats={portfolioStats}
+                />
+              )}
+              {activeTab === "backtest" && <Backtest />}
+              {activeTab === "strategy" && <StrategySettings />}
+            </div>
+          )}
+        </div>
+      </main>
 
-        {activeTab === "notifications" && <Notifications />}
-
-        {activeTab === "recommendations" && (
-          <AIRecommendations
-            data={aiAnalysisData}
-            portfolio={portfolioData}
-            stats={portfolioStats}
-          />
-        )}
-
-        {activeTab === "backtest" && <Backtest />}
-
-        {activeTab === "strategy" && <StrategySettings />}
-
-        {/* 個股詳細資訊彈出視窗 */}
-        {showStockDetail && selectedStock && (
-          <StockDetail
-            stockInfo={selectedStock}
-            onClose={() => {
-              setShowStockDetail(false);
-              setSelectedStock(null);
-            }}
-          />
-        )}
-      </div>
+      {/* 股票詳情彈窗 */}
+      {showStockDetail && selectedStock && (
+        <StockDetail
+          stockInfo={selectedStock}
+          onClose={() => {
+            setShowStockDetail(false);
+            setSelectedStock(null);
+          }}
+        />
+      )}
     </div>
   );
 };
