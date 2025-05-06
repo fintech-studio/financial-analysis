@@ -9,7 +9,7 @@ import {
   recommendedStocks,
   chartData,
   latestNews,
-} from "../data/marketData";
+} from "../data/index"; // Adjust the import path as necessary
 import ActiveStocksSection from "@/components/ActiveStocks/ActiveStocksSection";
 import NewsSection from "@/components/News/NewsSection";
 import TrendChart from "@/components/MarketTrends/TrendChart";
