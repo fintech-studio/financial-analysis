@@ -1,7 +1,7 @@
 import {
   MARKET_CARDS_CONFIG,
   PAGE_SECTIONS,
-} from "@/constants/marketLayoutConfig";
+} from "@/constants/market/marketLayoutConfig";
 
 export type MarketCardId = (typeof MARKET_CARDS_CONFIG)[number]["id"];
 

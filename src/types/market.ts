@@ -1,4 +1,4 @@
-import { TIME_RANGES } from "@/constants/marketConstants";
+import { TIME_RANGES } from "@/constants/market/marketConstants";
 
 export type TimeRange = (typeof TIME_RANGES)[number];
 

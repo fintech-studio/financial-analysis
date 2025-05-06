@@ -32,17 +32,16 @@ import {
   Legend,
 } from "chart.js";
 import StockChart from "../components/Charts/StockChart";
-import { Doughnut } from "react-chartjs-2";
-import Summary from "../components/Portfolio/Summary";
-import Recommendations from "../components/Portfolio/Recommendations";
-import Performance from "../components/Portfolio/Performance";
-import Backtest from "../components/Portfolio/Backtest";
-import AssetAllocation from "../components/Portfolio/AssetAllocation";
-import Notifications from "../components/Portfolio/Notifications";
-import AIRecommendations from "../components/Portfolio/AIRecommendations";
-import Holdings from "../components/Portfolio/Holdings";
-import StockDetail from "../components/Portfolio/StockDetail";
-import StrategySettings from "../components/Portfolio/StrategySettings";
+import Summary from "../components/features/PortfolioPage/Summary";
+import Recommendations from "../components/features/PortfolioPage/Recommendations";
+import Performance from "../components/features/PortfolioPage/Performance";
+import Backtest from "../components/features/PortfolioPage/Backtest";
+import AssetAllocation from "../components/features/PortfolioPage/AssetAllocation";
+import Notifications from "../components/features/PortfolioPage/Notifications";
+import AIRecommendations from "../components/features/PortfolioPage/AIRecommendations";
+import Holdings from "../components/features/PortfolioPage/Holdings";
+import StockDetail from "../components/features/PortfolioPage/StockDetail";
+import StrategySettings from "../components/features/PortfolioPage/StrategySettings";
 
 // 註冊 Chart.js 元件
 ChartJS.register(

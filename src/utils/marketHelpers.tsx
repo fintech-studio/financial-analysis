@@ -7,7 +7,7 @@ import {
   MARKET_STATUS,
   TREND_INDICATORS,
   STRENGTH_THRESHOLDS,
-} from "@/constants/marketConstants";
+} from "@/constants/market/marketConstants";
 
 export const getStatusColor = (status: string | undefined): string => {
   if (!status) return "text-gray-600";

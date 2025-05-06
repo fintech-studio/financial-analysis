@@ -1,4 +1,4 @@
-import { SPACING } from "@/constants/layoutConstants";
+import { SPACING } from "@/constants/layout/config";
 import Link from "next/link";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 

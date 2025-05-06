@@ -10,18 +10,17 @@ import {
   chartData,
   latestNews,
 } from "../data/index"; // Adjust the import path as necessary
-import ActiveStocksSection from "@/components/ActiveStocks/ActiveStocksSection";
-import NewsSection from "@/components/News/NewsSection";
-import TrendChart from "@/components/MarketTrends/TrendChart";
-import HotStockTable from "@/components/HotStocks/HotStockTable";
-import IndustrySection from "@/components/Industry/IndustrySection";
-import EducationSection from "@/components/Education/EducationSection";
-import NFTSection from "@/components/NFT/NFTSection";
-import RecommendationsSection from "@/components/Recommendations/RecommendationsSection";
-import SentimentSection from "@/components/MarketSentiment/SentimentSection";
-import MarketOverviewSection from "@/components/MarketOverview/MarketOverviewSection";
-import { EDUCATION_CONTENTS } from "@/constants/educationConfig";
-import { NEWS_SECTION_CONFIG } from "@/constants/newsConfig";
+import ActiveStocksSection from "@/components/features/HomePage/ActiveStocks/ActiveStocksSection";
+import NewsSection from "@/components/features/HomePage/News/NewsSection";
+import TrendChart from "@/components/features/HomePage/MarketTrends/TrendChart";
+import HotStockTable from "@/components/features/HomePage/HotStocks/HotStockTable";
+import IndustrySection from "@/components/features/HomePage/Industry/IndustrySection";
+import EducationSection from "@/components/features/HomePage/Education/EducationSection";
+import RecommendationsSection from "@/components/features/HomePage/Recommendations/RecommendationsSection";
+import SentimentSection from "@/components/features/HomePage/MarketSentiment/SentimentSection";
+import MarketOverviewSection from "@/components/features/HomePage/MarketOverview/MarketOverviewSection";
+import { EDUCATION_CONTENTS } from "@/constants/education/config";
+import { NEWS_SECTION_CONFIG } from "@/constants/news/config";
 import PageSection from "@/components/Layout/PageSection";
 
 const HomePage = () => {

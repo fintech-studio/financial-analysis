@@ -13,7 +13,7 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { MarketOverview } from "@/types/market";
-import MarketCard from "@/components/MarketOverview/MarketCard";
+import MarketCard from "@/components/features/HomePage/MarketOverview/MarketCard";
 
 type MetricItem = {
   label: string;

@@ -1,5 +1,5 @@
 import React from "react";
-import StockChart from "../Charts/StockChart";
+import StockChart from "@/components/Charts/StockChart";
 
 interface TrendChartProps {
   data: {

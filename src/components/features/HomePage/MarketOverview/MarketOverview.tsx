@@ -1,6 +1,6 @@
 import React from "react";
 import { MarketOverview as MarketOverviewType } from "@/types/market";
-import MarketCard from "@/components/MarketOverview/MarketCard";
+import MarketCard from "@/components/features/HomePage/MarketOverview/MarketCard";
 import {
   ChartBarIcon,
   CurrencyDollarIcon,
