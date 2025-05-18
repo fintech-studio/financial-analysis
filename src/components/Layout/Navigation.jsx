@@ -68,7 +68,7 @@ const Navigation = () => {
         { name: "股票分析", href: "/market-analysis/stock" },
         { name: "加密貨幣", href: "/market-analysis/crypto" },
         { name: "全球市場", href: "/market-analysis/global" },
-        { name: "趨勢預測", href: "/trend-prediction" },
+        { name: "趨勢預測", href: "/market-analysis/trend-prediction" },
       ],
     },
     { name: "投資組合", href: "/portfolio", icon: BriefcaseIcon },
@@ -121,7 +121,7 @@ const Navigation = () => {
             >
               {/* <span className="text-blue-600">投資</span> */}
               <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                智富黑洞 錢包失重
+                智富黑洞
               </span>
             </Link>
           </div>
