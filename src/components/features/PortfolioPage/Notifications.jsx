@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import {
   BellAlertIcon,
   ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   ExclamationTriangleIcon,
   NewspaperIcon,
-  CalendarIcon,
   BanknotesIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";

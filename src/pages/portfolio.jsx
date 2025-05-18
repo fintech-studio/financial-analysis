@@ -1,24 +1,14 @@
 import React, { useState } from "react";
 import {
-  ChartBarIcon,
-  MagnifyingGlassIcon,
   PlusIcon,
-  TrashIcon,
-  AdjustmentsHorizontalIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
   ChartPieIcon,
   CurrencyDollarIcon,
   ScaleIcon,
-  ShieldCheckIcon,
   BanknotesIcon,
-  ClockIcon,
   BellAlertIcon,
   LightBulbIcon,
   ArrowTrendingUpIcon,
-  BookOpenIcon,
-  InformationCircleIcon,
-  ArrowPathIcon,
+  BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 import {
   Chart as ChartJS,
@@ -35,13 +25,11 @@ import StockChart from "../components/Charts/StockChart";
 import Summary from "../components/features/PortfolioPage/Summary";
 import Recommendations from "../components/features/PortfolioPage/Recommendations";
 import Performance from "../components/features/PortfolioPage/Performance";
-import Backtest from "../components/features/PortfolioPage/Backtest";
 import AssetAllocation from "../components/features/PortfolioPage/AssetAllocation";
 import Notifications from "../components/features/PortfolioPage/Notifications";
 import AIRecommendations from "../components/features/PortfolioPage/AIRecommendations";
 import Holdings from "../components/features/PortfolioPage/Holdings";
 import StockDetail from "../components/features/PortfolioPage/StockDetail";
-import StrategySettings from "../components/features/PortfolioPage/StrategySettings";
 
 // 註冊 Chart.js 元件
 ChartJS.register(
@@ -61,13 +49,6 @@ const Portfolio = () => {
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: "ascending",
-  });
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [screenerFilters, setScreenerFilters] = useState({
-    priceRange: { min: "", max: "" },
-    marketCap: { min: "", max: "" },
-    peRatio: { min: "", max: "" },
-    dividendYield: { min: "", max: "" },
   });
   const [showStockDetail, setShowStockDetail] = useState(false);
   const [selectedStock, setSelectedStock] = useState(null);
@@ -168,42 +149,6 @@ const Portfolio = () => {
       values: [1125000, 1140000, 1160000, 1180000, 1250000],
     },
   };
-
-  // 模擬股票篩選結果
-  const screenerResults = [
-    {
-      symbol: "2330",
-      name: "台積電",
-      price: "785",
-      marketCap: "20.3T",
-      peRatio: "15.2",
-      dividendYield: "2.1%",
-    },
-    {
-      symbol: "2317",
-      name: "鴻海",
-      price: "105",
-      marketCap: "1.4T",
-      peRatio: "12.8",
-      dividendYield: "3.5%",
-    },
-    {
-      symbol: "2454",
-      name: "聯發科",
-      price: "1085",
-      marketCap: "1.7T",
-      peRatio: "18.5",
-      dividendYield: "1.8%",
-    },
-    {
-      symbol: "2412",
-      name: "中華電",
-      price: "115",
-      marketCap: "0.9T",
-      peRatio: "14.2",
-      dividendYield: "4.2%",
-    },
-  ];
 
   // 新增投資組合分析數據
   const portfolioAnalysis = {
@@ -341,20 +286,6 @@ const Portfolio = () => {
     setSortConfig({ key, direction });
   };
 
-  const getSortedData = (data) => {
-    if (!sortConfig.key) return data;
-
-    return [...data].sort((a, b) => {
-      const aValue = parseFloat(a[sortConfig.key].replace(/[^0-9.-]/g, ""));
-      const bValue = parseFloat(b[sortConfig.key].replace(/[^0-9.-]/g, ""));
-
-      if (sortConfig.direction === "ascending") {
-        return aValue - bValue;
-      }
-      return bValue - aValue;
-    });
-  };
-
   // 新增導航標籤配置
   const tabs = [
     { id: "overview", name: "投資組合總覽", icon: ChartPieIcon },
@@ -363,8 +294,6 @@ const Portfolio = () => {
     { id: "performance", name: "績效分析", icon: ArrowTrendingUpIcon },
     { id: "notifications", name: "異動提示", icon: BellAlertIcon },
     { id: "recommendations", name: "AI智能建議", icon: LightBulbIcon },
-    { id: "backtest", name: "投資回測", icon: ArrowPathIcon },
-    { id: "strategy", name: "投資策略", icon: AdjustmentsHorizontalIcon },
   ];
 
   // 處理選擇股票的函數
@@ -404,10 +333,9 @@ const Portfolio = () => {
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="h-16 md:h-20 flex items-center justify-between pt-4 md:pt-6">
-            <div className="flex items-center">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                我的投資組合
-              </h1>
+            <div className="flex items-center space-x-3">
+              <BriefcaseIcon className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900">我的投資組合</h1>
             </div>
 
             {/* 操作按鈕 */}
@@ -495,8 +423,6 @@ const Portfolio = () => {
                   stats={portfolioStats}
                 />
               )}
-              {activeTab === "backtest" && <Backtest />}
-              {activeTab === "strategy" && <StrategySettings />}
             </div>
           )}
         </div>

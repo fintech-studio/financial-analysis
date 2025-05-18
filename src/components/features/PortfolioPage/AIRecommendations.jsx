@@ -2,11 +2,7 @@ import React, { useState } from "react";
 import {
   LightBulbIcon,
   ChartBarIcon,
-  ShieldCheckIcon,
-  ScaleIcon,
   ArrowTrendingUpIcon,
-  BanknotesIcon,
-  EyeIcon,
   FireIcon,
   HandThumbUpIcon,
   HandThumbDownIcon,

@@ -1,11 +1,4 @@
-import {
-  ChartBarIcon,
-  CurrencyDollarIcon,
-  GlobeAsiaAustraliaIcon,
-  BuildingOfficeIcon,
-  ChartPieIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/outline";
+import { ChartBarIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 
 export const MARKET_CARDS_CONFIG = [
   {
