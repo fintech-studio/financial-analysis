@@ -1,6 +1,6 @@
-import React from 'react';
-import Navigation from './components/Layout/Navigation';
-import Routes from './Routes';
+import React from "react";
+import Navigation from "./components/Layout/Navigation";
+import Routes from "./Routes";
 
 function App() {
   return (
@@ -13,4 +13,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;

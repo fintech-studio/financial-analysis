@@ -68,7 +68,7 @@ const Navigation = () => {
         { name: "股票分析", href: "/market-analysis/stock" },
         { name: "加密貨幣", href: "/market-analysis/crypto" },
         { name: "全球市場", href: "/market-analysis/global" },
-        { name: "趨勢預測", href: "/market-analysis/trend-prediction" },
+        { name: "AI 智能趨勢預測", href: "/ai-prediction" },
       ],
     },
     { name: "投資組合", href: "/portfolio", icon: BriefcaseIcon },
