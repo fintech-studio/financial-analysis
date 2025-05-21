@@ -14,6 +14,13 @@ import {
   NewspaperIcon,
 } from "@heroicons/react/24/outline";
 import { SparklesIcon } from "@heroicons/react/24/solid";
+import {
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
+  ExclamationTriangleIcon,
+  EyeIcon,
+  CommandLineIcon,
+} from "@heroicons/react/24/outline";
 
 const MarketAnalysis = () => {
   // 更新導航標籤狀態
@@ -113,43 +120,124 @@ const MarketAnalysis = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 頁面標題 - 使用漸層背景增加視覺效果 */}
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-white bg-opacity-20 rounded-lg">
-                <ChartBarIcon className="h-8 w-8 text-white" />
+      {/* 頁面標題 - 更現代化的設計 */}
+      <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-xl relative overflow-hidden">
+        {/* 裝飾性背景元素 */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white opacity-5 rounded-full"></div>
+          <div className="absolute bottom-10 right-20 w-32 h-32 bg-white opacity-5 rounded-full"></div>
+          <div className="absolute top-20 right-40 w-16 h-16 bg-white opacity-5 rounded-full"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
+          {/* 頂部區域 - 標題和更新時間 */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div className="flex items-center">
+              <div className="p-3 bg-white bg-opacity-15 backdrop-blur-sm rounded-2xl shadow-lg mr-4">
+                <ChartBarIcon className="h-9 w-9 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-white">市場分析中心</h1>
+              <div>
+                <h1 className="text-3xl font-bold text-white tracking-tight">
+                  市場分析
+                </h1>
+                <p className="text-blue-100 mt-1 text-sm">
+                  專業投資數據分析與市場洞察
+                </p>
+              </div>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-white bg-white bg-opacity-20 px-3 py-1 rounded-full">
-              <span>最後更新：</span>
-              <span className="font-medium">
-                {new Date().toLocaleDateString("zh-TW")}
-              </span>
+
+            <div className="flex items-center mt-4 md:mt-0">
+              <div className="bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400 border-opacity-30 flex items-center space-x-3">
+                <ArrowPathIcon className="h-4 w-4 text-blue-200" />
+                <div>
+                  <div className="text-xs text-blue-200">最後更新</div>
+                  <div className="text-sm font-medium text-white">
+                    {new Date().toLocaleDateString("zh-TW", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* 導航標籤 */}
-          <div className="mt-6">
-            <nav className="flex space-x-6">
-              {["overview", "news", "alerts"].map((tab) => (
-                <button
-                  key={tab}
-                  className={`${
-                    activeTab === tab
-                      ? "text-white border-b-2 border-white"
-                      : "text-blue-100 hover:text-white hover:border-blue-200 border-b-2 border-transparent"
-                  } pb-2 px-1 font-medium text-sm transition-colors`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {tab === "overview" && "市場概況"}
-                  {tab === "news" && "市場新聞"}
-                  {tab === "alerts" && "重要提醒"}
-                </button>
-              ))}
-            </nav>
+          {/* 中間區域 - 關鍵指標摘要 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-3 border border-white border-opacity-20">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-blue-100">台股加權</span>
+                <div className="bg-green-500 bg-opacity-20 rounded-full px-2 py-0.5">
+                  <span className="text-xs text-green-300">+0.70%</span>
+                </div>
+              </div>
+              <div className="text-lg font-bold text-white">17,935</div>
+            </div>
+
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-3 border border-white border-opacity-20">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-blue-100">美元/台幣</span>
+                <div className="bg-red-500 bg-opacity-20 rounded-full px-2 py-0.5">
+                  <span className="text-xs text-red-300">-0.25%</span>
+                </div>
+              </div>
+              <div className="text-lg font-bold text-white">31.56</div>
+            </div>
+
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-3 border border-white border-opacity-20">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-blue-100">比特幣</span>
+                <div className="bg-green-500 bg-opacity-20 rounded-full px-2 py-0.5">
+                  <span className="text-xs text-green-300">+1.95%</span>
+                </div>
+              </div>
+              <div className="text-lg font-bold text-white">$65,280</div>
+            </div>
+
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-3 border border-white border-opacity-20">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-blue-100">恐慌指數</span>
+                <div className="bg-blue-500 bg-opacity-20 rounded-full px-2 py-0.5">
+                  <span className="text-xs text-blue-300">適中</span>
+                </div>
+              </div>
+              <div className="text-lg font-bold text-white">15.2</div>
+            </div>
+          </div>
+
+          {/* 導航標籤 - 更現代的設計 */}
+          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-1 inline-flex border border-white border-opacity-20">
+            {["overview", "news", "alerts"].map((tab) => (
+              <button
+                key={tab}
+                className={`${
+                  activeTab === tab
+                    ? "bg-white text-indigo-700 shadow-md"
+                    : "text-white hover:bg-white hover:bg-opacity-10"
+                } px-5 py-2 rounded-lg font-medium text-sm transition-all duration-200`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === "overview" && (
+                  <div className="flex items-center">
+                    <ChartBarIcon className="h-4 w-4 mr-1.5" />
+                    <span>市場概況</span>
+                  </div>
+                )}
+                {tab === "news" && (
+                  <div className="flex items-center">
+                    <NewspaperIcon className="h-4 w-4 mr-1.5" />
+                    <span>市場新聞</span>
+                  </div>
+                )}
+                {tab === "alerts" && (
+                  <div className="flex items-center">
+                    <BoltIcon className="h-4 w-4 mr-1.5" />
+                    <span>重要提醒</span>
+                  </div>
+                )}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -158,87 +246,106 @@ const MarketAnalysis = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === "overview" && (
           <>
-            {/* 市場概況 - 使用卡片陰影和圓角增強視覺層次 */}
+            {/* 移除重複的「今日市場重點」區塊，改為顯示更多深入分析和其他市場指標 */}
             <div className="mb-10">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
                 <FireIcon className="h-5 w-5 text-orange-500 mr-2" />
-                今日市場重點
+                市場深度分析
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* 台股表現卡片 */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      台股指數
+                      台股表現
                     </h3>
-                    <ChartBarIcon className="h-6 w-6 text-blue-600" />
+                    <ChartBarIcon className="h-6 w-6 text-indigo-600" />
                   </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-3xl font-bold text-gray-900">
-                      {marketData.stock.index}
-                    </span>
-                    <span className="text-green-500 font-semibold">
-                      {marketData.stock.changePercent}
-                    </span>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-500">
-                    成交量：{marketData.stock.volume}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">加權指數</span>
+                      <span className="text-green-500 font-medium">17,935</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">漲跌幅</span>
+                      <span className="text-green-500 font-medium">+0.70%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">成交量</span>
+                      <span className="text-gray-800 font-medium">2,835億</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* 美股表現卡片 */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      比特幣
+                      美股表現
+                    </h3>
+                    <GlobeAltIcon className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">道瓊指數</span>
+                      <span className="text-red-500 font-medium">38,790</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">那斯達克</span>
+                      <span className="text-green-500 font-medium">17,245</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">S&P 500</span>
+                      <span className="text-red-500 font-medium">5,475</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 國際匯率卡片 - 保留 */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      國際匯率
                     </h3>
                     <CurrencyDollarIcon className="h-6 w-6 text-yellow-600" />
                   </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-3xl font-bold text-gray-900">
-                      ${marketData.crypto.btc}
-                    </span>
-                    <span className="text-green-500 font-semibold">
-                      {marketData.crypto.changePercent}
-                    </span>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-500">
-                    市值占比：{marketData.crypto.dominance}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">美元/台幣</span>
+                      <span className="text-red-500 font-medium">31.56</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">美元/歐元</span>
+                      <span className="text-green-500 font-medium">1.088</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">美元/日元</span>
+                      <span className="text-green-500 font-medium">153.25</span>
+                    </div>
                   </div>
                 </div>
+
+                {/* 經濟指標卡片 - 保留 */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      道瓊指數
-                    </h3>
-                    <GlobeAsiaAustraliaIcon className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-3xl font-bold text-gray-900">
-                      {marketData.global.dow}
-                    </span>
-                    <span className="text-red-500 font-semibold">
-                      {marketData.global.changePercent}
-                    </span>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-500">
-                    VIX指數：{marketData.global.vix}
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      市場情緒
+                      經濟指標
                     </h3>
                     <HeartIcon className="h-6 w-6 text-purple-600" />
                   </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-3xl font-bold text-gray-900">
-                      {marketData.sentiment.index}
-                    </span>
-                    <span className="text-green-500 font-semibold">
-                      {marketData.sentiment.change}
-                    </span>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-500">
-                    狀態：{marketData.sentiment.status}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">美國CPI</span>
+                      <span className="text-gray-800 font-medium">3.4%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">美國失業率</span>
+                      <span className="text-gray-800 font-medium">3.9%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Fed利率</span>
+                      <span className="text-gray-800 font-medium">5.25%</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -247,7 +354,7 @@ const MarketAnalysis = () => {
             {/* 分析工具 - 增加間距和視覺分隔 */}
             <div className="mb-10">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                <SparklesIcon className="h-5 w-5 text-blue-500 mr-2" />
+                <CommandLineIcon className="h-5 w-5 text-blue-500 mr-2" />
                 分析工具
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -316,61 +423,127 @@ const MarketAnalysis = () => {
 
             {/* AI 市場見解 - 新增區塊 */}
             <div className="mb-10">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                <SparklesIcon className="h-5 w-5 text-purple-500 mr-2" />
-                AI 市場見解
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                <SparklesIcon className="h-6 w-6 text-purple-600 mr-2" />
+                AI 智能市場洞察
               </h2>
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl shadow-lg p-6">
-                <div className="flex items-center mb-4">
-                  <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center mr-4">
-                    <SparklesIcon className="h-6 w-6 text-purple-500" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      本週市場摘要
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      基於最新數據與趨勢分析
-                    </p>
+
+              <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-purple-100">
+                {/* 頂部標題區 */}
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3">
+                        <SparklesIcon className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white">
+                          本週智能市場分析
+                        </h3>
+                        <p className="text-sm text-purple-100">
+                          基於大數據與機器學習模型分析 |{" "}
+                          {new Date().toLocaleDateString("zh-TW")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-colors">
+                        <ArrowPathIcon className="h-4 w-4 text-white" />
+                      </button>
+                      <button className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-colors">
+                        <ArrowTopRightOnSquareIcon className="h-4 w-4 text-white" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div className="bg-white bg-opacity-60 p-4 rounded-lg">
-                    <p className="text-gray-700 leading-relaxed">
-                      本週市場呈現震盪格局，科技股表現較強，金融股表現平淡。通膨數據好於預期，
-                      可能支持央行降息預期，適合加碼布局成長股與科技龍頭。加密貨幣市場出現回升跡象，
-                      比特幣站穩65,000美元。
+
+                {/* 主要內容區 */}
+                <div className="p-6">
+                  {/* 市場摘要 */}
+                  <div className="mb-6">
+                    <div className="flex items-center mb-3">
+                      <div className="p-2 bg-purple-100 rounded-md text-purple-600 mr-2">
+                        <ChartBarIcon className="h-5 w-5" />
+                      </div>
+                      <h4 className="font-medium text-lg text-gray-900">
+                        市場摘要
+                      </h4>
+                    </div>
+                    <p className="text-gray-700 bg-gray-50 p-4 rounded-lg border-l-4 border-purple-400">
+                      本週市場呈現震盪格局，科技股表現較強，
+                      <span className="font-medium text-blue-600">
+                        金融股表現平淡
+                      </span>
+                      。通膨數據好於預期，可能支持央行降息預期，適合加碼布局成長股與科技龍頭。
+                      加密貨幣市場出現回升跡象，比特幣站穩65,000美元。
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white bg-opacity-60 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-800 mb-2">
-                        關注焦點
-                      </h4>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• 台積電海外擴產進度</li>
-                        <li>• 美國非農就業數據</li>
-                        <li>• 歐洲央行利率決議</li>
+
+                  {/* 三欄數據分析 */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* 關注焦點 */}
+                    <div className="bg-blue-50 rounded-lg p-5 border border-blue-100 hover:shadow-md transition-shadow">
+                      <div className="flex items-center mb-3">
+                        <EyeIcon className="h-5 w-5 text-blue-600 mr-2" />
+                        <h4 className="font-medium text-gray-800">關注焦點</h4>
+                      </div>
+                      <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
+                          <span>台積電海外擴產進度</span>
+                        </li>
+                        <li className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
+                          <span>美國非農就業數據</span>
+                        </li>
+                        <li className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
+                          <span>歐洲央行利率決議</span>
+                        </li>
                       </ul>
                     </div>
-                    <div className="bg-white bg-opacity-60 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-800 mb-2">
-                        投資機會
-                      </h4>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• AI相關應用產業</li>
-                        <li>• 低估值高股息標的</li>
-                        <li>• 長線布局能源轉型</li>
+
+                    {/* 投資機會 */}
+                    <div className="bg-green-50 rounded-lg p-5 border border-green-100 hover:shadow-md transition-shadow">
+                      <div className="flex items-center mb-3">
+                        <LightBulbIcon className="h-5 w-5 text-green-600 mr-2" />
+                        <h4 className="font-medium text-gray-800">投資機會</h4>
+                      </div>
+                      <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                          <span>AI相關應用產業</span>
+                        </li>
+                        <li className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                          <span>低估值高股息標的</span>
+                        </li>
+                        <li className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                          <span>長線布局能源轉型</span>
+                        </li>
                       </ul>
                     </div>
-                    <div className="bg-white bg-opacity-60 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-800 mb-2">
-                        風險提示
-                      </h4>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• 地緣政治緊張加劇</li>
-                        <li>• 高估值科技股修正</li>
-                        <li>• 通膨預期反轉風險</li>
+
+                    {/* 風險提示 */}
+                    <div className="bg-red-50 rounded-lg p-5 border border-red-100 hover:shadow-md transition-shadow">
+                      <div className="flex items-center mb-3">
+                        <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2" />
+                        <h4 className="font-medium text-gray-800">風險提示</h4>
+                      </div>
+                      <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div>
+                          <span>地緣政治緊張加劇</span>
+                        </li>
+                        <li className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div>
+                          <span>高估值科技股修正</span>
+                        </li>
+                        <li className="flex items-center">
+                          <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div>
+                          <span>通膨預期反轉風險</span>
+                        </li>
                       </ul>
                     </div>
                   </div>

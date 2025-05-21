@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  ChartBarIcon,
-  StarIcon,
-  NewspaperIcon,
-  TableCellsIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-} from "@heroicons/react/24/outline";
+import { ChartBarIcon, StarIcon } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { Line } from "react-chartjs-2";
 
