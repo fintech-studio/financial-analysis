@@ -7,7 +7,7 @@ import {
   InformationCircleIcon,
   Square3Stack3DIcon,
 } from "@heroicons/react/24/outline";
-import { getPriceChangeColor } from "../../../utils/stockUtils";
+import { getPriceChangeColor } from "@/utils/stockUtils";
 
 const StockList = ({
   stockDetails,

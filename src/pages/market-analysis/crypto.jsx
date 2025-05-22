@@ -1,10 +1,4 @@
-import React, { useState } from "react";
-import {
-  MagnifyingGlassIcon,
-  BoltIcon,
-  PhotoIcon,
-  CubeTransparentIcon,
-} from "@heroicons/react/24/outline";
+import React, { useState, useEffect } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,7 +11,13 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
-import { Line, Bar, Doughnut } from "react-chartjs-2";
+
+// 引入元件
+import Header from "@/components/features/CryptoPage/Header";
+import Overview from "@/components/features/CryptoPage/Overview";
+import CoinAnalysis from "@/components/features/CryptoPage/CoinAnalysis";
+import FactorsAnalysis from "@/components/features/CryptoPage/FactorsAnalysis";
+import MarketForecast from "@/components/features/CryptoPage/MarketForecast";
 
 // 註冊 Chart.js 組件
 ChartJS.register(
@@ -35,8 +35,10 @@ ChartJS.register(
 const CryptoMarket = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterStrength, setFilterStrength] = useState("all");
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
-  // 模擬數據
+  // 模擬數據 (實際應用中可能來自API)
   const marketData = {
     overview: {
       market: {
@@ -188,552 +190,100 @@ const CryptoMarket = () => {
       ethPrice: [2200, 2250, 2300, 2350, 2400, 2350],
       volume: [90, 88, 86, 85, 87, 85.2],
       rsi: [45, 48, 46, 47, 45, 45],
-    },
-  };
-
-  // 圖表配置
-  const priceChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "加密貨幣價格趨勢",
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: false,
-      },
-    },
-  };
-
-  const volumeChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "24小時成交量趨勢",
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: false,
-      },
-    },
-  };
-
-  const marketCapChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "市值分布",
-      },
-    },
-  };
-
-  const rsiChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "RSI指標趨勢",
-      },
-    },
-    scales: {
-      y: {
-        min: 0,
-        max: 100,
-      },
-    },
-  };
-
-  const factorChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "影響因素強度",
-      },
-    },
-    scales: {
-      y: {
-        min: 0,
-        max: 100,
-      },
-    },
-  };
-
-  // 圖表數據
-  const priceChartData = {
-    labels: marketData.history.labels,
-    datasets: [
-      {
-        label: "比特幣",
-        data: marketData.history.btcPrice,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0.1,
-      },
-      {
-        label: "以太幣",
-        data: marketData.history.ethPrice,
-        borderColor: "rgb(153, 102, 255)",
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const volumeChartData = {
-    labels: marketData.history.labels,
-    datasets: [
-      {
-        label: "24h成交量",
-        data: marketData.history.volume,
-        borderColor: "rgb(255, 99, 132)",
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const marketCapChartData = {
-    labels: marketData.coins.map((coin) => coin.name),
-    datasets: [
-      {
-        data: marketData.coins.map((coin) => parseFloat(coin.dominance)),
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.5)",
-          "rgba(54, 162, 235, 0.5)",
-          "rgba(255, 206, 86, 0.5)",
-          "rgba(75, 192, 192, 0.5)",
+      // 新增更詳細的日內數據
+      intraday: {
+        labels: [
+          "1:00",
+          "2:00",
+          "3:00",
+          "4:00",
+          "5:00",
+          "6:00",
+          "7:00",
+          "8:00",
+          "9:00",
+          "10:00",
+          "11:00",
+          "12:00",
+          "13:00",
+          "14:00",
+          "15:00",
+          "16:00",
+          "17:00",
+          "18:00",
+          "19:00",
+          "20:00",
+          "21:00",
+          "22:00",
+          "23:00",
+          "0:00",
         ],
-        borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(255, 206, 86, 1)",
-          "rgba(75, 192, 192, 1)",
+        btcPrice: [
+          45100, 45250, 45400, 45150, 45300, 45275, 45325, 45400, 45200, 45150,
+          45050, 45000, 45350, 45550, 45650, 45700, 45600, 45500, 45350, 45400,
+          45600, 45750, 45800, 45850,
         ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const rsiChartData = {
-    labels: marketData.history.labels,
-    datasets: [
-      {
-        label: "RSI",
-        data: marketData.history.rsi,
-        borderColor: "rgb(255, 159, 64)",
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const factorChartData = {
-    labels: marketData.factors.map((factor) => factor.name),
-    datasets: [
-      {
-        label: "影響強度",
-        data: marketData.factors.map((factor) => factor.strength),
-        backgroundColor: [
-          "rgba(75, 192, 192, 0.5)",
-          "rgba(54, 162, 235, 0.5)",
-          "rgba(255, 206, 86, 0.5)",
-          "rgba(255, 99, 132, 0.5)",
+        volume: [
+          580, 600, 620, 720, 610, 600, 430, 630, 550, 270, 265, 720, 560, 540,
+          510, 300, 360, 490, 350, 450, 520, 630, 470, 320,
         ],
-        borderColor: [
-          "rgba(75, 192, 192, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(255, 206, 86, 1)",
-          "rgba(255, 99, 132, 1)",
+        // 上漲/下跌標記 (可選，用於預設顏色)
+        priceChange: [
+          1, 1, -1, 1, -1, 1, 1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1, -1, 1, 1,
+          1, 1, 1, 1,
         ],
-        borderWidth: 1,
       },
-    ],
+    },
   };
 
-  const getStatusColor = (status) => {
-    if (!status) return "text-blue-500";
-
-    switch (status.toLowerCase()) {
-      case "up":
-      case "強勢":
-      case "正面":
-      case "偏多":
-      case "多頭":
-        return "text-green-500";
-      case "down":
-      case "弱勢":
-      case "負面":
-      case "偏空":
-      case "空頭":
-        return "text-red-500";
-      case "neutral":
-      case "中性":
-        return "text-yellow-500";
-      default:
-        return "text-blue-500";
-    }
+  // 模擬刷新數據操作
+  const handleRefresh = () => {
+    setLastUpdated(new Date());
+    // 實際應用中可能會重新獲取資料
+    console.log("刷新數據");
   };
+
+  // 按強度過濾幣種
+  const filteredCoins = marketData.coins
+    .filter((coin) => {
+      if (filterStrength === "all") return true;
+      return coin.strength === filterStrength;
+    })
+    .filter((coin) => {
+      if (!searchQuery) return true;
+      return (
+        coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        coin.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    });
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 頁面標題 */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <BoltIcon className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">
-                加密貨幣市場分析
-              </h1>
-            </div>
-            <div className="flex-1 max-w-lg ml-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="搜尋幣種或指標..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header
+        lastUpdated={lastUpdated}
+        onRefresh={handleRefresh}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        marketData={marketData}
+      />
 
-      {/* 主要內容 */}
+      {/* 主要內容區域 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 導航標籤 */}
-        <div className="border-b border-gray-200 mb-8">
-          <nav className="-mb-px flex space-x-8">
-            {["overview", "coins", "factors", "forecast"].map((tab) => (
-              <button
-                key={tab}
-                className={`${
-                  activeTab === tab
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab === "overview" && "市場概況"}
-                {tab === "coins" && "幣種分析"}
-                {tab === "factors" && "影響因素"}
-                {tab === "forecast" && "市場預測"}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* 內容區域 */}
-        {activeTab === "overview" && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  市場概況
-                </h3>
-                <span
-                  className={`text-sm font-medium ${getStatusColor(
-                    marketData.overview.market.overall
-                  )}`}
-                >
-                  {marketData.overview.market.overall}
-                </span>
-              </div>
-              <div className="flex items-baseline justify-between">
-                <span className="text-2xl font-bold text-gray-900">
-                  ${marketData.overview.market.price}
-                </span>
-                <span
-                  className={`text-sm font-medium ${getStatusColor(
-                    marketData.overview.market.change.startsWith("+")
-                      ? "up"
-                      : "down"
-                  )}`}
-                >
-                  {marketData.overview.market.change}
-                </span>
-              </div>
-              <p className="mt-2 text-sm text-gray-500">
-                {marketData.overview.market.description}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {marketData.overview.indicators.map((indicator) => (
-                <div
-                  key={indicator.name}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {indicator.name}
-                    </h3>
-                    <span
-                      className={`text-sm font-medium ${getStatusColor(
-                        indicator.trend
-                      )}`}
-                    >
-                      {indicator.change > 0 ? "+" : ""}
-                      {indicator.change}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {indicator.value}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    {indicator.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* 價格趨勢圖 */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="h-[300px]">
-                <Line options={priceChartOptions} data={priceChartData} />
-              </div>
-            </div>
-
-            {/* 成交量趨勢圖 */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="h-[300px]">
-                <Line options={volumeChartOptions} data={volumeChartData} />
-              </div>
-            </div>
-
-            {/* 市值分布圖 */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="h-[300px]">
-                <Doughnut
-                  options={marketCapChartOptions}
-                  data={marketCapChartData}
-                />
-              </div>
-            </div>
-
-            {/* 技術指標 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {marketData.overview.technical.map((indicator) => (
-                <div
-                  key={indicator.name}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {indicator.name}
-                    </h3>
-                    <span
-                      className={`text-sm font-medium ${getStatusColor(
-                        indicator.signal
-                      )}`}
-                    >
-                      {indicator.signal}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {indicator.value}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    {indicator.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* RSI趨勢圖 */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="h-[300px]">
-                <Line options={rsiChartOptions} data={rsiChartData} />
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === "overview" && <Overview marketData={marketData} />}
 
         {activeTab === "coins" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {marketData.coins.map((coin) => (
-                <div
-                  key={coin.symbol}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {coin.name} ({coin.symbol})
-                    </h3>
-                    <span
-                      className={`text-sm font-medium ${getStatusColor(
-                        coin.strength
-                      )}`}
-                    >
-                      {coin.strength}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-gray-900">
-                      ${coin.price}
-                    </span>
-                    <span
-                      className={`text-sm font-medium ${getStatusColor(
-                        coin.change.startsWith("+") ? "up" : "down"
-                      )}`}
-                    >
-                      {coin.change}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    {coin.description}
-                  </p>
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">24h成交量</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {coin.volume}
-                        </p>
-                        <p
-                          className={`text-xs ${getStatusColor(
-                            coin.volumeChange.startsWith("+") ? "up" : "down"
-                          )}`}
-                        >
-                          {coin.volumeChange}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">市值</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {coin.marketCap}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          市占率: {coin.dominance}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <CoinAnalysis
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            filterStrength={filterStrength}
+            setFilterStrength={setFilterStrength}
+            filteredCoins={filteredCoins}
+          />
         )}
 
-        {activeTab === "factors" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {marketData.factors.map((factor) => (
-                <div
-                  key={factor.name}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {factor.name}
-                    </h3>
-                    <span
-                      className={`text-sm font-medium ${getStatusColor(
-                        factor.impact
-                      )}`}
-                    >
-                      {factor.impact}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {factor.strength}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    {factor.description}
-                  </p>
-                  <ul className="mt-4 space-y-2">
-                    {factor.details.map((detail, index) => (
-                      <li key={index} className="text-sm text-gray-600">
-                        • {detail}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
+        {activeTab === "factors" && <FactorsAnalysis marketData={marketData} />}
 
-            {/* 影響因素強度圖 */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="h-[300px]">
-                <Bar options={factorChartOptions} data={factorChartData} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "forecast" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {marketData.forecast.map((forecast) => (
-                <div
-                  key={forecast.period}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {forecast.period}
-                    </h3>
-                    <span
-                      className={`text-sm font-medium ${getStatusColor(
-                        forecast.outlook
-                      )}`}
-                    >
-                      {forecast.outlook}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {forecast.confidence}%
-                    </span>
-                    <span className="text-sm text-gray-500">信心指數</span>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm text-gray-500 mb-2">關鍵因素：</p>
-                    <ul className="space-y-1">
-                      {forecast.keyFactors.map((factor, index) => (
-                        <li key={index} className="text-sm text-gray-600">
-                          • {factor}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {activeTab === "forecast" && <MarketForecast marketData={marketData} />}
       </div>
     </div>
   );

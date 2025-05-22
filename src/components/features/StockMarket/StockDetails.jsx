@@ -3,7 +3,7 @@ import { StarIcon } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { Line } from "react-chartjs-2";
 import { ChartBarIcon } from "@heroicons/react/24/outline";
-import { getPriceChangeColor, getRatingColor } from "../../../utils/stockUtils";
+import { getPriceChangeColor, getRatingColor } from "@/utils/stockUtils";
 
 const StockDetails = ({ stock, favoriteStocks, toggleFavoriteStock }) => {
   return (

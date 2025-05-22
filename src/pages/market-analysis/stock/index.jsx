@@ -21,6 +21,7 @@ import StockList from "@/components/features/StockMarket/StockList";
 import StockComparison from "@/components/features/StockMarket/StockComparison";
 import StockDetails from "@/components/features/StockMarket/StockDetails";
 import TechnicalPatterns from "@/components/features/StockMarket/TechnicalPatterns";
+import Screener from "@/components/features/StockMarket/Screener"; // 新增的導入
 
 // 註冊 Chart.js 組件
 ChartJS.register(
@@ -153,6 +154,16 @@ const StockMarket = () => {
               >
                 技術分析
               </button>
+              <button
+                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                  activeTab === "screener"
+                    ? "bg-white text-indigo-700"
+                    : "text-white hover:bg-white hover:bg-opacity-10"
+                }`}
+                onClick={() => setActiveTab("screener")}
+              >
+                選股器
+              </button>
             </nav>
           </div>
         </div>
@@ -210,6 +221,12 @@ const StockMarket = () => {
         {/* 其他選項卡內容... */}
         {activeTab === "sectors" && <div>產業分析頁面內容</div>}
         {activeTab === "technical" && <div>技術分析頁面內容</div>}
+        {activeTab === "screener" && (
+          <Screener
+            favoriteStocks={favoriteStocks}
+            toggleFavoriteStock={toggleFavoriteStock}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import React from "react";
 import { Line } from "react-chartjs-2";
-import { getPriceChangeColor } from "../../../utils/stockUtils";
+import { getPriceChangeColor } from "@/utils/stockUtils";
 
 const StockComparison = ({
   stockCompare,

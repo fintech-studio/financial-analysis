@@ -74,7 +74,7 @@ const TrendChart = ({
               </button>
             </div>
           </div>
-          <StockChart data={data} />
+          <StockChart data={data} title="台股大盤指數" />
         </div>
       </div>
     </section>
