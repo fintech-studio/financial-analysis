@@ -236,7 +236,11 @@ const ModuleCard = ({ module }) => {
       BuildingOfficeIcon: <BuildingOfficeIcon className="h-6 w-6" />,
       ArrowTrendingUpIcon: <ArrowTrendingUpIcon className="h-6 w-6" />,
       ArrowTrendingDownIcon: <ArrowTrendingDownIcon className="h-6 w-6" />,
+      CurrencyDollarIcon: <CurrencyDollarIcon className="h-6 w-6" />, // 新增這行
+      GlobeAsiaAustraliaIcon: <GlobeAsiaAustraliaIcon className="h-6 w-6" />, // 新增這行
     };
+
+    // 如果找不到對應的icon,回傳預設的ChartBarIcon
     return icons[iconName] || <ChartBarIcon className="h-6 w-6" />;
   };
 
