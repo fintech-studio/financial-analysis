@@ -8,7 +8,7 @@ import {
   ChevronDownIcon,
   HomeIcon,
   ChartBarIcon,
-  AcademicCapIcon,
+  NewspaperIcon,
   ChatBubbleLeftRightIcon,
   BriefcaseIcon,
   MagnifyingGlassIcon,
@@ -72,7 +72,7 @@ const Navigation = () => {
       ],
     },
     { name: "投資組合", href: "/portfolio", icon: BriefcaseIcon },
-    { name: "理財知識", href: "/education", icon: AcademicCapIcon },
+    { name: "財經新聞", href: "/news", icon: NewspaperIcon },
     { name: "社群討論", href: "/community", icon: ChatBubbleLeftRightIcon },
   ];
 
@@ -121,7 +121,7 @@ const Navigation = () => {
             >
               {/* <span className="text-blue-600">投資</span> */}
               <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                智富黑洞
+                FinTech 智慧投資
               </span>
             </Link>
           </div>
