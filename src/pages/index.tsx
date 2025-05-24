@@ -6,8 +6,11 @@ import {
   ChatBubbleLeftRightIcon,
   ChevronRightIcon,
   BriefcaseIcon,
-  ChartBarIcon} from "@heroicons/react/24/outline";
+  ChartBarIcon,
+} from "@heroicons/react/24/outline";
+import { FaGithub } from "react-icons/fa";
 import dynamic from "next/dynamic";
+import Wave from "@/components/Wave";
 
 // 動態引入元件以改善首次載入效能
 const TerminalAnimation = dynamic(
@@ -31,17 +34,17 @@ export default function Home() {
   }, []);
 
   // 處理搜尋
-interface SearchEvent {
+  interface SearchEvent {
     preventDefault: () => void;
-}
+  }
 
-const handleSearch = (e: SearchEvent): void => {
+  const handleSearch = (e: SearchEvent): void => {
     e.preventDefault();
     if (searchQuery) {
-        // 實作搜尋功能
-        console.log("搜尋:", searchQuery);
+      // 實作搜尋功能
+      console.log("搜尋:", searchQuery);
     }
-};
+  };
 
   return (
     <>
@@ -51,7 +54,7 @@ const handleSearch = (e: SearchEvent): void => {
           {/* 動態背景裝飾 */}
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
-            
+
             {/* 浮動圓點裝飾 */}
             <div className="absolute top-20 right-[20%] w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
             <div className="absolute bottom-40 left-[10%] w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl"></div>
@@ -70,7 +73,7 @@ const handleSearch = (e: SearchEvent): void => {
                       智慧投資決策
                     </div>
                   </h1>
-                
+
                   <p className="mt-6 text-blue-100/90 text-xl max-w-xl leading-relaxed">
                     運用人工智能與大數據分析，提供專業市場洞察、風險評估與個人化投資建議，
                     讓您在複雜多變的金融市場中做出明智決策。
@@ -85,9 +88,9 @@ const handleSearch = (e: SearchEvent): void => {
                       {/* 搜尋類型標籤 */}
                       <div className="flex mb-2 px-2 pt-1">
                         {[
-                          {id: "stocks", name: "股票"},
-                          {id: "crypto", name: "加密貨幣"},
-                          {id: "etf", name: "ETF"},
+                          { id: "stocks", name: "股票" },
+                          { id: "crypto", name: "加密貨幣" },
+                          { id: "etf", name: "ETF" },
                         ].map((tab) => (
                           <button
                             key={tab.id}
@@ -102,13 +105,19 @@ const handleSearch = (e: SearchEvent): void => {
                           </button>
                         ))}
                       </div>
-                      
+
                       <form onSubmit={handleSearch} className="relative">
                         <input
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder={activeTab === "stocks" ? "輸入股票代號或公司名稱..." : activeTab === "crypto" ? "輸入加密貨幣名稱..." : "輸入ETF代號..."}
+                          placeholder={
+                            activeTab === "stocks"
+                              ? "輸入股票代號或公司名稱..."
+                              : activeTab === "crypto"
+                              ? "輸入加密貨幣名稱..."
+                              : "輸入ETF代號..."
+                          }
                           className="w-full px-6 py-4 pr-36 rounded-lg
                           bg-white/10
                           border border-white/20
@@ -116,7 +125,8 @@ const handleSearch = (e: SearchEvent): void => {
                           focus:outline-none focus:ring-2 focus:ring-blue-400/40
                           transition duration-200"
                         />
-                        <button 
+                        <Link
+                          href={`/ai-prediction/${activeTab}/${searchQuery}`}
                           type="submit"
                           className="absolute right-2 top-1/2 -translate-y-1/2
                           bg-gradient-to-r from-blue-500 to-indigo-500
@@ -128,14 +138,14 @@ const handleSearch = (e: SearchEvent): void => {
                         >
                           <SparklesIcon className="h-5 w-5" />
                           <span>AI 預測</span>
-                        </button>
+                        </Link>
                       </form>
                     </div>
                   </div>
 
                   <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-blue-200/80">
                     <span>熱門搜尋：</span>
-                    {["台積電", "聯發科", "鴻海", "緯創", "台達電"].map((term) => (
+                    {["台積電", "聯發科", "鴻海", "緯創"].map((term) => (
                       <button
                         key={term}
                         onClick={() => setSearchQuery(term)}
@@ -146,9 +156,8 @@ const handleSearch = (e: SearchEvent): void => {
                     ))}
                   </div>
                 </div>
-
               </div>
-  
+
               {/* 右側終端機 - 改進設計 */}
               <div className="relative z-10 hidden lg:block">
                 <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden border border-gray-700/30 transition-all duration-300 hover:shadow-blue-900/30 group">
@@ -275,11 +284,7 @@ const handleSearch = (e: SearchEvent): void => {
           </div>
 
           {/* 波浪裝飾 */}
-          <div className="absolute bottom-0 left-0 right-0">
-            <svg className="w-full h-auto" viewBox="0 0 1440 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0,64L48,80C96,96,192,128,288,128C384,128,480,96,576,85.3C672,75,768,85,864,101.3C960,117,1056,139,1152,133.3C1248,128,1344,96,1392,80L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" fill="#f8fafc"/>
-            </svg>
-          </div>
+          <Wave />
         </section>
 
         {/* 功能區塊 - 重新設計 */}
@@ -302,8 +307,12 @@ const handleSearch = (e: SearchEvent): void => {
                   className={`group bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:border-blue-200 transition-all duration-300 block hover:shadow-xl relative flex flex-col `}
                 >
                   <div>
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${feature.iconBg} mb-6 group-hover:scale-110 transition-transform`}>
-                      <feature.icon className={`h-7 w-7 ${feature.iconColor}`} />
+                    <div
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center ${feature.iconBg} mb-6 group-hover:scale-110 transition-transform`}
+                    >
+                      <feature.icon
+                        className={`h-7 w-7 ${feature.iconColor}`}
+                      />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-3">
                       {feature.title}
@@ -312,7 +321,7 @@ const handleSearch = (e: SearchEvent): void => {
                       {feature.description}
                     </p>
                   </div>
-                  
+
                   <div className="mt-auto inline-flex items-center text-blue-600 group-hover:text-blue-700 font-medium">
                     探索功能
                     <ChevronRightIcon className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
@@ -325,38 +334,38 @@ const handleSearch = (e: SearchEvent): void => {
       </main>
 
       {/* 頁腳 */}
-      <footer className="bg-gray-900 text-gray-400 py-16">
-          <div className="container mx-auto px-4">
-              <div className="flex flex-col items-center space-y-4">
-                  <a 
-                      href="https://github.com/HaoXun97/financial-analysis" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-200"
-                  >
-                      <svg 
-                          className="w-6 h-6 text-gray-400 hover:text-white" 
-                          fill="currentColor" 
-                          viewBox="0 0 24 24" 
-                          aria-hidden="true"
-                      >
-                          <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-                      </svg>
-                  </a>
-                  <p>&copy; {new Date().getFullYear()} FinTech Studio 保留所有權利。</p>
-              </div>
+      <footer className="bg-gray-900 text-gray-400 py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center space-y-4">
+            <a
+              href="https://github.com/HaoXun97/financial-analysis"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-200"
+            >
+              <FaGithub className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
+            </a>
+            <p>
+              &copy; {new Date().getFullYear()} FinTech Studio 保留所有權利。
+            </p>
           </div>
+        </div>
       </footer>
 
       {/* 根據需要添加全域樣式 */}
       <style jsx global>{`
         @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         .animate-fade-in-up {
           animation: fadeInUp 0.6s ease-out forwards;
-          
         }
         .animation-delay-200 {
           animation-delay: 0.2s;
@@ -375,34 +384,38 @@ const handleSearch = (e: SearchEvent): void => {
 const features = [
   {
     title: "市場分析",
-    description: "運用 AI 分析全球金融市場動態，提供即時市場趨勢、技術分析與基本面分析，協助您掌握投資先機",
+    description:
+      "運用 AI 分析全球金融市場動態，提供即時市場趨勢、技術分析與基本面分析，協助您掌握投資先機",
     icon: ChartBarIcon,
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
-    link: "/market-analysis"
+    link: "/market-analysis",
   },
   {
     title: "投資組合",
-    description: "智能投資組合管理系統，追蹤績效表現、風險評估，並提供最佳化建議，讓您的資產配置更有效率",
+    description:
+      "智能投資組合管理系統，追蹤績效表現、風險評估，並提供最佳化建議，讓您的資產配置更有效率",
     icon: BriefcaseIcon,
     iconBg: "bg-green-100",
     iconColor: "text-green-600",
-    link: "/portfolio"
+    link: "/portfolio",
   },
   {
     title: "財經新聞",
-    description: "AI 精選與分析全球財經新聞，即時掌握市場脈動，為您提供關鍵投資訊息與市場洞察",
+    description:
+      "AI 精選與分析全球財經新聞，即時掌握市場脈動，為您提供關鍵投資訊息與市場洞察",
     icon: NewspaperIcon,
     iconBg: "bg-purple-100",
     iconColor: "text-purple-600",
-    link: "/news"
+    link: "/news",
   },
   {
     title: "社群討論",
-    description: "連結專業投資者社群，分享投資心得與策略，集結群體智慧，擴展投資視野",
+    description:
+      "連結專業投資者社群，分享投資心得與策略，集結群體智慧，擴展投資視野",
     icon: ChatBubbleLeftRightIcon,
     iconBg: "bg-amber-100",
     iconColor: "text-amber-600",
-    link: "/community"
-  }
+    link: "/community",
+  },
 ];
