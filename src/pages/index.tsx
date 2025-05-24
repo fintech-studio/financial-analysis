@@ -53,8 +53,6 @@ export default function Home() {
         <section className="relative min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-violet-900 flex items-center overflow-hidden">
           {/* 動態背景裝飾 */}
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
-
             {/* 浮動圓點裝飾 */}
             <div className="absolute top-20 right-[20%] w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
             <div className="absolute bottom-40 left-[10%] w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl"></div>
