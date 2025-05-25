@@ -432,7 +432,7 @@ const AuthPage = () => {
           } else {
             localStorage.removeItem("rememberedEmail");
           }
-          router.push("/");
+          router.back();
         } else {
           setErrors({ email: "電子郵件或密碼錯誤" });
         }

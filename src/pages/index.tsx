@@ -66,7 +66,7 @@ export default function Home() {
       subItems: [
         {
           name: "股票分析",
-          href: "/market-analysis/stocks",
+          href: "/market-analysis/stock",
           icon: ChartBarIcon,
           description: "台股、美股即時分析",
           color: "text-blue-600",
@@ -90,7 +90,7 @@ export default function Home() {
         },
         {
           name: "AI 智能預測",
-          href: "/market-analysis/ai-predictions",
+          href: "/ai-prediction",
           icon: SparklesIcon,
           description: "機器學習市場預測",
           color: "text-purple-600",

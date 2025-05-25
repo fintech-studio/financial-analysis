@@ -353,3 +353,15 @@
   @apply bg-white/90 backdrop-blur-md shadow-sm;
   @apply transition-all duration-300;
 }
+
+/* 隱藏 IE/Edge 的密碼顯示按鈕 */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+/* 隱藏 Chrome 的密碼自動填入按鈕 */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-strong-password-auto-fill-button {
+  display: none !important;
+}
