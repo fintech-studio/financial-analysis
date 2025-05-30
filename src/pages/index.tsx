@@ -414,12 +414,7 @@ export default function Home() {
                               ? "輸入加密貨幣名稱..."
                               : "輸入ETF代號..."
                           }
-                          className="w-full px-6 py-4 pr-36 rounded-lg
-                          bg-white/10
-                          border border-white/20
-                          text-white placeholder-blue-200/70
-                          focus:outline-none focus:ring-2 focus:ring-blue-400/40
-                          transition duration-200"
+                          className="w-full px-6 py-4 pr-36 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200/70 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition duration-200"
                         />
                         <Link
                           href={`/ai-prediction/${activeTab}/${searchQuery}`}

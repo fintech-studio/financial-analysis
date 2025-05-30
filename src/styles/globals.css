@@ -1,113 +1,232 @@
+/* ===== 字體匯入 ===== */
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap");
 
+/* ===== Tailwind CSS 核心 ===== */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ===== 基礎樣式 ===== */
 @layer base {
   html {
     font-family: "Noto Sans TC", sans-serif;
-    @apply antialiased;
+    @apply antialiased scroll-smooth;
   }
 
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gray-50 text-gray-900 leading-relaxed;
   }
 
+  /* 標題層級 */
   h1 {
-    @apply text-3xl font-bold mb-6;
+    @apply text-3xl font-bold mb-6 text-gray-900;
   }
-
   h2 {
-    @apply text-2xl font-semibold mb-4;
+    @apply text-2xl font-semibold mb-4 text-gray-800;
+  }
+  h3 {
+    @apply text-xl font-semibold mb-3 text-gray-800;
+  }
+  h4 {
+    @apply text-lg font-medium mb-2 text-gray-700;
+  }
+  h5 {
+    @apply text-base font-medium mb-2 text-gray-700;
+  }
+  h6 {
+    @apply text-sm font-medium mb-1 text-gray-600;
   }
 
-  h3 {
-    @apply text-xl font-semibold mb-3;
+  /* 連結樣式 */
+  a {
+    @apply text-blue-600 hover:text-blue-700 transition-colors duration-200;
+  }
+
+  /* 輸入框基礎樣式 */
+  input,
+  textarea,
+  select {
+    @apply transition-all duration-200;
+  }
+
+  /* 表格基礎樣式 */
+  table {
+    @apply border-collapse border-spacing-0;
   }
 }
 
+/* ===== 組件樣式 ===== */
 @layer components {
+  /* ===== 按鈕組件 ===== */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium 
+           rounded-lg transition-all duration-200 focus:outline-none 
+           focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
   .btn-primary {
-    @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors;
+    @apply btn bg-blue-600 text-white border border-transparent 
+           hover:bg-blue-700 focus:ring-blue-500 active:bg-blue-800;
   }
 
   .btn-secondary {
-    @apply bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 
-           transition-colors duration-200 focus:outline-none focus:ring-2 
-           focus:ring-gray-500 focus:ring-offset-2;
+    @apply btn bg-gray-600 text-white border border-transparent 
+           hover:bg-gray-700 focus:ring-gray-500 active:bg-gray-800;
+  }
+
+  .btn-success {
+    @apply btn bg-green-600 text-white border border-transparent 
+           hover:bg-green-700 focus:ring-green-500 active:bg-green-800;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-600 text-white border border-transparent 
+           hover:bg-red-700 focus:ring-red-500 active:bg-red-800;
   }
 
   .btn-outline {
-    @apply inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors;
+    @apply btn bg-white text-gray-700 border border-gray-300 
+           hover:bg-gray-50 focus:ring-blue-500 active:bg-gray-100;
   }
 
+  .btn-ghost {
+    @apply btn bg-transparent text-gray-700 border border-transparent 
+           hover:bg-gray-100 focus:ring-gray-500;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  /* ===== 輸入框組件 ===== */
   .input-field {
-    @apply border border-gray-300 rounded-lg px-3 py-2 focus:outline-none 
-           focus:ring-2 focus:ring-blue-500 focus:border-transparent
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg 
+           bg-white text-gray-900 placeholder-gray-500
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+           disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
            transition-all duration-200;
   }
 
+  .input-error {
+    @apply border-red-300 focus:ring-red-500;
+  }
+
+  .input-success {
+    @apply border-green-300 focus:ring-green-500;
+  }
+
+  /* ===== 卡片組件 ===== */
   .card {
-    @apply bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200;
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 
+           overflow-hidden transition-shadow duration-200;
   }
 
   .card-hover {
-    @apply hover:shadow-lg transition-all duration-200 cursor-pointer;
+    @apply card hover:shadow-md cursor-pointer 
+           transform transition-all duration-200 hover:scale-[1.02];
   }
 
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200 bg-gray-50;
+  }
+
+  .card-body {
+    @apply px-6 py-4;
+  }
+
+  .card-footer {
+    @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
+  }
+
+  /* ===== 徽章組件 ===== */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full 
+           text-xs font-medium;
   }
 
+  .badge-primary {
+    @apply bg-blue-100 text-blue-800;
+  }
+  .badge-secondary {
+    @apply bg-gray-100 text-gray-800;
+  }
   .badge-success {
     @apply bg-green-100 text-green-800;
   }
-
   .badge-warning {
     @apply bg-yellow-100 text-yellow-800;
   }
-
-  .badge-error {
+  .badge-danger {
     @apply bg-red-100 text-red-800;
   }
-
   .badge-info {
     @apply bg-blue-100 text-blue-800;
   }
 
+  /* ===== 表格組件 ===== */
   .table-container {
-    @apply overflow-x-auto rounded-lg border border-gray-200;
+    @apply overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm;
   }
 
   .table {
     @apply min-w-full divide-y divide-gray-200;
   }
 
+  .table thead {
+    @apply bg-gray-50;
+  }
+
   .table th {
-    @apply px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 
+           uppercase tracking-wider;
   }
 
   .table td {
     @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
   }
 
-  .table tr {
+  .table tbody tr {
     @apply hover:bg-gray-50 transition-colors duration-150;
   }
 
-  .table tr:nth-child(even) {
-    @apply bg-gray-50;
+  .table tbody tr:nth-child(even) {
+    @apply bg-gray-100/50;
   }
 
+  /* ===== 圖表組件 ===== */
   .chart-container {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply card p-6;
   }
 
+  .chart-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .chart-title {
+    @apply text-lg font-semibold text-gray-900;
+  }
+
+  /* ===== 載入組件 ===== */
   .loading-spinner {
-    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
+    @apply animate-spin rounded-full border-2 border-gray-200 
+           border-t-blue-600;
   }
 
+  .loading-sm {
+    @apply h-4 w-4;
+  }
+  .loading-md {
+    @apply h-8 w-8;
+  }
+  .loading-lg {
+    @apply h-12 w-12;
+  }
+
+  /* ===== 標題組件 ===== */
   .section-title {
     @apply text-2xl font-bold text-gray-900 mb-6;
   }
@@ -116,8 +235,38 @@
     @apply text-lg font-semibold text-gray-700 mb-4;
   }
 
+  .page-title {
+    @apply text-3xl font-bold text-gray-900 mb-8;
+  }
+
+  .page-subtitle {
+    @apply text-xl text-gray-600 mb-6;
+  }
+
+  /* ===== 佈局組件 ===== */
+  .container-fluid {
+    @apply w-full px-4 sm:px-6 lg:px-8;
+  }
+
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
   .grid-layout {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+    @apply grid gap-6;
+  }
+
+  .grid-1 {
+    @apply grid-cols-1;
+  }
+  .grid-2 {
+    @apply grid-cols-1 md:grid-cols-2;
+  }
+  .grid-3 {
+    @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3;
+  }
+  .grid-4 {
+    @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
   }
 
   .flex-layout {
@@ -125,12 +274,35 @@
   }
 
   .main-content {
-    @apply pt-16; /* 保留導航列高度的上邊距，確保內容不會被導航列覆蓋 */
+    @apply pt-16 min-h-screen;
   }
 
-  /* 新增滾動條美化 */
+  /* ===== 導航組件 ===== */
+  .nav-responsive {
+    @apply fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md 
+           shadow-sm transition-all duration-300;
+  }
+
+  /* ===== 模態框組件 ===== */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 z-50 
+           flex items-center justify-center p-4;
+  }
+
+  .modal-content {
+    @apply bg-white rounded-lg shadow-xl max-w-md w-full 
+           transform transition-all duration-200;
+  }
+
+  /* ===== 提示框組件 ===== */
+  .tooltip {
+    @apply absolute z-10 px-2 py-1 text-xs text-white 
+           bg-gray-900 rounded shadow-lg;
+  }
+
+  /* ===== 滾動條組件 ===== */
   .scrollbar-thin::-webkit-scrollbar {
-    @apply h-1.5 w-1.5;
+    @apply w-1.5 h-1.5;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
@@ -150,7 +322,27 @@
     display: none;
   }
 
-  /* 新增文字行數限制 */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.5);
+    border-radius: 3px;
+    transition: background 0.2s;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.7);
+  }
+
+  /* ===== 文字截斷組件 ===== */
   .line-clamp-1 {
     display: -webkit-box;
     -webkit-line-clamp: 1;
@@ -173,9 +365,9 @@
   }
 }
 
-/* 自定義滾動條樣式 */
+/* ===== 全域滾動條樣式 ===== */
 ::-webkit-scrollbar {
-  @apply w-2;
+  @apply w-2 h-2;
 }
 
 ::-webkit-scrollbar-track {
@@ -186,18 +378,20 @@
   @apply bg-gray-400 rounded-full hover:bg-gray-500;
 }
 
-/* 動畫效果 */
+::-webkit-scrollbar-corner {
+  @apply bg-gray-100;
+}
+
+/* ===== 動畫定義 ===== */
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-in-out;
 }
 
 @keyframes slideIn {
@@ -211,27 +405,36 @@
   }
 }
 
-.animate-slide-in {
-  animation: slideIn 0.4s ease-out;
-}
-
-/* 新增動畫效果 */
-@keyframes fadeIn {
+@keyframes slideUp {
   from {
-    opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(100%);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out forwards;
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
-/* 終端機光標閃爍動畫 */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 @keyframes blink {
   0%,
   100% {
@@ -242,75 +445,63 @@
   }
 }
 
-.animate-blink {
-  animation: blink 1s infinite;
+@keyframes bounce {
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%,
+  43% {
+    transform: translate3d(0, -30px, 0);
+  }
+  70% {
+    transform: translate3d(0, -15px, 0);
+  }
+  90% {
+    transform: translate3d(0, -4px, 0);
+  }
 }
 
-/* 自定義滾動條 */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.5);
-  border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.7);
-}
-
+/* ===== 工具類別 ===== */
 @layer utilities {
-  /* 自適應容器 */
-  .container-responsive {
-    @apply w-full mx-auto px-4;
-    @apply sm:px-6 sm:max-w-[640px];
-    @apply md:max-w-[768px];
-    @apply lg:max-w-[1024px];
-    @apply xl:max-w-[1280px];
+  /* 動畫類別 */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  .animate-slide-in {
+    animation: slideIn 0.4s ease-out forwards;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+  }
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out forwards;
+  }
+  .animate-pulse-custom {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .animate-blink {
+    animation: blink 1s infinite;
+  }
+  .animate-bounce-custom {
+    animation: bounce 2s infinite;
   }
 
-  /* 響應式網格系統 */
-  .grid-responsive {
-    @apply grid grid-cols-1 gap-4;
-    @apply sm:grid-cols-2 sm:gap-6;
-    @apply lg:grid-cols-3 lg:gap-8;
-    @apply xl:grid-cols-4;
+  /* 延遲動畫 */
+  .animation-delay-100 {
+    animation-delay: 0.1s;
   }
-
-  /* 響應式間距 */
-  .spacing-responsive {
-    @apply p-4;
-    @apply sm:p-6;
-    @apply lg:p-8;
+  .animation-delay-200 {
+    animation-delay: 0.2s;
   }
-
-  /* 響應式字體大小 */
-  .text-responsive {
-    @apply text-base;
-    @apply sm:text-lg;
-    @apply lg:text-xl;
+  .animation-delay-300 {
+    animation-delay: 0.3s;
   }
-
-  /* 響應式卡片 */
-  .card-responsive {
-    @apply rounded-lg shadow-sm;
-    @apply hover:shadow-md transition-shadow;
-    @apply sm:hover:scale-[1.02] transform transition-transform;
-  }
-
-  /* 滾動條美化 */
-  .scrollbar-none {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .scrollbar-none::-webkit-scrollbar {
-    display: none;
+  .animation-delay-500 {
+    animation-delay: 0.5s;
   }
 
   /* 響應式容器 */
@@ -319,49 +510,170 @@
     max-width: 1280px;
   }
 
+  /* 響應式網格 */
+  .grid-responsive {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 
+           lg:grid-cols-3 lg:gap-8 xl:grid-cols-4;
+  }
+
+  /* 響應式間距 */
+  .spacing-responsive {
+    @apply p-4 sm:p-6 lg:p-8;
+  }
+
+  /* 響應式文字 */
+  .text-responsive {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+
+  /* 響應式卡片 */
+  .card-responsive {
+    @apply rounded-lg shadow-sm hover:shadow-md transition-all duration-200
+           sm:hover:scale-[1.02] transform;
+  }
+
   /* 響應式陰影 */
   .shadow-responsive {
     @apply shadow-sm hover:shadow-md transition-shadow duration-200;
   }
 
-  /* 響應式轉場效果 */
+  /* 通用轉場 */
   .transition-responsive {
     @apply transition-all duration-200 ease-in-out;
   }
-}
 
-/* 自定義斷點配置 */
-@custom-media --viewport-sm (min-width: 640px);
-@custom-media --viewport-md (min-width: 768px);
-@custom-media --viewport-lg (min-width: 1024px);
-@custom-media --viewport-xl (min-width: 1280px);
-
-/* 響應式動畫 */
-@media (prefers-reduced-motion: no-preference) {
-  .animate-fade-in {
-    @apply transition-opacity duration-300 ease-in-out;
+  /* 居中對齊 */
+  .center-absolute {
+    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
   }
 
-  .animate-slide-up {
-    @apply transition-transform duration-300 ease-out;
+  .center-flex {
+    @apply flex items-center justify-center;
+  }
+
+  /* 全寬高 */
+  .full-screen {
+    @apply w-screen h-screen;
+  }
+
+  /* 漸層背景 */
+  .gradient-primary {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600;
+  }
+
+  .gradient-secondary {
+    @apply bg-gradient-to-r from-gray-600 to-gray-700;
+  }
+
+  .gradient-success {
+    @apply bg-gradient-to-r from-green-600 to-emerald-600;
+  }
+
+  .gradient-warning {
+    @apply bg-gradient-to-r from-yellow-500 to-orange-500;
+  }
+
+  .gradient-danger {
+    @apply bg-gradient-to-r from-red-600 to-pink-600;
+  }
+
+  /* 毛玻璃效果 */
+  .backdrop-blur-glass {
+    @apply backdrop-blur-md bg-white/80;
+  }
+
+  .backdrop-blur-dark {
+    @apply backdrop-blur-md bg-black/20;
   }
 }
 
-/* 移動優先的導航列 */
-.nav-responsive {
-  @apply fixed top-0 w-full z-50;
-  @apply bg-white/90 backdrop-blur-md shadow-sm;
-  @apply transition-all duration-300;
+/* ===== 響應式動畫 ===== */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-in,
+  .animate-slide-up,
+  .animate-scale-in {
+    animation: none;
+  }
+
+  .transition-responsive,
+  .card-responsive {
+    transition: none;
+  }
 }
 
-/* 隱藏 IE/Edge 的密碼顯示按鈕 */
+/* ===== 深色模式支援 ===== */
+@media (prefers-color-scheme: dark) {
+  .dark-mode-auto {
+    @apply bg-gray-900 text-gray-100;
+  }
+}
+
+/* ===== 列印樣式 ===== */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-break {
+    page-break-after: always;
+  }
+
+  .print-avoid-break {
+    page-break-inside: avoid;
+  }
+}
+
+/* ===== 瀏覽器兼容性修復 ===== */
+/* 隱藏 IE/Edge 密碼顯示按鈕 */
 input::-ms-reveal,
 input::-ms-clear {
   display: none;
 }
 
-/* 隱藏 Chrome 的密碼自動填入按鈕 */
+/* 隱藏 Chrome 密碼自動填入按鈕 */
 input[type="password"]::-webkit-credentials-auto-fill-button,
 input[type="password"]::-webkit-strong-password-auto-fill-button {
   display: none !important;
+}
+
+/* 修復 iOS Safari 按鈕樣式 */
+input[type="button"],
+input[type="submit"],
+button {
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+/* 修復 Firefox 輸入框內邊距 */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  box-sizing: border-box;
+}
+
+/* ===== 無障礙支援 ===== */
+/* 聚焦指示器 */
+.focus-visible:focus {
+  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+}
+
+/* 跳過連結 */
+.skip-link {
+  @apply absolute -top-10 left-0 bg-blue-600 text-white p-2 rounded
+         focus:top-0 z-50 transition-all;
+}
+
+/* 螢幕閱讀器專用 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

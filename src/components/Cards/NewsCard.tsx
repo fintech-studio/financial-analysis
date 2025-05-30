@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ClockIcon, NewspaperIcon } from "@heroicons/react/24/outline";
+import { ClockIcon } from "@heroicons/react/24/outline";
 
 export interface NewsItem {
   id: string;

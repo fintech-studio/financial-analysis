@@ -155,8 +155,8 @@ const TerminalAnimation = () => {
 
   // 參考
   const containerRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
-  const loadingIntervalRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 自動滾動
   useEffect(() => {

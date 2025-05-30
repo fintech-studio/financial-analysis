@@ -1,5 +1,4 @@
 import React from "react";
-import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/solid";
 
 export interface SentimentData {
   overall: number; // 0-100範圍，50為中立

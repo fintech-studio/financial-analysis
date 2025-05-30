@@ -94,7 +94,7 @@ const MarketAnalysis = () => {
       title: "趨勢預測",
       description: "AI智能趨勢預測",
       icon: LightBulbIcon,
-      href: "/market-analysis/trend-prediction",
+      href: "/ai-prediction",
       data: { trend: "關注", status: "熱門" },
       color: "text-purple-600",
       bgColor: "bg-purple-100",
