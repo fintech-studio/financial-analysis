@@ -8,6 +8,7 @@ export interface MarketMetric {
   changePercent: string;
   trend?: string;
   status?: string;
+  description?: string;
 }
 
 export interface MarketData extends MarketMetric {
@@ -29,15 +30,8 @@ export interface ChartData {
   prices: number[];
 }
 
-export interface MarketMetric {
-  value: string;
-  change: string;
-  changePercent: string;
-  description: string;
-}
-
 export interface MarketOverview {
-  stock: {
+  stock?: {
     name: string;
     value: string;
     change: string;
@@ -46,7 +40,7 @@ export interface MarketOverview {
     upDownRatio: string;
     highlights: string;
   };
-  crypto: {
+  crypto?: {
     name: string;
     value: string;
     change: string;
@@ -55,7 +49,7 @@ export interface MarketOverview {
     dominance: string;
     highlights: string;
   };
-  global: {
+  global?: {
     name: string;
     value: string;
     change: string;
@@ -64,7 +58,7 @@ export interface MarketOverview {
     vix: string;
     highlights: string;
   };
-  realEstate: {
+  realEstate?: {
     name: string;
     value: string;
     change: string;
@@ -73,7 +67,7 @@ export interface MarketOverview {
     trend: string;
     highlights: string;
   };
-  futures: {
+  futures?: {
     name: string;
     volume: string;
     change: string;
@@ -86,7 +80,7 @@ export interface MarketOverview {
       gold: CommodityData;
     };
   };
-  nft: {
+  nft?: {
     name: string;
     volume: string;
     change: string;
@@ -99,6 +93,28 @@ export interface MarketOverview {
       gaming: NFTCategoryData;
     };
   };
+  indices?: MarketIndex[];
+  summary?: {
+    totalMarketCap: number;
+    totalVolume: number;
+    advancingStocks: number;
+    decliningStocks: number;
+    unchangedStocks: number;
+    newHighs: number;
+    newLows: number;
+    topGainers: number;
+    topLosers: number;
+  };
+  sectors?: Array<{
+    id: string;
+    name: string;
+    change: number;
+    changePercent: number;
+    volume: number;
+    marketCap: number;
+    stockCount: number;
+  }>;
+  lastUpdate?: string;
 }
 
 interface CommodityData {
@@ -123,6 +139,74 @@ export interface MarketSentiment {
   vix: MarketMetric & { status: string };
   fearGreed: MarketMetric & { status: string };
   marketBreadth: MarketMetric & { status: string };
+  overall?: string;
+  score?: number;
+  indicators?: {
+    fearGreedIndex: number;
+    vixLevel: number;
+    putCallRatio: number;
+    marginDebt: number;
+    shortInterest: number;
+  };
+  sentiment?: {
+    bullish: number;
+    neutral: number;
+    bearish: number;
+  };
+  analysis?: {
+    summary: string;
+    factors: string[];
+    risks: string[];
+  };
+  lastUpdate?: string;
+}
+
+export interface MarketSector {
+  id?: string;
+  name: string;
+  change: string;
+  changePercent: string;
+  strength?: number;
+  leadingStocks?: string[];
+  highlights?: string;
+  volume?: number;
+  marketCap?: number;
+  stockCount?: number;
+  topStocks?: Array<{
+    symbol: string;
+    name: string;
+    change: number;
+  }>;
+}
+
+export interface MarketTrend {
+  id?: string;
+  name: string;
+  category?: string;
+  direction?: string;
+  strength: number;
+  description: string;
+  duration?: string;
+  relatedStocks?: Array<{
+    symbol: string;
+    name: string;
+    correlation: number;
+  }>;
+  performance?: {
+    [key: string]: number;
+  };
+}
+
+export interface MarketIndex {
+  id?: string;
+  name: string;
+  symbol?: string;
+  value: string;
+  change: string;
+  changePercent: string;
+  volume?: string;
+  updateTime?: string;
+  status?: string;
 }
 
 export interface SectorPerformance {
@@ -134,12 +218,16 @@ export interface SectorPerformance {
 }
 
 export interface MarketNews {
+  id?: string;
   title: string;
   source: string;
   time: string;
   impact: string;
   category: string;
   summary: string;
+  severity?: string;
+  affectedSectors?: string[];
+  publishedAt?: string;
 }
 
 export interface HotStock {
@@ -149,6 +237,8 @@ export interface HotStock {
   change: string;
   changePercent: string;
   highlights: string;
+  volume?: string;
+  turnover?: string;
 }
 
 export interface RecommendedStock {

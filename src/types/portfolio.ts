@@ -1,4 +1,61 @@
 // Portfolio related types
+export interface Portfolio {
+  id: string;
+  name: string;
+  description?: string;
+  userId: string;
+  totalValue: string;
+  totalReturn?: string;
+  totalReturnPercent?: string;
+  totalCost?: number;
+  totalGainLoss?: number;
+  totalGainLossPercent?: number;
+  dayChange?: number;
+  dayChangePercent?: number;
+  holdings: Holding[];
+  transactions?: Transaction[];
+  performance?: PerformanceData;
+  allocation?: AssetAllocation[];
+  createdAt?: string;
+  updatedAt?: string;
+  isDefault?: boolean;
+}
+
+export interface Holding {
+  id?: string;
+  portfolioId?: string;
+  symbol: string;
+  name: string;
+  quantity: number;
+  averagePrice: string;
+  currentPrice: string;
+  totalValue?: string;
+  unrealizedReturn?: string;
+  unrealizedReturnPercent?: string;
+  weight?: number;
+  marketValue?: number;
+  costBasis?: number;
+  gainLoss?: number;
+  gainLossPercent?: number;
+  dayChange?: number;
+  dayChangePercent?: number;
+  lastUpdated?: string;
+}
+
+export interface PerformanceData {
+  labels: string[];
+  values: number[];
+  benchmarkValues?: number[];
+}
+
+export interface AssetAllocation {
+  name: string;
+  category?: string;
+  value: number;
+  percentage: number;
+  color: string;
+}
+
 export interface RiskMetrics {
   volatility: number;
   volatilityVsMarket: number;
