@@ -554,13 +554,13 @@ const AuthPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold">FinTech</h2>
+                  <h2 className="text-3xl font-bold text-white">FinTech</h2>
                   <p className="text-blue-300 text-sm">智慧投資平台</p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h1 className="text-5xl font-bold leading-tight">
+                <h1 className="text-5xl font-bold leading-tight text-white">
                   {brandContent.title}
                   <br />
                   <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent">

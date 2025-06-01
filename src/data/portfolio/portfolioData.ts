@@ -47,19 +47,19 @@ export const portfolioData = {
     ],
     recommendations: [
       {
-        type: "positive",
+        type: "positive" as const,
         text: "您的資產配置大致均衡，風險分散較為適當。",
       },
       {
-        type: "neutral",
+        type: "neutral" as const,
         text: "台股配置比例偏高，可考慮增加其他地區投資降低地域風險。",
       },
       {
-        type: "negative",
+        type: "negative" as const,
         text: "科技股比重偏高，建議適度分散至其他產業以降低風險。",
       },
       {
-        type: "positive",
+        type: "positive" as const,
         text: "短期債券配置比例適中，可提供穩定收益。",
       },
     ],
@@ -236,9 +236,9 @@ export const portfolioData = {
   ],
   transactions: [
     {
-      id: 1,
+      id: "1",
       date: "2024-05-15",
-      type: "買入",
+      type: "買入" as const,
       symbol: "2330",
       name: "台積電",
       quantity: 50,
@@ -246,9 +246,9 @@ export const portfolioData = {
       total: "NT$29,250",
     },
     {
-      id: 2,
+      id: "2",
       date: "2024-05-10",
-      type: "賣出",
+      type: "賣出" as const,
       symbol: "2308",
       name: "台達電",
       quantity: 200,
@@ -256,9 +256,9 @@ export const portfolioData = {
       total: "NT$62,400",
     },
     {
-      id: 3,
+      id: "3",
       date: "2024-05-02",
-      type: "買入",
+      type: "買入" as const,
       symbol: "0050",
       name: "元大台灣50",
       quantity: 300,
@@ -266,9 +266,9 @@ export const portfolioData = {
       total: "NT$42,600",
     },
     {
-      id: 4,
+      id: "4",
       date: "2024-04-28",
-      type: "買入",
+      type: "買入" as const,
       symbol: "AAPL",
       name: "蘋果公司",
       quantity: 10,
@@ -276,9 +276,9 @@ export const portfolioData = {
       total: "NT$54,640",
     },
     {
-      id: 5,
+      id: "5",
       date: "2024-04-18",
-      type: "賣出",
+      type: "賣出" as const,
       symbol: "NVDA",
       name: "輝達",
       quantity: 5,
@@ -286,9 +286,9 @@ export const portfolioData = {
       total: "NT$133,650",
     },
     {
-      id: 6,
+      id: "6",
       date: "2024-04-10",
-      type: "買入",
+      type: "買入" as const,
       symbol: "BTC",
       name: "比特幣",
       quantity: 0.1,
@@ -296,9 +296,9 @@ export const portfolioData = {
       total: "NT$19,750",
     },
     {
-      id: 7,
+      id: "7",
       date: "2024-04-05",
-      type: "買入",
+      type: "買入" as const,
       symbol: "MSFT",
       name: "微軟",
       quantity: 5,
@@ -350,37 +350,37 @@ export const portfolioData = {
       {
         name: "特雷諾比率",
         value: "1.42",
-        status: "good",
+        status: "good" as const,
         interpretation: "高於平均",
       },
       {
         name: "索提諾比率",
         value: "1.18",
-        status: "good",
+        status: "good" as const,
         interpretation: "良好",
       },
       {
         name: "信息比率",
         value: "0.78",
-        status: "neutral",
+        status: "neutral" as const,
         interpretation: "中等",
       },
       {
         name: "貝塔係數",
         value: "0.85",
-        status: "good",
+        status: "good" as const,
         interpretation: "低於市場",
       },
       {
         name: "阿爾法係數",
         value: "3.7%",
-        status: "good",
+        status: "good" as const,
         interpretation: "優於市場",
       },
       {
         name: "R平方",
         value: "0.82",
-        status: "neutral",
+        status: "neutral" as const,
         interpretation: "中度相關",
       },
     ],
@@ -413,7 +413,7 @@ export const portfolioData = {
       name: "台積電",
       price: "NT$585",
       priceChange: 1.2,
-      quantity: 200,
+      quantity: "200",
       marketValue: "NT$117,000",
       costBasis: "NT$98,000",
       totalReturn: {
@@ -427,7 +427,7 @@ export const portfolioData = {
       name: "鴻海",
       price: "NT$108.5",
       priceChange: -0.5,
-      quantity: 500,
+      quantity: "500",
       marketValue: "NT$54,250",
       costBasis: "NT$51,000",
       totalReturn: {
@@ -441,7 +441,7 @@ export const portfolioData = {
       name: "元大台灣50",
       price: "NT$142",
       priceChange: 0.2,
-      quantity: 1000,
+      quantity: "1000",
       marketValue: "NT$142,000",
       costBasis: "NT$125,000",
       totalReturn: {
@@ -455,7 +455,7 @@ export const portfolioData = {
       name: "蘋果公司",
       price: "US$175.5",
       priceChange: 1.8,
-      quantity: 50,
+      quantity: "50",
       marketValue: "NT$273,200",
       costBasis: "NT$218,000",
       totalReturn: {
@@ -469,7 +469,7 @@ export const portfolioData = {
       name: "微軟",
       price: "US$335.8",
       priceChange: 2.1,
-      quantity: 30,
+      quantity: "30",
       marketValue: "NT$313,650",
       costBasis: "NT$253,500",
       totalReturn: {
@@ -489,9 +489,9 @@ export const portfolioData = {
     recommendationLevel: 7,
     recommendations: [
       {
-        type: "rebalance",
+        type: "rebalance" as const,
         title: "投資組合再平衡",
-        priority: "high",
+        priority: "high" as const,
         subtitle: "降低科技股比重",
         description:
           "您的投資組合中科技股比重達到 57.8%，明顯高於建議的 35% 上限，增加了集中度風險。",
@@ -503,9 +503,9 @@ export const portfolioData = {
         impact: "風險降低 15%，波動率降低 3%",
       },
       {
-        type: "opportunity",
+        type: "opportunity" as const,
         title: "新興投資機會",
-        priority: "medium",
+        priority: "medium" as const,
         subtitle: "綠能產業增長潛力",
         description:
           "根據最新產業分析和市場趨勢，綠能產業正處於成長階段，政策支持力度增強。",
@@ -516,9 +516,9 @@ export const portfolioData = {
         impact: "潛在年化收益 +3.2%",
       },
       {
-        type: "risk",
+        type: "risk" as const,
         title: "市場風險提示",
-        priority: "high",
+        priority: "high" as const,
         subtitle: "通膨風險防禦不足",
         description:
           "面對持續攀升的通膨數據，您的投資組合缺少足夠的防禦性資產配置，可能導致實際收益被侵蝕。",
@@ -530,9 +530,9 @@ export const portfolioData = {
         impact: "通膨保護能力提升 40%",
       },
       {
-        type: "adjustment",
+        type: "adjustment" as const,
         title: "債券投資調整",
-        priority: "medium",
+        priority: "medium" as const,
         subtitle: "降低長期債券風險",
         description:
           "當前利率環境下，您持有的長期債券 ETF (AGG) 面臨較高的利率風險，建議調整債券組合的存續期。",
@@ -543,9 +543,9 @@ export const portfolioData = {
         impact: "降低利率風險 25%",
       },
       {
-        type: "tax",
+        type: "tax" as const,
         title: "稅務優化建議",
-        priority: "low",
+        priority: "low" as const,
         subtitle: "利用虧損實現稅務優化",
         description:
           "您的特斯拉 (TSLA) 持倉目前處於虧損狀態，可以考慮進行稅務虧損收割 (Tax Loss Harvesting)，同時保持相似的市場曝險。",
@@ -557,9 +557,9 @@ export const portfolioData = {
         impact: "潛在稅務節省 NT$15,400",
       },
       {
-        type: "opportunity",
+        type: "opportunity" as const,
         title: "國際市場配置",
-        priority: "medium",
+        priority: "medium" as const,
         subtitle: "增加國際市場曝險",
         description:
           "您的投資組合主要集中在台灣和美國市場，缺少足夠的國際市場多元化配置。新興市場估值具吸引力。",

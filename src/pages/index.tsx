@@ -595,7 +595,7 @@ export default function Home() {
                 <Link
                   key={feature.title}
                   href={feature.link}
-                  className={`group bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:border-blue-200 transition-all duration-300 block hover:shadow-xl relative flex flex-col `}
+                  className={`group bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-xl relative flex flex-col `}
                 >
                   <div>
                     <div
