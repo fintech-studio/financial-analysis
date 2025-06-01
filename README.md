@@ -14,7 +14,7 @@
 ## 技術棧
 
 - **前端框架**：
-  - React 18 (Next.js 14)
+  - React 19 (Next.js 15)
   - TypeScript
 - **UI 樣式**：Tailwind CSS / Headless UI
 - **Icon**：Heroicons
