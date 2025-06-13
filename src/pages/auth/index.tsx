@@ -17,6 +17,13 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 
+// MVC 架構 - 導入控制器
+import {
+  UserController,
+  UserLoginRequest,
+  UserRegisterRequest,
+} from "../../controllers/UserController";
+
 // 類型定義
 interface LoginForm {
   email: string;

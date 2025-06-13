@@ -2,6 +2,9 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  bio?: string;
+  riskLevel?: string;
   avatar?: string;
   level: string;
   location: string;
@@ -45,8 +48,73 @@ export class UserModel {
   static getInstance(): UserModel {
     if (!UserModel.instance) {
       UserModel.instance = new UserModel();
+      UserModel.instance.initializeDefaultUsers();
     }
     return UserModel.instance;
+  }
+
+  private initializeDefaultUsers(): void {
+    // 創建預設的模擬用戶
+    const defaultUser: User = {
+      id: "user_001",
+      name: "張小明",
+      email: "zhang@example.com",
+      phone: "0912-345-678",
+      bio: "熱愛投資理財的軟體工程師",
+      riskLevel: "中等風險",
+      avatar: "https://via.placeholder.com/100",
+      level: "進階投資者",
+      location: "台北",
+      joinDate: "2023年1月加入",
+      preferences: {
+        theme: "light",
+        language: "zh-TW",
+        notifications: {
+          email: true,
+          push: true,
+          priceAlerts: true,
+          newsAlerts: false,
+        },
+        riskTolerance: "moderate",
+      },
+      portfolio: {
+        totalValue: 1250000,
+        totalReturn: 125000,
+        monthlyReturn: 8.5,
+      },
+    };
+
+    // 添加更多模擬用戶以供測試
+    const secondUser: User = {
+      id: "user_002",
+      name: "李小華",
+      email: "li@example.com",
+      phone: "0987-654-321",
+      bio: "投資新手，正在學習基礎知識",
+      riskLevel: "保守型",
+      level: "新手投資者",
+      location: "台中",
+      joinDate: "2024年3月加入",
+      preferences: {
+        theme: "dark",
+        language: "zh-TW",
+        notifications: {
+          email: true,
+          push: false,
+          priceAlerts: true,
+          newsAlerts: true,
+        },
+        riskTolerance: "conservative",
+      },
+      portfolio: {
+        totalValue: 350000,
+        totalReturn: 15000,
+        monthlyReturn: 4.2,
+      },
+    };
+
+    this.users.set(defaultUser.id, defaultUser);
+    this.users.set(secondUser.id, secondUser);
   }
 
   async getUserById(id: string): Promise<User | null> {

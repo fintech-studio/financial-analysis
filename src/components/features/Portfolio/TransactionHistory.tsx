@@ -30,6 +30,11 @@ import {
   Legend,
   Filler,
 } from "chart.js";
+import { PortfolioController } from "../../../controllers/PortfolioController";
+import {
+  useMvcController,
+  usePaginatedData,
+} from "../../../hooks/useMvcController";
 import type {
   Transaction,
   TransactionStats,
@@ -347,8 +352,21 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
 };
 
 const TransactionHistory: React.FC<TransactionHistoryProps> = ({
-  transactions,
+  transactions: initialTransactions,
 }) => {
+  // MVC 控制器
+  const portfolioController = new PortfolioController();
+
+  // 使用 MVC Hook 管理交易數據
+  const {
+    data: transactions,
+    loading: transactionsLoading,
+    error: transactionsError,
+    execute: executePortfolioAction,
+    setData,
+  } = useMvcController<Transaction[]>();
+
+  // 狀態管理
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -359,6 +377,65 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const itemsPerPage = 10;
+
+  // 初始化數據
+  useEffect(() => {
+    if (initialTransactions && initialTransactions.length > 0) {
+      // 如果有初始數據，直接使用
+      setData(initialTransactions);
+    } else {
+      // 否則從控制器載入
+      loadTransactions();
+    }
+  }, [initialTransactions]);
+
+  // 修復TransactionHistory組件中的類型轉換問題
+  const loadTransactions = async () => {
+    const userId = "user_001"; // 應該從認證上下文獲取
+    await executePortfolioAction(
+      async () => {
+        const portfolioTransactions =
+          await portfolioController.getTransactionHistory(userId);
+        // 轉換Portfolio模型的Transaction到組件期望的Transaction格式
+        return portfolioTransactions.map((t) => ({
+          ...t,
+          name: t.symbol + " 股票", // 添加缺失的name屬性
+          total: `NT$ ${(t.quantity * t.price).toLocaleString()}`, // 轉換為字符串格式
+          price: `NT$ ${t.price.toLocaleString()}`, // 將price也轉換為字符串格式
+          type: t.type === "buy" ? "買入" : ("賣出" as "買入" | "賣出"), // 修復類型轉換
+        }));
+      },
+      {
+        onSuccess: (data) => {
+          console.log("交易歷史載入成功:", data);
+        },
+        onError: (error) => {
+          console.error("載入交易歷史失敗:", error);
+        },
+      }
+    );
+  };
+
+  // 處理數據匯出 - 通過控制器
+  const handleExportData = async () => {
+    try {
+      const userId = "user_001";
+      const result = await portfolioController.exportPortfolioReport(
+        userId,
+        "excel"
+      );
+
+      // 創建下載連結
+      const link = document.createElement("a");
+      link.href = result.downloadUrl;
+      link.download = result.fileName;
+      link.click();
+
+      console.log("交易數據匯出成功");
+    } catch (error) {
+      console.error("匯出失敗:", error);
+    }
+  };
 
   const handleSort = (field: SortField): void => {
     if (field === sortField) {
@@ -401,6 +478,8 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   };
 
   const filteredTransactions = useMemo((): Transaction[] => {
+    if (!transactions) return [];
+
     const dateRangeFilter = getDateRangeFilter(selectedPeriod);
 
     let filtered = [...transactions].filter((transaction) => {
@@ -477,6 +556,15 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
   // 交易統計分析
   const transactionStats = useMemo((): TransactionStats => {
+    if (!transactions) {
+      return {
+        basic: { 買入: { count: 0, total: 0 }, 賣出: { count: 0, total: 0 } },
+        monthly: [],
+        symbols: [],
+        netCashFlow: 0,
+      };
+    }
+
     // 基本統計
     const stats = {
       買入: { count: 0, total: 0 },

@@ -1,38 +1,10 @@
-export interface EducationResource {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  level: "初級" | "中級" | "高級";
-  type: "文章" | "影片" | "課程" | "工具";
-  duration?: string;
-  author: string;
-  publishDate: string;
-  tags: string[];
-  content?: string;
-  videoUrl?: string;
-  downloadUrl?: string;
-  rating: number;
-  views: number;
-}
-
-export interface EducationCategory {
-  id: string;
-  name: string;
-  description: string;
-  resourceCount: number;
-  icon: string;
-}
-
-export interface LearningPath {
-  id: string;
-  title: string;
-  description: string;
-  difficulty: "初級" | "中級" | "高級";
-  estimatedTime: string;
-  resources: EducationResource[];
-  progress?: number;
-}
+import {
+  EducationModel,
+  EducationResource,
+  EducationCategory,
+  LearningPath,
+  LearningProgress,
+} from "../models/EducationModel";
 
 export interface EducationSearchParams {
   query?: string;
@@ -45,6 +17,7 @@ export interface EducationSearchParams {
 
 export class EducationController {
   private static instance: EducationController;
+  private educationModel: EducationModel;
 
   static getInstance(): EducationController {
     if (!EducationController.instance) {
@@ -53,7 +26,9 @@ export class EducationController {
     return EducationController.instance;
   }
 
-  private constructor() {}
+  private constructor() {
+    this.educationModel = EducationModel.getInstance();
+  }
 
   async getAllResources(params: EducationSearchParams = {}): Promise<{
     resources: EducationResource[];
@@ -61,267 +36,149 @@ export class EducationController {
     page: number;
     totalPages: number;
   }> {
-    const { query, category, level, type, limit = 20, page = 1 } = params;
-
-    // 模擬 API 調用
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    // 模擬教育資源數據
-    const mockResources: EducationResource[] = [
-      {
-        id: "1",
-        title: "股票投資基礎入門",
-        description: "從零開始學習股票投資的基本概念",
-        category: "股票投資",
-        level: "初級",
-        type: "課程",
-        duration: "2小時",
-        author: "投資專家王老師",
-        publishDate: "2024-05-15",
-        tags: ["股票", "投資", "基礎"],
-        rating: 4.8,
-        views: 15420,
-      },
-      {
-        id: "2",
-        title: "技術分析完全指南",
-        description: "深入了解各種技術指標和圖表分析方法",
-        category: "技術分析",
-        level: "中級",
-        type: "文章",
-        duration: "45分鐘",
-        author: "分析師李專家",
-        publishDate: "2024-05-10",
-        tags: ["技術分析", "指標", "圖表"],
-        rating: 4.6,
-        views: 8932,
-      },
-      {
-        id: "3",
-        title: "風險管理策略",
-        description: "學習如何有效管理投資風險",
-        category: "風險管理",
-        level: "高級",
-        type: "影片",
-        duration: "1.5小時",
-        author: "風險管理專家陳老師",
-        publishDate: "2024-05-08",
-        tags: ["風險管理", "策略", "投資"],
-        videoUrl: "https://example.com/video/3",
-        rating: 4.9,
-        views: 12456,
-      },
-      {
-        id: "4",
-        title: "投資組合配置工具",
-        description: "實用的投資組合分析和配置工具",
-        category: "投資工具",
-        level: "中級",
-        type: "工具",
-        author: "工具開發團隊",
-        publishDate: "2024-05-05",
-        tags: ["工具", "投資組合", "配置"],
-        downloadUrl: "https://example.com/tool/4",
-        rating: 4.5,
-        views: 6789,
-      },
-    ];
-
-    let filteredResources = [...mockResources];
-
-    // 篩選邏輯
-    if (query) {
-      const searchTerm = query.toLowerCase();
-      filteredResources = filteredResources.filter(
-        (resource) =>
-          resource.title.toLowerCase().includes(searchTerm) ||
-          resource.description.toLowerCase().includes(searchTerm) ||
-          resource.tags.some((tag) => tag.toLowerCase().includes(searchTerm))
-      );
+    try {
+      return await this.educationModel.getAllResources(params);
+    } catch (error) {
+      console.error("Error fetching education resources:", error);
+      throw new Error("無法獲取教育資源");
     }
-
-    if (category) {
-      filteredResources = filteredResources.filter(
-        (resource) => resource.category === category
-      );
-    }
-
-    if (level) {
-      filteredResources = filteredResources.filter(
-        (resource) => resource.level === level
-      );
-    }
-
-    if (type) {
-      filteredResources = filteredResources.filter(
-        (resource) => resource.type === type
-      );
-    }
-
-    // 分頁處理
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedResources = filteredResources.slice(startIndex, endIndex);
-
-    return {
-      resources: paginatedResources,
-      total: filteredResources.length,
-      page,
-      totalPages: Math.ceil(filteredResources.length / limit),
-    };
   }
 
   async getResourceById(id: string): Promise<EducationResource | null> {
-    // 模擬 API 調用
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // 這裡應該從數據庫獲取具體資源
-    // 目前返回模擬數據
-    const resources = await this.getAllResources();
-    return resources.resources.find((resource) => resource.id === id) || null;
+    try {
+      return await this.educationModel.getResourceById(id);
+    } catch (error) {
+      console.error("Error fetching education resource:", error);
+      throw new Error("無法獲取教育資源詳情");
+    }
   }
 
   async getCategories(): Promise<EducationCategory[]> {
-    // 模擬 API 調用
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    return [
-      {
-        id: "1",
-        name: "股票投資",
-        description: "學習股票市場和投資策略",
-        resourceCount: 25,
-        icon: "📈",
-      },
-      {
-        id: "2",
-        name: "技術分析",
-        description: "掌握技術指標和圖表分析",
-        resourceCount: 18,
-        icon: "📊",
-      },
-      {
-        id: "3",
-        name: "基本面分析",
-        description: "了解公司財務和行業分析",
-        resourceCount: 15,
-        icon: "📋",
-      },
-      {
-        id: "4",
-        name: "風險管理",
-        description: "學習投資風險控制方法",
-        resourceCount: 12,
-        icon: "🛡️",
-      },
-      {
-        id: "5",
-        name: "投資工具",
-        description: "實用的投資分析工具",
-        resourceCount: 8,
-        icon: "🔧",
-      },
-    ];
+    try {
+      return await this.educationModel.getCategories();
+    } catch (error) {
+      console.error("Error fetching education categories:", error);
+      throw new Error("無法獲取教育分類");
+    }
   }
 
   async getLearningPaths(): Promise<LearningPath[]> {
-    // 模擬 API 調用
-    await new Promise((resolve) => setTimeout(resolve, 150));
-
-    const resources = await this.getAllResources();
-
-    return [
-      {
-        id: "1",
-        title: "投資新手完整學習路徑",
-        description: "從基礎概念到實戰操作的完整學習計劃",
-        difficulty: "初級",
-        estimatedTime: "4週",
-        resources: resources.resources.filter((r) => r.level === "初級"),
-      },
-      {
-        id: "2",
-        title: "技術分析進階課程",
-        description: "深入學習各種技術分析方法和策略",
-        difficulty: "中級",
-        estimatedTime: "6週",
-        resources: resources.resources.filter((r) => r.category === "技術分析"),
-      },
-      {
-        id: "3",
-        title: "專業投資者培訓",
-        description: "高級投資策略和風險管理",
-        difficulty: "高級",
-        estimatedTime: "8週",
-        resources: resources.resources.filter((r) => r.level === "高級"),
-      },
-    ];
+    try {
+      return await this.educationModel.getLearningPaths();
+    } catch (error) {
+      console.error("Error fetching learning paths:", error);
+      throw new Error("無法獲取學習路徑");
+    }
   }
 
   async getPopularResources(limit: number = 10): Promise<EducationResource[]> {
-    // 模擬 API 調用
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    const resources = await this.getAllResources();
-
-    // 按觀看次數排序
-    return resources.resources
-      .sort((a, b) => b.views - a.views)
-      .slice(0, limit);
+    try {
+      const result = await this.educationModel.getAllResources({ limit });
+      return result.resources.sort((a, b) => b.views - a.views);
+    } catch (error) {
+      console.error("Error fetching popular resources:", error);
+      throw new Error("無法獲取熱門資源");
+    }
   }
 
   async getRecentResources(limit: number = 10): Promise<EducationResource[]> {
-    // 模擬 API 調用
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    const resources = await this.getAllResources();
-
-    // 按發布日期排序
-    return resources.resources
-      .sort(
+    try {
+      const result = await this.educationModel.getAllResources({ limit });
+      return result.resources.sort(
         (a, b) =>
           new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()
-      )
-      .slice(0, limit);
+      );
+    } catch (error) {
+      console.error("Error fetching recent resources:", error);
+      throw new Error("無法獲取最新資源");
+    }
   }
 
   async getRecommendedResources(
     userLevel: string = "初級"
   ): Promise<EducationResource[]> {
-    // 模擬 API 調用
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    const resources = await this.getAllResources();
-
-    // 根據用戶級別推薦資源
-    return resources.resources
-      .filter((resource) => resource.level === userLevel)
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, 5);
+    try {
+      const result = await this.educationModel.getAllResources({
+        level: userLevel,
+      });
+      return result.resources.sort((a, b) => b.rating - a.rating).slice(0, 5);
+    } catch (error) {
+      console.error("Error fetching recommended resources:", error);
+      throw new Error("無法獲取推薦資源");
+    }
   }
 
   async searchResources(query: string): Promise<EducationResource[]> {
-    return (await this.getAllResources({ query })).resources;
+    try {
+      const result = await this.educationModel.getAllResources({ query });
+      return result.resources;
+    } catch (error) {
+      console.error("Error searching resources:", error);
+      throw new Error("搜尋資源失敗");
+    }
   }
 
   async getResourcesByCategory(category: string): Promise<EducationResource[]> {
-    return (await this.getAllResources({ category })).resources;
+    try {
+      const result = await this.educationModel.getAllResources({ category });
+      return result.resources;
+    } catch (error) {
+      console.error("Error fetching resources by category:", error);
+      throw new Error("無法獲取分類資源");
+    }
   }
 
   async getResourcesByType(type: string): Promise<EducationResource[]> {
-    return (await this.getAllResources({ type })).resources;
+    try {
+      const result = await this.educationModel.getAllResources({ type });
+      return result.resources;
+    } catch (error) {
+      console.error("Error fetching resources by type:", error);
+      throw new Error("無法獲取類型資源");
+    }
+  }
+
+  async getUserProgress(userId: string): Promise<LearningProgress[]> {
+    try {
+      return await this.educationModel.getUserProgress(userId);
+    } catch (error) {
+      console.error("Error fetching user progress:", error);
+      throw new Error("無法獲取學習進度");
+    }
+  }
+
+  async updateProgress(
+    userId: string,
+    resourceId: string,
+    progress: number
+  ): Promise<void> {
+    try {
+      await this.educationModel.updateProgress(userId, resourceId, progress);
+    } catch (error) {
+      console.error("Error updating progress:", error);
+      throw new Error("更新學習進度失敗");
+    }
   }
 
   async recordView(resourceId: string): Promise<void> {
-    // 模擬記錄觀看次數
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    console.log(`Recorded view for resource: ${resourceId}`);
+    try {
+      await this.educationModel.recordView(resourceId);
+    } catch (error) {
+      console.error("Error recording view:", error);
+      // 不拋出錯誤，因為這不是關鍵功能
+    }
   }
 
   async rateResource(resourceId: string, rating: number): Promise<void> {
-    // 模擬評分功能
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    console.log(`Rated resource ${resourceId} with ${rating} stars`);
+    try {
+      if (rating < 1 || rating > 5) {
+        throw new Error("評分必須在1-5之間");
+      }
+      await this.educationModel.rateResource(resourceId, rating);
+    } catch (error) {
+      console.error("Error rating resource:", error);
+      throw new Error("評分失敗");
+    }
   }
 }
 

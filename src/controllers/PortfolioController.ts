@@ -269,6 +269,22 @@ export class PortfolioController {
     }
   }
 
+  async getAllocation(userId: string): Promise<AssetAllocation[]> {
+    // 這是 getAssetAllocation 的別名，為了保持一致性
+    return this.getAssetAllocation(userId);
+  }
+
+  async exportReport(
+    userId: string,
+    format: "pdf" | "excel" = "pdf"
+  ): Promise<{
+    downloadUrl: string;
+    fileName: string;
+  }> {
+    // 這是 exportPortfolioReport 的別名，為了保持一致性
+    return this.exportPortfolioReport(userId, format);
+  }
+
   private calculateTransactionFee(amount: number): number {
     // 簡單的手續費計算邏輯
     const feeRate = 0.001425; // 0.1425%

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ChartBarIcon,
   BriefcaseIcon,
@@ -15,6 +15,13 @@ import {
   MapPinIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, PlusIcon } from "@heroicons/react/24/solid";
+
+// MVC 架構引入
+import { UserController } from "../controllers/UserController";
+import { PortfolioController } from "../controllers/PortfolioController";
+import { StockController } from "../controllers/StockController";
+import { User } from "../models/UserModel";
+import { Portfolio } from "../models/PortfolioModel";
 
 interface UserInfo {
   name: string;
@@ -87,176 +94,25 @@ interface Tab {
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [userInfo, setUserInfo] = useState<UserInfo>({
-    name: "王小明",
-    email: "wang.xiaoming@example.com",
-    phone: "0912-345-678",
-    joinDate: "2023年3月15日",
-    bio: "專注於價值投資與長期持有策略的投資者，致力於研究基本面分析與市場趨勢。",
-    avatar: "/images/default-avatar.png",
-    location: "台北市",
-    riskLevel: "穩健型",
-    level: "進階投資者",
-  });
 
-  // 投資數據統計
-  const investmentStats: InvestmentStats = {
-    totalValue: 1250000,
-    totalReturn: 125000,
-    returnRate: 11.2,
-    portfolioCount: 3,
-    watchlistCount: 15,
-    articlesRead: 87,
-    coursesCompleted: 5,
-    monthlyReturn: 8.5,
-    bestStock: "台積電",
-    winRate: 72.5,
-  };
+  // MVC 架構相關狀態
+  const [user, setUser] = useState<User | null>(null);
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+  const [investmentStats, setInvestmentStats] =
+    useState<InvestmentStats | null>(null);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+  const [favoriteStocks, setFavoriteStocks] = useState<Stock[]>([]);
+  const [portfolioAllocation, setPortfolioAllocation] = useState<
+    PortfolioAllocation[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 成就系統
-  const achievements: Achievement[] = [
-    {
-      id: 1,
-      name: "第一筆投資",
-      description: "完成首次股票投資",
-      icon: TrophyIcon,
-      unlocked: true,
-      color: "text-yellow-500",
-    },
-    {
-      id: 2,
-      name: "學習達人",
-      description: "完成10堂投資課程",
-      icon: AcademicCapIcon,
-      unlocked: true,
-      color: "text-blue-500",
-    },
-    {
-      id: 3,
-      name: "連續獲利",
-      description: "連續3個月獲利",
-      icon: FireIcon,
-      unlocked: true,
-      color: "text-red-500",
-    },
-    {
-      id: 4,
-      name: "分析高手",
-      description: "閱讀100篇分析文章",
-      icon: BookmarkIcon,
-      unlocked: false,
-      color: "text-purple-500",
-    },
-  ];
-
-  // 最近活動
-  const recentActivities: Activity[] = [
-    {
-      id: 1,
-      type: "trade",
-      action: "買入",
-      target: "台積電 (2330)",
-      amount: "50,000",
-      time: "2小時前",
-      icon: ArrowTrendingUpIcon,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-    },
-    {
-      id: 2,
-      type: "watchlist",
-      action: "關注",
-      target: "聯發科 (2454)",
-      time: "5小時前",
-      icon: EyeIcon,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-    },
-    {
-      id: 3,
-      type: "article",
-      action: "閱讀",
-      target: "半導體產業分析報告",
-      time: "1天前",
-      icon: BookmarkIcon,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-    },
-    {
-      id: 4,
-      type: "course",
-      action: "完成",
-      target: "技術分析基礎課程",
-      time: "3天前",
-      icon: CheckCircleIcon,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-    },
-  ];
-
-  // 收藏的股票
-  const favoriteStocks: Stock[] = [
-    {
-      symbol: "2330",
-      name: "台積電",
-      price: 562,
-      change: 8,
-      changePercent: 1.44,
-      volume: "12.5M",
-    },
-    {
-      symbol: "2454",
-      name: "聯發科",
-      price: 758,
-      change: -12,
-      changePercent: -1.56,
-      volume: "3.2M",
-    },
-    {
-      symbol: "2317",
-      name: "鴻海",
-      price: 108.5,
-      change: 2.5,
-      changePercent: 2.36,
-      volume: "8.7M",
-    },
-    {
-      symbol: "3008",
-      name: "大立光",
-      price: 2890,
-      change: -45,
-      changePercent: -1.53,
-      volume: "1.1M",
-    },
-  ];
-
-  // 投資組合分佈
-  const portfolioAllocation: PortfolioAllocation[] = [
-    {
-      category: "科技股",
-      percentage: 45,
-      amount: 562500,
-      color: "bg-blue-500",
-    },
-    {
-      category: "金融股",
-      percentage: 25,
-      amount: 312500,
-      color: "bg-green-500",
-    },
-    {
-      category: "傳產股",
-      percentage: 20,
-      amount: 250000,
-      color: "bg-yellow-500",
-    },
-    {
-      category: "現金",
-      percentage: 10,
-      amount: 125000,
-      color: "bg-gray-500",
-    },
-  ];
+  // 控制器實例
+  const userController = new UserController();
+  const portfolioController = new PortfolioController();
+  const stockController = new StockController();
 
   const tabs: Tab[] = [
     { id: "overview", name: "總覽", icon: ChartBarIcon },
@@ -266,10 +122,194 @@ const ProfilePage: React.FC = () => {
     { id: "settings", name: "設定", icon: CogIcon },
   ];
 
-  const handleSaveProfile = (): void => {
-    setIsEditing(false);
-    // 這裡可以添加保存邏輯
+  // 載入用戶資料
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const userId = "user_001"; // 模擬用戶 ID
+
+      // 並行載入所有數據
+      const [
+        userResult,
+        statsResult,
+        achievementsResult,
+        activitiesResult,
+        watchlistResult,
+        allocationResult,
+      ] = await Promise.allSettled([
+        userController.getUserProfile(userId),
+        userController.getInvestmentStats(userId),
+        userController.getAchievements(userId),
+        userController.getRecentActivities(userId),
+        stockController.getWatchlist(userId),
+        portfolioController.getAllocation(userId),
+      ]);
+
+      // 處理結果
+      if (userResult.status === "fulfilled") {
+        setUser(userResult.value);
+      }
+
+      if (statsResult.status === "fulfilled") {
+        setInvestmentStats(statsResult.value);
+      }
+
+      if (achievementsResult.status === "fulfilled") {
+        setAchievements(achievementsResult.value);
+      }
+
+      if (activitiesResult.status === "fulfilled") {
+        setRecentActivities(activitiesResult.value);
+      }
+
+      if (watchlistResult.status === "fulfilled") {
+        // 使用 StockController 的轉換方法來處理類型轉換
+        const convertedStocks = watchlistResult.value.map((stock) =>
+          stockController.convertStockForUI(stock)
+        );
+        setFavoriteStocks(convertedStocks);
+      }
+
+      if (allocationResult.status === "fulfilled") {
+        // 轉換 AssetAllocation 類型以匹配預期的格式
+        const convertedAllocation = allocationResult.value.map(
+          (allocation) => ({
+            ...allocation,
+            amount: allocation.value, // 添加缺少的 amount 屬性
+          })
+        );
+        setPortfolioAllocation(convertedAllocation);
+      }
+    } catch (error) {
+      console.error("載入用戶資料失敗:", error);
+      setError(error instanceof Error ? error.message : "載入失敗");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSaveProfile = async (): Promise<void> => {
+    try {
+      if (!user) return;
+
+      await userController.updateUserProfile(user.id, {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        bio: user.bio,
+        riskLevel: user.riskLevel,
+      });
+
+      setIsEditing(false);
+      console.log("個人資料更新成功");
+    } catch (error) {
+      console.error("更新個人資料失敗:", error);
+      setError(error instanceof Error ? error.message : "更新個人資料失敗");
+    }
+  };
+
+  const handleAddToWatchlist = async (symbol: string) => {
+    try {
+      if (!user) return;
+
+      await stockController.addToWatchlist(user.id, symbol);
+      // 重新載入關注股票並轉換類型
+      const updatedWatchlist = await stockController.getWatchlist(user.id);
+      const convertedStocks = updatedWatchlist.map((stock) =>
+        stockController.convertStockForUI(stock)
+      );
+      setFavoriteStocks(convertedStocks);
+    } catch (error) {
+      console.error("新增關注股票失敗:", error);
+    }
+  };
+
+  const handleRemoveFromWatchlist = async (symbol: string) => {
+    try {
+      if (!user) return;
+
+      await stockController.removeFromWatchlist(user.id, symbol);
+      // 重新載入關注股票並轉換類型
+      const updatedWatchlist = await stockController.getWatchlist(user.id);
+      const convertedStocks = updatedWatchlist.map((stock) =>
+        stockController.convertStockForUI(stock)
+      );
+      setFavoriteStocks(convertedStocks);
+    } catch (error) {
+      console.error("移除關注股票失敗:", error);
+    }
+  };
+
+  const handleUpdateNotificationSettings = async (settings: any) => {
+    try {
+      if (!user) return;
+
+      await userController.updateNotificationSettings(user.id, settings);
+      console.log("通知設定更新成功");
+    } catch (error) {
+      console.error("更新通知設定失敗:", error);
+    }
+  };
+
+  // 載入狀態
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">載入個人資料中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 錯誤狀態
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
+            <h3 className="text-lg font-medium text-red-800">載入失敗</h3>
+            <p className="mt-2 text-red-600">{error}</p>
+            <button
+              onClick={loadUserData}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              重新載入
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 沒有用戶數據
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-gray-100 rounded-lg p-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              找不到用戶資料
+            </h3>
+            <p className="text-gray-600 mb-4">請先登入您的帳戶</p>
+            <button
+              onClick={() => (window.location.href = "/auth")}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              前往登入
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -280,25 +320,23 @@ const ProfilePage: React.FC = () => {
             <div className="flex items-center space-x-6">
               <div className="relative">
                 <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-2xl font-bold border-4 border-white/30">
-                  {userInfo.name.charAt(0)}
+                  {user.name.charAt(0)}
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
                   <CheckCircleIcon className="h-4 w-4 text-white" />
                 </div>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">
-                  {userInfo.name}
-                </h1>
-                <p className="text-blue-100 text-lg">{userInfo.level}</p>
+                <h1 className="text-3xl font-bold text-white">{user.name}</h1>
+                <p className="text-blue-100 text-lg">{user.level}</p>
                 <div className="flex items-center space-x-4 mt-2">
                   <div className="flex items-center text-blue-100">
                     <MapPinIcon className="h-4 w-4 mr-1" />
-                    {userInfo.location}
+                    {user.location}
                   </div>
                   <div className="flex items-center text-blue-100">
                     <CalendarDaysIcon className="h-4 w-4 mr-1" />
-                    {userInfo.joinDate}
+                    {user.joinDate}
                   </div>
                 </div>
               </div>
@@ -325,13 +363,17 @@ const ProfilePage: React.FC = () => {
                     <div className="ml-3">
                       <p className="text-sm text-gray-600">總資產</p>
                       <p className="font-bold text-gray-900">
-                        NT$ {(investmentStats.totalValue / 10000).toFixed(0)}萬
+                        NT${" "}
+                        {investmentStats
+                          ? (investmentStats.totalValue / 10000).toFixed(0)
+                          : "0"}
+                        萬
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-green-600">
-                      +{investmentStats.returnRate}%
+                      +{investmentStats?.returnRate || 0}%
                     </p>
                   </div>
                 </div>
@@ -344,7 +386,7 @@ const ProfilePage: React.FC = () => {
                     <div className="ml-3">
                       <p className="text-sm text-gray-600">月報酬率</p>
                       <p className="font-bold text-gray-900">
-                        {investmentStats.monthlyReturn}%
+                        {investmentStats?.monthlyReturn || 0}%
                       </p>
                     </div>
                   </div>
@@ -358,7 +400,7 @@ const ProfilePage: React.FC = () => {
                     <div className="ml-3">
                       <p className="text-sm text-gray-600">勝率</p>
                       <p className="font-bold text-gray-900">
-                        {investmentStats.winRate}%
+                        {investmentStats?.winRate || 0}%
                       </p>
                     </div>
                   </div>
@@ -470,7 +512,6 @@ const ProfilePage: React.FC = () => {
                 </nav>
               </div>
 
-              {/* ...existing code... (其餘的標籤內容部分保持不變) */}
               <div className="p-8">
                 {activeTab === "overview" && (
                   <div className="space-y-8">
@@ -488,13 +529,15 @@ const ProfilePage: React.FC = () => {
                               </p>
                               <p className="text-3xl font-bold mt-1">
                                 NT${" "}
-                                {(investmentStats.totalValue / 10000).toFixed(
-                                  0
-                                )}
+                                {investmentStats
+                                  ? (
+                                      investmentStats.totalValue / 10000
+                                    ).toFixed(0)
+                                  : "0"}
                                 萬
                               </p>
                               <p className="text-blue-100 text-sm mt-1">
-                                較上月 +{investmentStats.monthlyReturn}%
+                                較上月 +{investmentStats?.monthlyReturn || 0}%
                               </p>
                             </div>
                             <CurrencyDollarIcon className="h-12 w-12 text-blue-200" />
@@ -509,13 +552,15 @@ const ProfilePage: React.FC = () => {
                               </p>
                               <p className="text-3xl font-bold mt-1">
                                 NT${" "}
-                                {(investmentStats.totalReturn / 10000).toFixed(
-                                  0
-                                )}
+                                {investmentStats
+                                  ? (
+                                      investmentStats.totalReturn / 10000
+                                    ).toFixed(0)
+                                  : "0"}
                                 萬
                               </p>
                               <p className="text-green-100 text-sm mt-1">
-                                報酬率 {investmentStats.returnRate}%
+                                報酬率 {investmentStats?.returnRate || 0}%
                               </p>
                             </div>
                             <ArrowTrendingUpIcon className="h-12 w-12 text-green-200" />
@@ -529,10 +574,10 @@ const ProfilePage: React.FC = () => {
                                 最佳持股
                               </p>
                               <p className="text-2xl font-bold mt-1">
-                                {investmentStats.bestStock}
+                                {investmentStats?.bestStock || "暫無數據"}
                               </p>
                               <p className="text-purple-100 text-sm mt-1">
-                                勝率 {investmentStats.winRate}%
+                                勝率 {investmentStats?.winRate || 0}%
                               </p>
                             </div>
                             <TrophyIcon className="h-12 w-12 text-purple-200" />
@@ -760,10 +805,10 @@ const ProfilePage: React.FC = () => {
                           </label>
                           <input
                             type="text"
-                            value={userInfo.name}
+                            value={user.name}
                             disabled={!isEditing}
                             onChange={(e) =>
-                              setUserInfo({ ...userInfo, name: e.target.value })
+                              setUser({ ...user, name: e.target.value })
                             }
                             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 transition-colors"
                           />
@@ -775,11 +820,11 @@ const ProfilePage: React.FC = () => {
                           </label>
                           <input
                             type="email"
-                            value={userInfo.email}
+                            value={user.email}
                             disabled={!isEditing}
                             onChange={(e) =>
-                              setUserInfo({
-                                ...userInfo,
+                              setUser({
+                                ...user,
                                 email: e.target.value,
                               })
                             }
@@ -793,11 +838,11 @@ const ProfilePage: React.FC = () => {
                           </label>
                           <input
                             type="tel"
-                            value={userInfo.phone}
+                            value={user.phone}
                             disabled={!isEditing}
                             onChange={(e) =>
-                              setUserInfo({
-                                ...userInfo,
+                              setUser({
+                                ...user,
                                 phone: e.target.value,
                               })
                             }
@@ -810,11 +855,11 @@ const ProfilePage: React.FC = () => {
                             風險偏好
                           </label>
                           <select
-                            value={userInfo.riskLevel}
+                            value={user.riskLevel}
                             disabled={!isEditing}
                             onChange={(e) =>
-                              setUserInfo({
-                                ...userInfo,
+                              setUser({
+                                ...user,
                                 riskLevel: e.target.value,
                               })
                             }
@@ -832,10 +877,10 @@ const ProfilePage: React.FC = () => {
                           個人簡介
                         </label>
                         <textarea
-                          value={userInfo.bio}
+                          value={user.bio}
                           disabled={!isEditing}
                           onChange={(e) =>
-                            setUserInfo({ ...userInfo, bio: e.target.value })
+                            setUser({ ...user, bio: e.target.value })
                           }
                           rows={4}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 transition-colors"

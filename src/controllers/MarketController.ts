@@ -271,6 +271,33 @@ export class MarketController {
   clearCache(): void {
     this.marketModel.clearCache();
   }
+
+  async getMarketSummary(): Promise<{
+    overview: MarketOverview;
+    hotStocks: HotStock[];
+    latestNews: MarketNews[];
+    sentiment: MarketSentiment;
+  }> {
+    try {
+      // 並行獲取市場摘要所需的數據
+      const [overview, hotStocks, latestNews, sentiment] = await Promise.all([
+        this.marketModel.getMarketOverview(),
+        this.marketModel.getHotStocks(),
+        this.marketModel.getLatestNews(5),
+        this.marketModel.getMarketSentiment(),
+      ]);
+
+      return {
+        overview,
+        hotStocks,
+        latestNews,
+        sentiment,
+      };
+    } catch (error) {
+      console.error("Error fetching market summary:", error);
+      throw new Error("無法獲取市場摘要數據");
+    }
+  }
 }
 
 export default MarketController;

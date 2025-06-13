@@ -201,4 +201,42 @@ export class StockController {
       );
     }
   }
+
+  async getWatchlist(userId: string): Promise<Stock[]> {
+    try {
+      // 模擬用戶關注列表
+      const watchlistSymbols = ["2330", "2454", "2317", "3008", "2882"];
+
+      const watchlist = await Promise.all(
+        watchlistSymbols.map(async (symbol) => {
+          const stock = await this.stockModel.getStock(symbol);
+          return stock;
+        })
+      );
+
+      return watchlist.filter((stock) => stock !== null) as Stock[];
+    } catch (error) {
+      console.error("Error fetching watchlist:", error);
+      throw new Error("無法獲取關注列表");
+    }
+  }
+
+  // 轉換 Stock 類型為 UI 期望的格式
+  convertStockForUI(stock: Stock): {
+    symbol: string;
+    name: string;
+    price: number;
+    change: number;
+    changePercent: number;
+    volume: string;
+  } {
+    return {
+      symbol: stock.symbol,
+      name: stock.name,
+      price: parseFloat(stock.price.replace(/,/g, "")),
+      change: parseFloat(stock.change.replace(/[+,]/g, "")),
+      changePercent: parseFloat(stock.changePercent.replace(/[+%]/g, "")),
+      volume: stock.volume,
+    };
+  }
 }

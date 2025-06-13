@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Doughnut, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -21,6 +21,11 @@ import {
   PresentationChartLineIcon,
   ScaleIcon,
 } from "@heroicons/react/24/outline";
+
+// MVC 架構引入
+import { PortfolioController } from "../../../controllers/PortfolioController";
+import { useMvcController } from "../../../hooks/useMvcController";
+import { AssetAllocation as AssetAllocationType } from "../../../models/PortfolioModel";
 
 // 註冊 Chart.js 組件
 ChartJS.register(
@@ -140,32 +145,100 @@ const CHART_COLORS = {
 } as const;
 
 const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
-  const [activeTab, setActiveTab] = useState<TabType>("assetClass");
+  const [activeTab, setActiveTab] = useState<
+    "assetClass" | "sector" | "region"
+  >("assetClass");
   const [showComparison, setShowComparison] = useState<boolean>(false);
 
-  // 理想配置 (示例數據，實際應用中可從API獲取或用戶設置)
+  // MVC 控制器
+  const portfolioController = new PortfolioController();
+
+  // 使用 MVC Hook 管理資產配置數據
+  const {
+    data: assetAllocationData,
+    loading: allocationLoading,
+    error: allocationError,
+    execute: executeAllocation,
+  } = useMvcController<AssetAllocationType[]>();
+
+  // 載入最新的資產配置數據
+  const loadAssetAllocation = async () => {
+    const userId = "user_001"; // 應該從認證上下文獲取
+    await executeAllocation(
+      () => portfolioController.getAssetAllocation(userId),
+      {
+        onSuccess: (data) => {
+          console.log("資產配置載入成功:", data);
+        },
+        onError: (error) => {
+          console.error("載入資產配置失敗:", error);
+        },
+      }
+    );
+  };
+
+  // 初始化時載入數據
+  useEffect(() => {
+    if (!data || data.byAssetClass.length === 0) {
+      loadAssetAllocation();
+    }
+  }, []);
+
+  // 處理重新平衡建議 - 通過控制器
+  const handleRebalanceAnalysis = async () => {
+    try {
+      const userId = "user_001";
+      // 可以添加專門的重新平衡分析方法到控制器
+      const analysis = await portfolioController.getRiskAnalysis(userId);
+      console.log("重新平衡分析:", analysis);
+      // 顯示分析結果的邏輯
+    } catch (error) {
+      console.error("重新平衡分析失敗:", error);
+    }
+  };
+
+  // 使用MVC數據或者props數據，並轉換格式以符合AssetItem接口
+  const currentData = useMemo(() => {
+    if (assetAllocationData && assetAllocationData.length > 0) {
+      // 轉換MVC數據格式為組件期望的格式
+      const convertedData: AssetAllocationData = {
+        byAssetClass: assetAllocationData.map((item) => ({
+          name: item.category,
+          percentage: item.percentage,
+        })),
+        bySector: [],
+        byRegion: [],
+        recommendations: [],
+      };
+      return convertedData;
+    }
+    return data;
+  }, [assetAllocationData, data]);
+
+  // 目標配置數據
   const targetAllocation: TargetAllocation = {
     assetClass: [
-      { name: "股票", percentage: 50 },
-      { name: "債券", percentage: 30 },
-      { name: "加密貨幣", percentage: 5 },
-      { name: "現金", percentage: 10 },
-      { name: "黃金", percentage: 5 },
-      { name: "其他", percentage: 0 },
+      { name: "股票", percentage: 60 },
+      { name: "ETF", percentage: 25 },
+      { name: "債券", percentage: 10 },
+      { name: "加密貨幣", percentage: 3 },
+      { name: "現金", percentage: 2 },
     ],
   };
 
-  const getChartData = (type: TabType): ChartResult => {
+  const getChartData = (
+    type: "assetClass" | "sector" | "region"
+  ): ChartResult => {
     let chartData: ChartData;
     let targetData: ChartData | undefined;
 
     switch (type) {
       case "assetClass":
         chartData = {
-          labels: data.byAssetClass.map((item) => item.name),
+          labels: currentData.byAssetClass.map((item) => item.name),
           datasets: [
             {
-              data: data.byAssetClass.map((item) => item.percentage),
+              data: currentData.byAssetClass.map((item) => item.percentage),
               backgroundColor: [...CHART_COLORS.assetClass],
               borderColor: [...CHART_COLORS.assetClassBorder],
               borderWidth: 1,
@@ -175,11 +248,11 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
 
         if (showComparison) {
           targetData = {
-            labels: data.byAssetClass.map((item) => item.name),
+            labels: currentData.byAssetClass.map((item) => item.name),
             datasets: [
               {
                 label: "目前配置",
-                data: data.byAssetClass.map((item) => item.percentage),
+                data: currentData.byAssetClass.map((item) => item.percentage),
                 backgroundColor: ["rgba(54, 162, 235, 0.6)"],
                 borderColor: ["rgba(54, 162, 235, 1)"],
                 borderWidth: 1,
@@ -199,10 +272,10 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
         break;
       case "sector":
         chartData = {
-          labels: data.bySector.map((item) => item.name),
+          labels: currentData.bySector.map((item) => item.name),
           datasets: [
             {
-              data: data.bySector.map((item) => item.percentage),
+              data: currentData.bySector.map((item) => item.percentage),
               backgroundColor: [...CHART_COLORS.sector],
               borderColor: [...CHART_COLORS.sectorBorder],
               borderWidth: 1,
@@ -212,10 +285,10 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
         break;
       case "region":
         chartData = {
-          labels: data.byRegion.map((item) => item.name),
+          labels: currentData.byRegion.map((item) => item.name),
           datasets: [
             {
-              data: data.byRegion.map((item) => item.percentage),
+              data: currentData.byRegion.map((item) => item.percentage),
               backgroundColor: [...CHART_COLORS.region],
               borderColor: [...CHART_COLORS.regionBorder],
               borderWidth: 1,
@@ -312,7 +385,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
   const calculateDeviation = (): DeviationItem[] => {
     if (activeTab !== "assetClass") return [];
 
-    return data.byAssetClass.map((item) => {
+    return currentData.byAssetClass.map((item) => {
       const targetItem = targetAllocation.assetClass.find(
         (t) => t.name === item.name
       ) || { name: item.name, percentage: 0 };
@@ -338,15 +411,8 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
 
   const unbalancedAssets = getUnbalancedAssets();
 
-  // 動態生成顏色的函數
-  const generateDynamicColor = (index: number): string => {
-    return `rgba(${(index * 30) % 255}, ${(index * 50 + 100) % 255}, ${
-      (index * 70 + 50) % 255
-    }, 0.6)`;
-  };
-
   // 處理標籤點擊事件
-  const handleTabClick = (tab: TabType): void => {
+  const handleTabClick = (tab: "assetClass" | "sector" | "region"): void => {
     setActiveTab(tab);
   };
 
@@ -354,6 +420,21 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
   const handleToggleComparison = (): void => {
     setShowComparison(!showComparison);
   };
+
+  // 動態生成顏色的輔助函數
+  function generateDynamicColor(index: number): string {
+    const colors = [
+      "rgba(54, 162, 235, 0.6)",
+      "rgba(75, 192, 192, 0.6)",
+      "rgba(255, 206, 86, 0.6)",
+      "rgba(255, 99, 132, 0.6)",
+      "rgba(153, 102, 255, 0.6)",
+      "rgba(255, 159, 64, 0.6)",
+      "rgba(255, 99, 71, 0.6)",
+      "rgba(46, 139, 87, 0.6)",
+    ];
+    return colors[index % colors.length];
+  }
 
   return (
     <div className="space-y-6">
@@ -474,7 +555,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {data.byAssetClass.map((item, index) => {
+                      {currentData.byAssetClass.map((item, index) => {
                         const targetItem = showComparison
                           ? targetAllocation.assetClass.find(
                               (t) => t.name === item.name
@@ -531,7 +612,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
 
               {activeTab === "sector" && (
                 <div className="space-y-2">
-                  {data.bySector.map((item, index) => (
+                  {currentData.bySector.map((item, index) => (
                     <div
                       key={`sector-${item.name}-${index}`}
                       className="flex items-center justify-between"
@@ -557,7 +638,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
 
               {activeTab === "region" && (
                 <div className="space-y-2">
-                  {data.byRegion.map((item, index) => (
+                  {currentData.byRegion.map((item, index) => (
                     <div
                       key={`region-${item.name}-${index}`}
                       className="flex items-center justify-between"

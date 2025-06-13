@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AcademicCapIcon,
   ChartBarIcon,
@@ -19,9 +19,28 @@ import {
   BookmarkIcon,
   ChatBubbleLeftRightIcon,
   FunnelIcon as FilterIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
-interface FeaturedContent {
+// MVC 架構引入
+import { EducationController } from "../../controllers/EducationController";
+import { UserController } from "../../controllers/UserController";
+import {
+  useMvcController,
+  useDataLoader,
+  usePaginatedData,
+} from "../../hooks/useMvcController";
+import {
+  Course,
+  Tool,
+  FeaturedContent,
+  LearningProgress,
+  EducationResource,
+} from "../../models/EducationModel";
+import { User } from "../../models/UserModel";
+
+// 傳統介面保持向後兼容
+interface FeaturedContentLegacy {
   id: number;
   title: string;
   description: string;
@@ -30,7 +49,7 @@ interface FeaturedContent {
   image: string;
 }
 
-interface Course {
+interface CourseLegacy {
   id: number;
   title: string;
   description: string;
@@ -43,7 +62,7 @@ interface Course {
   progress: number;
 }
 
-interface Tool {
+interface ToolLegacy {
   id: number;
   title: string;
   description: string;
@@ -65,6 +84,18 @@ interface Tab {
   icon: React.ComponentType<{ className?: string }>;
 }
 
+// 模擬論壇貼文介面
+interface ForumPost {
+  id: string;
+  title: string;
+  content: string;
+  author: string;
+  publishDate: string;
+  replies: number;
+  likes: number;
+  isHot: boolean;
+}
+
 type TabId = "featured" | "courses" | "tools" | "resources" | "forum";
 type DifficultyLevel = "all" | "beginner" | "intermediate" | "advanced";
 
@@ -73,136 +104,270 @@ const EducationPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("all");
 
-  // 精選內容
-  const featuredContent: FeaturedContent[] = [
-    {
-      id: 1,
-      title: "2025投資新趨勢",
-      description: "了解AI、綠能、半導體等新興科技的投資機會",
-      type: "專題研究",
-      popularity: "熱門",
-      image: "/images/education/trends.jpg",
-    },
-    {
-      id: 2,
-      title: "資產配置基礎",
-      description: "學習如何根據風險承受度和時間範圍配置您的投資組合",
-      type: "入門指南",
-      popularity: "推薦",
-      image: "/images/education/allocation.jpg",
-    },
-    {
-      id: 3,
-      title: "通膨環境的投資策略",
-      description: "掌握高通膨時期的投資技巧與防禦策略",
-      type: "進階策略",
-      popularity: "新增",
-      image: "/images/education/inflation.jpg",
-    },
-  ];
+  // MVC 架構相關狀態 - 添加缺失的狀態
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<string>("");
 
-  // 課程內容增強
-  const courses: Course[] = [
-    {
-      id: 1,
-      title: "投資基礎入門",
-      description:
-        "學習投資的基本概念、風險管理和投資策略，適合初次接觸投資的朋友",
-      duration: "4週",
-      level: "初學者",
-      rating: 4.9,
-      students: 1240,
-      icon: AcademicCapIcon,
-      topics: ["風險與回報", "基本投資工具", "投資心理學", "組合建構基礎"],
-      progress: 0,
-    },
-    {
-      id: 2,
-      title: "技術分析進階",
-      description: "深入學習各種技術指標和圖表分析方法，掌握市場趨勢判斷技巧",
-      duration: "6週",
-      level: "進階",
-      rating: 4.7,
-      students: 856,
-      icon: ChartBarIcon,
-      topics: ["蠟燭圖分析", "技術指標應用", "市場循環", "交易系統建立"],
-      progress: 0,
-    },
-    {
-      id: 3,
-      title: "基本面分析",
-      description: "學習如何分析公司財務報表和產業趨勢，找出被低估的優質公司",
-      duration: "5週",
-      level: "中級",
-      rating: 4.8,
-      students: 932,
-      icon: BookOpenIcon,
-      topics: ["財務報表解析", "估值模型", "產業分析", "競爭優勢評估"],
-      progress: 0,
-    },
-    {
-      id: 4,
-      title: "投資心理學",
-      description: "了解情緒如何影響投資決策，學習克服心理偏誤的實用方法",
-      duration: "4週",
-      level: "適合所有人",
-      rating: 4.9,
-      students: 1105,
-      icon: UserGroupIcon,
-      topics: ["行為金融學", "認知偏誤", "情緒控制", "紀律交易"],
-      progress: 0,
-    },
-    {
-      id: 5,
-      title: "退休規劃專題",
-      description: "建立長期財務目標，規劃退休投資策略與資產分配",
-      duration: "3週",
-      level: "中級",
-      rating: 4.6,
-      students: 789,
-      icon: BanknotesIcon,
-      topics: ["退休資產計算", "提取策略", "稅務規劃", "遺產安排"],
-      progress: 0,
-    },
-    {
-      id: 6,
-      title: "風險管理實務",
-      description: "學習如何控制投資風險，保護您的投資組合",
-      duration: "4週",
-      level: "進階",
-      rating: 4.7,
-      students: 673,
-      icon: ShieldCheckIcon,
-      topics: ["風險類型識別", "避險策略", "投組優化", "壓力測試"],
-      progress: 0,
-    },
-  ];
+  // MVC 控制器實例
+  const educationController = EducationController.getInstance();
+  const userController = new UserController();
 
-  // 互動工具
-  const tools: Tool[] = [
+  // 使用 MVC Hooks 管理各種數據
+  const {
+    data: user,
+    loading: userLoading,
+    error: userError,
+    execute: executeUser,
+  } = useMvcController<User>();
+
+  const {
+    data: featuredContent,
+    loading: featuredLoading,
+    error: featuredError,
+  } = useDataLoader(
+    () => educationController.getRecommendedResources("初級"),
+    [] as EducationResource[],
     {
-      id: 1,
-      title: "投資計算器",
-      description:
-        "計算投資報酬率、複利效果和風險評估，幫助您做出明智的投資決策",
-      icon: CalculatorIcon,
-      popular: true,
-    },
-    {
-      id: 2,
-      title: "投資組合分析工具",
-      description: "上傳您的投資組合，分析風險水準、潛在回報與改進建議",
-      icon: TrendingUpIcon,
-      popular: false,
-    },
-    {
-      id: 3,
-      title: "財務目標規劃",
-      description: "設定您的財務目標，獲取達成目標的詳細路徑圖與資產配置建議",
-      icon: BanknotesIcon,
-      popular: true,
-    },
-  ];
+      onSuccess: (data) => console.log("精選內容載入成功:", data),
+      onError: (error) => console.error("精選內容載入失敗:", error),
+    }
+  );
+
+  // 使用分頁Hook管理課程數據
+  const {
+    data: courses,
+    loading: coursesLoading,
+    error: coursesError,
+    currentPage: coursePage,
+    totalPages: courseTotalPages,
+    loadPage: loadCoursePage,
+    nextPage: nextCoursePage,
+    prevPage: prevCoursePage,
+  } = usePaginatedData(
+    (page, limit) =>
+      educationController
+        .getAllResources({
+          page,
+          limit,
+          type: "course",
+          level: difficulty !== "all" ? difficulty : undefined,
+          // 移除不支援的search參數，改用title搜尋
+        })
+        .then((result) => ({
+          data: result.resources.filter(
+            (resource) =>
+              !searchTerm ||
+              resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              resource.description
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase())
+          ),
+          total: result.total,
+          page: result.page,
+          totalPages: result.totalPages,
+        })),
+    10
+  );
+
+  const {
+    data: tools,
+    loading: toolsLoading,
+    execute: executeTools,
+  } = useMvcController<EducationResource[]>();
+
+  const {
+    data: forumPosts,
+    loading: forumLoading,
+    execute: executeForumPosts,
+  } = useMvcController<ForumPost[]>();
+
+  const {
+    data: userProgress,
+    loading: progressLoading,
+    execute: executeProgress,
+  } = useMvcController<LearningProgress[]>();
+
+  // 載入用戶資料
+  const loadUserData = async () => {
+    const userId = "user_001";
+    await executeUser(() => userController.getUserProfile(userId));
+  };
+
+  // 載入工具數據
+  const loadTools = async () => {
+    const result = await educationController.getAllResources({ type: "tool" });
+    await executeTools(() => Promise.resolve(result.resources));
+  };
+
+  // 載入論壇數據 - 模擬數據
+  const loadForumPosts = async () => {
+    await executeForumPosts(async () => {
+      // 模擬論壇貼文數據
+      return [
+        {
+          id: "1",
+          title: "新手投資指南討論",
+          content: "分享新手投資心得...",
+          author: "投資新手",
+          publishDate: "2小時前",
+          replies: 23,
+          likes: 156,
+          isHot: true,
+        },
+        {
+          id: "2",
+          title: "技術分析交流",
+          content: "技術分析相關討論...",
+          author: "分析師",
+          publishDate: "4小時前",
+          replies: 15,
+          likes: 89,
+          isHot: true,
+        },
+      ] as ForumPost[];
+    });
+  };
+
+  // 載入學習進度
+  const loadUserProgress = async () => {
+    const userId = "user_001";
+    await executeProgress(() => educationController.getUserProgress(userId));
+  };
+
+  // 載入教育數據的主函數
+  const loadEducationData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      await Promise.all([
+        loadUserData(),
+        loadTools(),
+        loadForumPosts(),
+        loadUserProgress(),
+      ]);
+
+      setLastUpdate(new Date().toLocaleString("zh-TW"));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "載入數據失敗");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 刷新數據
+  const handleRefreshData = async () => {
+    await loadEducationData();
+  };
+
+  // 開始學習課程
+  const handleStartLearning = async (courseId: string) => {
+    try {
+      await educationController.recordView(courseId);
+      console.log("開始學習課程:", courseId);
+      // 這裡可以導航到課程詳情頁面
+    } catch (error) {
+      console.error("開始學習失敗:", error);
+    }
+  };
+
+  // 收藏課程
+  const handleBookmark = async (courseId: string) => {
+    try {
+      // 這裡可以實現收藏功能
+      console.log("收藏課程:", courseId);
+    } catch (error) {
+      console.error("收藏失敗:", error);
+    }
+  };
+
+  // 初始化載入
+  useEffect(() => {
+    loadEducationData();
+  }, []);
+
+  // 當搜尋條件改變時重新載入課程
+  useEffect(() => {
+    if (activeTab === "courses") {
+      loadCoursePage(1);
+    }
+  }, [searchTerm, difficulty, activeTab]);
+
+  // 處理資源評分 - 通過控制器
+  const handleRateResource = async (resourceId: string, rating: number) => {
+    try {
+      await educationController.rateResource(resourceId, rating);
+      console.log("評分成功");
+      // 可以顯示成功提示
+    } catch (error) {
+      console.error("評分失敗:", error);
+    }
+  };
+
+  // 處理學習進度更新 - 通過控制器
+  const handleUpdateProgress = async (resourceId: string, progress: number) => {
+    try {
+      const userId = "user_001";
+      await educationController.updateProgress(userId, resourceId, progress);
+      // 重新載入進度數據
+      loadUserProgress();
+    } catch (error) {
+      console.error("更新進度失敗:", error);
+    }
+  };
+
+  // 轉換數據格式以保持向後兼容
+  const featuredContentLegacy: FeaturedContentLegacy[] = (
+    featuredContent || []
+  ).map((item, index) => ({
+    id: parseInt(item.id),
+    title: item.title,
+    description: item.description,
+    type: item.type,
+    popularity:
+      item.level === "初級" ? "推薦" : item.level === "中級" ? "熱門" : "精選",
+    image: `https://source.unsplash.com/600x400?finance${index}`,
+  }));
+
+  const coursesLegacy: CourseLegacy[] = (courses || []).map(
+    (course, index) => ({
+      id: parseInt(course.id),
+      title: course.title,
+      description: course.description,
+      duration: course.duration || "1小時",
+      level: course.level,
+      rating: course.rating,
+      students: Math.floor(Math.random() * 1000) + 100, // 移除不存在的course.students屬性
+      icon:
+        course.category === "技術分析"
+          ? ChartBarIcon
+          : course.category === "基本面分析"
+          ? BookOpenIcon
+          : course.category === "投資心理"
+          ? UserGroupIcon
+          : course.category === "風險管理"
+          ? ShieldCheckIcon
+          : AcademicCapIcon,
+      topics: course.tags || ["投資基礎", "市場分析"],
+      progress: course.progress || 0,
+    })
+  );
+
+  const toolsLegacy: ToolLegacy[] = (tools || []).map((tool, index) => ({
+    id: parseInt(tool.id),
+    title: tool.title,
+    description: tool.description,
+    icon:
+      tool.category === "計算工具"
+        ? CalculatorIcon
+        : tool.category === "分析工具"
+        ? TrendingUpIcon
+        : tool.category === "模擬工具"
+        ? BanknotesIcon
+        : CalculatorIcon,
+    popular: tool.level === "初級" || index < 3,
+  }));
 
   // 學習資源
   const resources: Resource[] = [
@@ -245,7 +410,7 @@ const EducationPage: React.FC = () => {
   ];
 
   // 根據難度和搜索詞過濾課程
-  const filteredCourses = courses.filter((course) => {
+  const filteredCourses = coursesLegacy.filter((course) => {
     const matchesSearch =
       searchTerm === "" ||
       course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -259,18 +424,74 @@ const EducationPage: React.FC = () => {
     return matchesSearch && matchesDifficulty;
   });
 
+  // 載入狀態
+  if (loading) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">載入教育資源中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 錯誤狀態
+  if (error) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
+            <h3 className="text-lg font-medium text-red-800">載入失敗</h3>
+            <p className="mt-2 text-red-600">{error}</p>
+            <button
+              onClick={loadEducationData}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              重新載入
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* 頂部橫幅 */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-4xl">
-            <h1 className="text-3xl text-white md:text-4xl font-bold mb-4">
-              投資理財知識中心
-            </h1>
-            <p className="text-lg md:text-xl opacity-90 mb-6">
-              探索我們精心準備的課程、工具和資源，提升您的投資知識和技能
-            </p>
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h1 className="text-3xl text-white md:text-4xl font-bold mb-4">
+                  投資理財知識中心
+                </h1>
+                <p className="text-lg md:text-xl opacity-90 mb-6">
+                  探索我們精心準備的課程、工具和資源，提升您的投資知識和技能
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleRefreshData}
+                  className="p-2 bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl border border-indigo-400 border-opacity-30 text-blue-200 hover:text-white transition-colors"
+                  title="刷新數據"
+                >
+                  <ArrowPathIcon className="h-5 w-5" />
+                </button>
+
+                {lastUpdate && (
+                  <div className="bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl px-3 py-1 border border-indigo-400 border-opacity-30">
+                    <div className="text-xs text-blue-200">最後更新</div>
+                    <div className="text-sm font-medium text-white">
+                      {lastUpdate}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="relative max-w-lg">
               <input
                 type="text"
@@ -317,7 +538,7 @@ const EducationPage: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900">精選內容</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {featuredContent.map((item) => (
+                {featuredContentLegacy.map((item) => (
                   <div
                     key={item.id}
                     className="bg-white rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg"
@@ -391,7 +612,7 @@ const EducationPage: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {courses.slice(0, 3).map((course) => {
+                  {coursesLegacy.slice(0, 3).map((course) => {
                     const Icon = course.icon;
                     return (
                       <div
@@ -425,7 +646,12 @@ const EducationPage: React.FC = () => {
                             <span>{course.students} 名學員</span>
                           </div>
                         </div>
-                        <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
+                        <button
+                          onClick={() =>
+                            handleStartLearning(course.id.toString())
+                          }
+                          className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+                        >
                           <PlayCircleIcon className="h-5 w-5 mr-2" />
                           開始學習
                         </button>
@@ -586,11 +812,21 @@ const EducationPage: React.FC = () => {
                           </div>
 
                           <div className="flex gap-2 mt-4">
-                            <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
+                            <button
+                              onClick={() =>
+                                handleStartLearning(course.id.toString())
+                              }
+                              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+                            >
                               <PlayCircleIcon className="h-5 w-5 mr-2" />
                               {course.progress > 0 ? "繼續學習" : "開始學習"}
                             </button>
-                            <button className="px-3 py-2 text-gray-600 hover:text-blue-600 transition-colors">
+                            <button
+                              onClick={() =>
+                                handleBookmark(course.id.toString())
+                              }
+                              className="px-3 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+                            >
                               <BookmarkIcon className="h-5 w-5" />
                             </button>
                           </div>
@@ -628,7 +864,7 @@ const EducationPage: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900">互動工具</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {tools.map((tool) => {
+                {toolsLegacy.map((tool) => {
                   const Icon = tool.icon;
                   return (
                     <div
@@ -663,7 +899,7 @@ const EducationPage: React.FC = () => {
                   本週最受歡迎的工具
                 </h3>
                 <div className="space-y-4">
-                  {tools
+                  {toolsLegacy
                     .sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0))
                     .map((tool, index) => {
                       const Icon = tool.icon;
@@ -813,62 +1049,33 @@ const EducationPage: React.FC = () => {
                   🔥 熱門討論話題
                 </h3>
                 <div className="space-y-4">
-                  <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-gray-900">
-                        2025年該如何調整投資組合？
-                      </h4>
-                      <span className="text-xs text-gray-500">2小時前</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      面對通膨壓力和利率變化，大家都是如何調整自己的投資策略的？想聽聽各位的經驗分享...
-                    </p>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span>投資者小明 發起</span>
-                      <div className="flex items-center space-x-4">
-                        <span>💬 23 回覆</span>
-                        <span>👍 15 讚</span>
+                  {(forumPosts || [])
+                    .filter((post) => post.isHot)
+                    .map((post) => (
+                      <div
+                        key={post.id}
+                        className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium text-gray-900">
+                            {post.title}
+                          </h4>
+                          <span className="text-xs text-gray-500">
+                            {post.publishDate}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          {post.content}
+                        </p>
+                        <div className="flex items-center justify-between text-sm text-gray-500">
+                          <span>{post.author} 發起</span>
+                          <div className="flex items-center space-x-4">
+                            <span>💬 {post.replies} 回覆</span>
+                            <span>👍 {post.likes} 讚</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-gray-900">
-                        AI概念股還值得投資嗎？
-                      </h4>
-                      <span className="text-xs text-gray-500">5小時前</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      看到AI股票漲了一年多，現在還適合進場嗎？有沒有具體的標的推薦？
-                    </p>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span>科技控 發起</span>
-                      <div className="flex items-center space-x-4">
-                        <span>💬 31 回覆</span>
-                        <span>👍 22 讚</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-gray-900">
-                        新手請教：該如何開始定期定額投資？
-                      </h4>
-                      <span className="text-xs text-gray-500">1天前</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      剛開始工作，想要開始投資但不知道從何入手。聽說定期定額是不錯的選擇...
-                    </p>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span>投資新手 發起</span>
-                      <div className="flex items-center space-x-4">
-                        <span>💬 18 回覆</span>
-                        <span>👍 12 讚</span>
-                      </div>
-                    </div>
-                  </div>
+                    ))}
                 </div>
               </div>
 

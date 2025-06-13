@@ -10,6 +10,8 @@ export interface Portfolio {
   performance: PerformanceData;
   transactions: Transaction[];
   risk: RiskData;
+  overview: PortfolioOverviewData;
+  aiRecommendations: AIRecommendation[];
 }
 
 export interface Holding {
@@ -60,6 +62,29 @@ export interface RiskData {
   sharpeRatio: number;
   maxDrawdown: number;
   riskLevel: "low" | "medium" | "high";
+}
+
+export interface PortfolioOverviewData {
+  totalValue: number;
+  totalReturn: number;
+  dayChange: number;
+  dayChangePercent: number;
+  holdingsCount: number;
+  lastUpdated: string;
+}
+
+export interface AIRecommendation {
+  id: string;
+  type: "buy" | "sell" | "hold" | "rebalance";
+  symbol?: string;
+  title: string;
+  description: string;
+  confidence: number;
+  reasoning: string[];
+  expectedReturn?: number;
+  riskLevel: "low" | "medium" | "high";
+  priority: "high" | "medium" | "low";
+  createdAt: string;
 }
 
 export class PortfolioModel {
@@ -151,6 +176,33 @@ export class PortfolioModel {
         maxDrawdown: -8.5,
         riskLevel: "medium",
       },
+      overview: {
+        totalValue: 1250000,
+        totalReturn: 125000,
+        dayChange: 15000,
+        dayChangePercent: 1.2,
+        holdingsCount: 1,
+        lastUpdated: "2024-06-30",
+      },
+      aiRecommendations: [
+        {
+          id: "rec_001",
+          type: "buy",
+          symbol: "2330",
+          title: "Buy 台積電",
+          description: "Based on recent performance and market trends.",
+          confidence: 0.85,
+          reasoning: [
+            "Strong quarterly earnings",
+            "Positive industry outlook",
+            "Technicals indicate upward momentum",
+          ],
+          expectedReturn: 0.1,
+          riskLevel: "medium",
+          priority: "high",
+          createdAt: "2024-06-30",
+        },
+      ],
     };
 
     this.portfolios.set(portfolioId, mockPortfolio);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   ChatBubbleLeftIcon,
   FireIcon,
@@ -10,6 +10,15 @@ import {
   ChartBarIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+
+// MVC 架構引入
+import { CommunityController } from "../controllers/CommunityController";
+import { UserController } from "../controllers/UserController";
+import {
+  useMvcController,
+  useDataLoader,
+  usePaginatedData,
+} from "../hooks/useMvcController";
 
 interface Post {
   title: string;
@@ -56,225 +65,250 @@ const CommunityPage: React.FC = () => {
   const [timeRange, setTimeRange] = useState<string>("all");
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [savedPosts, setSavedPosts] = useState<string[]>([]);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
 
-  const externalForums: Forum[] = [
-    {
-      id: 1,
-      name: "PTT 股票版",
-      description: "台灣最大的股票討論社群",
-      url: "https://www.ptt.cc/bbs/Stock/index.html",
-      icon: GlobeAltIcon,
-      category: "股票討論",
-      posts: [
-        {
-          title: "[標的] 台積電(2330) 多",
-          author: "stockmaster",
-          timestamp: "10分鐘前",
-          url: "https://www.ptt.cc/bbs/Stock/M.1234567890.A.123.html",
-          category: "個股分析",
-        },
-        {
-          title: "[新聞] 聯發科法說會重點整理",
-          author: "technews",
-          timestamp: "30分鐘前",
-          url: "https://www.ptt.cc/bbs/Stock/M.1234567891.A.456.html",
-          category: "新聞資訊",
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Mobile01 投資理財",
-      description: "綜合性投資理財討論區",
-      url: "https://www.mobile01.com/topiclist.php?f=291",
-      icon: GlobeAltIcon,
-      category: "綜合討論",
-      posts: [
-        {
-          title: "2024年投資展望與策略分享",
-          author: "投資達人",
-          timestamp: "1小時前",
-          url: "https://www.mobile01.com/topicdetail.php?f=291&t=1234567",
-          category: "投資策略",
-        },
-        {
-          title: "定期定額vs單筆投資比較",
-          author: "理財顧問",
-          timestamp: "2小時前",
-          url: "https://www.mobile01.com/topicdetail.php?f=291&t=1234568",
-          category: "投資策略",
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: "Reddit r/investing",
-      description: "國際投資討論社群",
-      url: "https://www.reddit.com/r/investing/",
-      icon: GlobeAltIcon,
-      category: "國際投資",
-      posts: [
-        {
-          title: "What are your investment strategies for 2024?",
-          author: "u/investor123",
-          timestamp: "3小時前",
-          url: "https://www.reddit.com/r/investing/comments/1234567",
-          category: "投資策略",
-        },
-        {
-          title: "Analysis: Tech sector outlook",
-          author: "u/techanalyst",
-          timestamp: "4小時前",
-          url: "https://www.reddit.com/r/investing/comments/1234568",
-          category: "產業分析",
-        },
-      ],
-    },
-    {
-      id: 4,
-      name: "Seeking Alpha",
-      description: "專業投資分析平台",
-      url: "https://seekingalpha.com/",
-      icon: GlobeAltIcon,
-      category: "投資分析",
-      posts: [
-        {
-          title: "TSM: Semiconductor Industry Analysis",
-          author: "Tech Analyst",
-          timestamp: "5小時前",
-          url: "https://seekingalpha.com/article/1234567",
-          category: "產業分析",
-        },
-        {
-          title: "Market Outlook: 2024 Predictions",
-          author: "Market Expert",
-          timestamp: "6小時前",
-          url: "https://seekingalpha.com/article/1234568",
-          category: "市場展望",
-        },
-      ],
-    },
-    {
-      id: 5,
-      name: "Cmoney 理財寶",
-      description: "台股投資討論區",
-      url: "https://www.cmoney.tw/forum/",
-      icon: GlobeAltIcon,
-      category: "股票討論",
-      posts: [
-        {
-          title: "半導體產業鏈分析",
-          author: "產業研究員",
-          timestamp: "7小時前",
-          url: "https://www.cmoney.tw/forum/topic/1234567",
-          category: "產業分析",
-        },
-        {
-          title: "台股大盤技術分析",
-          author: "技術分析師",
-          timestamp: "8小時前",
-          url: "https://www.cmoney.tw/forum/topic/1234568",
-          category: "技術分析",
-        },
-      ],
-    },
-    {
-      id: 6,
-      name: "StockFeel 股感",
-      description: "投資理財知識分享平台",
-      url: "https://www.stockfeel.com.tw/",
-      icon: GlobeAltIcon,
-      category: "投資教育",
-      posts: [
-        {
-          title: "如何看懂財務報表",
-          author: "財務分析師",
-          timestamp: "9小時前",
-          url: "https://www.stockfeel.com.tw/article/1234567",
-          category: "投資教育",
-        },
-        {
-          title: "價值投資入門指南",
-          author: "投資顧問",
-          timestamp: "10小時前",
-          url: "https://www.stockfeel.com.tw/article/1234568",
-          category: "投資教育",
-        },
-      ],
-    },
-    {
-      id: 7,
-      name: "財報狗",
-      description: "基本面分析與財報解讀平台",
-      url: "https://statementdog.com/",
-      icon: GlobeAltIcon,
-      category: "基本面分析",
-      posts: [
-        {
-          title: "台積電2024年第一季財報分析",
-          author: "財報分析師",
-          timestamp: "11小時前",
-          url: "https://statementdog.com/analysis/2330",
-          category: "財報分析",
-          likes: 156,
-          views: 2345,
-        },
-        {
-          title: "如何解讀現金流量表",
-          author: "財務顧問",
-          timestamp: "12小時前",
-          url: "https://statementdog.com/education/cash-flow",
-          category: "投資教育",
-          likes: 89,
-          views: 1234,
-        },
-      ],
-    },
-    {
-      id: 8,
-      name: "股癌",
-      description: "台股投資討論與分析",
-      url: "https://gooaye.com/",
-      icon: GlobeAltIcon,
-      category: "股票討論",
-      posts: [
-        {
-          title: "半導體產業週報",
-          author: "產業分析師",
-          timestamp: "13小時前",
-          url: "https://www.gooaye.com/article/1234567",
-          category: "產業分析",
-          likes: 234,
-          views: 3456,
-        },
-        {
-          title: "台股大盤技術面分析",
-          author: "技術分析師",
-          timestamp: "14小時前",
-          url: "https://www.gooaye.com/article/1234568",
-          category: "技術分析",
-          likes: 167,
-          views: 2345,
-        },
-      ],
-    },
-  ];
+  // MVC 控制器實例 - 使用單例模式
+  const communityController = CommunityController.getInstance();
+  const userController = new UserController();
 
-  // 獲取所有可用的分類
+  // 使用 MVC Hooks 管理數據
+  const {
+    data: user,
+    loading: userLoading,
+    error: userError,
+    execute: executeUser,
+  } = useMvcController<any>();
+
+  const {
+    data: forums,
+    loading: forumsLoading,
+    error: forumsError,
+  } = useDataLoader(() => communityController.getForums(), [], {
+    onSuccess: (data) => console.log("論壇數據載入成功:", data),
+    onError: (error) => console.error("論壇數據載入失敗:", error),
+  });
+
+  const {
+    data: trendingPosts,
+    loading: trendingLoading,
+    execute: executeTrending,
+  } = useMvcController<any[]>();
+
+  const {
+    data: popularPosts,
+    loading: popularLoading,
+    execute: executePopular,
+  } = useMvcController<any[]>();
+
+  // 優化：使用 debounce 處理搜尋查詢
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // 優化：使用 useCallback 包裝函數避免重複創建
+  const filterPosts = useCallback(
+    (posts: any[], activeTab: string, savedPosts: string[]) => {
+      if (activeTab === "hot") {
+        return posts.filter((post: any) => (post.likes ?? 0) > 100);
+      } else if (activeTab === "saved") {
+        return posts.filter((post: any) => savedPosts.includes(post.url));
+      }
+      return posts;
+    },
+    []
+  );
+
+  const sortPosts = useCallback((posts: any[], sortBy: string) => {
+    return [...posts].sort((a: any, b: any) => {
+      switch (sortBy) {
+        case "time":
+          return (
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          );
+        case "likes":
+          return (b.likes ?? 0) - (a.likes ?? 0);
+        case "views":
+          return (b.views ?? 0) - (a.views ?? 0);
+        default:
+          return 0;
+      }
+    });
+  }, []);
+
+  const filterByTimeRange = useCallback((posts: any[], timeRange: string) => {
+    if (timeRange === "all") return posts;
+
+    const now = new Date();
+    return posts.filter((post: any) => {
+      const postTime = new Date(post.timestamp);
+      switch (timeRange) {
+        case "today":
+          return postTime.toDateString() === now.toDateString();
+        case "week":
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          return postTime >= weekAgo;
+        case "month":
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          return postTime >= monthAgo;
+        default:
+          return true;
+      }
+    });
+  }, []);
+
+  // 優化：分離過濾邏輯並使用 useMemo 緩存結果
+  const processedForums = useMemo(() => {
+    if (!forums || forums.length === 0) return [];
+
+    // 避免在每次渲染時創建新的陣列
+    const result = forums
+      .filter(
+        (forum: any) => selectedForum === "all" || forum.name === selectedForum
+      )
+      .map((forum: any) => {
+        if (!forum.posts || forum.posts.length === 0) {
+          return { ...forum, posts: [] };
+        }
+
+        // 基本過濾
+        let filteredPosts = forum.posts.filter((post: any) => {
+          const matchesSearch =
+            !debouncedSearchQuery ||
+            post.title
+              .toLowerCase()
+              .includes(debouncedSearchQuery.toLowerCase()) ||
+            post.author
+              .toLowerCase()
+              .includes(debouncedSearchQuery.toLowerCase());
+
+          const matchesCategory =
+            selectedCategory === "all" || post.category === selectedCategory;
+
+          return matchesSearch && matchesCategory;
+        });
+
+        // 時間過濾
+        filteredPosts = filterByTimeRange(filteredPosts, timeRange);
+
+        // 根據標籤過濾
+        filteredPosts = filterPosts(filteredPosts, activeTab, savedPosts);
+
+        // 排序
+        filteredPosts = sortPosts(filteredPosts, sortBy);
+
+        return { ...forum, posts: filteredPosts };
+      })
+      .filter((forum: any) => forum.posts.length > 0);
+
+    return result;
+  }, [
+    forums,
+    debouncedSearchQuery,
+    selectedCategory,
+    selectedForum,
+    timeRange,
+    sortBy,
+    activeTab,
+    savedPosts,
+    filterPosts,
+    sortPosts,
+    filterByTimeRange,
+  ]);
+
+  // 優化：減少重複計算
   const categories = useMemo(() => {
+    if (!forums) return ["all"];
+
     const categorySet = new Set<string>();
-    externalForums.forEach((forum) => {
-      forum.posts.forEach((post) => {
-        categorySet.add(post.category);
-      });
+    forums.forEach((forum: any) => {
+      if (forum.posts) {
+        forum.posts.forEach((post: any) => {
+          if (post.category) {
+            categorySet.add(post.category);
+          }
+        });
+      }
     });
     return ["all", ...Array.from(categorySet)];
+  }, [forums]);
+
+  const forumNames = useMemo(() => {
+    if (!forums) return ["all"];
+    return ["all", ...forums.map((forum: any) => forum.name)];
+  }, [forums]);
+
+  // 優化：使用 useCallback 避免重複創建函數
+  const handleSavePost = useCallback(
+    async (postUrl: string) => {
+      try {
+        const userId = "user_001";
+        if (savedPosts.includes(postUrl)) {
+          await communityController.unsavePost(userId, postUrl);
+          setSavedPosts((prev) => prev.filter((url) => url !== postUrl));
+        } else {
+          await communityController.savePost(userId, postUrl);
+          setSavedPosts((prev) => [...prev, postUrl]);
+        }
+      } catch (error) {
+        console.error("收藏操作失敗:", error);
+      }
+    },
+    [savedPosts, communityController]
+  );
+
+  const handleTabChange = useCallback((tabId: string) => {
+    setActiveTab(tabId);
   }, []);
 
-  // 獲取所有論壇
-  const forums = useMemo(() => {
-    return ["all", ...externalForums.map((forum) => forum.name)];
+  // 載入用戶數據
+  const loadUserData = async () => {
+    const userId = "user_001";
+    await executeUser(() => userController.getUserProfile(userId));
+  };
+
+  // 載入趨勢貼文
+  const loadTrendingPosts = async () => {
+    await executeTrending(() => communityController.getTrendingPosts(10));
+  };
+
+  // 載入熱門貼文
+  const loadPopularPosts = async () => {
+    await executePopular(() => communityController.getPopularPosts(10));
+  };
+
+  // 載入收藏貼文
+  const loadSavedPosts = async () => {
+    try {
+      const userId = "user_001";
+      const saved = await communityController.getSavedPosts(userId);
+      setSavedPosts(saved);
+    } catch (error) {
+      console.error("載入收藏貼文失敗:", error);
+    }
+  };
+
+  // 初始化載入數據
+  useEffect(() => {
+    loadUserData();
+    loadTrendingPosts();
+    loadPopularPosts();
+    loadSavedPosts();
   }, []);
+
+  // 優化：減少不必要的重新載入
+  useEffect(() => {
+    if (debouncedSearchQuery !== searchQuery) return;
+    // 只在真正需要時才重新載入
+    const timeoutId = setTimeout(() => {
+      // loadPage(1);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [selectedCategory, debouncedSearchQuery, sortBy]);
 
   // 時間範圍選項
   const timeRanges: TimeRange[] = [
@@ -291,104 +325,42 @@ const CommunityPage: React.FC = () => {
     { value: "views", label: "最多瀏覽" },
   ];
 
-  // 過濾和排序文章
-  const filteredForums = useMemo(() => {
-    let result = externalForums
-      .map((forum) => ({
-        ...forum,
-        posts: forum.posts.filter((post) => {
-          const matchesSearch =
-            searchQuery === "" ||
-            post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            post.author.toLowerCase().includes(searchQuery.toLowerCase());
-          const matchesCategory =
-            selectedCategory === "all" || post.category === selectedCategory;
-
-          // 時間過濾
-          let matchesTime = true;
-          if (timeRange !== "all") {
-            const postTime = new Date(post.timestamp);
-            const now = new Date();
-            switch (timeRange) {
-              case "today":
-                matchesTime = postTime.toDateString() === now.toDateString();
-                break;
-              case "week":
-                const weekAgo = new Date(now.setDate(now.getDate() - 7));
-                matchesTime = postTime >= weekAgo;
-                break;
-              case "month":
-                const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
-                matchesTime = postTime >= monthAgo;
-                break;
-            }
-          }
-
-          return matchesSearch && matchesCategory && matchesTime;
-        }),
-      }))
-      .filter(
-        (forum) =>
-          (selectedForum === "all" || forum.name === selectedForum) &&
-          forum.posts.length > 0
-      );
-
-    // 根據標籤過濾
-    if (activeTab === "hot") {
-      result = result.map((forum) => ({
-        ...forum,
-        posts: forum.posts.filter((post) => (post.likes ?? 0) > 100),
-      }));
-    } else if (activeTab === "saved") {
-      result = result.map((forum) => ({
-        ...forum,
-        posts: forum.posts.filter((post) => savedPosts.includes(post.url)),
-      }));
-    }
-
-    // 排序
-    result = result.map((forum) => ({
-      ...forum,
-      posts: [...forum.posts].sort((a, b) => {
-        switch (sortBy) {
-          case "time":
-            return (
-              new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-            );
-          case "likes":
-            return (b.likes ?? 0) - (a.likes ?? 0);
-          case "views":
-            return (b.views ?? 0) - (a.views ?? 0);
-          default:
-            return 0;
-        }
-      }),
-    }));
-
-    return result;
-  }, [
-    searchQuery,
-    selectedCategory,
-    selectedForum,
-    timeRange,
-    sortBy,
-    activeTab,
-    savedPosts,
-  ]);
-
-  const handleSavePost = (postUrl: string): void => {
-    setSavedPosts((prev) =>
-      prev.includes(postUrl)
-        ? prev.filter((url) => url !== postUrl)
-        : [...prev, postUrl]
-    );
-  };
-
   const tabs: Tab[] = [
     { id: "discussions", name: "討論區", icon: ChatBubbleLeftIcon },
     { id: "hot", name: "熱門話題", icon: FireIcon },
     { id: "saved", name: "收藏文章", icon: BookmarkIcon },
   ];
+
+  // 添加載入狀態檢查
+  if (forumsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">載入社群數據中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (forumsError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
+            <h3 className="text-lg font-medium text-red-800">載入失敗</h3>
+            <p className="mt-2 text-red-600">{forumsError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              重新載入
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -428,7 +400,7 @@ const CommunityPage: React.FC = () => {
                 onChange={(e) => setSelectedForum(e.target.value)}
                 className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {forums.map((forum) => (
+                {forumNames.map((forum) => (
                   <option key={forum} value={forum}>
                     {forum === "all" ? "所有論壇" : forum}
                   </option>
@@ -468,8 +440,8 @@ const CommunityPage: React.FC = () => {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -484,103 +456,129 @@ const CommunityPage: React.FC = () => {
         </div>
 
         {/* 論壇列表 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredForums.map((forum) => {
-            const Icon = forum.icon;
-            return (
-              <div key={forum.id} className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <Icon className="h-8 w-8 text-blue-600" />
-                    <div>
-                      <h2 className="text-lg font-medium text-gray-900">
-                        {forum.name}
-                      </h2>
-                      <p className="text-sm text-gray-500">{forum.category}</p>
-                    </div>
-                  </div>
-                  <a
-                    href={forum.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <ArrowTopRightOnSquareIcon className="h-5 w-5" />
-                  </a>
-                </div>
-                <p className="text-gray-600 mb-4">{forum.description}</p>
-
-                {/* 熱門文章列表 */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-900">
-                    熱門討論
-                  </h3>
-                  {forum.posts.map((post, index) => (
-                    <div
-                      key={index}
-                      className="block p-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => setSelectedPost(post)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <h4 className="text-sm font-medium text-gray-900">
-                          {post.title}
-                        </h4>
-                        <span className="text-xs text-gray-500">
-                          {post.timestamp}
-                        </span>
+        {processedForums.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-500">
+              <ChatBubbleLeftIcon className="h-12 w-12 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">沒有找到相關討論</h3>
+              <p>請嘗試調整搜尋條件或瀏覽其他分類</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {processedForums.map((forum) => {
+              const Icon = forum.icon;
+              return (
+                <div
+                  key={forum.id}
+                  className="bg-white rounded-lg shadow p-6 transition-shadow hover:shadow-lg"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <Icon className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                      <div>
+                        <h2 className="text-lg font-medium text-gray-900">
+                          {forum.name}
+                        </h2>
+                        <p className="text-sm text-gray-500">
+                          {forum.category}
+                        </p>
                       </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-gray-500">{post.author}</p>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                            {post.category}
+                    </div>
+                    <a
+                      href={forum.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 flex-shrink-0"
+                    >
+                      <ArrowTopRightOnSquareIcon className="h-5 w-5" />
+                    </a>
+                  </div>
+                  <p className="text-gray-600 mb-4 line-clamp-2">
+                    {forum.description}
+                  </p>
+
+                  {/* 熱門文章列表 */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-gray-900">
+                      熱門討論 ({forum.posts.length})
+                    </h3>
+                    {forum.posts.slice(0, 5).map((post: any, index: number) => (
+                      <div
+                        key={`${forum.id}-${index}`}
+                        className="block p-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => setSelectedPost(post)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <h4 className="text-sm font-medium text-gray-900 line-clamp-1 flex-1">
+                            {post.title}
+                          </h4>
+                          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                            {post.timestamp}
                           </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSavePost(post.url);
-                            }}
-                            className={`text-xs ${
-                              savedPosts.includes(post.url)
-                                ? "text-yellow-600"
-                                : "text-gray-400"
-                            } hover:text-yellow-600`}
-                          >
-                            <BookmarkIcon className="h-4 w-4" />
-                          </button>
+                        </div>
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-xs text-gray-500 truncate">
+                            {post.author}
+                          </p>
+                          <div className="flex items-center space-x-2 flex-shrink-0">
+                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                              {post.category}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSavePost(post.url);
+                              }}
+                              className={`text-xs transition-colors ${
+                                savedPosts.includes(post.url)
+                                  ? "text-yellow-600"
+                                  : "text-gray-400"
+                              } hover:text-yellow-600`}
+                            >
+                              <BookmarkIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                          <span className="flex items-center">
+                            <ChartBarIcon className="h-4 w-4 mr-1" />
+                            {post.views ?? 0} 瀏覽
+                          </span>
+                          <span className="flex items-center">
+                            <FireIcon className="h-4 w-4 mr-1" />
+                            {post.likes ?? 0} 讚
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                        <span className="flex items-center">
-                          <ChartBarIcon className="h-4 w-4 mr-1" />
-                          {post.views ?? 0} 瀏覽
-                        </span>
-                        <span className="flex items-center">
-                          <FireIcon className="h-4 w-4 mr-1" />
-                          {post.likes ?? 0} 讚
+                    ))}
+                    {forum.posts.length > 5 && (
+                      <div className="text-center">
+                        <span className="text-xs text-gray-500">
+                          還有 {forum.posts.length - 5} 篇文章...
                         </span>
                       </div>
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* 文章預覽模態框 */}
       {selectedPost && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900 pr-4">
                   {selectedPost.title}
                 </h2>
                 <button
                   onClick={() => setSelectedPost(null)}
-                  className="text-gray-400 hover:text-gray-500"
+                  className="text-gray-400 hover:text-gray-500 flex-shrink-0"
                 >
                   <XMarkIcon className="h-6 w-6" />
                 </button>
@@ -601,11 +599,11 @@ const CommunityPage: React.FC = () => {
               <div className="mt-6 flex justify-end space-x-4">
                 <button
                   onClick={() => handleSavePost(selectedPost.url)}
-                  className={`flex items-center px-4 py-2 rounded-md ${
+                  className={`flex items-center px-4 py-2 rounded-md transition-colors ${
                     savedPosts.includes(selectedPost.url)
-                      ? "bg-yellow-100 text-yellow-600"
-                      : "bg-gray-100 text-gray-600"
-                  } hover:bg-yellow-200`}
+                      ? "bg-yellow-100 text-yellow-600 hover:bg-yellow-200"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
                 >
                   <BookmarkIcon className="h-5 w-5 mr-2" />
                   {savedPosts.includes(selectedPost.url)
@@ -616,7 +614,7 @@ const CommunityPage: React.FC = () => {
                   href={selectedPost.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
                   <ArrowTopRightOnSquareIcon className="h-5 w-5 mr-2" />
                   查看原文

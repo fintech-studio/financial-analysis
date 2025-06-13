@@ -20,6 +20,9 @@ import { FaGithub } from "react-icons/fa";
 import dynamic from "next/dynamic";
 import Wave from "@/components/Wave";
 
+// MVC 控制器引入
+import { StockController } from "@/controllers/StockController";
+
 // 動態引入元件以改善首次載入效能
 const TerminalAnimation = dynamic(
   () => import("@/components/Animation/TerminalAnimation"),
@@ -33,6 +36,27 @@ export default function Home() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // 控制器實例
+  const stockController = new StockController();
+
+  // 處理搜尋
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery) {
+      try {
+        // 使用控制器進行搜尋
+        const searchResults = await stockController.searchStocks({
+          query: searchQuery,
+          limit: 10,
+        });
+        console.log("搜尋結果:", searchResults);
+        // 可以導向搜尋結果頁面或顯示結果
+      } catch (error) {
+        console.error("搜尋失敗:", error);
+      }
+    }
+  };
+
   // 監聽滾動事件
   useEffect(() => {
     const handleScroll = () => {
@@ -41,19 +65,6 @@ export default function Home() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  // 處理搜尋
-  interface SearchEvent {
-    preventDefault: () => void;
-  }
-
-  const handleSearch = (e: SearchEvent): void => {
-    e.preventDefault();
-    if (searchQuery) {
-      // 實作搜尋功能
-      console.log("搜尋:", searchQuery);
-    }
-  };
 
   // 導覽選項 - 重新設計結構
   const navigationItems = [
@@ -205,7 +216,7 @@ export default function Home() {
                         <div className="bg-white backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 py-0 animate-fade-in-down">
                           {/* 子項目列表 */}
                           <div className="px-3 py-2">
-                            {item.subItems?.map((subItem, index) => (
+                            {item.subItems?.map((subItem) => (
                               <Link
                                 key={subItem.name}
                                 href={subItem.href}
@@ -591,7 +602,7 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {features.map((feature, index) => (
+              {features.map((feature) => (
                 <Link
                   key={feature.title}
                   href={feature.link}

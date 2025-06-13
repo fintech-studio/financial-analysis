@@ -19,6 +19,10 @@ export interface UserRegisterRequest {
 
 export interface UserUpdateRequest {
   name?: string;
+  email?: string;
+  phone?: string;
+  bio?: string;
+  riskLevel?: string;
   preferences?: UserPreferences;
 }
 
@@ -152,5 +156,121 @@ export class UserController {
   async logout(userId: string): Promise<boolean> {
     // 模擬登出邏輯（清除 session、token 等）
     return true;
+  }
+
+  async getInvestmentStats(userId: string): Promise<any> {
+    try {
+      // 模擬投資統計數據
+      const mockStats = {
+        totalValue: 1250000,
+        totalReturn: 125000,
+        returnRate: 12.5,
+        portfolioCount: 3,
+        watchlistCount: 15,
+        articlesRead: 42,
+        coursesCompleted: 8,
+        monthlyReturn: 8.5,
+        bestStock: "台積電",
+        winRate: 68.5,
+      };
+
+      return mockStats;
+    } catch (error) {
+      throw new Error("獲取投資統計失敗");
+    }
+  }
+
+  async getAchievements(userId: string): Promise<any[]> {
+    try {
+      // 模擬成就數據
+      const mockAchievements = [
+        {
+          id: 1,
+          name: "首次投資",
+          description: "完成第一筆投資交易",
+          icon: "🚀",
+          unlocked: true,
+          color: "text-blue-600",
+        },
+        {
+          id: 2,
+          name: "學習達人",
+          description: "完成10堂投資課程",
+          icon: "📚",
+          unlocked: true,
+          color: "text-green-600",
+        },
+        {
+          id: 3,
+          name: "風險管理師",
+          description: "建立多元化投資組合",
+          icon: "🛡️",
+          unlocked: false,
+          color: "text-purple-600",
+        },
+      ];
+
+      return mockAchievements;
+    } catch (error) {
+      throw new Error("獲取成就失敗");
+    }
+  }
+
+  async getRecentActivities(userId: string): Promise<any[]> {
+    try {
+      // 模擬最近活動數據
+      const mockActivities = [
+        {
+          id: 1,
+          type: "investment",
+          action: "買入",
+          target: "台積電",
+          amount: "50,000",
+          time: "2小時前",
+          icon: "📈",
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+        },
+        {
+          id: 2,
+          type: "analysis",
+          action: "分析",
+          target: "半導體產業",
+          time: "4小時前",
+          icon: "🔍",
+          color: "text-blue-600",
+          bgColor: "bg-blue-50",
+        },
+        {
+          id: 3,
+          type: "learning",
+          action: "完成課程",
+          target: "技術分析基礎",
+          time: "1天前",
+          icon: "🎓",
+          color: "text-purple-600",
+          bgColor: "bg-purple-50",
+        },
+      ];
+
+      return mockActivities;
+    } catch (error) {
+      throw new Error("獲取活動記錄失敗");
+    }
+  }
+
+  async updateNotificationSettings(
+    userId: string,
+    settings: any
+  ): Promise<void> {
+    try {
+      // 模擬更新通知設定
+      console.log(
+        `Updated notification settings for user ${userId}:`,
+        settings
+      );
+    } catch (error) {
+      throw new Error("更新通知設定失敗");
+    }
   }
 }

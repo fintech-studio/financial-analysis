@@ -20,13 +20,21 @@ export interface NewsItem {
 }
 
 export interface MarketNews {
-  id?: string;
+  id: string;
   title: string;
-  source: string;
-  time: string;
-  impact: string;
-  category: string;
   summary: string;
+  content?: string;
+  source: string;
+  category: string;
+  publishedAt: string;
+  url?: string;
+  imageUrl?: string;
+  tags: string[];
+  isBreaking?: boolean;
+  readCount?: number;
+  sentiment?: "positive" | "negative" | "neutral";
+  time?: string; // 為了向後兼容
+  impact?: string; // 為了向後兼容
 }
 
 export interface NewsFilters {

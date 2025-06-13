@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ChartPieIcon,
   ArrowTrendingUpIcon,
@@ -17,7 +17,12 @@ import HoldingsTable from "../components/features/Portfolio/HoldingsTable";
 import PerformanceChart from "../components/features/Portfolio/PerformanceChart";
 import TransactionHistory from "../components/features/Portfolio/TransactionHistory";
 import RiskAndRecommendations from "../components/features/Portfolio/RiskAndRecommendations";
-import { portfolioData } from "../data/portfolio/portfolioData";
+
+// MVC 架構引入
+import { PortfolioController } from "../controllers/PortfolioController";
+import { UserController } from "../controllers/UserController";
+import { Portfolio } from "../models/PortfolioModel";
+import { User } from "../models/UserModel";
 
 interface Tab {
   id: string;
@@ -25,13 +30,12 @@ interface Tab {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
-// 更新 Holding 介面定義以匹配實際資料結構
 interface Holding {
   symbol: string;
   name: string;
   price: string;
   priceChange: number;
-  quantity: string; // 改為 string 以匹配資料
+  quantity: string;
   marketValue: string;
   costBasis: string;
   totalReturn: {
@@ -42,7 +46,18 @@ interface Holding {
 }
 
 const PortfolioPage: React.FC = () => {
-  const [selectedHolding, setSelectedHolding] = useState<string | null>(null); // 改為 string | null
+  const [selectedHolding, setSelectedHolding] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("overview");
+
+  // MVC 架构相关状态
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 控制器实例
+  const portfolioController = new PortfolioController();
+  const userController = new UserController();
 
   const tabs: Tab[] = [
     { id: "overview", name: "投資組合概覽", icon: ChartPieIcon },
@@ -53,18 +68,149 @@ const PortfolioPage: React.FC = () => {
     { id: "risk_ai", name: "風險與建議", icon: SparklesIcon },
   ];
 
-  const [activeTab, setActiveTab] = useState<string>("overview");
+  // 載入投資組合數據
+  useEffect(() => {
+    loadPortfolioData();
+  }, []);
 
-  const handleAddAsset = (): void => {};
+  const loadPortfolioData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const handleExportReport = (): void => {};
+      // 模擬用戶 ID
+      const userId = "user_001";
 
-  const handleRefreshData = (): void => {};
+      // 並行載入用戶和投資組合數據
+      const [userResult, portfolioResult] = await Promise.allSettled([
+        userController.getUserProfile(userId),
+        portfolioController.getPortfolio(userId),
+      ]);
 
-  // 處理選中持倉的函數
+      // 處理用戶數據
+      if (userResult.status === "fulfilled") {
+        setUser(userResult.value);
+      } else {
+        console.error("載入用戶資料失敗:", userResult.reason);
+      }
+
+      // 處理投資組合數據
+      if (portfolioResult.status === "fulfilled") {
+        setPortfolio(portfolioResult.value);
+      } else {
+        console.error("載入投資組合失敗:", portfolioResult.reason);
+        setError("載入投資組合失敗");
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "載入數據失敗");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddAsset = async (): Promise<void> => {
+    try {
+      if (!user) return;
+
+      // 這裡可以打開一個模態框或導向新增資產頁面
+      console.log("開啟新增資產功能");
+
+      // 示例：新增一筆交易
+      const newTransaction = await portfolioController.addTransaction(user.id, {
+        symbol: "AAPL",
+        type: "buy",
+        quantity: 10,
+        price: 150,
+        date: new Date().toISOString().split("T")[0],
+      });
+
+      console.log("新增交易成功:", newTransaction);
+
+      // 重新載入投資組合數據
+      await loadPortfolioData();
+    } catch (error) {
+      console.error("新增資產失敗:", error);
+      setError(error instanceof Error ? error.message : "新增資產失敗");
+    }
+  };
+
+  const handleExportReport = async (): Promise<void> => {
+    try {
+      if (!user || !portfolio) return;
+
+      const report = await portfolioController.exportReport(user.id, "pdf");
+
+      console.log("匯出報表成功:", report);
+    } catch (error) {
+      console.error("匯出報表失敗:", error);
+      setError(error instanceof Error ? error.message : "匯出報表失敗");
+    }
+  };
+
+  const handleRefreshData = async (): Promise<void> => {
+    await loadPortfolioData();
+  };
+
   const handleSelectHolding = (symbol: string): void => {
     setSelectedHolding(symbol);
   };
+
+  // 載入狀態
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">載入投資組合中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 錯誤狀態
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
+            <h3 className="text-lg font-medium text-red-800">載入失敗</h3>
+            <p className="mt-2 text-red-600">{error}</p>
+            <button
+              onClick={handleRefreshData}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              重新載入
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 沒有投資組合數據
+  if (!portfolio) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-gray-100 rounded-lg p-8">
+            <BanknotesIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              尚未建立投資組合
+            </h3>
+            <p className="text-gray-600 mb-4">
+              開始您的投資之旅，建立第一個投資組合
+            </p>
+            <button
+              onClick={handleAddAsset}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              建立投資組合
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -131,21 +277,73 @@ const PortfolioPage: React.FC = () => {
         {/* 內容區域 */}
         {activeTab === "overview" && (
           <div className="space-y-6">
-            <PortfolioOverview data={portfolioData.overview} />
-            <PerformanceChart data={portfolioData.performance} timeRange="1M" />
+            <PortfolioOverview
+              data={{
+                ...portfolio.overview,
+                lastUpdate: portfolio.overview.lastUpdated,
+                monthlyChange: "8.5",
+                totalValue: portfolio.overview.totalValue.toString(),
+                totalReturn: {
+                  value: portfolio.overview.totalReturn.toString(),
+                  percentage: "8.5%",
+                },
+              }}
+            />
+            <PerformanceChart
+              data={{
+                daily: {
+                  labels: portfolio.performance.labels,
+                  portfolio: portfolio.performance.portfolioValue,
+                  benchmark: portfolio.performance.benchmarkValue,
+                },
+                weekly: {
+                  labels: portfolio.performance.labels,
+                  portfolio: portfolio.performance.portfolioValue,
+                  benchmark: portfolio.performance.benchmarkValue,
+                },
+                monthly: {
+                  labels: portfolio.performance.labels,
+                  portfolio: portfolio.performance.portfolioValue,
+                  benchmark: portfolio.performance.benchmarkValue,
+                },
+                returns: {
+                  "1W": 2.5,
+                  "1M": 8.5,
+                  "3M": 12.3,
+                  "6M": 18.7,
+                  "1Y": 22.4,
+                  YTD: 15.2,
+                  ALL: 85.6,
+                },
+              }}
+              timeRange="1M"
+            />
           </div>
         )}
 
         {activeTab === "allocation" && (
           <div className="space-y-6">
-            <AssetAllocation data={portfolioData.allocation} />
+            <AssetAllocation
+              data={{
+                byAssetClass: portfolio.allocation.map((item) => ({
+                  name: item.category,
+                  category: item.category,
+                  value: item.value,
+                  percentage: item.percentage,
+                  color: item.color,
+                })),
+                bySector: [],
+                byRegion: [],
+                recommendations: [],
+              }}
+            />
           </div>
         )}
 
         {activeTab === "holdings" && (
           <div className="space-y-6">
             <HoldingsTable
-              holdings={portfolioData.holdings}
+              holdings={portfolio.holdings}
               onSelectHolding={handleSelectHolding}
               selectedHolding={selectedHolding || undefined}
             />
@@ -155,7 +353,32 @@ const PortfolioPage: React.FC = () => {
         {activeTab === "performance" && (
           <div className="space-y-6">
             <PerformanceChart
-              data={portfolioData.performance}
+              data={{
+                daily: {
+                  labels: portfolio.performance.labels,
+                  portfolio: portfolio.performance.portfolioValue,
+                  benchmark: portfolio.performance.benchmarkValue,
+                },
+                weekly: {
+                  labels: portfolio.performance.labels,
+                  portfolio: portfolio.performance.portfolioValue,
+                  benchmark: portfolio.performance.benchmarkValue,
+                },
+                monthly: {
+                  labels: portfolio.performance.labels,
+                  portfolio: portfolio.performance.portfolioValue,
+                  benchmark: portfolio.performance.benchmarkValue,
+                },
+                returns: {
+                  "1W": 2.5,
+                  "1M": 8.5,
+                  "3M": 12.3,
+                  "6M": 18.7,
+                  "1Y": 22.4,
+                  YTD: 15.2,
+                  ALL: 85.6,
+                },
+              }}
               timeRange="ALL"
               showBenchmark={true}
               showDetails={true}
@@ -164,14 +387,76 @@ const PortfolioPage: React.FC = () => {
         )}
 
         {activeTab === "history" && (
-          <TransactionHistory transactions={portfolioData.transactions} />
+          <TransactionHistory
+            transactions={portfolio.transactions.map((transaction) => ({
+              ...transaction,
+              type: transaction.type === "buy" ? "買入" : "賣出",
+              name: `交易 ${transaction.symbol}`,
+              total: `${(
+                transaction.amount + transaction.fee
+              ).toLocaleString()}`,
+              quantity: transaction.quantity.toString(),
+              price: transaction.price.toString(),
+            }))}
+          />
         )}
 
         {/* 整合的風險評估與AI建議頁面 */}
         {activeTab === "risk_ai" && (
           <RiskAndRecommendations
-            riskData={portfolioData.risk}
-            aiData={portfolioData.aiRecommendations}
+            riskData={{
+              metrics: {
+                volatility: portfolio.risk.volatility,
+                volatilityVsMarket: portfolio.risk.volatility * 0.8,
+                sharpeRatio: portfolio.risk.sharpeRatio,
+                maxDrawdown: portfolio.risk.maxDrawdown,
+                maxDrawdownDate: "2024-03-15",
+              },
+              volatility: {
+                labels: ["1月", "2月", "3月", "4月", "5月", "6月"],
+                portfolio: [12.5, 13.2, 15.8, 14.1, 13.7, 15.2],
+                market: [10.2, 11.1, 12.8, 11.9, 11.4, 12.6],
+              },
+              drawdown: {
+                labels: ["1月", "2月", "3月", "4月", "5月", "6月"],
+                values: [-2.1, -1.8, -4.2, -3.1, -1.5, -0.8],
+              },
+              riskFactors: {
+                labels: ["市場風險", "信用風險", "流動性風險", "匯率風險"],
+                values: [6.5, 3.2, 2.8, 4.1],
+              },
+              otherMetrics: [
+                {
+                  name: "Beta 係數",
+                  value: portfolio.risk.beta.toString(),
+                  status: "neutral" as const,
+                  interpretation: "投資組合與市場的相關性",
+                },
+              ],
+            }}
+            aiData={{
+              summary: "您的投資組合整體表現良好，建議適度調整配置以降低風險。",
+              healthScore: 78,
+              optimizationPotential: 15,
+              recommendationLevel: 3,
+              recommendations: portfolio.aiRecommendations.map((rec) => ({
+                type:
+                  rec.type === "buy"
+                    ? "opportunity"
+                    : rec.type === "sell"
+                    ? "risk"
+                    : rec.type === "rebalance"
+                    ? "rebalance"
+                    : "adjustment",
+                title: rec.title,
+                priority: rec.priority,
+                description: rec.description,
+                actions: rec.reasoning,
+                impact: rec.expectedReturn
+                  ? `預期報酬: ${(rec.expectedReturn * 100).toFixed(1)}%`
+                  : undefined,
+              })),
+            }}
           />
         )}
       </div>
