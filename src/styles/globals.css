@@ -17,6 +17,26 @@
     @apply bg-gray-50 text-gray-900 leading-relaxed;
   }
 
+  /* 動畫效能優化 */
+  * {
+    /* 啟用硬體加速 */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* 頁面轉場容器優化 */
+  [data-page-transition] {
+    will-change: transform, opacity;
+    transform-style: preserve-3d;
+  }
+
+  /* 減少重繪 */
+  .transition-optimized {
+    will-change: transform, opacity;
+    contain: layout style paint;
+  }
+
   /* 標題層級 */
   h1 {
     @apply text-3xl font-bold mb-6 text-gray-900;
