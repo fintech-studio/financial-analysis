@@ -6,13 +6,19 @@ import {
   AssetAllocation,
   PerformanceData,
 } from "../models/PortfolioModel";
+import { BaseController } from "./BaseController";
+import { PortfolioService } from "../services/PortfolioService";
+import * as PortfolioTypes from "../types/portfolio";
 
 export interface AddTransactionRequest {
+  portfolioId?: string;
   symbol: string;
   type: "buy" | "sell";
   quantity: number;
   price: number;
   date: string;
+  fees?: number;
+  notes?: string;
 }
 
 export interface UpdateHoldingRequest {
@@ -25,127 +31,243 @@ export interface PortfolioAnalysisRequest {
   timeRange?: "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "ALL";
 }
 
-export class PortfolioController {
+export class PortfolioController extends BaseController {
+  private static instance: PortfolioController;
   private portfolioModel: PortfolioModel;
+  private portfolioService: PortfolioService;
 
-  constructor() {
+  private constructor() {
+    super();
     this.portfolioModel = PortfolioModel.getInstance();
+    this.portfolioService = PortfolioService.getInstance();
+  }
+
+  static getInstance(): PortfolioController {
+    if (!PortfolioController.instance) {
+      PortfolioController.instance = new PortfolioController();
+    }
+    return PortfolioController.instance;
+  }
+
+  // 類型轉換輔助函數
+  private convertServicePortfolioToModel(
+    servicePortfolio: PortfolioTypes.Portfolio
+  ): Portfolio {
+    return {
+      id: servicePortfolio.id,
+      userId: servicePortfolio.userId,
+      totalValue:
+        typeof servicePortfolio.totalValue === "string"
+          ? parseFloat(servicePortfolio.totalValue.replace(/,/g, ""))
+          : 0,
+      totalReturn: servicePortfolio.totalGainLoss || 0,
+      dayChange: servicePortfolio.dayChange || 0,
+      dayChangePercent: servicePortfolio.dayChangePercent || 0,
+      holdings: servicePortfolio.holdings.map((h) =>
+        this.convertServiceHoldingToModel(h)
+      ),
+      allocation:
+        servicePortfolio.allocation?.map((a) =>
+          this.convertServiceAllocationToModel(a)
+        ) || [],
+      performance: this.convertServicePerformanceToModel(
+        servicePortfolio.performance
+      ),
+      transactions:
+        servicePortfolio.transactions?.map((t) =>
+          this.convertServiceTransactionToModel(t)
+        ) || [],
+      risk: {
+        riskScore: 5.0,
+        volatility: 15.0,
+        beta: 1.0,
+        sharpeRatio: 1.0,
+        maxDrawdown: -10.0,
+        riskLevel: "medium",
+      },
+      overview: {
+        totalValue:
+          typeof servicePortfolio.totalValue === "string"
+            ? parseFloat(servicePortfolio.totalValue.replace(/,/g, ""))
+            : 0,
+        totalReturn: servicePortfolio.totalGainLoss || 0,
+        dayChange: servicePortfolio.dayChange || 0,
+        dayChangePercent: servicePortfolio.dayChangePercent || 0,
+        holdingsCount: servicePortfolio.holdings.length,
+        lastUpdated: servicePortfolio.updatedAt || new Date().toISOString(),
+      },
+      aiRecommendations: [],
+    };
+  }
+
+  private convertServiceHoldingToModel(
+    serviceHolding: PortfolioTypes.Holding
+  ): Holding {
+    return {
+      symbol: serviceHolding.symbol,
+      name: serviceHolding.name,
+      price: serviceHolding.currentPrice,
+      priceChange: serviceHolding.dayChange || 0,
+      quantity: serviceHolding.quantity.toString(),
+      marketValue: serviceHolding.totalValue || "0",
+      costBasis: (serviceHolding.costBasis || 0).toString(),
+      totalReturn: {
+        value: serviceHolding.unrealizedReturn || "0",
+        percentage: serviceHolding.unrealizedReturnPercent || "0%",
+      },
+      weight: serviceHolding.weight ? `${serviceHolding.weight}%` : "0%",
+    };
+  }
+
+  private convertServiceAllocationToModel(
+    serviceAllocation: PortfolioTypes.AssetAllocation
+  ): AssetAllocation {
+    return {
+      category: serviceAllocation.category || serviceAllocation.name,
+      percentage: serviceAllocation.percentage,
+      value: serviceAllocation.value,
+      color: serviceAllocation.color,
+    };
+  }
+
+  private convertServicePerformanceToModel(
+    servicePerformance?: PortfolioTypes.PerformanceData
+  ): PerformanceData {
+    if (!servicePerformance) {
+      return {
+        labels: [],
+        portfolioValue: [],
+        benchmarkValue: [],
+        timeRange: "1M",
+      };
+    }
+
+    return {
+      labels: servicePerformance.labels,
+      portfolioValue: servicePerformance.values,
+      benchmarkValue: servicePerformance.benchmarkValues || [],
+      timeRange: "1M",
+    };
+  }
+
+  private convertServiceTransactionToModel(
+    serviceTransaction: PortfolioTypes.Transaction
+  ): Transaction {
+    return {
+      id: serviceTransaction.id,
+      symbol: serviceTransaction.symbol,
+      type: serviceTransaction.type === "買入" ? "buy" : "sell",
+      quantity:
+        typeof serviceTransaction.quantity === "string"
+          ? parseFloat(serviceTransaction.quantity)
+          : serviceTransaction.quantity,
+      price: parseFloat(serviceTransaction.price.replace(/[^\d.-]/g, "")),
+      amount: parseFloat(serviceTransaction.total.replace(/[^\d.-]/g, "")),
+      date: serviceTransaction.date,
+      fee: 0,
+      status: "completed" as const,
+    };
   }
 
   async getPortfolio(userId: string): Promise<Portfolio> {
-    try {
+    return this.executeWithErrorHandling(async () => {
+      this.validateRequired(userId, "用戶ID");
+
+      // 優先從服務層獲取數據，回退到模型層
+      try {
+        const portfolios = await this.portfolioService.getUserPortfolios(userId);
+        const servicePortfolio = portfolios.find((p) => p.isDefault) || portfolios[0];
+        if (servicePortfolio) {
+          return this.convertServicePortfolioToModel(servicePortfolio);
+        }
+      } catch (serviceError) {
+        console.warn("服務層獲取失敗，使用模型層:", serviceError);
+      }
+      
       const portfolio = await this.portfolioModel.getPortfolio(userId);
       if (!portfolio) {
         throw new Error("投資組合不存在");
       }
       return portfolio;
-    } catch (error) {
-      throw new Error(
-        `獲取投資組合失敗: ${
-          error instanceof Error ? error.message : "未知錯誤"
-        }`
-      );
-    }
+    }, "獲取投資組合");
+  }
+
+  async getUserPortfolios(userId: string): Promise<Portfolio[]> {
+    return this.executeWithErrorHandling(async () => {
+      this.validateRequired(userId, "用戶ID");
+      const servicePortfolios = await this.portfolioService.getUserPortfolios(userId);
+      return servicePortfolios.map(p => this.convertServicePortfolioToModel(p));
+    }, "獲取用戶投資組合列表");
   }
 
   async addTransaction(
     userId: string,
     request: AddTransactionRequest
   ): Promise<Transaction> {
-    try {
-      // 驗證交易數據
-      if (request.quantity <= 0) {
-        throw new Error("交易數量必須大於0");
-      }
-      if (request.price <= 0) {
-        throw new Error("交易價格必須大於0");
-      }
+    return this.executeWithErrorHandling(async () => {
+      this.validateRequired(userId, "用戶ID");
+      this.validateRequired(request.symbol, "股票代碼");
+      this.validatePositiveNumber(request.quantity, "數量");
+      this.validatePositiveNumber(request.price, "價格");
 
-      const transaction = await this.portfolioModel.addTransaction(userId, {
+      // 使用服務層處理交易邏輯
+      const transactionData = {
+        portfolioId: request.portfolioId || `${userId}_default`,
         symbol: request.symbol,
         type: request.type,
         quantity: request.quantity,
         price: request.price,
-        amount: request.quantity * request.price,
-        date: request.date,
-        fee: this.calculateTransactionFee(request.quantity * request.price),
-        status: "completed",
-      });
+        date: request.date || new Date().toISOString(),
+        fees: request.fees,
+        notes: request.notes,
+      };
 
-      return transaction;
-    } catch (error) {
-      throw new Error(
-        `新增交易失敗: ${error instanceof Error ? error.message : "未知錯誤"}`
-      );
-    }
+      const serviceTransaction = await this.portfolioService.addTransaction(transactionData);
+      return this.convertServiceTransactionToModel(serviceTransaction);
+    }, "新增交易記錄");
   }
 
   async getPortfolioPerformance(
     userId: string,
     timeRange: "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "ALL" = "1M"
   ): Promise<PerformanceData> {
-    try {
-      const portfolio = await this.portfolioModel.getPortfolio(userId);
-      if (!portfolio) {
-        throw new Error("投資組合不存在");
-      }
+    return this.executeWithErrorHandling(async () => {
+      this.validateRequired(userId, "用戶ID");
 
-      // 這裡可以根據時間範圍重新計算績效數據
-      return {
-        ...portfolio.performance,
-        timeRange,
-      };
-    } catch (error) {
-      throw new Error(
-        `獲取投資組合績效失敗: ${
-          error instanceof Error ? error.message : "未知錯誤"
-        }`
+      const portfolio = await this.getPortfolio(userId);
+      const servicePerformance = await this.portfolioService.getPortfolioPerformance(
+        portfolio.id,
+        timeRange.toLowerCase()
       );
-    }
+      return this.convertServicePerformanceToModel(servicePerformance);
+    }, "獲取投資組合績效");
   }
 
   async getAssetAllocation(userId: string): Promise<AssetAllocation[]> {
-    try {
-      const portfolio = await this.portfolioModel.getPortfolio(userId);
-      if (!portfolio) {
-        throw new Error("投資組合不存在");
-      }
-      return portfolio.allocation;
-    } catch (error) {
-      throw new Error(
-        `獲取資產配置失敗: ${
-          error instanceof Error ? error.message : "未知錯誤"
-        }`
-      );
-    }
+    return this.executeWithErrorHandling(async () => {
+      this.validateRequired(userId, "用戶ID");
+
+      const portfolio = await this.getPortfolio(userId);
+      const serviceAllocations = await this.portfolioService.getAssetAllocation(portfolio.id);
+      return serviceAllocations.map(a => this.convertServiceAllocationToModel(a));
+    }, "獲取資產配置");
   }
 
   async getTransactionHistory(
     userId: string,
     limit?: number
   ): Promise<Transaction[]> {
-    try {
-      const portfolio = await this.portfolioModel.getPortfolio(userId);
-      if (!portfolio) {
-        throw new Error("投資組合不存在");
-      }
+    return this.executeWithErrorHandling(async () => {
+      this.validateRequired(userId, "用戶ID");
 
-      let transactions = portfolio.transactions.sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      const portfolio = await this.getPortfolio(userId);
+      const serviceTransactions = await this.portfolioService.getPortfolioTransactions(
+        portfolio.id
       );
 
-      if (limit && limit > 0) {
-        transactions = transactions.slice(0, limit);
-      }
-
-      return transactions;
-    } catch (error) {
-      throw new Error(
-        `獲取交易歷史失敗: ${
-          error instanceof Error ? error.message : "未知錯誤"
-        }`
-      );
-    }
+      const modelTransactions = serviceTransactions.map(t => this.convertServiceTransactionToModel(t));
+      return limit ? modelTransactions.slice(0, limit) : modelTransactions;
+    }, "獲取交易歷史");
   }
 
   async updateHolding(
@@ -206,10 +328,29 @@ export class PortfolioController {
     }
   }
 
+  async getPerformanceAnalysis(userId: string): Promise<PerformanceData> {
+    try {
+      const portfolio = await this.portfolioModel.getPortfolio(userId);
+      if (!portfolio) {
+        throw new Error("投資組合不存在");
+      }
+      return portfolio.performance;
+    } catch (error) {
+      throw new Error(
+        `獲取績效分析失敗: ${
+          error instanceof Error ? error.message : "未知錯誤"
+        }`
+      );
+    }
+  }
+
   async getRiskAnalysis(userId: string): Promise<{
     riskScore: number;
     riskLevel: string;
     volatility: number;
+    sharpeRatio: number;
+    maxDrawdown: number;
+    beta: number;
     recommendations: string[];
   }> {
     try {
@@ -226,6 +367,9 @@ export class PortfolioController {
         riskScore: portfolio.risk.riskScore,
         riskLevel: portfolio.risk.riskLevel,
         volatility: portfolio.risk.volatility,
+        sharpeRatio: portfolio.risk.sharpeRatio,
+        maxDrawdown: portfolio.risk.maxDrawdown,
+        beta: portfolio.risk.beta,
         recommendations,
       };
     } catch (error) {

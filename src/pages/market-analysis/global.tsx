@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ChartBarIcon,
   GlobeAltIcon,
@@ -18,6 +18,14 @@ import {
   ArcElement,
 } from "chart.js";
 import { Line, Bar, Doughnut } from "react-chartjs-2";
+
+// MVC 架構引入
+import { MarketController } from "../../controllers/MarketController";
+import { UserController } from "../../controllers/UserController";
+import { useMvcController, useDataLoader } from "../../hooks/useMvcController";
+import { MarketOverview, MarketSentiment } from "../../types/market";
+import { User } from "../../models/UserModel";
+import Footer from "@/components/Layout/Footer";
 
 // 註冊 Chart.js 組件
 ChartJS.register(
@@ -105,9 +113,84 @@ const GlobalMarket: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  // 模擬數據
-  const marketData: MarketData = {
+  // MVC 架構 - 控制器和狀態管理
+  const marketController = MarketController.getInstance();
+  const userController = UserController.getInstance();
+
+  const {
+    data: user,
+    loading: userLoading,
+    error: userError,
+    execute: executeUser,
+  } = useMvcController<User>();
+
+  const {
+    data: globalMarketData,
+    loading: marketLoading,
+    error: marketError,
+  } = useDataLoader(() => marketController.getGlobalMarketOverview(), null, {
+    onSuccess: (data) => {
+      console.log("全球市場數據載入成功:", data);
+      setLastUpdated(new Date());
+    },
+    onError: (error) => {
+      console.error("載入全球市場數據失敗:", error);
+    },
+  });
+
+  const {
+    data: economicIndicators,
+    loading: economicLoading,
+    execute: executeEconomicRefresh,
+  } = useMvcController<any>();
+
+  const {
+    data: commodityPrices,
+    loading: commodityLoading,
+    execute: executeCommodityRefresh,
+  } = useMvcController<any>();
+
+  // 載入初始數據
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    const userId = "user_001"; // 模擬用戶ID
+
+    try {
+      // 並行載入用戶數據和經濟指標
+      await Promise.all([
+        executeUser(() => userController.getUserProfile(userId)),
+        executeEconomicRefresh(() => marketController.getEconomicIndicators()),
+        executeCommodityRefresh(() => marketController.getCommodityPrices()),
+      ]);
+    } catch (error) {
+      console.error("載入初始數據失敗:", error);
+    }
+  };
+
+  // 刷新所有市場數據
+  const handleRefreshData = async () => {
+    try {
+      setLastUpdated(new Date());
+
+      // 並行刷新所有數據
+      await Promise.all([
+        executeEconomicRefresh(() => marketController.getEconomicIndicators()),
+        executeCommodityRefresh(() => marketController.getCommodityPrices()),
+      ]);
+
+      console.log("全球市場數據刷新完成");
+    } catch (error) {
+      console.error("刷新全球市場數據失敗:", error);
+    }
+  };
+
+  // 模擬數據 (在沒有實際數據時使用)
+  const fallbackMarketData: MarketData = {
     overview: {
       indices: [
         {
@@ -262,6 +345,41 @@ const GlobalMarket: React.FC = () => {
     },
   };
 
+  // 使用從控制器獲取的數據，如果沒有則使用模擬數據
+  const marketData = globalMarketData || fallbackMarketData;
+
+  // 載入狀態
+  if (marketLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">載入全球市場數據中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 錯誤狀態
+  if (marketError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
+            <h3 className="text-lg font-medium text-red-800">載入失敗</h3>
+            <p className="mt-2 text-red-600">{String(marketError)}</p>
+            <button
+              onClick={handleRefreshData}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              重新載入
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // 圖表配置
   const priceChartOptions = {
     responsive: true,
@@ -360,10 +478,10 @@ const GlobalMarket: React.FC = () => {
   };
 
   const regionChartData = {
-    labels: marketData.regions.map((region) => region.name),
+    labels: marketData.regions.map((region: Region) => region.name),
     datasets: [
       {
-        data: marketData.regions.map((region) => region.weight),
+        data: marketData.regions.map((region: Region) => region.weight),
         backgroundColor: [
           "rgba(75, 192, 192, 0.5)",
           "rgba(54, 162, 235, 0.5)",
@@ -398,11 +516,11 @@ const GlobalMarket: React.FC = () => {
   };
 
   const ratesChartData = {
-    labels: marketData.centralBanks.map((bank) => bank.name),
+    labels: marketData.centralBanks.map((bank: CentralBank) => bank.name),
     datasets: [
       {
         label: "政策利率",
-        data: marketData.centralBanks.map((bank) =>
+        data: marketData.centralBanks.map((bank: CentralBank) =>
           parseFloat(bank.rate.split("-")[0])
         ),
         backgroundColor: "rgba(54, 162, 235, 0.6)",
@@ -486,7 +604,7 @@ const GlobalMarket: React.FC = () => {
         {activeTab === "overview" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {marketData.overview.indices.map((index) => (
+              {marketData.overview.indices.map((index: MarketIndex) => (
                 <div
                   key={index.name}
                   className="bg-white rounded-xl shadow-lg p-6"
@@ -527,7 +645,7 @@ const GlobalMarket: React.FC = () => {
         {activeTab === "regions" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {marketData.regions.map((region) => (
+              {marketData.regions.map((region: Region) => (
                 <div
                   key={region.name}
                   className="bg-white rounded-xl shadow-lg p-6"
@@ -576,7 +694,7 @@ const GlobalMarket: React.FC = () => {
         {activeTab === "commodities" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {marketData.overview.commodities.map((commodity) => (
+              {marketData.overview.commodities.map((commodity: Commodity) => (
                 <div
                   key={commodity.name}
                   className="bg-white rounded-xl shadow-lg p-6"
@@ -620,30 +738,32 @@ const GlobalMarket: React.FC = () => {
         {activeTab === "economy" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {marketData.overview.economic.map((indicator) => (
-                <div
-                  key={indicator.name}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {indicator.name}
-                    </h3>
-                    <span
-                      className={`text-sm font-medium ${getStatusColor(
-                        indicator.trend
-                      )}`}
-                    >
-                      {indicator.change}
-                    </span>
+              {marketData.overview.economic.map(
+                (indicator: EconomicIndicator) => (
+                  <div
+                    key={indicator.name}
+                    className="bg-white rounded-xl shadow-lg p-6"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {indicator.name}
+                      </h3>
+                      <span
+                        className={`text-sm font-medium ${getStatusColor(
+                          indicator.trend
+                        )}`}
+                      >
+                        {indicator.change}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-2xl font-bold text-gray-900">
+                        {indicator.value}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {indicator.value}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
 
             {/* 經濟指標趨勢圖 */}
@@ -686,7 +806,7 @@ const GlobalMarket: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {marketData.regions.map((region) => (
+                      {marketData.regions.map((region: Region) => (
                         <tr key={region.name}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {region.name}
@@ -738,7 +858,7 @@ const GlobalMarket: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {marketData.centralBanks.map((bank) => (
+                      {marketData.centralBanks.map((bank: CentralBank) => (
                         <tr key={bank.name}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {bank.name}
@@ -759,6 +879,7 @@ const GlobalMarket: React.FC = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

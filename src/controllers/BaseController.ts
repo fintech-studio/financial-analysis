@@ -1,3 +1,14 @@
+// 導入必要的 Model 類別
+import {
+  UserModel,
+  PortfolioModel,
+  CommunityModel,
+  StockModel,
+  NewsModel,
+  MarketModel,
+  EducationModel,
+} from "../models";
+
 // 統一錯誤處理類
 export class ErrorHandler {
   static handleControllerError(error: any, context: string): never {
@@ -112,4 +123,78 @@ export abstract class BaseController {
       throw new Error("電子郵件格式不正確");
     }
   }
+}
+
+// 依賴注入容器
+export class DIContainer {
+  private static instance: DIContainer;
+  private services: Map<string, any> = new Map();
+  private factories: Map<string, () => any> = new Map();
+
+  static getInstance(): DIContainer {
+    if (!DIContainer.instance) {
+      DIContainer.instance = new DIContainer();
+    }
+    return DIContainer.instance;
+  }
+
+  // 註冊單例服務
+  registerSingleton<T>(key: string, factory: () => T): void {
+    this.factories.set(key, factory);
+  }
+
+  // 註冊實例
+  registerInstance<T>(key: string, instance: T): void {
+    this.services.set(key, instance);
+  }
+
+  // 獲取服務
+  get<T>(key: string): T {
+    if (this.services.has(key)) {
+      return this.services.get(key);
+    }
+
+    if (this.factories.has(key)) {
+      const factory = this.factories.get(key)!;
+      const instance = factory();
+      this.services.set(key, instance);
+      return instance;
+    }
+
+    throw new Error(`Service ${key} not found`);
+  }
+
+  // 清理容器
+  clear(): void {
+    this.services.clear();
+    this.factories.clear();
+  }
+}
+
+// 服務鍵常量
+export const SERVICE_KEYS = {
+  USER_MODEL: "UserModel",
+  PORTFOLIO_MODEL: "PortfolioModel",
+  COMMUNITY_MODEL: "CommunityModel",
+  STOCK_MODEL: "StockModel",
+  NEWS_MODEL: "NewsModel",
+  MARKET_MODEL: "MarketModel",
+  EDUCATION_MODEL: "EducationModel",
+} as const;
+
+// 初始化容器
+export function initializeDIContainer(): void {
+  const container = DIContainer.getInstance();
+
+  // 註冊所有模型
+  container.registerSingleton(SERVICE_KEYS.USER_MODEL, () =>
+    UserModel.getInstance()
+  );
+  container.registerSingleton(SERVICE_KEYS.PORTFOLIO_MODEL, () =>
+    PortfolioModel.getInstance()
+  );
+  container.registerSingleton(SERVICE_KEYS.COMMUNITY_MODEL, () =>
+    CommunityModel.getInstance()
+  );
+  // ... 其他模型
 }

@@ -200,7 +200,7 @@ const Navigation: React.FC = () => {
     <>
       {/* 重新設計的導覽列 - 固定白色背景 */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`sticky top-0 left-0 right-0 z-[100] transition-all duration-500 ${
           scrolled
             ? "bg-white shadow-xl border-b border-gray-200/50"
             : "bg-white shadow-lg border-b border-gray-200"

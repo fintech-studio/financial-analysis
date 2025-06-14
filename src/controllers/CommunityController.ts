@@ -16,9 +16,64 @@ export interface CommunitySearchParams {
   page?: number;
 }
 
+// 新增服務層
+class CommunityPostService {
+  constructor(private model: CommunityModel) {}
+
+  async createPost(
+    postData: Omit<
+      CommunityPost,
+      | "id"
+      | "createdAt"
+      | "updatedAt"
+      | "likes"
+      | "replies"
+      | "views"
+      | "status"
+    >
+  ): Promise<CommunityPost> {
+    return await this.model.createPost(postData);
+  }
+
+  async updatePost(
+    postId: string,
+    updates: Partial<CommunityPost>
+  ): Promise<CommunityPost> {
+    // 實現更新邏輯
+    throw new Error("尚未實現");
+  }
+
+  async deletePost(postId: string, userId: string): Promise<void> {
+    // 實現刪除邏輯
+    console.log(`Post ${postId} deleted by ${userId}`);
+  }
+}
+
+class CommunityInteractionService {
+  constructor(private model: CommunityModel) {}
+
+  async likePost(postId: string, userId: string): Promise<void> {
+    return await this.model.likePost(postId, userId);
+  }
+
+  async savePost(userId: string, postUrl: string): Promise<void> {
+    console.log(`User ${userId} saved post: ${postUrl}`);
+  }
+
+  async reportPost(
+    postId: string,
+    reason: string,
+    reporterId: string
+  ): Promise<void> {
+    console.log(`Post ${postId} reported by ${reporterId} for: ${reason}`);
+  }
+}
+
 export class CommunityController {
   private static instance: CommunityController;
   private communityModel: CommunityModel;
+  private postService: CommunityPostService;
+  private interactionService: CommunityInteractionService;
 
   static getInstance(): CommunityController {
     if (!CommunityController.instance) {
@@ -29,6 +84,10 @@ export class CommunityController {
 
   private constructor() {
     this.communityModel = CommunityModel.getInstance();
+    this.postService = new CommunityPostService(this.communityModel);
+    this.interactionService = new CommunityInteractionService(
+      this.communityModel
+    );
   }
 
   async getAllPosts(params: CommunitySearchParams = {}): Promise<{
@@ -63,6 +122,7 @@ export class CommunityController {
     }
   }
 
+  // 委派給服務層
   async createPost(
     post: Omit<
       CommunityPost,
@@ -76,7 +136,7 @@ export class CommunityController {
     >
   ): Promise<CommunityPost> {
     try {
-      return await this.communityModel.createPost(post);
+      return await this.postService.createPost(post);
     } catch (error) {
       console.error("Error creating post:", error);
       throw new Error("創建貼文失敗");
@@ -96,7 +156,7 @@ export class CommunityController {
 
   async likePost(postId: string, userId: string): Promise<void> {
     try {
-      await this.communityModel.likePost(postId, userId);
+      await this.interactionService.likePost(postId, userId);
     } catch (error) {
       console.error("Error liking post:", error);
       throw new Error("按讚失敗");

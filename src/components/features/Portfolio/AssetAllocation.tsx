@@ -151,7 +151,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
   const [showComparison, setShowComparison] = useState<boolean>(false);
 
   // MVC 控制器
-  const portfolioController = new PortfolioController();
+  const portfolioController = PortfolioController.getInstance();
 
   // 使用 MVC Hook 管理資產配置數據
   const {
@@ -164,23 +164,19 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
   // 載入最新的資產配置數據
   const loadAssetAllocation = async () => {
     const userId = "user_001"; // 應該從認證上下文獲取
-    await executeAllocation(
-      () => portfolioController.getAssetAllocation(userId),
-      {
-        onSuccess: (data) => {
-          console.log("資產配置載入成功:", data);
-        },
-        onError: (error) => {
-          console.error("載入資產配置失敗:", error);
-        },
-      }
-    );
+    await executeAllocation(async () => {
+      const data = await portfolioController.getAssetAllocation(userId);
+      console.log("資產配置載入成功:", data);
+      return data;
+    });
   };
 
   // 初始化時載入數據
   useEffect(() => {
     if (!data || data.byAssetClass.length === 0) {
-      loadAssetAllocation();
+      loadAssetAllocation().catch((error: any) => {
+        console.error("載入資產配置失敗:", error);
+      });
     }
   }, []);
 

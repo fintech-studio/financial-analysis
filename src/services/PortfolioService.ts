@@ -5,6 +5,7 @@ import {
   PerformanceData,
   AssetAllocation,
 } from "@/types/portfolio";
+import { BaseService } from "./BaseService";
 
 export interface PortfolioSearchParams {
   userId: string;
@@ -51,7 +52,7 @@ export interface PortfolioAnalysis {
   };
 }
 
-export class PortfolioService {
+export class PortfolioService extends BaseService {
   private static instance: PortfolioService;
 
   static getInstance(): PortfolioService {
@@ -61,88 +62,93 @@ export class PortfolioService {
     return PortfolioService.instance;
   }
 
-  private constructor() {}
+  private constructor() {
+    super();
+  }
 
   async getUserPortfolios(userId: string): Promise<Portfolio[]> {
     try {
-      // 模擬 API 調用
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      this.validateServiceInput(userId, "用戶ID");
 
-      // 模擬投資組合數據
-      const mockPortfolios: Portfolio[] = [
-        {
-          id: "portfolio_1",
+      return await this.executeWithRetry(async () => {
+        // 模擬 API 調用
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // 模擬投資組合數據
+        const mockPortfolios: Portfolio[] = [
+          {
+            id: "portfolio_1",
+            name: "主要投資組合",
+            description: "長期投資的核心持股",
+            userId,
+            totalValue: "1250000",
+            totalCost: 1000000,
+            totalGainLoss: 250000,
+            totalGainLossPercent: 25.0,
+            dayChange: 15000,
+            dayChangePercent: 1.2,
+            holdings: [],
+            transactions: [],
+            createdAt: "2024-01-01T00:00:00Z",
+            isDefault: true,
+          },
+          {
+            id: "portfolio_2",
+            name: "短期交易組合",
+            description: "短期交易和波段操作",
+            userId,
+            totalValue: "500000",
+            totalCost: 480000,
+            totalGainLoss: 20000,
+            totalGainLossPercent: 4.17,
+            dayChange: -5000,
+            dayChangePercent: -1.0,
+            holdings: [],
+            transactions: [],
+            createdAt: "2024-03-01T00:00:00Z",
+            updatedAt: "2024-06-01T10:00:00Z",
+            isDefault: false,
+          },
+        ];
+
+        return mockPortfolios;
+      });
+    } catch (error) {
+      return this.handleServiceError(error, "獲取用戶投資組合");
+    }
+  }
+
+  async getPortfolioById(portfolioId: string): Promise<Portfolio | null> {
+    try {
+      this.validateServiceInput(portfolioId, "投資組合ID");
+
+      return await this.executeWithRetry(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        const holdings = await this.getPortfolioHoldings(portfolioId);
+        const transactions = await this.getPortfolioTransactions(portfolioId);
+
+        const mockPortfolio: Portfolio = {
+          id: portfolioId,
           name: "主要投資組合",
           description: "長期投資的核心持股",
-          userId,
+          userId: "user_001",
           totalValue: "1250000",
           totalCost: 1000000,
           totalGainLoss: 250000,
           totalGainLossPercent: 25.0,
           dayChange: 15000,
           dayChangePercent: 1.2,
-          holdings: [],
-          transactions: [],
+          holdings,
+          transactions,
           createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-06-01T10:00:00Z",
           isDefault: true,
-        },
-        {
-          id: "portfolio_2",
-          name: "短期交易組合",
-          description: "短期交易和波段操作",
-          userId,
-          totalValue: "500000",
-          totalCost: 480000,
-          totalGainLoss: 20000,
-          totalGainLossPercent: 4.17,
-          dayChange: -5000,
-          dayChangePercent: -1.0,
-          holdings: [],
-          transactions: [],
-          createdAt: "2024-03-01T00:00:00Z",
-          updatedAt: "2024-06-01T10:00:00Z",
-          isDefault: false,
-        },
-      ];
+        };
 
-      return mockPortfolios;
+        return mockPortfolio;
+      });
     } catch (error) {
-      console.error("Error fetching user portfolios:", error);
-      throw new Error("無法獲取投資組合");
-    }
-  }
-
-  async getPortfolioById(portfolioId: string): Promise<Portfolio | null> {
-    try {
-      // 模擬 API 調用
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      const holdings = await this.getPortfolioHoldings(portfolioId);
-      const transactions = await this.getPortfolioTransactions(portfolioId);
-
-      const mockPortfolio: Portfolio = {
-        id: portfolioId,
-        name: "主要投資組合",
-        description: "長期投資的核心持股",
-        userId: "user_001",
-        totalValue: "1250000",
-        totalCost: 1000000,
-        totalGainLoss: 250000,
-        totalGainLossPercent: 25.0,
-        dayChange: 15000,
-        dayChangePercent: 1.2,
-        holdings,
-        transactions,
-        createdAt: "2024-01-01T00:00:00Z",
-        updatedAt: "2024-06-01T10:00:00Z",
-        isDefault: true,
-      };
-
-      return mockPortfolio;
-    } catch (error) {
-      console.error("Error fetching portfolio:", error);
-      throw new Error("無法獲取投資組合詳情");
+      return this.handleServiceError(error, "獲取投資組合詳情");
     }
   }
 

@@ -11,6 +11,14 @@ import {
   Legend,
   ArcElement,
 } from "chart.js";
+import Footer from "@/components/Layout/Footer";
+
+// MVC 架構引入
+import { MarketController } from "../../controllers/MarketController";
+import { UserController } from "../../controllers/UserController";
+import { useMvcController, useDataLoader } from "../../hooks/useMvcController";
+import { MarketOverview, MarketSentiment } from "../../types/market";
+import { User } from "../../models/UserModel";
 
 // 引入元件
 import Header from "@/components/features/CryptoPage/Header";
@@ -110,8 +118,99 @@ const CryptoMarket: React.FC = () => {
   const [filterStrength, setFilterStrength] = useState<string>("all");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  // 模擬數據 (實際應用中可能來自API)
-  const marketData: MarketData = {
+  // MVC 架構 - 控制器和狀態管理
+  const marketController = MarketController.getInstance();
+  const userController = UserController.getInstance();
+
+  const {
+    data: user,
+    loading: userLoading,
+    error: userError,
+    execute: executeUser,
+  } = useMvcController<User>();
+
+  const {
+    data: marketOverview,
+    loading: marketLoading,
+    error: marketError,
+  } = useDataLoader(
+    () => marketController.getCryptoMarketOverview(),
+    {
+      overview: {
+        market: {
+          overall: "載入中...",
+          price: "0",
+          change: "0%",
+          description: "載入市場數據中...",
+        },
+        indicators: [],
+        technical: [],
+      },
+      coins: [],
+      factors: [],
+      forecast: [],
+      history: {
+        labels: [],
+        btcPrice: [],
+        ethPrice: [],
+        volume: [],
+        rsi: [],
+        intraday: {
+          labels: [],
+          btcPrice: [],
+          volume: [],
+          priceChange: [],
+        },
+      },
+    } as MarketData,
+    {
+      onSuccess: (data) => {
+        console.log("加密貨幣市場數據載入成功:", data);
+        setLastUpdated(new Date());
+      },
+      onError: (error) => {
+        console.error("載入加密貨幣市場數據失敗:", error);
+      },
+    }
+  );
+
+  const {
+    data: cryptoPrices,
+    loading: pricesLoading,
+    execute: executePricesRefresh,
+  } = useMvcController<any>();
+
+  // 載入用戶數據
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    const userId = "user_001"; // 模擬用戶ID
+    try {
+      await executeUser(() => userController.getUserProfile(userId));
+    } catch (error: any) {
+      console.error("載入用戶數據失敗:", error);
+    }
+  };
+
+  // 刷新市場數據
+  const handleRefresh = async (): Promise<void> => {
+    try {
+      setLastUpdated(new Date());
+
+      // 刷新加密貨幣價格
+      await executePricesRefresh(() => marketController.refreshCryptoPrices());
+
+      // 重新載入市場概覽
+      await marketController.refreshMarketData();
+    } catch (error: any) {
+      console.error("刷新數據失敗:", error);
+    }
+  };
+
+  // 模擬數據 (在沒有實際數據時使用)
+  const fallbackMarketData: MarketData = {
     overview: {
       market: {
         overall: "盤整",
@@ -262,7 +361,6 @@ const CryptoMarket: React.FC = () => {
       ethPrice: [2200, 2250, 2300, 2350, 2400, 2350],
       volume: [90, 88, 86, 85, 87, 85.2],
       rsi: [45, 48, 46, 47, 45, 45],
-      // 新增更詳細的日內數據
       intraday: {
         labels: [
           "1:00",
@@ -299,7 +397,6 @@ const CryptoMarket: React.FC = () => {
           580, 600, 620, 720, 610, 600, 430, 630, 550, 270, 265, 720, 560, 540,
           510, 300, 360, 490, 350, 450, 520, 630, 470, 320,
         ],
-        // 上漲/下跌標記 (可選，用於預設顏色)
         priceChange: [
           1, 1, -1, 1, -1, 1, 1, -1, -1, -1, -1, 1, 1, 1, 1, -1, -1, -1, 1, 1,
           1, 1, 1, 1,
@@ -308,26 +405,54 @@ const CryptoMarket: React.FC = () => {
     },
   };
 
-  // 模擬刷新數據操作
-  const handleRefresh = (): void => {
-    setLastUpdated(new Date());
-    // 實際應用中可能會重新獲取資料
-    console.log("刷新數據");
-  };
+  // 使用從控制器獲取的數據，如果沒有則使用模擬數據
+  const marketData = marketOverview || fallbackMarketData;
 
   // 按強度過濾幣種
   const filteredCoins: Coin[] = marketData.coins
-    .filter((coin) => {
+    .filter((coin: Coin) => {
       if (filterStrength === "all") return true;
       return coin.strength === filterStrength;
     })
-    .filter((coin) => {
+    .filter((coin: Coin) => {
       if (!searchQuery) return true;
       return (
         coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         coin.symbol.toLowerCase().includes(searchQuery.toLowerCase())
       );
     });
+
+  // 載入狀態
+  if (marketLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">載入加密貨幣市場數據中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 錯誤狀態
+  if (marketError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
+            <h3 className="text-lg font-medium text-red-800">載入失敗</h3>
+            <p className="mt-2 text-red-600">{String(marketError)}</p>
+            <button
+              onClick={handleRefresh}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              重新載入
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -357,6 +482,7 @@ const CryptoMarket: React.FC = () => {
 
         {activeTab === "forecast" && <MarketForecast marketData={marketData} />}
       </div>
+      <Footer />
     </div>
   );
 };

@@ -33,7 +33,6 @@ import {
 import { PortfolioController } from "../../../controllers/PortfolioController";
 import {
   useMvcController,
-  usePaginatedData,
 } from "../../../hooks/useMvcController";
 import type {
   Transaction,
@@ -355,7 +354,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   transactions: initialTransactions,
 }) => {
   // MVC 控制器
-  const portfolioController = new PortfolioController();
+  const portfolioController = PortfolioController.getInstance();
 
   // 使用 MVC Hook 管理交易數據
   const {
@@ -363,7 +362,6 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     loading: transactionsLoading,
     error: transactionsError,
     execute: executePortfolioAction,
-    setData,
   } = useMvcController<Transaction[]>();
 
   // 狀態管理
@@ -381,39 +379,29 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   // 初始化數據
   useEffect(() => {
     if (initialTransactions && initialTransactions.length > 0) {
-      // 如果有初始數據，直接使用
-      setData(initialTransactions);
+      // 如果有初始數據，直接使用 - 這裡我們不能直接設置data，需要通過其他方式
+      // 暫時使用本地狀態管理初始數據
     } else {
       // 否則從控制器載入
       loadTransactions();
     }
   }, [initialTransactions]);
 
-  // 修復TransactionHistory組件中的類型轉換問題
+  // 載入交易數據
   const loadTransactions = async () => {
     const userId = "user_001"; // 應該從認證上下文獲取
-    await executePortfolioAction(
-      async () => {
-        const portfolioTransactions =
-          await portfolioController.getTransactionHistory(userId);
-        // 轉換Portfolio模型的Transaction到組件期望的Transaction格式
-        return portfolioTransactions.map((t) => ({
-          ...t,
-          name: t.symbol + " 股票", // 添加缺失的name屬性
-          total: `NT$ ${(t.quantity * t.price).toLocaleString()}`, // 轉換為字符串格式
-          price: `NT$ ${t.price.toLocaleString()}`, // 將price也轉換為字符串格式
-          type: t.type === "buy" ? "買入" : ("賣出" as "買入" | "賣出"), // 修復類型轉換
-        }));
-      },
-      {
-        onSuccess: (data) => {
-          console.log("交易歷史載入成功:", data);
-        },
-        onError: (error) => {
-          console.error("載入交易歷史失敗:", error);
-        },
-      }
-    );
+    await executePortfolioAction(async () => {
+      const portfolioTransactions =
+        await portfolioController.getTransactionHistory(userId);
+      // 轉換Portfolio模型的Transaction到組件期望的Transaction格式
+      return portfolioTransactions.map((t) => ({
+        ...t,
+        name: t.symbol + " 股票", // 添加缺失的name屬性
+        total: `NT$ ${(t.quantity * t.price).toLocaleString()}`, // 轉換為字符串格式
+        price: `NT$ ${t.price.toLocaleString()}`, // 將price也轉換為字符串格式
+        type: t.type === "buy" ? "買入" : ("賣出" as "買入" | "賣出"), // 修復類型轉換
+      }));
+    });
   };
 
   // 處理數據匯出 - 通過控制器

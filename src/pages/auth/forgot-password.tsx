@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
@@ -14,6 +14,10 @@ import {
   BoltIcon,
   LockClosedIcon,
 } from "@heroicons/react/24/outline";
+
+// MVC 架構引入
+import { UserController } from "../../controllers/UserController";
+import { useMvcController } from "../../hooks/useMvcController";
 
 // 類型定義
 interface ForgotPasswordForm {
@@ -316,10 +320,26 @@ SuccessMessage.displayName = "SuccessMessage";
 const ForgotPasswordPage = () => {
   const router = useRouter();
   const [formData, setFormData] = useState<ForgotPasswordForm>({ email: "" });
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<ForgotPasswordErrors>({});
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
+
+  // MVC 架构 - 使用控制器和Hook
+  const userController = UserController.getInstance();
+
+  const {
+    data: resetResult,
+    loading: isLoading,
+    error: controllerError,
+    execute: executeResetPassword,
+  } = useMvcController<{ message: string }>();
+
+  // 監聽控制器錯誤
+  useEffect(() => {
+    if (controllerError) {
+      setErrors({ general: controllerError.message || "發生錯誤" });
+    }
+  }, [controllerError]);
 
   // 表單變更處理
   const handleChange = useCallback(
@@ -351,39 +371,30 @@ const ForgotPasswordPage = () => {
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-  // 發送重設郵件
+  // 發送重設郵件 - 使用MVC架構
   const sendResetEmail = useCallback(async () => {
     if (attemptCount >= 3) {
       setErrors({ general: "發送次數過多，請稍後再試" });
       return false;
     }
 
-    setIsLoading(true);
-    setErrors({});
-
     try {
-      // 模擬 API 呼叫
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (Math.random() < 0.1) {
-            reject(new Error("服務暫時無法使用，請稍後再試"));
-          } else {
-            resolve(true);
-          }
-        }, 2000);
+      await executeResetPassword(async () => {
+        const result = await userController.requestPasswordReset(
+          formData.email
+        );
+        console.log("密碼重設郵件發送成功:", result);
+        setAttemptCount((prev) => prev + 1);
+        return result;
       });
-
-      setAttemptCount((prev) => prev + 1);
       return true;
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "發送失敗，請稍後再試";
+    } catch (error: any) {
+      console.error("發送密碼重設郵件失敗:", error);
+      const message = error?.message || "發送失敗，請稍後再試";
       setErrors({ general: message });
       return false;
-    } finally {
-      setIsLoading(false);
     }
-  }, [attemptCount]);
+  }, [attemptCount, formData.email, executeResetPassword, userController]);
 
   // 表單提交處理
   const handleSubmit = useCallback(

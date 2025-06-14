@@ -15,6 +15,8 @@
 
   body {
     @apply bg-gray-50 text-gray-900 leading-relaxed;
+    /* 全域隱藏水平滾動條但保持功能 */
+    overflow-x: hidden;
   }
 
   /* 動畫效能優化 */
@@ -294,7 +296,7 @@
   }
 
   .main-content {
-    @apply pt-16 min-h-screen;
+    @apply pt-0 min-h-screen;
   }
 
   /* ===== 導航組件 ===== */
@@ -340,6 +342,50 @@
 
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* 隱藏水平滾動條 */
+  .hide-horizontal-scrollbar {
+    overflow-x: hidden;
+  }
+
+  .hide-horizontal-scrollbar-but-allow-scroll {
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-horizontal-scrollbar-but-allow-scroll::-webkit-scrollbar {
+    height: 0;
+    display: none;
+  }
+
+  /* 只隱藏水平滾動條，保留垂直滾動條 */
+  .hide-x-scrollbar {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .hide-x-scrollbar-preserve-scroll {
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .hide-x-scrollbar-preserve-scroll::-webkit-scrollbar:horizontal {
+    height: 0;
+    display: none;
+  }
+
+  /* Firefox 專用 */
+  .hide-x-scrollbar-preserve-scroll {
+    scrollbar-width: thin;
+  }
+
+  @supports (-moz-appearance: none) {
+    .hide-x-scrollbar-preserve-scroll {
+      scrollbar-width: none;
+      scrollbar-color: transparent transparent;
+    }
   }
 
   .custom-scrollbar::-webkit-scrollbar {
@@ -604,6 +650,51 @@
 
   .backdrop-blur-dark {
     @apply backdrop-blur-md bg-black/20;
+  }
+
+  /* ===== 滾動條控制工具類別 ===== */
+  /* 完全隱藏水平滾動條 */
+  .hide-horizontal-scroll {
+    overflow-x: hidden;
+  }
+
+  /* 隱藏水平滾動條但保持滾動功能 */
+  .hide-horizontal-scrollbar-only {
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-horizontal-scrollbar-only::-webkit-scrollbar:horizontal {
+    height: 0;
+    display: none;
+  }
+
+  /* 全域隱藏所有水平滾動條但保持功能 */
+  .no-horizontal-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-horizontal-scrollbar::-webkit-scrollbar:horizontal {
+    height: 0;
+    display: none;
+  }
+
+  /* 僅在需要時顯示垂直滾動條 */
+  .vertical-scroll-only {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  /* 隱藏所有滾動條但保持滾動功能 */
+  .hide-all-scrollbars {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hide-all-scrollbars::-webkit-scrollbar {
+    display: none;
   }
 }
 

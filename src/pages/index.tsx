@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   SparklesIcon,
@@ -7,21 +7,21 @@ import {
   ChevronRightIcon,
   BriefcaseIcon,
   ChartBarIcon,
-  UserIcon,
-  Bars3Icon,
-  XMarkIcon,
-  MagnifyingGlassIcon,
-  GlobeAltIcon,
-  CurrencyDollarIcon,
-  ChevronDownIcon,
-  ArrowTrendingUpIcon,
 } from "@heroicons/react/24/outline";
-import { FaGithub } from "react-icons/fa";
 import dynamic from "next/dynamic";
 import Wave from "@/components/Wave";
+import Footer from "@/components/Layout/Footer";
 
-// MVC 控制器引入
-import { StockController } from "@/controllers/StockController";
+// 優化後的 MVC 控制器引入
+import { MarketController } from "@/controllers/MarketController";
+import { NewsController } from "@/controllers/NewsController";
+
+// 增強的Hook引入
+import {
+  usePreloadData,
+  useFormController,
+  useRealTimeData,
+} from "@/hooks/useMvcController";
 
 // 動態引入元件以改善首次載入效能
 const TerminalAnimation = dynamic(
@@ -30,428 +30,325 @@ const TerminalAnimation = dynamic(
 );
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [activeTab, setActiveTab] = useState("stocks");
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [, setIsScrolled] = useState(false);
+  const [appReady, setAppReady] = useState(false);
 
-  // 控制器實例
-  const stockController = new StockController();
+  // 控制器實例 - 使用 useMemo 避免重複建立
+  const marketController = useMemo(() => MarketController.getInstance(), []);
+  const newsController = useMemo(() => NewsController.getInstance(), []);
 
-  // 處理搜尋
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery) {
+  // 修復：穩定的載入函數，避免重複建立
+  const loaders = useMemo(
+    () => ({
+      marketOverview: () =>
+        marketController.getMarketOverview().catch((error) => {
+          console.warn("市場概況載入失敗:", error);
+          return { indices: [], trending: [] }; // 返回預設值
+        }),
+      latestNews: () =>
+        newsController.getLatestNews(5).catch((error) => {
+          console.warn("最新新聞載入失敗:", error);
+          return []; // 返回預設值
+        }),
+    }),
+    [marketController, newsController]
+  );
+
+  // 使用多控制器Hook管理多個數據源
+  const { loading: pageLoading, isComplete } = usePreloadData(loaders, {
+    onProgress: (loaded, total) => {
+      console.log(`載入進度: ${loaded}/${total}`);
+    },
+  });
+
+  // 計算載入狀態
+  const isAnyLoading = pageLoading || !isComplete || !appReady;
+
+  // 搜尋表單管理 - 穩定的 validator 函數
+  const searchValidator = useCallback(
+    (values: { query: string; type: string }) => ({
+      query: !values.query.trim() ? "請輸入搜尋內容" : null,
+    }),
+    []
+  );
+
+  const searchSubmitHandler = useCallback(
+    async (values: { query: string; type: string }) => {
       try {
-        // 使用控制器進行搜尋
-        const searchResults = await stockController.searchStocks({
-          query: searchQuery,
-          limit: 10,
-        });
-        console.log("搜尋結果:", searchResults);
-        // 可以導向搜尋結果頁面或顯示結果
+        console.log("搜尋:", values.query, values.type);
+        // 這裡可以導航到搜尋結果頁面
       } catch (error) {
         console.error("搜尋失敗:", error);
       }
+    },
+    []
+  );
+
+  const {
+    values: searchValues,
+    errors: searchErrors,
+    setValue: setSearchValue,
+    handleSubmit: handleSearchSubmit,
+    submitting: searchSubmitting,
+  } = useFormController(
+    { query: "", type: "stocks" as const },
+    searchSubmitHandler,
+    searchValidator
+  );
+
+  // 實時市場數據 - 穩定的載入函數
+  const marketDataLoader = useCallback(
+    () =>
+      marketController.getMarketOverview().catch((error) => {
+        console.warn("實時市場數據載入失敗:", error);
+        return null;
+      }),
+    [marketController]
+  );
+
+  const {
+    isActive: marketActive,
+    start: startMarket,
+    stop: stopMarket,
+  } = useRealTimeData(
+    marketDataLoader,
+    30000, // 30秒更新
+    {
+      autoStart: false, // 改為手動啟動，等應用程式準備好
+      onSuccess: useCallback((data: any) => {
+        console.log("市場數據更新:", data);
+      }, []),
+      onError: useCallback((error: any) => {
+        console.warn("市場數據更新失敗:", error);
+      }, []),
     }
-  };
+  );
+
+  // 應用程式初始化 - 修復依賴問題
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeApp = async () => {
+      try {
+        if (!isMounted) return;
+
+        setAppReady(false);
+        // 等待一小段時間確保組件完全掛載
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        if (!isMounted) return;
+        setAppReady(true);
+      } catch (error) {
+        console.error("應用程式初始化失敗:", error);
+        if (isMounted) {
+          setAppReady(true); // 即使失敗也要繼續顯示頁面
+        }
+      }
+    };
+
+    initializeApp();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // 移除所有依賴，只執行一次
+
+  // 當應用程式準備好後啟動市場數據
+  useEffect(() => {
+    if (appReady && !marketActive) {
+      startMarket();
+    }
+
+    return () => {
+      if (marketActive) {
+        stopMarket();
+      }
+    };
+  }, [appReady]); // 只依賴 appReady
+
+  // 處理搜尋
+  const handleSearch = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      try {
+        await handleSearchSubmit();
+      } catch (error) {
+        console.error("搜尋提交失敗:", error);
+      }
+    },
+    [handleSearchSubmit]
+  );
 
   // 監聽滾動事件
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 導覽選項 - 重新設計結構
-  const navigationItems = [
-    {
-      name: "市場分析",
-      href: "/market-analysis",
-      icon: ChartBarIcon,
-      description: "即時市場動態與技術分析",
-      hasDropdown: true,
-      subItems: [
-        {
-          name: "股票分析",
-          href: "/market-analysis/stock",
-          icon: ChartBarIcon,
-          description: "台股、美股即時分析",
-          color: "text-blue-600",
-          bgColor: "bg-blue-50",
-        },
-        {
-          name: "加密貨幣",
-          href: "/market-analysis/crypto",
-          icon: CurrencyDollarIcon,
-          description: "數位資產市場動態",
-          color: "text-orange-600",
-          bgColor: "bg-orange-50",
-        },
-        {
-          name: "全球市場",
-          href: "/market-analysis/global",
-          icon: GlobeAltIcon,
-          description: "國際指數與外匯",
-          color: "text-green-600",
-          bgColor: "bg-green-50",
-        },
-        {
-          name: "AI 智能預測",
-          href: "/ai-prediction",
-          icon: SparklesIcon,
-          description: "機器學習市場預測",
-          color: "text-purple-600",
-          bgColor: "bg-purple-50",
-        },
-      ],
-    },
-    {
-      name: "投資組合",
-      href: "/portfolio",
-      icon: BriefcaseIcon,
-      description: "智能投資組合管理",
-      hasDropdown: false,
-    },
-    {
-      name: "財經新聞",
-      href: "/news",
-      icon: NewspaperIcon,
-      description: "AI 精選全球財經資訊",
-      hasDropdown: false,
-    },
-    {
-      name: "社群討論",
-      href: "/community",
-      icon: ChatBubbleLeftRightIcon,
-      description: "投資者交流平台",
-      hasDropdown: false,
-    },
-  ];
+  // 頁面可見性變化時控制實時數據
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopMarket();
+      } else if (appReady) {
+        startMarket();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [appReady, startMarket, stopMarket]);
+
+  // 取得最新的市場數據
+
+  // 如果應用程式還沒準備好，顯示載入畫面
+  if (!appReady) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-violet-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white text-lg">正在載入應用程式...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      {/* 重新設計的導覽列 */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isScrolled
-            ? "bg-white/95 backdrop-blur-xl shadow-xl border-b border-gray-200/50"
-            : "bg-white/5 backdrop-blur-md border-b border-white/10"
-        }`}
-      >
-        <div className="container mx-auto px-4 lg:px-6">
-          <div className="flex items-center justify-between h-20">
-            {/* 左側 - 品牌Logo區域 */}
-            <div className="flex items-center space-x-8">
-              <Link href="/" className="flex items-center space-x-3 group">
-                <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300">
-                    <ArrowTrendingUpIcon className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="absolute -inset-1 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
-                </div>
-                <div className="flex flex-col">
-                  <span
-                    className={`text-xl font-bold transition-colors duration-300 ${
-                      isScrolled ? "text-gray-900" : "text-white"
-                    } group-hover:text-blue-600`}
-                  >
-                    FinTech
-                  </span>
-                  <span
-                    className={`text-xs ${
-                      isScrolled ? "text-gray-500" : "text-blue-200/80"
-                    } font-medium`}
-                  >
-                    智慧投資平台
-                  </span>
-                </div>
-              </Link>
-            </div>
-
-            {/* 中間 - 導覽連結區域 (桌面版) - 修正滑鼠感應區域 */}
-            <div className="hidden lg:flex items-center space-x-2">
-              {navigationItems.map((item) => (
-                <div
-                  key={item.name}
-                  className="relative"
-                  onMouseEnter={() =>
-                    item.hasDropdown && setOpenDropdown(item.name)
-                  }
-                  onMouseLeave={() => setOpenDropdown(null)}
-                >
-                  <Link
-                    href={item.href}
-                    className={`group flex items-center space-x-2 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden ${
-                      isScrolled
-                        ? "text-gray-700 hover:text-blue-600 hover:bg-blue-50/80"
-                        : "text-white/90 hover:text-white hover:bg-white/10"
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5 transition-transform group-hover:scale-110 duration-200" />
-                    <span className="font-medium text-sm">{item.name}</span>
-                    {item.hasDropdown && (
-                      <ChevronDownIcon
-                        className={`h-4 w-4 transition-transform duration-200 ${
-                          openDropdown === item.name ? "rotate-180" : ""
-                        }`}
-                      />
-                    )}
-
-                    {/* 懸停效果背景 */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </Link>
-
-                  {/* 下拉選單 - 移除間距並添加連接橋樑 */}
-                  {item.hasDropdown && openDropdown === item.name && (
-                    <>
-                      {/* 隱形的連接橋樑 - 填補空隙 */}
-                      <div className="absolute top-full left-0 w-full h-1 bg-transparent"></div>
-
-                      {/* 下拉選單主體 */}
-                      <div className="absolute top-full left-0 pt-1 w-60 z-50">
-                        <div className="bg-white backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 py-0 animate-fade-in-down">
-                          {/* 子項目列表 */}
-                          <div className="px-3 py-2">
-                            {item.subItems?.map((subItem) => (
-                              <Link
-                                key={subItem.name}
-                                href={subItem.href}
-                                className="group flex items-start p-3 rounded-xl hover:bg-gray-50/80 transition-all duration-200 mb-1"
-                              >
-                                {/* 圖標區域 */}
-                                <div
-                                  className={`w-10 h-10 ${subItem.bgColor} rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-200`}
-                                >
-                                  {typeof subItem.icon === "string" ? (
-                                    <span className="text-lg">
-                                      {subItem.icon}
-                                    </span>
-                                  ) : (
-                                    <subItem.icon
-                                      className={`h-5 w-5 ${subItem.color}`}
-                                    />
-                                  )}
-                                </div>
-
-                                {/* 內容區域 */}
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between">
-                                    <h4
-                                      className={`font-semibold text-sm text-gray-900 group-hover:${subItem.color} transition-colors`}
-                                    >
-                                      {subItem.name}
-                                    </h4>
-                                    <ChevronRightIcon className="h-4 w-4 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all duration-200" />
-                                  </div>
-                                  <p className="text-xs text-gray-500 mt-0.5 group-hover:text-gray-700 transition-colors">
-                                    {subItem.description}
-                                  </p>
-                                </div>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* 右側 - 操作區域 */}
-            <div className="flex items-center space-x-3">
-              {/* 搜尋按鈕 (桌面版) */}
-              <button
-                className={`hidden md:flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ${
-                  isScrolled
-                    ? "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <MagnifyingGlassIcon className="h-5 w-5" />
-              </button>
-
-              {/* 登入/註冊按鈕 */}
-              <div className="hidden md:flex items-center space-x-2">
-                <Link
-                  href="/auth"
-                  className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium text-sm shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-blue-500/40 hover:scale-105"
-                >
-                  登入
-                </Link>
-              </div>
-
-              {/* 手機版選單按鈕 */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className={`lg:hidden p-2.5 rounded-xl transition-all duration-300 ${
-                  isScrolled
-                    ? "text-gray-700 hover:bg-gray-100"
-                    : "text-white hover:bg-white/10"
-                }`}
-              >
-                {isMobileMenuOpen ? (
-                  <XMarkIcon className="h-6 w-6" />
-                ) : (
-                  <Bars3Icon className="h-6 w-6" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* 手機版下拉選單 - 重新設計 */}
-          {isMobileMenuOpen && (
-            <div className="lg:hidden absolute top-full left-0 right-0 bg-white/98 backdrop-blur-xl border-b border-gray-200/50 shadow-2xl">
-              <div className="px-4 py-6 space-y-1">
-                {/* 手機版搜尋框 */}
-                <div className="mb-6">
-                  <div className="relative">
-                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="搜尋股票、新聞、討論..."
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* 導覽項目 */}
-                {navigationItems.map((item) => (
-                  <div key={item.name}>
-                    <Link
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center space-x-4 px-4 py-4 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group"
-                    >
-                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                        <item.icon className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <span className="font-medium text-base">
-                          {item.name}
-                        </span>
-                      </div>
-                      <ChevronRightIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
-                    </Link>
-                  </div>
-                ))}
-
-                {/* 手機版操作按鈕 */}
-                <div className="pt-6 mt-6 border-t border-gray-200 space-y-3">
-                  <Link
-                    href="/auth"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center justify-center w-full px-4 py-3 text-gray-700 font-medium rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <UserIcon className="h-5 w-5 mr-2" />
-                    登入帳戶
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
-
       <main>
         {/* Hero Section - 漸變背景與波浪效果 */}
-        <section className="relative min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-violet-900 flex items-center overflow-hidden">
-          {/* 動態背景裝飾 */}
-          <div className="absolute inset-0">
-            {/* 浮動圓點裝飾 */}
-            <div className="absolute top-20 right-[20%] w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-40 left-[10%] w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl"></div>
-            <div className="absolute top-40 left-[15%] w-36 h-36 bg-violet-400/30 rounded-full blur-2xl"></div>
+        <section className="relative min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden mt-[-60px]">
+          {/* 動態網格背景 */}
+          <div className="absolute inset-0 opacity-20">
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `
+                linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+              `,
+                backgroundSize: "50px 50px",
+              }}
+            />
           </div>
 
-          <div className="container mx-auto px-4 pt-24 pb-24 relative z-10">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              {/* 左側內容 */}
-              <div className="space-y-10">
-                <div className="animate-fade-in-up">
-                  <h1 className="mt-8 text-5xl md:text-6xl xl:text-7xl font-bold leading-tight">
-                    <span className="text-white">大數據驅動</span>
-                    <br />
-                    <div className="mt-2 inline-block text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-blue-300 to-purple-200">
-                      智慧投資決策
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid lg:grid-cols-2 gap-12 xl:gap-16 items-center min-h-screen py-20">
+              {/* 主標題 */}
+              <div className="space-y-6 lg:space-y-8">
+                <div className="animate-fade-in-up animation-delay-200">
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
+                    <span className="block text-white mb-2">未來金融</span>
+                    <div className="relative">
+                      <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 animate-gradient">
+                        智慧投資決策
+                      </span>
+                      {/* 文字光效 */}
+                      <div className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 blur-sm opacity-50 animate-pulse"></div>
                     </div>
                   </h1>
 
-                  <p className="mt-6 text-blue-100/90 text-xl max-w-xl leading-relaxed">
-                    運用人工智能與大數據分析，提供專業市場洞察、風險評估與個人化投資建議，
-                    讓您在複雜多變的金融市場中做出明智決策。
+                  <p className="mt-6 lg:mt-8 text-blue-100/90 text-lg lg:text-xl max-w-2xl leading-relaxed">
+                    運用前沿 AI 技術與大數據分析，為您提供個人化投資洞察、
+                    <span className="text-blue-300 font-semibold">
+                      智能風險管理
+                    </span>
+                    與
+                    <span className="text-purple-300 font-semibold">
+                      精準市場預測
+                    </span>
+                    ，讓投資決策更加明智且高效。
                   </p>
                 </div>
 
-                {/* 搜尋區塊 - 重新設計 */}
-                <div className="max-w-xl animation-delay-400">
+                {/* 搜尋區塊 - 使用Hook管理 */}
+                <div className="max-w-2x1 animation-delay-400">
                   <div className="relative">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-2xl blur opacity-30"></div>
-                    <div className="relative bg-white/10 backdrop-blur-xl rounded-xl p-1.5">
-                      {/* 搜尋類型標籤 */}
-                      <div className="flex mb-2 px-2 pt-1">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-400/30 to-indigo-400/30 rounded-xl blur opacity-40"></div>
+                    <div className="relative bg-white/10 backdrop-blur-xl rounded-xl p-3 border border-white/20 shadow-lg">
+                      {/* 搜尋類型選擇標籤 */}
+                      <div className="flex gap-2 mb-4">
                         {[
-                          { id: "stocks", name: "股票" },
-                          { id: "crypto", name: "加密貨幣" },
-                          { id: "etf", name: "ETF" },
-                        ].map((tab) => (
+                          { key: "stocks", label: "股票" },
+                          { key: "crypto", label: "加密貨幣" },
+                          { key: "etf", label: "ETF" },
+                        ].map((type) => (
                           <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`px-3 py-1.5 rounded-lg mr-1 text-sm transition-all ${
-                              activeTab === tab.id
-                                ? "bg-white/20 text-white"
-                                : "text-blue-200 hover:bg-white/10"
+                            key={type.key}
+                            onClick={() => setSearchValue("type", type.key)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 ${
+                              searchValues.type === type.key
+                                ? "bg-white/20 text-white border border-white/30 shadow-md"
+                                : "text-white/70 hover:text-white hover:bg-white/10 border border-white/15 hover:border-white/25"
                             }`}
                           >
-                            {tab.name}
+                            {type.label}
                           </button>
                         ))}
                       </div>
 
-                      <form onSubmit={handleSearch} className="relative">
-                        <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder={
-                            activeTab === "stocks"
-                              ? "輸入股票代號或公司名稱..."
-                              : activeTab === "crypto"
-                              ? "輸入加密貨幣名稱..."
-                              : "輸入ETF代號..."
-                          }
-                          className="w-full px-6 py-4 pr-36 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200/70 focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition duration-200"
-                        />
-                        <Link
-                          href={`/ai-prediction/${activeTab}/${searchQuery}`}
-                          type="submit"
-                          className="absolute right-2 top-1/2 -translate-y-1/2
-                          bg-gradient-to-r from-blue-500 to-indigo-500
-                          hover:from-blue-600 hover:to-indigo-600
-                          text-white px-6 py-2.5 rounded-lg
-                          flex items-center space-x-2
-                          transition-all duration-200
-                          shadow-lg shadow-indigo-500/30"
-                        >
-                          <SparklesIcon className="h-5 w-5" />
-                          <span>AI 預測</span>
-                        </Link>
-                      </form>
+                      {/* 搜尋輸入框容器 */}
+                      <div className="relative">
+                        <form onSubmit={handleSearch} className="relative">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={searchValues.query}
+                              onChange={(e) =>
+                                setSearchValue("query", e.target.value)
+                              }
+                              placeholder={
+                                searchValues.type === "stocks"
+                                  ? "輸入股票代號或公司名稱..."
+                                  : searchValues.type === "crypto"
+                                  ? "輸入加密貨幣名稱..."
+                                  : "輸入ETF代號..."
+                              }
+                              className="w-full px-4 py-3 pr-28 rounded-lg bg-white/10 border border-white/25 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400/40 transition-all duration-300 backdrop-blur-sm"
+                            />
+                            <button
+                              type="submit"
+                              disabled={searchSubmitting}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-500 disabled:to-gray-600 text-white px-4 py-2 rounded-md flex items-center space-x-1.5 transition-all duration-300 shadow-md hover:shadow-blue-500/25 disabled:opacity-50"
+                            >
+                              {searchSubmitting ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              ) : (
+                                <SparklesIcon className="h-4 w-4" />
+                              )}
+                              <span className="text-sm font-medium">
+                                {searchSubmitting ? "搜尋中" : "AI 預測"}
+                              </span>
+                            </button>
+                          </div>
+                        </form>
+
+                        {/* 顯示搜尋錯誤 */}
+                        {searchErrors.query && (
+                          <p className="text-red-300 text-sm mt-2">
+                            ⚠️ {searchErrors.query}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-blue-200/80">
-                    <span>熱門搜尋：</span>
+                  {/* 熱門搜尋標籤 */}
+                  <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+                    <span className="text-white/70 font-medium">
+                      熱門搜尋：
+                    </span>
                     {["台積電", "聯發科", "鴻海", "緯創"].map((term) => (
                       <button
                         key={term}
-                        onClick={() => setSearchQuery(term)}
-                        className="px-2.5 py-1 rounded-full border border-blue-400/30 hover:bg-blue-500/20 hover:text-white transition-all"
+                        onClick={() => setSearchValue("query", term)}
+                        className="px-3 py-1 rounded-full bg-white/8 border border-white/15 text-white/80 hover:bg-white/15 hover:text-white hover:border-white/30 transition-all duration-300 backdrop-blur-sm hover:scale-105"
                       >
                         {term}
                       </button>
@@ -492,7 +389,12 @@ export default function Home() {
                         v3.2.1
                       </span>
                     </div>
-                    <div className="flex items-center space-x-2 ml-4"></div>
+                    <div className="flex items-center space-x-2 ml-4">
+                      {/* 載入狀態指示器 */}
+                      {isAnyLoading && (
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                      )}
+                    </div>
                   </div>
 
                   {/* 終端機主體 */}
@@ -500,23 +402,20 @@ export default function Home() {
                     className="text-gray-200 font-mono text-sm h-80 relative"
                     style={{ overflow: "hidden" }}
                   >
-                    {/* 增加陰影效果 */}
-                    <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-gray-900/40 to-transparent pointer-events-none z-10"></div>
-
-                    {/* 終端機內容 */}
                     <div className="p-4 relative h-full">
                       <TerminalAnimation />
                     </div>
-
-                    {/* 底部漸層效果 */}
-                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-900/80 to-transparent pointer-events-none"></div>
                   </div>
 
                   {/* 終端機底部狀態列 */}
                   <div className="bg-gray-800/70 px-3 py-1.5 border-t border-gray-700/40 flex items-center justify-between text-xs text-gray-400">
                     <div className="flex items-center">
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
-                      已連接
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                          marketActive ? "bg-green-500" : "bg-gray-500"
+                        }`}
+                      ></span>
+                      {marketActive ? "已連接" : "連線中斷"}
                     </div>
                     <div className="flex items-center space-x-3">
                       <span>12ms 延遲</span>
@@ -526,7 +425,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* 重新設計浮動資訊卡片 */}
+                {/* 浮動資訊卡片 */}
                 <div className="absolute -right-8 bottom-20 transform rotate-6 bg-gradient-to-r from-blue-600/90 to-blue-500/90 px-3 py-2 rounded-lg shadow-lg text-white text-xs flex items-center backdrop-blur-sm border border-blue-400/30 group-hover:scale-105 transition-transform">
                   <div className="absolute inset-0 bg-blue-600 animate-pulse-slow opacity-30 rounded-lg"></div>
                   <svg
@@ -590,15 +489,21 @@ export default function Home() {
         </section>
 
         {/* 功能區塊 - 重新設計 */}
-        <section className="py-20 bg-slate-50">
+        <section className="py-12 bg-slate-50 ">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                智慧金融工具，讓您決策無憂
-              </h2>
-              <p className="text-xl text-gray-600">
-                整合多元化的功能與工具，協助您在投資路上走得更穩健
-              </p>
+            <div className="max-w-4xl mx-auto text-center mb-20">
+              <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-6">
+                <SparklesIcon className="w-4 h-4 mr-2" />
+                核心功能
+              </div>
+              <div className="max-w-3xl mx-auto text-center mb-16">
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                  智慧金融工具，讓您決策無憂
+                </h2>
+                <p className="text-xl text-gray-600">
+                  整合多元化的功能與工具，協助您在投資路上走得更穩健
+                </p>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -635,24 +540,7 @@ export default function Home() {
         </section>
       </main>
 
-      {/* 頁腳 */}
-      <footer className="bg-gray-900 text-gray-400 py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col items-center space-y-4">
-            <a
-              href="https://github.com/HaoXun97/financial-analysis"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 transition-colors duration-200"
-            >
-              <FaGithub className="w-6 h-6 text-gray-400 hover:text-white transition-colors" />
-            </a>
-            <p>
-              &copy; {new Date().getFullYear()} FinTech Studio 保留所有權利。
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* 根據需要添加全域樣式 */}
       <style jsx global>{`
@@ -738,5 +626,3 @@ const features = [
     link: "/community",
   },
 ];
-
-Home.hideNavigation = true;

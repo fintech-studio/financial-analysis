@@ -1,143 +1,507 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
-// 基本的 MVC 控制器 Hook
-export function useMvcController<T>() {
+// 基礎 Hook 類型定義
+export interface ControllerHookOptions {
+  autoStart?: boolean;
+  cacheKey?: string;
+  cacheTTL?: number;
+  onSuccess?: (data: any) => void;
+  onError?: (error: Error) => void;
+}
+
+export interface RetryOptions extends ControllerHookOptions {
+  maxRetries?: number;
+  retryDelay?: number;
+  retryCondition?: (error: Error) => boolean;
+  onRetry?: (attempt: number, error: Error) => void;
+}
+
+export interface RealTimeOptions extends ControllerHookOptions {
+  interval?: number;
+  autoStart?: boolean;
+}
+
+export interface PreloadOptions {
+  priority?: string[];
+  concurrent?: boolean;
+  onProgress?: (loaded: number, total: number) => void;
+}
+
+// 預加載數據 Hook
+export function usePreloadData<T extends Record<string, () => Promise<any>>>(
+  loaders: T,
+  options: PreloadOptions = {}
+) {
+  const [data, setData] = useState<Record<keyof T, any>>(
+    {} as Record<keyof T, any>
+  );
+  const [loading, setLoading] = useState<Record<keyof T, boolean>>(
+    {} as Record<keyof T, boolean>
+  );
+  const [errors, setErrors] = useState<Record<keyof T, string>>(
+    {} as Record<keyof T, string>
+  );
+  const [progress, setProgress] = useState({
+    loaded: 0,
+    total: Object.keys(loaders).length,
+  });
+  const [isComplete, setIsComplete] = useState(false);
+
+  // 修復：使用 useRef 來穩定 loaders 引用
+  const loadersRef = useRef(loaders);
+  loadersRef.current = loaders;
+
+  // 修復：使用 useRef 來穩定 options 引用
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
+  const reload = useCallback(async () => {
+    const currentLoaders = loadersRef.current;
+    const currentOptions = optionsRef.current;
+
+    const keys = Object.keys(currentLoaders) as Array<keyof T>;
+    const total = keys.length;
+    let loaded = 0;
+
+    setIsComplete(false);
+
+    // 初始化loading狀態
+    const initialLoading = {} as Record<keyof T, boolean>;
+    keys.forEach((key) => {
+      initialLoading[key] = true;
+    });
+    setLoading(initialLoading);
+    setErrors({} as Record<keyof T, string>);
+    setProgress({ loaded: 0, total });
+
+    // 使用 Promise.allSettled 來並行載入，避免一個失敗影響其他
+    const results = await Promise.allSettled(
+      keys.map(async (key) => {
+        try {
+          const result = await currentLoaders[key]();
+          return { key, result, success: true };
+        } catch (error) {
+          return {
+            key,
+            error: error instanceof Error ? error.message : "未知錯誤",
+            success: false,
+          };
+        }
+      })
+    );
+
+    // 處理結果
+    const newData = {} as Record<keyof T, any>;
+    const newErrors = {} as Record<keyof T, string>;
+    const newLoading = {} as Record<keyof T, boolean>;
+
+    results.forEach((result, index) => {
+      const key = keys[index];
+      newLoading[key] = false;
+      
+      if (result.status === 'fulfilled' && result.value.success) {
+        newData[key] = result.value.result;
+        loaded++;
+      } else {
+        const errorMessage = result.status === 'fulfilled' 
+          ? result.value.error || '載入失敗'
+          : '載入失敗';
+        newErrors[key] = errorMessage;
+        console.warn(`載入 ${String(key)} 失敗:`, errorMessage);
+      }
+    });
+
+    setData((prev) => ({ ...prev, ...newData }));
+    setErrors(newErrors);
+    setLoading(newLoading);
+    setProgress({ loaded, total });
+    setIsComplete(true);
+
+    currentOptions.onProgress?.(loaded, total);
+  }, []); // 空依賴陣列，因為我們使用 ref
+
+  // 修復：只在組件掛載時執行一次
+  const hasExecutedRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasExecutedRef.current) {
+      hasExecutedRef.current = true;
+      reload();
+    }
+  }, []); // 空依賴陣列，只執行一次
+
+  const hasErrors = Object.keys(errors).length > 0;
+  const pageLoading = Object.values(loading).some(Boolean);
+
+  return {
+    data,
+    loading,
+    errors,
+    progress,
+    isComplete,
+    hasErrors,
+    reload,
+  };
+}
+
+// 基礎控制器 Hook
+export function useMvcController<T>(
+  controllerFn?: () => Promise<T>,
+  options: ControllerHookOptions = {}
+) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   const execute = useCallback(
-    async (
-      action: () => Promise<T>,
-      options?: {
-        onSuccess?: (data: T) => void;
-        onError?: (error: Error) => void;
-      }
-    ) => {
+    async (fn?: () => Promise<T>) => {
+      const targetFn = fn || controllerFn;
+      if (!targetFn) return;
+
+      setLoading(true);
+      setError(null);
+
       try {
-        setLoading(true);
-        setError(null);
-        const result = await action();
+        const result = await targetFn();
         setData(result);
-        options?.onSuccess?.(result);
-        return result;
+        options.onSuccess?.(result);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "未知錯誤";
-        setError(errorMessage);
-        options?.onError?.(err as Error);
-        throw err;
+        const error = err instanceof Error ? err : new Error("Unknown error");
+        setError(error);
+        options.onError?.(error);
       } finally {
         setLoading(false);
       }
     },
-    []
+    [controllerFn, options]
   );
 
-  return { data, loading, error, execute, setData };
+  useEffect(() => {
+    if (options.autoStart !== false && controllerFn) {
+      execute();
+    }
+  }, [execute, options.autoStart]);
+
+  return { data, loading, error, execute };
 }
 
-// 數據載入 Hook
-export function useDataLoader<T>(
-  loader: () => Promise<T>,
-  defaultValue: T,
-  options?: {
-    onSuccess?: (data: T) => void;
-    onError?: (error: Error) => void;
-  }
+// 重試機制 Hook
+export function useControllerWithRetry<T>(
+  controllerFn: () => Promise<T>,
+  options: RetryOptions = {}
 ) {
-  const [data, setData] = useState<T>(defaultValue);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  useEffect(() => {
-    const loadData = async () => {
+  const {
+    maxRetries = 3,
+    retryDelay = 1000,
+    retryCondition = () => true,
+    onRetry,
+    ...baseOptions
+  } = options;
+
+  const execute = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setRetryCount(0);
+
+    const attemptExecution = async (attempt: number): Promise<void> => {
       try {
-        setLoading(true);
-        setError(null);
-        const result = await loader();
+        const result = await controllerFn();
         setData(result);
-        options?.onSuccess?.(result);
+        baseOptions.onSuccess?.(result);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "載入失敗";
-        setError(errorMessage);
-        options?.onError?.(err as Error);
-      } finally {
-        setLoading(false);
+        const error = err instanceof Error ? err : new Error("Unknown error");
+
+        if (attempt < maxRetries && retryCondition(error)) {
+          setRetryCount(attempt + 1);
+          onRetry?.(attempt + 1, error);
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
+          return attemptExecution(attempt + 1);
+        } else {
+          setError(error);
+          baseOptions.onError?.(error);
+        }
       }
     };
 
-    loadData();
-  }, []);
+    await attemptExecution(0);
+    setLoading(false);
+  }, [
+    controllerFn,
+    maxRetries,
+    retryDelay,
+    retryCondition,
+    onRetry,
+    baseOptions,
+  ]);
 
-  return { data, loading, error };
-}
-
-// 分頁數據 Hook
-export function usePaginatedData<T>(
-  loader: (
-    page: number,
-    limit: number
-  ) => Promise<{
-    data: T[];
-    total: number;
-    page: number;
-    totalPages: number;
-  }>,
-  pageSize: number = 10
-) {
-  const [data, setData] = useState<T[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-
-  const loadPage = useCallback(
-    async (page: number) => {
-      try {
-        setLoading(true);
-        setError(null);
-        const result = await loader(page, pageSize);
-        setData(result.data);
-        setCurrentPage(result.page);
-        setTotalPages(result.totalPages);
-        setTotal(result.total);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "載入失敗";
-        setError(errorMessage);
-        setData([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [loader, pageSize]
-  );
-
-  const nextPage = useCallback(() => {
-    if (currentPage < totalPages) {
-      loadPage(currentPage + 1);
-    }
-  }, [currentPage, totalPages, loadPage]);
-
-  const prevPage = useCallback(() => {
-    if (currentPage > 1) {
-      loadPage(currentPage - 1);
-    }
-  }, [currentPage, loadPage]);
+  const retry = useCallback(() => {
+    execute();
+  }, [execute]);
 
   useEffect(() => {
-    loadPage(1);
-  }, [loadPage]);
+    if (baseOptions.autoStart !== false) {
+      execute();
+    }
+  }, [execute, baseOptions.autoStart]);
+
+  return { data, loading, error, retryCount, execute, retry };
+}
+
+// 實時數據 Hook
+export function useRealTimeData<T>(
+  controllerFn: () => Promise<T>,
+  interval = 30000,
+  options: RealTimeOptions = {}
+) {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [isActive, setIsActive] = useState(false);
+
+  const { autoStart = true, onSuccess, onError } = options;
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await controllerFn();
+      setData(result);
+      onSuccess?.(result);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Unknown error");
+      setError(error);
+      onError?.(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [controllerFn, onSuccess, onError]);
+
+  const start = useCallback(() => {
+    if (isActive) return;
+
+    setIsActive(true);
+    fetchData(); // 立即執行一次
+
+    intervalRef.current = setInterval(fetchData, interval);
+  }, [isActive, fetchData, interval]);
+
+  const stop = useCallback(() => {
+    if (!isActive) return;
+
+    setIsActive(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [isActive]);
+
+  useEffect(() => {
+    if (autoStart) {
+      start();
+    }
+
+    return () => {
+      stop();
+    };
+  }, [autoStart, start, stop]);
 
   return {
     data,
     loading,
     error,
-    currentPage,
-    totalPages,
-    total,
-    loadPage,
-    nextPage,
-    prevPage,
+    isActive,
+    start,
+    stop,
+    retry: fetchData,
   };
 }
+
+// 表單控制器 Hook
+export function useFormController<T extends Record<string, any>>(
+  initialValues: T,
+  onSubmit: (values: T) => Promise<void>,
+  validator?: (values: T) => Partial<Record<keyof T, string | null>>
+) {
+  const [values, setValues] = useState<T>(initialValues);
+  const [errors, setErrors] = useState<Partial<Record<keyof T, string | null>>>(
+    {}
+  );
+  const [submitting, setSubmitting] = useState(false);
+
+  const setValue = useCallback(
+    (key: keyof T, value: any) => {
+      setValues((prev) => ({ ...prev, [key]: value }));
+      // 清除該欄位的錯誤
+      if (errors[key]) {
+        setErrors((prev) => ({ ...prev, [key]: null }));
+      }
+    },
+    [errors]
+  );
+
+  const handleSubmit = useCallback(async () => {
+    if (validator) {
+      const validationErrors = validator(values);
+      const hasErrors = Object.values(validationErrors).some(
+        (error) => error !== null
+      );
+
+      if (hasErrors) {
+        setErrors(validationErrors);
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    setErrors({});
+
+    try {
+      await onSubmit(values);
+    } catch (error) {
+      console.error("表單提交失敗:", error);
+    } finally {
+      setSubmitting(false);
+    }
+  }, [values, validator, onSubmit]);
+
+  const reset = useCallback(() => {
+    setValues(initialValues);
+    setErrors({});
+  }, [initialValues]);
+
+  return {
+    values,
+    errors,
+    submitting,
+    setValue,
+    handleSubmit,
+    reset,
+  };
+}
+
+// 數據載入器 Hook
+export function useDataLoader<T>(
+  loader: () => Promise<T>,
+  defaultValue: T,
+  options: ControllerHookOptions = {}
+) {
+  return useMvcController<T>(loader, { ...options, autoStart: true });
+}
+
+// 智能搜索 Hook
+export function useSmartSearch<T>(
+  searchFn: (query: string) => Promise<T[]>,
+  options: { debounceMs?: number; minQueryLength?: number } = {}
+) {
+  const [query, setQuery] = useState<string>("");
+  const [results, setResults] = useState<T[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const { debounceMs = 300, minQueryLength = 2 } = options;
+
+  const debouncedSearch = useCallback(
+    debounce(async (searchQuery: string) => {
+      if (searchQuery.length < minQueryLength) {
+        setResults([]);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const searchResults = await searchFn(searchQuery);
+        setResults(searchResults);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("搜索失敗");
+        setError(error);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, debounceMs),
+    [searchFn, minQueryLength, debounceMs]
+  );
+
+  const performSearch = useCallback(
+    (searchQuery: string) => {
+      setQuery(searchQuery);
+      debouncedSearch(searchQuery);
+    },
+    [debouncedSearch]
+  );
+
+  const clearResults = useCallback(() => {
+    setResults([]);
+    setQuery("");
+    setError(null);
+  }, []);
+
+  return {
+    query,
+    setQuery: performSearch,
+    results,
+    loading,
+    error,
+    performSearch,
+    clearResults,
+  };
+}
+
+// 防抖函數
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  return function (this: any, ...args: Parameters<T>) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+// 緩存管理器
+export class CacheManager {
+  private cache: Map<string, { data: any; timestamp: number; ttl: number }> =
+    new Map();
+
+  set(key: string, data: any, ttl: number = 300000): void {
+    // 預設5分鐘
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl,
+    });
+  }
+
+  get(key: string): any | null {
+    const item = this.cache.get(key);
+    if (!item) return null;
+
+    if (Date.now() - item.timestamp > item.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+
+    return item.data;
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  delete(key: string): void {
+    this.cache.delete(key);
+  }
+}
+
+// 全域緩存實例
+export const globalCacheManager = new CacheManager();

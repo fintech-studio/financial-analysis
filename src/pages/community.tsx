@@ -10,15 +10,18 @@ import {
   ChartBarIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import Footer from "../components/Layout/Footer";
 
-// MVC 架構引入
+// 優化後的 MVC 架構引入
 import { CommunityController } from "../controllers/CommunityController";
 import { UserController } from "../controllers/UserController";
 import {
-  useMvcController,
-  useDataLoader,
-  usePaginatedData,
+  usePreloadData,
+  useControllerWithRetry,
+  useFormController,
+  useSmartSearch,
 } from "../hooks/useMvcController";
+import { useAppInitialization } from "../utils/appInitializer";
 
 interface Post {
   title: string;
@@ -58,58 +61,115 @@ interface SortOption {
 
 const CommunityPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("discussions");
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedForum, setSelectedForum] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("time");
   const [timeRange, setTimeRange] = useState<string>("all");
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [savedPosts, setSavedPosts] = useState<string[]>([]);
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
 
-  // MVC 控制器實例 - 使用單例模式
-  const communityController = CommunityController.getInstance();
-  const userController = new UserController();
-
-  // 使用 MVC Hooks 管理數據
+  // 應用程式初始化
   const {
-    data: user,
-    loading: userLoading,
-    error: userError,
-    execute: executeUser,
-  } = useMvcController<any>();
-
-  const {
-    data: forums,
-    loading: forumsLoading,
-    error: forumsError,
-  } = useDataLoader(() => communityController.getForums(), [], {
-    onSuccess: (data) => console.log("論壇數據載入成功:", data),
-    onError: (error) => console.error("論壇數據載入失敗:", error),
+    isLoading: appLoading,
+    isInitialized,
+    error: appError,
+  } = useAppInitialization({
+    enableCache: true,
+    enableMockData: true,
   });
 
-  const {
-    data: trendingPosts,
-    loading: trendingLoading,
-    execute: executeTrending,
-  } = useMvcController<any[]>();
+  // MVC 控制器實例
+  const communityController = CommunityController.getInstance();
+  const userController = UserController.getInstance();
 
+  // 使用優化後的預加載 Hook
   const {
-    data: popularPosts,
-    loading: popularLoading,
-    execute: executePopular,
-  } = useMvcController<any[]>();
+    data: pageData,
+    loading: pageLoading,
+    errors: pageErrors,
+    progress,
+    isComplete,
+    reload: reloadPageData,
+  } = usePreloadData(
+    {
+      user: () => userController.getUserProfile("user_001"),
+      forums: () => communityController.getForums(),
+      savedPosts: () => communityController.getSavedPosts("user_001"),
+      trendingPosts: () => communityController.getTrendingPosts(10),
+      popularPosts: () => communityController.getPopularPosts(10),
+      categories: () => communityController.getCategories(),
+    },
+    {
+      priority: [
+        "user",
+        "forums",
+        "categories",
+        "savedPosts",
+        "trendingPosts",
+        "popularPosts",
+      ],
+      concurrent: false,
+      onProgress: (loaded, total) => {
+        console.log(`社群數據預加載進度: ${loaded}/${total}`);
+      },
+    }
+  );
 
-  // 優化：使用 debounce 處理搜尋查詢
+  // 智能搜尋 Hook
+  const {
+    query: searchQuery,
+    setQuery: setSearchQuery,
+    results: searchResults,
+    loading: searchLoading,
+    error: searchError,
+    performSearch,
+    clearResults,
+  } = useSmartSearch(
+    async (query: string) => {
+      return await communityController.searchForumPosts({
+        query,
+        category: selectedCategory !== "all" ? selectedCategory : undefined,
+        forum: selectedForum !== "all" ? selectedForum : undefined,
+        timeRange: timeRange !== "all" ? timeRange : undefined,
+        sortBy,
+      });
+    },
+    { debounceMs: 300, minQueryLength: 2 }
+  );
+
+  // 使用重試機制的資料更新
+  const {
+    data: realtimeData,
+    loading: realtimeLoading,
+    error: realtimeError,
+    retry: retryRealtime,
+  } = useControllerWithRetry(() => communityController.getForums(), {
+    maxRetries: 3,
+    retryDelay: 2000,
+    retryCondition: (error) => error.message.includes("網路"),
+    onRetry: (attempt, error) => {
+      console.log(`重試第 ${attempt} 次，錯誤:`, error.message);
+    },
+    cacheKey: "community_forums",
+    cacheTTL: 60000, // 1分鐘緩存
+  });
+
+  // 從預加載數據中提取各種資料
+  const {
+    user,
+    forums,
+    savedPosts: initialSavedPosts,
+    categories: categoriesFromData,
+  } = pageData;
+
+  // 初始化收藏文章
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 300);
+    if (initialSavedPosts) {
+      setSavedPosts(initialSavedPosts);
+    }
+  }, [initialSavedPosts]);
 
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
-  // 優化：使用 useCallback 包裝函數避免重複創建
+  // 輔助函數 - 移到 useMemo 之前
   const filterPosts = useCallback(
     (posts: any[], activeTab: string, savedPosts: string[]) => {
       if (activeTab === "hot") {
@@ -160,87 +220,6 @@ const CommunityPage: React.FC = () => {
     });
   }, []);
 
-  // 優化：分離過濾邏輯並使用 useMemo 緩存結果
-  const processedForums = useMemo(() => {
-    if (!forums || forums.length === 0) return [];
-
-    // 避免在每次渲染時創建新的陣列
-    const result = forums
-      .filter(
-        (forum: any) => selectedForum === "all" || forum.name === selectedForum
-      )
-      .map((forum: any) => {
-        if (!forum.posts || forum.posts.length === 0) {
-          return { ...forum, posts: [] };
-        }
-
-        // 基本過濾
-        let filteredPosts = forum.posts.filter((post: any) => {
-          const matchesSearch =
-            !debouncedSearchQuery ||
-            post.title
-              .toLowerCase()
-              .includes(debouncedSearchQuery.toLowerCase()) ||
-            post.author
-              .toLowerCase()
-              .includes(debouncedSearchQuery.toLowerCase());
-
-          const matchesCategory =
-            selectedCategory === "all" || post.category === selectedCategory;
-
-          return matchesSearch && matchesCategory;
-        });
-
-        // 時間過濾
-        filteredPosts = filterByTimeRange(filteredPosts, timeRange);
-
-        // 根據標籤過濾
-        filteredPosts = filterPosts(filteredPosts, activeTab, savedPosts);
-
-        // 排序
-        filteredPosts = sortPosts(filteredPosts, sortBy);
-
-        return { ...forum, posts: filteredPosts };
-      })
-      .filter((forum: any) => forum.posts.length > 0);
-
-    return result;
-  }, [
-    forums,
-    debouncedSearchQuery,
-    selectedCategory,
-    selectedForum,
-    timeRange,
-    sortBy,
-    activeTab,
-    savedPosts,
-    filterPosts,
-    sortPosts,
-    filterByTimeRange,
-  ]);
-
-  // 優化：減少重複計算
-  const categories = useMemo(() => {
-    if (!forums) return ["all"];
-
-    const categorySet = new Set<string>();
-    forums.forEach((forum: any) => {
-      if (forum.posts) {
-        forum.posts.forEach((post: any) => {
-          if (post.category) {
-            categorySet.add(post.category);
-          }
-        });
-      }
-    });
-    return ["all", ...Array.from(categorySet)];
-  }, [forums]);
-
-  const forumNames = useMemo(() => {
-    if (!forums) return ["all"];
-    return ["all", ...forums.map((forum: any) => forum.name)];
-  }, [forums]);
-
   // 優化：使用 useCallback 避免重複創建函數
   const handleSavePost = useCallback(
     async (postUrl: string) => {
@@ -264,53 +243,84 @@ const CommunityPage: React.FC = () => {
     setActiveTab(tabId);
   }, []);
 
-  // 載入用戶數據
-  const loadUserData = async () => {
-    const userId = "user_001";
-    await executeUser(() => userController.getUserProfile(userId));
-  };
+  // 優化：使用 useMemo 緩存過濾和排序結果
+  const processedForums = useMemo(() => {
+    if (!forums || forums.length === 0) return [];
 
-  // 載入趨勢貼文
-  const loadTrendingPosts = async () => {
-    await executeTrending(() => communityController.getTrendingPosts(10));
-  };
+    // 避免在每次渲染時創建新的陣列
+    const result = forums
+      .filter(
+        (forum: any) => selectedForum === "all" || forum.name === selectedForum
+      )
+      .map((forum: any) => {
+        if (!forum.posts || forum.posts.length === 0) {
+          return { ...forum, posts: [] };
+        }
 
-  // 載入熱門貼文
-  const loadPopularPosts = async () => {
-    await executePopular(() => communityController.getPopularPosts(10));
-  };
+        // 基本過濾
+        let filteredPosts = forum.posts.filter((post: any) => {
+          const matchesSearch =
+            !searchQuery ||
+            post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            post.author.toLowerCase().includes(searchQuery.toLowerCase());
 
-  // 載入收藏貼文
-  const loadSavedPosts = async () => {
-    try {
-      const userId = "user_001";
-      const saved = await communityController.getSavedPosts(userId);
-      setSavedPosts(saved);
-    } catch (error) {
-      console.error("載入收藏貼文失敗:", error);
-    }
-  };
+          const matchesCategory =
+            selectedCategory === "all" || post.category === selectedCategory;
 
-  // 初始化載入數據
-  useEffect(() => {
-    loadUserData();
-    loadTrendingPosts();
-    loadPopularPosts();
-    loadSavedPosts();
-  }, []);
+          return matchesSearch && matchesCategory;
+        });
 
-  // 優化：減少不必要的重新載入
-  useEffect(() => {
-    if (debouncedSearchQuery !== searchQuery) return;
-    // 只在真正需要時才重新載入
-    const timeoutId = setTimeout(() => {
-      // loadPage(1);
-    }, 100);
+        // 時間過濾
+        filteredPosts = filterByTimeRange(filteredPosts, timeRange);
 
-    return () => clearTimeout(timeoutId);
-  }, [selectedCategory, debouncedSearchQuery, sortBy]);
+        // 根據標籤過濾
+        filteredPosts = filterPosts(filteredPosts, activeTab, savedPosts);
 
-  // 時間範圍選項
+        // 排序
+        filteredPosts = sortPosts(filteredPosts, sortBy);
+
+        return { ...forum, posts: filteredPosts };
+      })
+      .filter((forum: any) => forum.posts.length > 0);
+
+    return result;
+  }, [
+    forums,
+    searchQuery,
+    selectedCategory,
+    selectedForum,
+    timeRange,
+    sortBy,
+    activeTab,
+    savedPosts,
+    filterPosts,
+    sortPosts,
+    filterByTimeRange,
+  ]);
+
+  // 優化：減少重複計算
+  const categoriesList = useMemo(() => {
+    if (!forums) return ["all"];
+
+    const categorySet = new Set<string>();
+    forums.forEach((forum: any) => {
+      if (forum.posts) {
+        forum.posts.forEach((post: any) => {
+          if (post.category) {
+            categorySet.add(post.category);
+          }
+        });
+      }
+    });
+    return ["all", ...Array.from(categorySet)];
+  }, [forums]);
+
+  const forumNames = useMemo(() => {
+    if (!forums) return ["all"];
+    return ["all", ...forums.map((forum: any) => forum.name)];
+  }, [forums]);
+
+  // 常數定義
   const timeRanges: TimeRange[] = [
     { value: "all", label: "全部時間" },
     { value: "today", label: "今天" },
@@ -318,7 +328,6 @@ const CommunityPage: React.FC = () => {
     { value: "month", label: "本月" },
   ];
 
-  // 排序選項
   const sortOptions: SortOption[] = [
     { value: "time", label: "最新發布" },
     { value: "likes", label: "最多讚" },
@@ -331,28 +340,58 @@ const CommunityPage: React.FC = () => {
     { id: "saved", name: "收藏文章", icon: BookmarkIcon },
   ];
 
-  // 添加載入狀態檢查
-  if (forumsLoading) {
+  // 如果應用程式未初始化，顯示載入畫面
+  if (!isInitialized) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">載入社群數據中...</p>
+          <p className="mt-4 text-gray-600">正在初始化應用程式...</p>
+          {appError && <p className="text-red-500 text-sm mt-2">{appError}</p>}
         </div>
       </div>
     );
   }
 
-  if (forumsError) {
+  // 數據載入中
+  if (pageLoading && !isComplete) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
-            <h3 className="text-lg font-medium text-red-800">載入失敗</h3>
-            <p className="mt-2 text-red-600">{forumsError}</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <div className="w-full max-w-md mx-auto bg-gray-200 rounded-full h-2 mt-4">
+            <div
+              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(progress.loaded / progress.total) * 100}%` }}
+            />
+          </div>
+          <p className="mt-4 text-gray-600">
+            正在載入社群數據... ({progress.loaded}/{progress.total})
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 錯誤處理
+  if (Object.keys(pageErrors).length > 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-red-800 mb-2">
+              載入失敗
+            </h2>
+            <ul className="text-red-700 text-sm space-y-1">
+              {Object.entries(pageErrors).map(([key, error]) => (
+                <li key={key}>
+                  {key}: {error}
+                </li>
+              ))}
+            </ul>
             <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              onClick={reloadPageData}
+              className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
             >
               重新載入
             </button>
@@ -363,208 +402,214 @@ const CommunityPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">社群討論</h1>
-        </div>
+    <>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">社群討論</h1>
+          </div>
 
-        {/* 搜尋和過濾器 */}
-        <div className="mb-8 space-y-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                placeholder="搜尋文章..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
-            </div>
-            <div className="flex items-center space-x-2">
-              <FunnelIcon className="h-5 w-5 text-gray-500" />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category === "all" ? "所有分類" : category}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedForum}
-                onChange={(e) => setSelectedForum(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {forumNames.map((forum) => (
-                  <option key={forum} value={forum}>
-                    {forum === "all" ? "所有論壇" : forum}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {timeRanges.map((range) => (
-                  <option key={range.value} value={range.value}>
-                    {range.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+          {/* 搜尋和過濾器 */}
+          <div className="mb-8 space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  placeholder="搜尋文章..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
+              </div>
+              <div className="flex items-center space-x-2">
+                <FunnelIcon className="h-5 w-5 text-gray-500" />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {categoriesList.map((category: string) => (
+                    <option key={category} value={category}>
+                      {category === "all" ? "所有分類" : category}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={selectedForum}
+                  onChange={(e) => setSelectedForum(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {forumNames.map((forum: string) => (
+                    <option key={forum} value={forum}>
+                      {forum === "all" ? "所有論壇" : forum}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={timeRange}
+                  onChange={(e) => setTimeRange(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {timeRanges.map((range) => (
+                    <option key={range.value} value={range.value}>
+                      {range.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* 標籤導航 */}
-        <div className="border-b border-gray-200 mb-8">
-          <nav className="-mb-px flex space-x-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  <Icon className="h-5 w-5 mr-2" />
-                  {tab.name}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* 論壇列表 */}
-        {processedForums.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-500">
-              <ChatBubbleLeftIcon className="h-12 w-12 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">沒有找到相關討論</h3>
-              <p>請嘗試調整搜尋條件或瀏覽其他分類</p>
-            </div>
+          {/* 標籤導航 */}
+          <div className="border-b border-gray-200 mb-8">
+            <nav className="-mb-px flex space-x-8">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === tab.id
+                        ? "border-blue-500 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5 mr-2" />
+                    {tab.name}
+                  </button>
+                );
+              })}
+            </nav>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {processedForums.map((forum) => {
-              const Icon = forum.icon;
-              return (
-                <div
-                  key={forum.id}
-                  className="bg-white rounded-lg shadow p-6 transition-shadow hover:shadow-lg"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <Icon className="h-8 w-8 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <h2 className="text-lg font-medium text-gray-900">
-                          {forum.name}
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                          {forum.category}
-                        </p>
-                      </div>
-                    </div>
-                    <a
-                      href={forum.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 flex-shrink-0"
-                    >
-                      <ArrowTopRightOnSquareIcon className="h-5 w-5" />
-                    </a>
-                  </div>
-                  <p className="text-gray-600 mb-4 line-clamp-2">
-                    {forum.description}
-                  </p>
 
-                  {/* 熱門文章列表 */}
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-gray-900">
-                      熱門討論 ({forum.posts.length})
-                    </h3>
-                    {forum.posts.slice(0, 5).map((post: any, index: number) => (
-                      <div
-                        key={`${forum.id}-${index}`}
-                        className="block p-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
-                        onClick={() => setSelectedPost(post)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <h4 className="text-sm font-medium text-gray-900 line-clamp-1 flex-1">
-                            {post.title}
-                          </h4>
-                          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                            {post.timestamp}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between mt-1">
-                          <p className="text-xs text-gray-500 truncate">
-                            {post.author}
+          {/* 論壇列表 */}
+          {processedForums.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-500">
+                <ChatBubbleLeftIcon className="h-12 w-12 mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">沒有找到相關討論</h3>
+                <p>請嘗試調整搜尋條件或瀏覽其他分類</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {processedForums.map((forum: any) => {
+                const Icon = forum.icon;
+                return (
+                  <div
+                    key={forum.id}
+                    className="bg-white rounded-lg shadow p-6 transition-shadow hover:shadow-lg"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <Icon className="h-8 w-8 text-blue-600 flex-shrink-0" />
+                        <div>
+                          <h2 className="text-lg font-medium text-gray-900">
+                            {forum.name}
+                          </h2>
+                          <p className="text-sm text-gray-500">
+                            {forum.category}
                           </p>
-                          <div className="flex items-center space-x-2 flex-shrink-0">
-                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                              {post.category}
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSavePost(post.url);
-                              }}
-                              className={`text-xs transition-colors ${
-                                savedPosts.includes(post.url)
-                                  ? "text-yellow-600"
-                                  : "text-gray-400"
-                              } hover:text-yellow-600`}
-                            >
-                              <BookmarkIcon className="h-4 w-4" />
-                            </button>
+                        </div>
+                      </div>
+                      <a
+                        href={forum.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 flex-shrink-0"
+                      >
+                        <ArrowTopRightOnSquareIcon className="h-5 w-5" />
+                      </a>
+                    </div>
+                    <p className="text-gray-600 mb-4 line-clamp-2">
+                      {forum.description}
+                    </p>
+
+                    {/* 熱門文章列表 */}
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-gray-900">
+                        熱門討論 ({forum.posts.length})
+                      </h3>
+                      {forum.posts
+                        .slice(0, 5)
+                        .map((post: any, index: number) => (
+                          <div
+                            key={`${forum.id}-${index}`}
+                            className="block p-3 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+                            onClick={() => setSelectedPost(post)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <h4 className="text-sm font-medium text-gray-900 line-clamp-1 flex-1">
+                                {post.title}
+                              </h4>
+                              <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                                {post.timestamp}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-xs text-gray-500 truncate">
+                                {post.author}
+                              </p>
+                              <div className="flex items-center space-x-2 flex-shrink-0">
+                                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                                  {post.category}
+                                </span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSavePost(post.url);
+                                  }}
+                                  className={`text-xs transition-colors ${
+                                    savedPosts.includes(post.url)
+                                      ? "text-yellow-600"
+                                      : "text-gray-400"
+                                  } hover:text-yellow-600`}
+                                >
+                                  <BookmarkIcon className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                              <span className="flex items-center">
+                                <ChartBarIcon className="h-4 w-4 mr-1" />
+                                {post.views ?? 0} 瀏覽
+                              </span>
+                              <span className="flex items-center">
+                                <FireIcon className="h-4 w-4 mr-1" />
+                                {post.likes ?? 0} 讚
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                          <span className="flex items-center">
-                            <ChartBarIcon className="h-4 w-4 mr-1" />
-                            {post.views ?? 0} 瀏覽
-                          </span>
-                          <span className="flex items-center">
-                            <FireIcon className="h-4 w-4 mr-1" />
-                            {post.likes ?? 0} 讚
+                        ))}
+                      {forum.posts.length > 5 && (
+                        <div className="text-center">
+                          <span className="text-xs text-gray-500">
+                            還有 {forum.posts.length - 5} 篇文章...
                           </span>
                         </div>
-                      </div>
-                    ))}
-                    {forum.posts.length > 5 && (
-                      <div className="text-center">
-                        <span className="text-xs text-gray-500">
-                          還有 {forum.posts.length - 5} 篇文章...
-                        </span>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <Footer />
       </div>
 
       {/* 文章預覽模態框 */}
@@ -624,7 +669,7 @@ const CommunityPage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

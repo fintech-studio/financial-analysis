@@ -63,6 +63,39 @@ export interface MarketData {
   };
 }
 
+export interface StockDetail {
+  symbol: string;
+  name: string;
+  price: number;
+  change?: string;
+  changePercent?: string;
+  open?: number;
+  high?: number;
+  low?: number;
+  volume?: number;
+  industry?: string;
+  marketCap?: number;
+  pe?: number;
+  pb?: number;
+  dividendYield?: number;
+  high52w?: number;
+  low52w?: number;
+  priceHistory?: number[];
+}
+
+export interface MarketOverview {
+  totalValue: number;
+  change: number;
+  changePercent: number;
+  volume: string;
+  status: string;
+  sectors: Array<{
+    name: string;
+    change: number;
+    changePercent: number;
+  }>;
+}
+
 export class StockModel {
   private static instance: StockModel;
   private stocks: Map<string, Stock> = new Map();
@@ -153,5 +186,70 @@ export class StockModel {
       hotSymbols.map((symbol) => this.getStock(symbol))
     );
     return results.filter((stock) => stock !== null) as Stock[];
+  }
+
+  async getStocks(): Promise<StockDetail[]> {
+    // 模擬獲取股票列表
+    const mockStocks: StockDetail[] = [
+      {
+        symbol: "2330",
+        name: "台積電",
+        price: 580,
+        change: "+1.75%",
+        changePercent: "+1.75%",
+        open: 570,
+        high: 585,
+        low: 568,
+        volume: 35862,
+        industry: "半導體",
+        marketCap: 15050000,
+        pe: 18.5,
+        pb: 4.2,
+        dividendYield: 1.9,
+        high52w: 625,
+        low52w: 445,
+        priceHistory: [570, 575, 580, 578, 580],
+      },
+      {
+        symbol: "2454",
+        name: "聯發科",
+        price: 950,
+        change: "+2.15%",
+        changePercent: "+2.15%",
+        open: 925,
+        high: 955,
+        low: 920,
+        volume: 28450,
+        industry: "半導體",
+        marketCap: 1520000,
+        pe: 15.2,
+        pb: 3.8,
+        dividendYield: 2.1,
+        high52w: 1100,
+        low52w: 680,
+        priceHistory: [925, 930, 950, 948, 950],
+      },
+      {
+        symbol: "2317",
+        name: "鴻海",
+        price: 105,
+        change: "-0.95%",
+        changePercent: "-0.95%",
+        open: 106,
+        high: 107,
+        low: 104,
+        volume: 45200,
+        industry: "電子",
+        marketCap: 1460000,
+        pe: 12.8,
+        pb: 1.2,
+        dividendYield: 4.5,
+        high52w: 115,
+        low52w: 88,
+        priceHistory: [106, 105, 105, 104, 105],
+      },
+    ];
+
+    return mockStocks;
   }
 }

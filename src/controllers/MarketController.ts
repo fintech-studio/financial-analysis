@@ -298,6 +298,77 @@ export class MarketController {
       throw new Error("無法獲取市場摘要數據");
     }
   }
+
+  async getCryptoMarketOverview(): Promise<any> {
+    try {
+      // 獲取加密貨幣市場概覽
+      const overview = await this.marketModel.getMarketOverview();
+      // 可以在這裡添加特定於加密貨幣的邏輯
+      return {
+        ...overview,
+        cryptoSpecific: true,
+      };
+    } catch (error) {
+      console.error("Error fetching crypto market overview:", error);
+      throw new Error("無法獲取加密貨幣市場概覽");
+    }
+  }
+
+  async getGlobalMarketOverview(): Promise<any> {
+    try {
+      // 獲取全球市場概覽
+      const overview = await this.marketModel.getMarketOverview();
+      // 可以在這裡添加全球市場特定的邏輯
+      return {
+        ...overview,
+        globalMarkets: true,
+      };
+    } catch (error) {
+      console.error("Error fetching global market overview:", error);
+      throw new Error("無法獲取全球市場概覽");
+    }
+  }
+
+  async refreshCryptoPrices(): Promise<any> {
+    try {
+      // 刷新加密貨幣價格
+      console.log("Refreshing crypto prices...");
+      return { success: true, timestamp: new Date() };
+    } catch (error) {
+      console.error("Error refreshing crypto prices:", error);
+      throw new Error("無法刷新加密貨幣價格");
+    }
+  }
+
+  async getEconomicIndicators(): Promise<any> {
+    try {
+      // 獲取經濟指標
+      return {
+        gdp: { value: "3.2%", change: "+0.1%" },
+        inflation: { value: "2.8%", change: "-0.2%" },
+        unemployment: { value: "3.7%", change: "0.0%" },
+        interestRate: { value: "5.25%", change: "0.0%" },
+      };
+    } catch (error) {
+      console.error("Error fetching economic indicators:", error);
+      throw new Error("無法獲取經濟指標");
+    }
+  }
+
+  async getCommodityPrices(): Promise<any> {
+    try {
+      // 獲取商品價格
+      return {
+        gold: { price: 2035, change: "+0.5%" },
+        oil: { price: 75.2, change: "-1.2%" },
+        copper: { price: 3.85, change: "+0.8%" },
+        silver: { price: 24.5, change: "+1.2%" },
+      };
+    } catch (error) {
+      console.error("Error fetching commodity prices:", error);
+      throw new Error("無法獲取商品價格");
+    }
+  }
 }
 
 export default MarketController;

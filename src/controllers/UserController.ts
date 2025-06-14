@@ -15,6 +15,8 @@ export interface UserRegisterRequest {
   email: string;
   password: string;
   location: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface UserUpdateRequest {
@@ -27,10 +29,18 @@ export interface UserUpdateRequest {
 }
 
 export class UserController {
+  private static instance: UserController;
   private userModel: UserModel;
 
-  constructor() {
+  private constructor() {
     this.userModel = UserModel.getInstance();
+  }
+
+  static getInstance(): UserController {
+    if (!UserController.instance) {
+      UserController.instance = new UserController();
+    }
+    return UserController.instance;
   }
 
   async login(
@@ -271,6 +281,22 @@ export class UserController {
       );
     } catch (error) {
       throw new Error("更新通知設定失敗");
+    }
+  }
+
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    try {
+      // 模擬密碼重設請求
+      console.log(`Password reset requested for email: ${email}`);
+
+      // 這裡可以添加實際的郵件發送邏輯
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // 模擬延遲
+
+      return {
+        message: `密碼重設郵件已發送至 ${email}`,
+      };
+    } catch (error) {
+      throw new Error("發送密碼重設郵件失敗");
     }
   }
 }

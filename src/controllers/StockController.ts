@@ -1,4 +1,10 @@
-import { StockModel, Stock, StockData, MarketData } from "../models/StockModel";
+import {
+  StockModel,
+  Stock,
+  StockData,
+  StockDetail,
+  MarketData,
+} from "../models/StockModel";
 
 export interface StockSearchRequest {
   query: string;
@@ -16,9 +22,17 @@ export interface StockPriceRequest {
 }
 
 export class StockController {
+  private static instance: StockController;
   private stockModel: StockModel;
 
-  constructor() {
+  static getInstance(): StockController {
+    if (!StockController.instance) {
+      StockController.instance = new StockController();
+    }
+    return StockController.instance;
+  }
+
+  private constructor() {
     this.stockModel = StockModel.getInstance();
   }
 
@@ -218,6 +232,89 @@ export class StockController {
     } catch (error) {
       console.error("Error fetching watchlist:", error);
       throw new Error("無法獲取關注列表");
+    }
+  }
+
+  async getStocks(filters?: any): Promise<StockDetail[]> {
+    try {
+      // 獲取股票列表，支援篩選
+      const stocks = await this.stockModel.getStocks();
+
+      if (!filters) return stocks;
+
+      let filteredStocks = stocks;
+
+      // 按板塊篩選
+      if (filters.sector && filters.sector !== "all") {
+        filteredStocks = filteredStocks.filter((stock) =>
+          stock.industry?.toLowerCase().includes(filters.sector.toLowerCase())
+        );
+      }
+
+      // 按搜尋關鍵字篩選
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        filteredStocks = filteredStocks.filter(
+          (stock) =>
+            stock.name.toLowerCase().includes(searchTerm) ||
+            stock.symbol.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      return filteredStocks;
+    } catch (error) {
+      throw new Error("獲取股票列表失敗");
+    }
+  }
+
+  async getTechnicalAnalysis(): Promise<any> {
+    try {
+      // 模擬技術分析數據
+      return {
+        bullish: [
+          {
+            symbol: "2330",
+            name: "台積電",
+            pattern: "突破阻力線",
+            confidence: 85,
+          },
+          {
+            symbol: "2454",
+            name: "聯發科",
+            pattern: "黃金交叉",
+            confidence: 78,
+          },
+        ],
+        bearish: [
+          { symbol: "2317", name: "鴻海", pattern: "頭肩頂", confidence: 72 },
+          {
+            symbol: "3008",
+            name: "大立光",
+            pattern: "死亡交叉",
+            confidence: 68,
+          },
+        ],
+      };
+    } catch (error) {
+      throw new Error("獲取技術分析失敗");
+    }
+  }
+
+  async addFavoriteStock(userId: string, symbol: string): Promise<void> {
+    try {
+      // 模擬添加收藏股票
+      console.log(`User ${userId} added ${symbol} to favorites`);
+    } catch (error) {
+      throw new Error("添加收藏股票失敗");
+    }
+  }
+
+  async removeFavoriteStock(userId: string, symbol: string): Promise<void> {
+    try {
+      // 模擬移除收藏股票
+      console.log(`User ${userId} removed ${symbol} from favorites`);
+    } catch (error) {
+      throw new Error("移除收藏股票失敗");
     }
   }
 

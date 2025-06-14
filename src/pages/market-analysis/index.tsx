@@ -20,6 +20,7 @@ import {
   EyeIcon,
   CommandLineIcon,
 } from "@heroicons/react/24/outline";
+import Footer from "@/components/Layout/Footer";
 
 // MVC 架構引入
 import { MarketController } from "../../controllers/MarketController";
@@ -83,7 +84,7 @@ const MarketAnalysis: React.FC = () => {
 
   // 控制器實例
   const marketController = MarketController.getInstance();
-  const userController = new UserController();
+  const userController = UserController.getInstance();
 
   // 載入初始數據
   useEffect(() => {
@@ -959,6 +960,7 @@ const MarketAnalysis: React.FC = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

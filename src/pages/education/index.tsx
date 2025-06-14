@@ -28,7 +28,6 @@ import { UserController } from "../../controllers/UserController";
 import {
   useMvcController,
   useDataLoader,
-  usePaginatedData,
 } from "../../hooks/useMvcController";
 import {
   Course,
@@ -111,7 +110,7 @@ const EducationPage: React.FC = () => {
 
   // MVC 控制器實例
   const educationController = EducationController.getInstance();
-  const userController = new UserController();
+  const userController = UserController.getInstance();
 
   // 使用 MVC Hooks 管理各種數據
   const {
@@ -139,36 +138,50 @@ const EducationPage: React.FC = () => {
     data: courses,
     loading: coursesLoading,
     error: coursesError,
-    currentPage: coursePage,
-    totalPages: courseTotalPages,
-    loadPage: loadCoursePage,
-    nextPage: nextCoursePage,
-    prevPage: prevCoursePage,
-  } = usePaginatedData(
-    (page, limit) =>
-      educationController
-        .getAllResources({
-          page,
-          limit,
-          type: "course",
-          level: difficulty !== "all" ? difficulty : undefined,
-          // 移除不支援的search參數，改用title搜尋
-        })
-        .then((result) => ({
-          data: result.resources.filter(
-            (resource) =>
-              !searchTerm ||
-              resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-              resource.description
-                .toLowerCase()
-                .includes(searchTerm.toLowerCase())
-          ),
-          total: result.total,
-          page: result.page,
-          totalPages: result.totalPages,
-        })),
-    10
-  );
+    execute: executeCoursesRefresh,
+  } = useMvcController<EducationResource[]>();
+
+  // 分頁狀態管理
+  const [coursePage, setCoursePage] = useState(1);
+  const [courseTotalPages, setCourseTotalPages] = useState(1);
+
+  const loadCoursePage = async (page: number, limit: number = 10) => {
+    try {
+      const result = await educationController.getAllResources({
+        page,
+        limit,
+        type: "course",
+        level: difficulty !== "all" ? difficulty : undefined,
+      });
+
+      const filteredData = result.resources.filter(
+        (resource) =>
+          !searchTerm ||
+          resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          resource.description
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+      );
+
+      await executeCoursesRefresh(() => Promise.resolve(filteredData));
+      setCoursePage(result.page);
+      setCourseTotalPages(result.totalPages);
+    } catch (error: any) {
+      console.error("載入課程頁面失敗:", error);
+    }
+  };
+
+  const nextCoursePage = () => {
+    if (coursePage < courseTotalPages) {
+      loadCoursePage(coursePage + 1);
+    }
+  };
+
+  const prevCoursePage = () => {
+    if (coursePage > 1) {
+      loadCoursePage(coursePage - 1);
+    }
+  };
 
   const {
     data: tools,
@@ -423,6 +436,99 @@ const EducationPage: React.FC = () => {
 
     return matchesSearch && matchesDifficulty;
   });
+
+  // 渲染課程卡片
+  const renderCourseCard = (course: CourseLegacy, index: number) => {
+    const Icon = course.icon;
+    return (
+      <div
+        key={course.id}
+        className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+      >
+        <div className="p-6">
+          <div className="flex justify-between">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Icon className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="flex items-center">
+              <StarIcon className="h-4 w-4 text-yellow-400" />
+              <span className="text-sm font-medium text-gray-700 ml-1">
+                {course.rating}
+              </span>
+            </div>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mt-4 mb-2">
+            {course.title}
+          </h3>
+          <p className="text-gray-600 mb-4 line-clamp-2">
+            {course.description}
+          </p>
+
+          <div className="flex flex-wrap gap-2 mb-4">
+            {course.topics.slice(0, 3).map((topic, topicIndex) => (
+              <span
+                key={topicIndex}
+                className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full"
+              >
+                {topic}
+              </span>
+            ))}
+            {course.topics.length > 3 && (
+              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                +{course.topics.length - 3} 更多
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+            <div className="flex items-center">
+              <ClockIcon className="h-4 w-4 mr-1" />
+              <span>{course.duration}</span>
+            </div>
+            <div className="flex items-center">
+              <UserGroupIcon className="h-4 w-4 mr-1" />
+              <span>{course.students} 名學員</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">課程進度</span>
+              <span className="text-gray-600">
+                {course.progress}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 h-2 rounded-full"
+                style={{ width: `${course.progress}%` }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={() =>
+                handleStartLearning(course.id.toString())
+              }
+              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
+            >
+              <PlayCircleIcon className="h-5 w-5 mr-2" />
+              {course.progress > 0 ? "繼續學習" : "開始學習"}
+            </button>
+            <button
+              onClick={() =>
+                handleBookmark(course.id.toString())
+              }
+              className="px-3 py-2 text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              <BookmarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // 載入狀態
   if (loading) {
@@ -770,9 +876,9 @@ const EducationPage: React.FC = () => {
                           </p>
 
                           <div className="flex flex-wrap gap-2 mb-4">
-                            {course.topics.slice(0, 3).map((topic, index) => (
+                            {course.topics.slice(0, 3).map((topic, topicIndex) => (
                               <span
-                                key={index}
+                                key={topicIndex}
                                 className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full"
                               >
                                 {topic}

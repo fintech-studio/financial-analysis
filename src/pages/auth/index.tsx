@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
@@ -17,12 +17,10 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 
-// MVC 架構 - 導入控制器
-import {
-  UserController,
-  UserLoginRequest,
-  UserRegisterRequest,
-} from "../../controllers/UserController";
+// MVC 架構 - 導入控制器和Hooks
+import { UserController } from "../../controllers/UserController";
+import { useMvcController } from "../../hooks/useMvcController";
+import { User } from "../../models/UserModel";
 
 // 類型定義
 interface LoginForm {
@@ -328,15 +326,43 @@ const AuthPage = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState(""); // 新增這個 state
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [loginData, setLoginData] = useState<LoginForm>(INITIAL_LOGIN_DATA);
   const [registerData, setRegisterData] = useState<RegisterForm>(
     INITIAL_REGISTER_DATA
   );
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<AuthErrors>({});
+
+  // MVC 架構 - 使用控制器和Hook
+  const userController = UserController.getInstance();
+
+  const {
+    data: user,
+    loading: isLoading,
+    error: controllerError,
+    execute: executeUserAction,
+  } = useMvcController<{ user: User; token: string }>();
+
+  // 載入記住的郵箱
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem("rememberedEmail");
+    if (rememberedEmail) {
+      setLoginData((prev) => ({
+        ...prev,
+        email: rememberedEmail,
+        remember: true,
+      }));
+    }
+  }, []);
+
+  // 監聽控制器錯誤
+  useEffect(() => {
+    if (controllerError) {
+      setErrors({ email: controllerError.message || "發生錯誤" });
+    }
+  }, [controllerError]);
 
   // 記憶化的處理函數
   const handleLoginChange = useCallback(
@@ -420,36 +446,40 @@ const AuthPage = () => {
     return Object.keys(newErrors).length === 0;
   }, [registerData]);
 
-  // 表單提交處理
+  // 表單提交處理 - 使用MVC架構
   const handleLogin = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!validateLogin()) return;
 
-      setIsLoading(true);
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await executeUserAction(async () => {
+          const authResult = await userController.login({
+            email: loginData.email,
+            password: loginData.password,
+          });
 
-        if (
-          loginData.email === "admin@fintech.com" &&
-          loginData.password === "password123"
-        ) {
+          console.log("登入成功:", authResult);
+          const user = authResult.user;
+
+          // 處理記住我功能
           if (loginData.remember) {
             localStorage.setItem("rememberedEmail", loginData.email);
           } else {
             localStorage.removeItem("rememberedEmail");
           }
+
+          // 登入成功後導向上一頁或首頁
           router.back();
-        } else {
-          setErrors({ email: "電子郵件或密碼錯誤" });
-        }
-      } catch (error) {
-        setErrors({ email: "登入失敗，請稍後再試" });
-      } finally {
-        setIsLoading(false);
+
+          return authResult;
+        });
+      } catch (error: any) {
+        console.error("登入失敗:", error);
+        setErrors({ email: "電子郵件或密碼錯誤" });
       }
     },
-    [loginData, validateLogin, router]
+    [loginData, validateLogin, executeUserAction, userController, router]
   );
 
   const handleRegister = useCallback(
@@ -457,27 +487,39 @@ const AuthPage = () => {
       e.preventDefault();
       if (!validateRegister()) return;
 
-      setIsLoading(true);
       try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await executeUserAction(async () => {
+          const authResult = await userController.register({
+            name: `${registerData.firstName} ${registerData.lastName}`,
+            email: registerData.email,
+            password: registerData.password,
+            location: "台灣",
+            firstName: registerData.firstName,
+            lastName: registerData.lastName,
+          });
 
-        // 保存註冊的 email
-        setRegisteredEmail(registerData.email);
-        setRegisterData(INITIAL_REGISTER_DATA);
-        setShowSuccessMessage(true);
-      } catch (error) {
-        setErrors({ email: "註冊失敗，請稍後再試" });
-      } finally {
-        setIsLoading(false);
+          console.log("註冊成功:", authResult);
+          const user = authResult.user;
+
+          // 保存註冊的 email 並顯示成功訊息
+          setRegisteredEmail(registerData.email);
+          setRegisterData(INITIAL_REGISTER_DATA);
+          setShowSuccessMessage(true);
+
+          return authResult;
+        });
+      } catch (error: any) {
+        console.error("註冊失敗:", error);
+        setErrors({ email: "註冊失敗，該電子郵件可能已被使用" });
       }
     },
-    [registerData, validateRegister]
+    [registerData, validateRegister, executeUserAction, userController]
   );
 
   // 成功訊息處理
   const handleSuccessClose = useCallback(() => {
     setShowSuccessMessage(false);
-    setRegisteredEmail(""); // 清空保存的 email
+    setRegisteredEmail("");
   }, []);
 
   const handleGoToLogin = useCallback(() => {
@@ -485,9 +527,9 @@ const AuthPage = () => {
     setActiveTab("login");
     setLoginData((prev) => ({
       ...prev,
-      email: registeredEmail, // 使用保存的 email
+      email: registeredEmail,
     }));
-    setRegisteredEmail(""); // 清空保存的 email
+    setRegisteredEmail("");
   }, [registeredEmail]);
 
   // 標籤切換
