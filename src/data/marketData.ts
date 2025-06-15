@@ -1,3 +1,10 @@
+import {
+  ChartBarIcon,
+  DocumentChartBarIcon,
+  UserGroupIcon,
+  BuildingOfficeIcon,
+} from "@heroicons/react/24/outline";
+
 export interface MarketIndex {
   name: string;
   value: string;
@@ -553,7 +560,7 @@ export const analysisModules = [
   {
     title: "技術分析",
     description: "K線、均線與技術指標分析",
-    icon: "ChartBarIcon",
+    icon: ChartBarIcon,
     color: "text-blue-600",
     bgColor: "bg-blue-100",
     href: "/market-analysis/technical",
@@ -565,7 +572,7 @@ export const analysisModules = [
   {
     title: "基本面分析",
     description: "財報、獲利能力與成長性評估",
-    icon: "DocumentChartBarIcon",
+    icon: DocumentChartBarIcon,
     color: "text-green-600",
     bgColor: "bg-green-100",
     href: "/market-analysis/fundamental",
@@ -577,7 +584,7 @@ export const analysisModules = [
   {
     title: "籌碼分析",
     description: "法人動向、融資融券與內部人交易",
-    icon: "UserGroupIcon",
+    icon: UserGroupIcon,
     color: "text-purple-600",
     bgColor: "bg-purple-100",
     href: "/market-analysis/chip",
@@ -589,7 +596,7 @@ export const analysisModules = [
   {
     title: "產業分析",
     description: "產業趨勢、競爭格局與市場佔有率",
-    icon: "BuildingOfficeIcon",
+    icon: BuildingOfficeIcon,
     color: "text-orange-600",
     bgColor: "bg-orange-100",
     href: "/market-analysis/industry",

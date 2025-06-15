@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
 // 基礎 Hook 類型定義
 export interface ControllerHookOptions {
@@ -98,14 +98,15 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
     results.forEach((result, index) => {
       const key = keys[index];
       newLoading[key] = false;
-      
-      if (result.status === 'fulfilled' && result.value.success) {
+
+      if (result.status === "fulfilled" && result.value.success) {
         newData[key] = result.value.result;
         loaded++;
       } else {
-        const errorMessage = result.status === 'fulfilled' 
-          ? result.value.error || '載入失敗'
-          : '載入失敗';
+        const errorMessage =
+          result.status === "fulfilled"
+            ? result.value.error || "載入失敗"
+            : "載入失敗";
         newErrors[key] = errorMessage;
         console.warn(`載入 ${String(key)} 失敗:`, errorMessage);
       }
@@ -145,42 +146,52 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
 }
 
 // 基礎控制器 Hook
-export function useMvcController<T>(
-  controllerFn?: () => Promise<T>,
-  options: ControllerHookOptions = {}
-) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+export function useMvcController<T>(initialData?: T) {
+  const [data, setData] = useState<T | null>(initialData || null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const execute = useCallback(
-    async (fn?: () => Promise<T>) => {
-      const targetFn = fn || controllerFn;
-      if (!targetFn) return;
+  // 使用 ref 來穩定執行狀態
+  const isExecutingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
+  // 清理函數
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const execute = useCallback(async (asyncFunction: () => Promise<T>) => {
+    // 防止重複執行
+    if (isExecutingRef.current || !isMountedRef.current) {
+      return;
+    }
+
+    try {
+      isExecutingRef.current = true;
       setLoading(true);
       setError(null);
 
-      try {
-        const result = await targetFn();
+      const result = await asyncFunction();
+
+      if (isMountedRef.current) {
         setData(result);
-        options.onSuccess?.(result);
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error("Unknown error");
-        setError(error);
-        options.onError?.(error);
-      } finally {
+      }
+    } catch (err) {
+      if (isMountedRef.current) {
+        const errorMessage =
+          err instanceof Error ? err.message : "發生未知錯誤";
+        setError(errorMessage);
+      }
+    } finally {
+      if (isMountedRef.current) {
         setLoading(false);
       }
-    },
-    [controllerFn, options]
-  );
-
-  useEffect(() => {
-    if (options.autoStart !== false && controllerFn) {
-      execute();
+      isExecutingRef.current = false;
     }
-  }, [execute, options.autoStart]);
+  }, []);
 
   return { data, loading, error, execute };
 }
@@ -392,7 +403,15 @@ export function useDataLoader<T>(
   defaultValue: T,
   options: ControllerHookOptions = {}
 ) {
-  return useMvcController<T>(loader, { ...options, autoStart: true });
+  const { data, loading, error, execute } = useMvcController<T>(defaultValue);
+  
+  useEffect(() => {
+    if (options.autoStart !== false) {
+      execute(loader);
+    }
+  }, [execute, loader, options.autoStart]);
+
+  return { data, loading, error, execute };
 }
 
 // 智能搜索 Hook

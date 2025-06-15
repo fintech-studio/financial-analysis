@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ChartBarIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import {
   Chart as ChartJS,
@@ -14,6 +14,7 @@ import {
   Filler,
 } from "chart.js";
 import Footer from "@/components/Layout/Footer";
+import { marketData, analysisModules } from "@/data/marketData";
 
 // MVC 架構引入
 import { StockController } from "../../../controllers/StockController";
@@ -125,6 +126,10 @@ const StockMarket: React.FC<StockMarketProps> = () => {
   const [newsFilter, setNewsFilter] = useState<NewsFilterType>("latest");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
+  // 新增載入狀態追蹤
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+
   // MVC 架構 - 控制器和狀態管理
   const stockController = StockController.getInstance();
   const marketController = MarketController.getInstance();
@@ -148,24 +153,30 @@ const StockMarket: React.FC<StockMarketProps> = () => {
     },
     onError: (error) => {
       console.error("載入市場概覽失敗:", error);
+      setLoadingError(
+        error instanceof Error ? error.message : "載入市場概覽失敗"
+      );
     },
   });
 
   const {
     data: stockDetails,
     loading: stocksLoading,
+    error: stocksError,
     execute: executeStocksRefresh,
   } = useMvcController<StockDetail[]>();
 
   const {
     data: technicalAnalysis,
     loading: technicalLoading,
+    error: technicalError,
     execute: executeTechnicalRefresh,
   } = useMvcController<any>();
 
   const {
     data: sectorData,
     loading: sectorLoading,
+    error: sectorError,
     execute: executeSectorRefresh,
   } = useMvcController<any>();
 
@@ -175,35 +186,8 @@ const StockMarket: React.FC<StockMarketProps> = () => {
     execute: executeScreenerRefresh,
   } = useMvcController<any>();
 
-  // 載入初始數據
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  // 當搜尋條件變化時重新載入股票數據
-  useEffect(() => {
-    if (searchQuery || selectedSector !== "all") {
-      loadStockData();
-    }
-  }, [searchQuery, selectedSector, selectedStrategy]);
-
-  const loadInitialData = async () => {
-    const userId = "user_001"; // 模擬用戶ID
-
-    try {
-      // 並行載入基礎數據
-      await Promise.all([
-        executeUser(() => userController.getUserProfile(userId)),
-        loadStockData(),
-        loadTechnicalAnalysis(),
-        loadSectorData(),
-      ]);
-    } catch (error) {
-      console.error("載入初始數據失敗:", error);
-    }
-  };
-
-  const loadStockData = async () => {
+  // 使用 useCallback 避免函數重新創建導致的無限載入
+  const loadStockData = useCallback(async () => {
     try {
       const filters = {
         sector: selectedSector !== "all" ? selectedSector : undefined,
@@ -214,32 +198,93 @@ const StockMarket: React.FC<StockMarketProps> = () => {
       await executeStocksRefresh(() => stockController.getStocks(filters));
     } catch (error: any) {
       console.error("載入股票數據失敗:", error);
+      setLoadingError(error?.message || "載入股票數據失敗");
     }
-  };
+  }, [
+    selectedSector,
+    searchQuery,
+    selectedStrategy,
+    executeStocksRefresh,
+    stockController,
+  ]);
 
-  const loadTechnicalAnalysis = async () => {
+  const loadTechnicalAnalysis = useCallback(async () => {
     try {
       await executeTechnicalRefresh(() =>
         stockController.getTechnicalAnalysis()
       );
     } catch (error: any) {
       console.error("載入技術分析失敗:", error);
+      setLoadingError(error?.message || "載入技術分析失敗");
     }
-  };
+  }, [executeTechnicalRefresh, stockController]);
 
-  const loadSectorData = async () => {
+  const loadSectorData = useCallback(async () => {
     try {
       await executeSectorRefresh(() => marketController.getSectorPerformance());
     } catch (error: any) {
       console.error("載入板塊數據失敗:", error);
+      setLoadingError(error?.message || "載入板塊數據失敗");
     }
-  };
+  }, [executeSectorRefresh, marketController]);
+
+  const loadInitialData = useCallback(async () => {
+    const userId = "user_001"; // 模擬用戶ID
+    setIsInitialLoading(true);
+    setLoadingError(null);
+
+    try {
+      // 並行載入基礎數據
+      await Promise.allSettled([
+        executeUser(() => userController.getUserProfile(userId)),
+        loadStockData(),
+        loadTechnicalAnalysis(),
+        loadSectorData(),
+      ]);
+    } catch (error) {
+      console.error("載入初始數據失敗:", error);
+      setLoadingError(
+        error instanceof Error ? error.message : "載入初始數據失敗"
+      );
+    } finally {
+      setIsInitialLoading(false);
+    }
+  }, [
+    executeUser,
+    userController,
+    loadStockData,
+    loadTechnicalAnalysis,
+    loadSectorData,
+  ]);
+
+  // 載入初始數據
+  useEffect(() => {
+    loadInitialData();
+  }, []); // 移除依賴，只在組件掛載時執行一次
+
+  // 當搜尋條件變化時重新載入股票數據 - 使用防抖
+  useEffect(() => {
+    if (!isInitialLoading) {
+      const timeoutId = setTimeout(() => {
+        loadStockData();
+      }, 500); // 500ms 防抖
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    searchQuery,
+    selectedSector,
+    selectedStrategy,
+    isInitialLoading,
+    loadStockData,
+  ]);
 
   // 刷新所有數據
   const handleRefreshData = async () => {
     try {
       setLastUpdated(new Date());
-      await Promise.all([
+      setLoadingError(null);
+      await Promise.allSettled([
         loadStockData(),
         loadTechnicalAnalysis(),
         loadSectorData(),
@@ -247,102 +292,98 @@ const StockMarket: React.FC<StockMarketProps> = () => {
       console.log("股票市場數據刷新完成");
     } catch (error) {
       console.error("刷新股票市場數據失敗:", error);
+      setLoadingError(error instanceof Error ? error.message : "刷新數據失敗");
     }
   };
 
-  // 處理收藏股票
-  const toggleFavoriteStock = async (symbol: string): Promise<void> => {
-    if (!user) return;
+  // 處理股票搜尋 - 添加防抖和避免無限更新
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>): void => {
+      const query = e.target.value;
+      setSearchQuery(query);
+    },
+    []
+  );
 
-    try {
-      if (favoriteStocks.includes(symbol)) {
-        await stockController.removeFavoriteStock(user.id, symbol);
-        setFavoriteStocks(favoriteStocks.filter((s) => s !== symbol));
-      } else {
-        await stockController.addFavoriteStock(user.id, symbol);
-        setFavoriteStocks([...favoriteStocks, symbol]);
-      }
-    } catch (error) {
-      console.error("更新收藏股票失敗:", error);
-    }
-  };
-
-  const toggleCompareStock = (symbol: string): void => {
-    if (stockCompare.includes(symbol)) {
-      setStockCompare(stockCompare.filter((s) => s !== symbol));
-    } else if (stockCompare.length < 3) {
-      setStockCompare([...stockCompare, symbol]);
-    }
-  };
-
-  // 處理股票搜尋
-  const handleSearchChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ): Promise<void> => {
-    const query = e.target.value;
-    setSearchQuery(query);
-
-    // 即時搜尋
-    if (query.length > 2) {
-      try {
-        await stockController.searchStocks({
-          query,
-          limit: 20,
-        });
-      } catch (error) {
-        console.error("搜尋股票失敗:", error);
-      }
-    }
-  };
-
-  const handleSort = (column: string): void => {
+  const handleSort = useCallback((column: string): void => {
     console.log("排序依據:", column);
     // TODO: 實現排序邏輯
-  };
+  }, []);
+
+  // 處理收藏股票 - 使用 useCallback 避免無限更新
+  const toggleFavoriteStock = useCallback(
+    async (symbol: string): Promise<void> => {
+      if (!user) return;
+
+      try {
+        if (favoriteStocks.includes(symbol)) {
+          await stockController.removeFavoriteStock(user.id, symbol);
+          setFavoriteStocks((prev) => prev.filter((s) => s !== symbol));
+        } else {
+          await stockController.addFavoriteStock(user.id, symbol);
+          setFavoriteStocks((prev) => [...prev, symbol]);
+        }
+      } catch (error) {
+        console.error("更新收藏股票失敗:", error);
+      }
+    },
+    [user, favoriteStocks, stockController]
+  );
+
+  const toggleCompareStock = useCallback((symbol: string): void => {
+    setStockCompare((prev) => {
+      if (prev.includes(symbol)) {
+        return prev.filter((s) => s !== symbol);
+      } else if (prev.length < 3) {
+        return [...prev, symbol];
+      }
+      return prev;
+    });
+  }, []);
 
   // 數據轉換函數
   const transformStockDetailsForList = (
     stocks: StockDetail[]
   ): StockDetailForList[] => {
-    return (
-      stocks?.map((stock) => ({
-        symbol: stock.symbol,
-        name: stock.name,
-        price:
-          typeof stock.price === "number"
-            ? `$${stock.price.toFixed(2)}`
-            : String(stock.price),
-        change: stock.change || "0",
-        changePercent: stock.changePercent || stock.change || "0%",
-        industry: stock.industry || "未分類",
-        volume: stock.volume?.toString() || "N/A",
-        pe: stock.pe?.toString() || "N/A",
-        dividend: stock.dividendYield?.toString() || "N/A",
-        dividendYield: stock.dividendYield?.toString() || "N/A",
-      })) || []
-    );
+    if (!stocks || stocks.length === 0) return [];
+
+    return stocks.map((stock) => ({
+      symbol: stock.symbol,
+      name: stock.name,
+      price:
+        typeof stock.price === "number"
+          ? `$${stock.price.toFixed(2)}`
+          : String(stock.price),
+      change: stock.change || "0",
+      changePercent: stock.changePercent || stock.change || "0%",
+      industry: stock.industry || "未分類",
+      volume: stock.volume?.toString() || "N/A",
+      pe: stock.pe?.toString() || "N/A",
+      dividend: stock.dividendYield?.toString() || "N/A",
+      dividendYield: stock.dividendYield?.toString() || "N/A",
+    }));
   };
 
   const transformStocksForComparison = (
     stocks: StockDetail[]
   ): StockForComparison[] => {
-    return (
-      stocks?.map((stock) => ({
-        symbol: stock.symbol,
-        name: stock.name,
-        price:
-          typeof stock.price === "number"
-            ? stock.price
-            : parseFloat(String(stock.price)) || 0,
-        pe: stock.pe,
-        pb: stock.pb,
-        dividend: stock.dividendYield?.toString(),
-        marketCap: stock.marketCap?.toString(),
-        volume: stock.volume?.toString(),
-        high52w: stock.high52w?.toString(),
-        low52w: stock.low52w?.toString(),
-      })) || []
-    );
+    if (!stocks || stocks.length === 0) return [];
+
+    return stocks.map((stock) => ({
+      symbol: stock.symbol,
+      name: stock.name,
+      price:
+        typeof stock.price === "number"
+          ? stock.price
+          : parseFloat(String(stock.price)) || 0,
+      pe: stock.pe,
+      pb: stock.pb,
+      dividend: stock.dividendYield?.toString(),
+      marketCap: stock.marketCap?.toString(),
+      volume: stock.volume?.toString(),
+      high52w: stock.high52w?.toString(),
+      low52w: stock.low52w?.toString(),
+    }));
   };
 
   const transformStockForDetails = (
@@ -380,26 +421,34 @@ const StockMarket: React.FC<StockMarketProps> = () => {
     stockDetails || []
   );
 
+  // 改善載入狀態判斷
+  const isLoading = isInitialLoading || (marketLoading && !marketOverview);
+  const hasError =
+    loadingError || marketError || stocksError || technicalError || sectorError;
+
   // 載入狀態
-  if (marketLoading || stocksLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">載入股票市場數據中...</p>
+          <p className="mt-2 text-sm text-gray-500">
+            請稍候，正在初始化數據...
+          </p>
         </div>
       </div>
     );
   }
 
   // 錯誤狀態
-  if (marketError) {
+  if (hasError) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
             <h3 className="text-lg font-medium text-red-800">載入失敗</h3>
-            <p className="mt-2 text-red-600">{String(marketError)}</p>
+            <p className="mt-2 text-red-600">{String(hasError)}</p>
             <button
               onClick={handleRefreshData}
               className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
@@ -451,9 +500,14 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 onClick={handleRefreshData}
                 className="p-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors"
                 title="刷新數據"
+                disabled={stocksLoading || technicalLoading || sectorLoading}
               >
                 <svg
-                  className="h-5 w-5 text-white"
+                  className={`h-5 w-5 text-white ${
+                    stocksLoading || technicalLoading || sectorLoading
+                      ? "animate-spin"
+                      : ""
+                  }`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -473,7 +527,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
           <div className="mt-6">
             <nav className="flex space-x-6 overflow-x-auto pb-2 scrollbar-hide">
               <button
-                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "overview"
                     ? "bg-white text-indigo-700"
                     : "text-white hover:bg-white hover:bg-opacity-10"
@@ -483,7 +537,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 市場概覽
               </button>
               <button
-                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "stocks"
                     ? "bg-white text-indigo-700"
                     : "text-white hover:bg-white hover:bg-opacity-10"
@@ -493,7 +547,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 個股分析
               </button>
               <button
-                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "sectors"
                     ? "bg-white text-indigo-700"
                     : "text-white hover:bg-white hover:bg-opacity-10"
@@ -503,7 +557,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 產業分析
               </button>
               <button
-                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "technical"
                     ? "bg-white text-indigo-700"
                     : "text-white hover:bg-white hover:bg-opacity-10"
@@ -513,7 +567,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 技術分析
               </button>
               <button
-                className={`px-4 py-2 text-sm font-medium rounded-md ${
+                className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "screener"
                     ? "bg-white text-indigo-700"
                     : "text-white hover:bg-white hover:bg-opacity-10"
@@ -531,13 +585,23 @@ const StockMarket: React.FC<StockMarketProps> = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === "overview" && (
           <Overview
-            marketData={marketOverview || {}} // 提供默認空對象以避免null錯誤
-            analysisModules={[]} // 從控制器獲取
+            marketData={marketOverview || marketData} // 使用 MVC 數據或回退到預設數據
+            analysisModules={analysisModules} // 傳遞正確的分析模組
           />
         )}
 
         {activeTab === "stocks" && (
           <div className="space-y-8">
+            {/* 載入指示器 */}
+            {stocksLoading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="text-gray-600">載入股票數據中...</span>
+                </div>
+              </div>
+            )}
+
             {/* 股票列表 */}
             <StockList
               stockDetails={transformedStockDetails}
@@ -580,10 +644,25 @@ const StockMarket: React.FC<StockMarketProps> = () => {
         {activeTab === "sectors" && (
           <div>
             {sectorLoading ? (
-              <div className="text-center py-8">載入板塊分析中...</div>
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="text-gray-600">載入板塊分析中...</span>
+                </div>
+              </div>
             ) : (
               <div>
-                板塊分析頁面內容 - 使用 {sectorData ? "真實" : "模擬"} 數據
+                <h2 className="text-xl font-semibold mb-4">產業分析</h2>
+                <p className="text-gray-600">
+                  板塊分析頁面內容 - 使用 {sectorData ? "真實" : "模擬"} 數據
+                </p>
+                {sectorError && (
+                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-yellow-800">
+                      載入板塊數據時出現問題: {String(sectorError)}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -592,11 +671,26 @@ const StockMarket: React.FC<StockMarketProps> = () => {
         {activeTab === "technical" && (
           <div>
             {technicalLoading ? (
-              <div className="text-center py-8">載入技術分析中...</div>
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="text-gray-600">載入技術分析中...</span>
+                </div>
+              </div>
             ) : (
               <div>
-                技術分析頁面內容 - 使用 {technicalAnalysis ? "真實" : "模擬"}{" "}
-                數據
+                <h2 className="text-xl font-semibold mb-4">技術分析</h2>
+                <p className="text-gray-600">
+                  技術分析頁面內容 - 使用 {technicalAnalysis ? "真實" : "模擬"}{" "}
+                  數據
+                </p>
+                {technicalError && (
+                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-yellow-800">
+                      載入技術分析數據時出現問題: {String(technicalError)}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

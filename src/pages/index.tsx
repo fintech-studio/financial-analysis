@@ -14,7 +14,6 @@ import Footer from "@/components/Layout/Footer";
 
 // 優化後的 MVC 控制器引入
 import { MarketController } from "@/controllers/MarketController";
-import { NewsController } from "@/controllers/NewsController";
 
 // 增強的Hook引入
 import {
@@ -35,7 +34,6 @@ export default function Home() {
 
   // 控制器實例 - 使用 useMemo 避免重複建立
   const marketController = useMemo(() => MarketController.getInstance(), []);
-  const newsController = useMemo(() => NewsController.getInstance(), []);
 
   // 修復：穩定的載入函數，避免重複建立
   const loaders = useMemo(
@@ -45,13 +43,8 @@ export default function Home() {
           console.warn("市場概況載入失敗:", error);
           return { indices: [], trending: [] }; // 返回預設值
         }),
-      latestNews: () =>
-        newsController.getLatestNews(5).catch((error) => {
-          console.warn("最新新聞載入失敗:", error);
-          return []; // 返回預設值
-        }),
     }),
-    [marketController, newsController]
+    [marketController]
   );
 
   // 使用多控制器Hook管理多個數據源
@@ -242,7 +235,7 @@ export default function Home() {
             <div className="grid lg:grid-cols-2 gap-12 xl:gap-16 items-center min-h-screen py-20">
               {/* 主標題 */}
               <div className="space-y-6 lg:space-y-8">
-                <div className="animate-fade-in-up animation-delay-200">
+                <div className="animate-fade-in-up ">
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
                     <span className="block text-white mb-2">未來金融</span>
                     <div className="relative">
@@ -268,7 +261,7 @@ export default function Home() {
                 </div>
 
                 {/* 搜尋區塊 - 使用Hook管理 */}
-                <div className="max-w-2x1 animation-delay-400">
+                <div className="max-w-2x1">
                   <div className="relative">
                     <div className="absolute -inset-1 bg-gradient-to-r from-blue-400/30 to-indigo-400/30 rounded-xl blur opacity-40"></div>
                     <div className="relative bg-white/10 backdrop-blur-xl rounded-xl p-3 border border-white/20 shadow-lg">
@@ -331,8 +324,8 @@ export default function Home() {
 
                         {/* 顯示搜尋錯誤 */}
                         {searchErrors.query && (
-                          <p className="text-red-300 text-sm mt-2">
-                            ⚠️ {searchErrors.query}
+                          <p className="text-red-300 text-sm mt-2 ml-4">
+                            {searchErrors.query}
                           </p>
                         )}
                       </div>
@@ -572,16 +565,6 @@ export default function Home() {
 
         .animate-fade-in-down {
           animation: fadeInDown 0.3s ease-out forwards;
-        }
-
-        .animation-delay-200 {
-          animation-delay: 0.2s;
-        }
-        .animation-delay-300 {
-          animation-delay: 0.3s;
-        }
-        .animation-delay-400 {
-          animation-delay: 0.4s;
         }
       `}</style>
     </>

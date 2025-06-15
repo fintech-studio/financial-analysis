@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
@@ -176,20 +176,39 @@ const Navigation: React.FC = () => {
   };
 
   // 處理通知點擊
-  const handleNotificationClick = (e: React.MouseEvent): void => {
-    e.stopPropagation();
-    setIsNotificationsOpen(!isNotificationsOpen);
-    setIsUserMenuOpen(false);
-    setOpenDropdown(null);
-  };
+  const handleNotificationClick = useCallback(
+    (e: React.MouseEvent): void => {
+      e.stopPropagation();
+      setIsNotificationsOpen(!isNotificationsOpen);
+      setIsUserMenuOpen(false);
+      setOpenDropdown(null);
+    },
+    [isNotificationsOpen]
+  );
 
   // 處理用戶選單點擊
-  const handleUserMenuClick = (e: React.MouseEvent): void => {
-    e.stopPropagation();
-    setIsUserMenuOpen(!isUserMenuOpen);
-    setIsNotificationsOpen(false);
-    setOpenDropdown(null);
-  };
+  const handleUserMenuClick = useCallback(
+    (e: React.MouseEvent): void => {
+      e.stopPropagation();
+      setIsUserMenuOpen(!isUserMenuOpen);
+      setIsNotificationsOpen(false);
+      setOpenDropdown(null);
+    },
+    [isUserMenuOpen]
+  );
+
+  // 處理下拉選單點擊
+  const handleDropdownClick = useCallback(
+    (itemName: string) => {
+      return (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setOpenDropdown(openDropdown === itemName ? null : itemName);
+        setIsUserMenuOpen(false);
+        setIsNotificationsOpen(false);
+      };
+    },
+    [openDropdown]
+  );
 
   // 標記所有通知為已讀
   const markAllAsRead = (): void => {
@@ -222,7 +241,7 @@ const Navigation: React.FC = () => {
                     FinTech
                   </span>
                   <span className="text-xs text-gray-500 font-medium">
-                    智慧投資平台
+                    智慧金融分析平台
                   </span>
                 </div>
               </Link>

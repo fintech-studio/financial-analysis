@@ -1,5 +1,5 @@
 // src/components/features/AIPrediction/PredictionSidebar.tsx
-import React from "react";
+import React, { useCallback } from "react";
 import TradingSettings from "./TradingSettings";
 import PortfolioSection from "./PortfolioSection";
 import RiskAnalysis from "./RiskAnalysis";
@@ -32,6 +32,14 @@ const PredictionSidebar: React.FC<PredictionSidebarProps> = ({
     { id: "analysis" as ActiveTab, label: "風險分析" },
   ];
 
+  // 使用 useCallback 穩定標籤切換函數
+  const handleTabClick = useCallback(
+    (tabId: ActiveTab) => {
+      setActiveTab(tabId);
+    },
+    [setActiveTab]
+  );
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* 標籤頁切換 */}
@@ -39,7 +47,7 @@ const PredictionSidebar: React.FC<PredictionSidebarProps> = ({
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabClick(tab.id)}
             className={`flex-1 py-3 px-4 text-center text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? "text-blue-600 border-b-2 border-blue-500"

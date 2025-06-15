@@ -7,20 +7,24 @@ import CryptoAnalysis from "./pages/market-analysis/crypto";
 import GlobalMarket from "./pages/market-analysis/global";
 import Education from "./pages/education";
 import Community from "./pages/community";
+import NewsPage from "./pages/news";
 import Profile from "./pages/profile";
+import AIPredictionPage from "./pages/ai-prediction";
 
 const AppRoutes = (): React.JSX.Element => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/portfolio" element={<Portfolio />} />
       <Route path="/market-analysis">
         <Route path="stock" element={<StockAnalysis />} />
         <Route path="crypto" element={<CryptoAnalysis />} />
         <Route path="global" element={<GlobalMarket />} />
       </Route>
+      <Route path="/ai-prediction" element={<AIPredictionPage />} />
+      <Route path="/portfolio" element={<Portfolio />} />
       <Route path="/education" element={<Education />} />
       <Route path="/community" element={<Community />} />
+      <Route path="/news" element={<NewsPage />} />
       <Route path="/profile" element={<Profile />} />
     </Routes>
   );

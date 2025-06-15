@@ -10,10 +10,21 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
+
+// 在開發模式下暫時移除 StrictMode 來修復無限更新問題
+// StrictMode 會在開發模式下故意執行某些函數兩次，導致狀態更新競爭
+if (process.env.NODE_ENV === "production") {
+  root.render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>
+  );
+} else {
+  root.render(
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </React.StrictMode>
-);
+  );
+}

@@ -3,6 +3,3 @@ export * from "./UserModel";
 export * from "./StockModel";
 export * from "./PortfolioModel";
 export * from "./MarketModel";
-export * from "./CommunityModel";
-export * from "./NewsModel";
-export * from "./EducationModel";

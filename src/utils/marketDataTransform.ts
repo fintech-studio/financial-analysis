@@ -7,14 +7,7 @@ interface MarketData {
 }
 
 export const transformMarketData = (data: MarketData) => {
-  const marketTypes = [
-    "stock",
-    "crypto",
-    "global",
-    "realEstate",
-    "futures",
-    "nft",
-  ];
+  const marketTypes = ["stock", "sentiment"];
 
   return marketTypes.reduce((acc: { [key: string]: any }, type) => {
     if (data[type]) {

@@ -27,8 +27,8 @@ const Footer: React.FC = () => {
             </div>
 
             <p className="text-gray-400 leading-relaxed mb-6 max-w-md">
-              運用前沿 AI 技術，為投資者提供智能化的金融分析工具，
-              讓每個投資決策都更加精準且有信心。
+              金融走勢智慧分析，讓投資更簡單。透過 AI
+              技術，提供即時市場分析、投資組合建議和風險評估，助您做出明智的投資決策。
             </p>
 
             <div className="flex space-x-4">
@@ -80,7 +80,8 @@ const Footer: React.FC = () => {
 
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row items-center justify-center">
           <p className="text-gray-400 text-sm text-center">
-            &copy; {new Date().getFullYear()} FinTech Studio. 保留所有權利。
+            &copy; {new Date().getFullYear()} FinTech Studio. All rights
+            reserved.
           </p>
         </div>
       </div>

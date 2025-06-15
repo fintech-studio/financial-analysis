@@ -49,7 +49,7 @@ interface AnalysisModule {
   title: string;
   description: string;
   href: string;
-  icon: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; // 改為 React 組件類型
   bgColor?: string;
   color?: string;
   data?: ModuleData;
@@ -223,7 +223,6 @@ const Overview: React.FC<OverviewProps> = ({ marketData, analysisModules }) => {
         <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl shadow-lg overflow-hidden">
           <div className="p-6">
             <div className="flex items-center mb-4">
-              <span className="text-purple-500 mr-2 text-xl">✨</span>
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">
                   本週市場摘要
@@ -275,22 +274,8 @@ const Overview: React.FC<OverviewProps> = ({ marketData, analysisModules }) => {
 
 // 子組件：模組卡片
 const ModuleCard: React.FC<ModuleCardProps> = ({ module }) => {
-  // 從字符串獲取相應的圖標組件
-  const getIconComponent = (iconName: string): JSX.Element => {
-    const icons: Record<string, JSX.Element> = {
-      ChartBarIcon: <ChartBarIcon className="h-6 w-6" />,
-      DocumentChartBarIcon: <DocumentChartBarIcon className="h-6 w-6" />,
-      UserGroupIcon: <UserGroupIcon className="h-6 w-6" />,
-      BuildingOfficeIcon: <BuildingOfficeIcon className="h-6 w-6" />,
-      ArrowTrendingUpIcon: <ArrowTrendingUpIcon className="h-6 w-6" />,
-      ArrowTrendingDownIcon: <ArrowTrendingDownIcon className="h-6 w-6" />,
-      CurrencyDollarIcon: <CurrencyDollarIcon className="h-6 w-6" />,
-      GlobeAsiaAustraliaIcon: <GlobeAsiaAustraliaIcon className="h-6 w-6" />,
-    };
-
-    // 如果找不到對應的icon,回傳預設的ChartBarIcon
-    return icons[iconName] || <ChartBarIcon className="h-6 w-6" />;
-  };
+  // 直接使用 React 組件而不是字串
+  const IconComponent = module.icon;
 
   return (
     <Link
@@ -302,7 +287,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ module }) => {
           <h3 className="text-lg font-medium text-gray-900">{module.title}</h3>
           <div className={`p-2 rounded-lg ${module.bgColor || "bg-blue-100"}`}>
             <div className={module.color || "text-blue-500"}>
-              {getIconComponent(module.icon)}
+              <IconComponent className="h-6 w-6" />
             </div>
           </div>
         </div>

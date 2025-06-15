@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Doughnut, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -408,14 +408,17 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
   const unbalancedAssets = getUnbalancedAssets();
 
   // 處理標籤點擊事件
-  const handleTabClick = (tab: "assetClass" | "sector" | "region"): void => {
-    setActiveTab(tab);
-  };
+  const handleTabClick = useCallback(
+    (tab: "assetClass" | "sector" | "region"): void => {
+      setActiveTab(tab);
+    },
+    []
+  );
 
   // 切換比較模式
-  const handleToggleComparison = (): void => {
-    setShowComparison(!showComparison);
-  };
+  const handleToggleComparison = useCallback(() => {
+    setShowComparison((prev) => !prev);
+  }, []);
 
   // 動態生成顏色的輔助函數
   function generateDynamicColor(index: number): string {
