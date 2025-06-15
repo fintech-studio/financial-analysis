@@ -4,6 +4,5 @@ export * from "./AuthService";
 export * from "./BaseService";
 export * from "./StockService";
 export * from "./PortfolioService";
-export * from "./NewsService";
 export * from "./NotificationService";
 export * from "./MarketService";

@@ -173,7 +173,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
 
   // 初始化時載入數據
   useEffect(() => {
-    if (!data || data.byAssetClass.length === 0) {
+    if (!data || !data.byAssetClass || data.byAssetClass.length === 0) {
       loadAssetAllocation().catch((error: any) => {
         console.error("載入資產配置失敗:", error);
       });
@@ -231,10 +231,12 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
     switch (type) {
       case "assetClass":
         chartData = {
-          labels: currentData.byAssetClass.map((item) => item.name),
+          labels: (currentData.byAssetClass || []).map((item) => item.name),
           datasets: [
             {
-              data: currentData.byAssetClass.map((item) => item.percentage),
+              data: (currentData.byAssetClass || []).map(
+                (item) => item.percentage
+              ),
               backgroundColor: [...CHART_COLORS.assetClass],
               borderColor: [...CHART_COLORS.assetClassBorder],
               borderWidth: 1,
@@ -244,11 +246,13 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
 
         if (showComparison) {
           targetData = {
-            labels: currentData.byAssetClass.map((item) => item.name),
+            labels: (currentData.byAssetClass || []).map((item) => item.name),
             datasets: [
               {
                 label: "目前配置",
-                data: currentData.byAssetClass.map((item) => item.percentage),
+                data: (currentData.byAssetClass || []).map(
+                  (item) => item.percentage
+                ),
                 backgroundColor: ["rgba(54, 162, 235, 0.6)"],
                 borderColor: ["rgba(54, 162, 235, 1)"],
                 borderWidth: 1,
@@ -268,10 +272,10 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
         break;
       case "sector":
         chartData = {
-          labels: currentData.bySector.map((item) => item.name),
+          labels: (currentData.bySector || []).map((item) => item.name),
           datasets: [
             {
-              data: currentData.bySector.map((item) => item.percentage),
+              data: (currentData.bySector || []).map((item) => item.percentage),
               backgroundColor: [...CHART_COLORS.sector],
               borderColor: [...CHART_COLORS.sectorBorder],
               borderWidth: 1,
@@ -281,10 +285,10 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
         break;
       case "region":
         chartData = {
-          labels: currentData.byRegion.map((item) => item.name),
+          labels: (currentData.byRegion || []).map((item) => item.name),
           datasets: [
             {
-              data: currentData.byRegion.map((item) => item.percentage),
+              data: (currentData.byRegion || []).map((item) => item.percentage),
               backgroundColor: [...CHART_COLORS.region],
               borderColor: [...CHART_COLORS.regionBorder],
               borderWidth: 1,
@@ -381,7 +385,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
   const calculateDeviation = (): DeviationItem[] => {
     if (activeTab !== "assetClass") return [];
 
-    return currentData.byAssetClass.map((item) => {
+    return (currentData.byAssetClass || []).map((item) => {
       const targetItem = targetAllocation.assetClass.find(
         (t) => t.name === item.name
       ) || { name: item.name, percentage: 0 };
@@ -554,7 +558,8 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {currentData.byAssetClass.map((item, index) => {
+                      {/* 修改：確保 currentData.byAssetClass 是陣列 */}
+                      {(currentData.byAssetClass || []).map((item, index) => {
                         const targetItem = showComparison
                           ? targetAllocation.assetClass.find(
                               (t) => t.name === item.name
@@ -611,7 +616,8 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
 
               {activeTab === "sector" && (
                 <div className="space-y-2">
-                  {currentData.bySector.map((item, index) => (
+                  {/* 修改：確保 currentData.bySector 是陣列 */}
+                  {(currentData.bySector || []).map((item, index) => (
                     <div
                       key={`sector-${item.name}-${index}`}
                       className="flex items-center justify-between"
@@ -637,7 +643,8 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
 
               {activeTab === "region" && (
                 <div className="space-y-2">
-                  {currentData.byRegion.map((item, index) => (
+                  {/* 修改：確保 currentData.byRegion 是陣列 */}
+                  {(currentData.byRegion || []).map((item, index) => (
                     <div
                       key={`region-${item.name}-${index}`}
                       className="flex items-center justify-between"
@@ -814,44 +821,47 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
             </div>
           ) : (
             <ul className="space-y-2">
-              {data.recommendations.map((recommendation, index) => (
-                <li
-                  key={index}
-                  className="flex items-start space-x-2 p-3 rounded-lg border border-gray-100 hover:bg-gray-50"
-                >
-                  <span
-                    className={`flex-shrink-0 p-1 rounded-md mt-0.5 ${
-                      recommendation.type === "positive"
-                        ? "bg-green-100"
-                        : recommendation.type === "neutral"
-                        ? "bg-yellow-100"
-                        : "bg-red-100"
-                    }`}
+              {/* 確認 currentData.recommendations 的保護措施已存在 */}
+              {(currentData.recommendations || []).map(
+                (recommendation, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start space-x-2 p-3 rounded-lg border border-gray-100 hover:bg-gray-50"
                   >
                     <span
-                      className={`block w-2 h-2 rounded-full ${
+                      className={`flex-shrink-0 p-1 rounded-md mt-0.5 ${
                         recommendation.type === "positive"
-                          ? "bg-green-500"
+                          ? "bg-green-100"
                           : recommendation.type === "neutral"
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
+                          ? "bg-yellow-100"
+                          : "bg-red-100"
                       }`}
-                    ></span>
-                  </span>
-                  <div>
-                    <p className="text-sm text-gray-800">
-                      {recommendation.text}
-                    </p>
-                    {recommendation.type === "negative" && (
-                      <div className="mt-2">
-                        <button className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200">
-                          查看調整方案
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </li>
-              ))}
+                    >
+                      <span
+                        className={`block w-2 h-2 rounded-full ${
+                          recommendation.type === "positive"
+                            ? "bg-green-500"
+                            : recommendation.type === "neutral"
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                        }`}
+                      ></span>
+                    </span>
+                    <div>
+                      <p className="text-sm text-gray-800">
+                        {recommendation.text}
+                      </p>
+                      {recommendation.type === "negative" && (
+                        <div className="mt-2">
+                          <button className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200">
+                            查看調整方案
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                )
+              )}
             </ul>
           )}
         </div>

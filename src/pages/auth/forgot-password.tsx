@@ -337,7 +337,7 @@ const ForgotPasswordPage = () => {
   // 監聽控制器錯誤
   useEffect(() => {
     if (controllerError) {
-      setErrors({ general: controllerError.message || "發生錯誤" });
+      setErrors({ general: controllerError || "發生錯誤" });
     }
   }, [controllerError]);
 

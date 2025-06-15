@@ -435,14 +435,33 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
 
   return (
     <>
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex flex-wrap justify-between items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <h3 className="text-lg font-semibold text-gray-900">持倉明細</h3>
-              <span className="text-sm text-gray-500">
-                ({sortedHoldings.length} 項資產)
-              </span>
+      <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+        {/* 表格頭部 */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-100 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
+
+          <div className="flex flex-wrap justify-between items-center gap-4 relative z-10">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+                <ChartBarIcon className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                  持倉明細
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  共 {sortedHoldings.length} 項資產 • 總市值{" "}
+                  {holdings
+                    .reduce((acc, curr) => {
+                      const value = parseFloat(
+                        curr.marketValue.replace(/[^0-9.-]+/g, "")
+                      );
+                      return acc + value;
+                    }, 0)
+                    .toLocaleString()}{" "}
+                  NT$
+                </p>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -451,26 +470,27 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
                 {Object.entries(holdingTypes).map(([type, data]) => (
                   <button
                     key={type}
-                    className={`px-3 py-1 text-xs rounded-full flex items-center ${
+                    className={`px-4 py-2 text-sm rounded-full flex items-center transition-all duration-200 transform hover:scale-105 ${
                       filterType === type
-                        ? "bg-blue-100 text-blue-700 border border-blue-200"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
+                        ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg"
+                        : "bg-white/70 text-gray-600 hover:bg-white border border-gray-200 hover:shadow-md"
                     }`}
                     onClick={() => setFilterType(type as FilterType)}
                   >
-                    {type === "stock" && (
-                      <TagIcon className="h-3.5 w-3.5 mr-1" />
-                    )}
+                    {type === "stock" && <TagIcon className="h-4 w-4 mr-2" />}
                     {type === "etf" && (
-                      <ChartPieIcon className="h-3.5 w-3.5 mr-1" />
+                      <ChartPieIcon className="h-4 w-4 mr-2" />
                     )}
                     {type === "crypto" && (
-                      <CurrencyDollarIcon className="h-3.5 w-3.5 mr-1" />
+                      <CurrencyDollarIcon className="h-4 w-4 mr-2" />
                     )}
                     {type === "bond" && (
-                      <DocumentIcon className="h-3.5 w-3.5 mr-1" />
+                      <DocumentIcon className="h-4 w-4 mr-2" />
                     )}
-                    {data.label} <span className="ml-1">({data.count})</span>
+                    {data.label}{" "}
+                    <span className="ml-1 bg-white/30 px-2 py-0.5 rounded-full text-xs">
+                      ({data.count})
+                    </span>
                   </button>
                 ))}
               </div>
@@ -480,14 +500,14 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
                 <input
                   type="text"
                   placeholder="搜尋資產..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-10 pr-4 py-3 border border-gray-200 rounded-2xl bg-white/70 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
                 {searchTerm && (
                   <button
-                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors duration-200"
                     onClick={() => setSearchTerm("")}
                   >
                     <XMarkIcon className="h-5 w-5" />
@@ -498,147 +518,195 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
           </div>
         </div>
 
+        {/* 表格內容 */}
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
               <tr>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
                   onClick={() => handleSort("symbol")}
                 >
-                  代號 <SortIcon field="symbol" />
+                  <div className="flex items-center space-x-1">
+                    <span>代號</span>
+                    <SortIcon field="symbol" />
+                  </div>
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
                   onClick={() => handleSort("name")}
                 >
-                  名稱 <SortIcon field="name" />
+                  <div className="flex items-center space-x-1">
+                    <span>名稱</span>
+                    <SortIcon field="name" />
+                  </div>
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
                   onClick={() => handleSort("price")}
                 >
-                  當前價格 <SortIcon field="price" />
+                  <div className="flex items-center space-x-1">
+                    <span>當前價格</span>
+                    <SortIcon field="price" />
+                  </div>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   趨勢
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
                   onClick={() => handleSort("quantity")}
                 >
-                  持有數量 <SortIcon field="quantity" />
+                  <div className="flex items-center space-x-1">
+                    <span>持有數量</span>
+                    <SortIcon field="quantity" />
+                  </div>
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
                   onClick={() => handleSort("marketValue")}
                 >
-                  市值 <SortIcon field="marketValue" />
+                  <div className="flex items-center space-x-1">
+                    <span>市值</span>
+                    <SortIcon field="marketValue" />
+                  </div>
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
                   onClick={() => handleSort("totalReturn")}
                 >
-                  收益率 <SortIcon field="totalReturn" />
+                  <div className="flex items-center space-x-1">
+                    <span>收益率</span>
+                    <SortIcon field="totalReturn" />
+                  </div>
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
                   onClick={() => handleSort("weight")}
                 >
-                  權重 <SortIcon field="weight" />
+                  <div className="flex items-center space-x-1">
+                    <span>權重</span>
+                    <SortIcon field="weight" />
+                  </div>
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   操作
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {sortedHoldings.map((holding) => (
+            <tbody className="bg-white divide-y divide-gray-100">
+              {sortedHoldings.map((holding, index) => (
                 <tr
                   key={holding.symbol}
-                  className={`${
+                  className={`transition-all duration-200 cursor-pointer ${
                     selectedHolding === holding.symbol
-                      ? "bg-blue-50"
+                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500"
                       : "hover:bg-gray-50"
-                  } cursor-pointer`}
+                  } ${index % 2 === 0 ? "bg-white" : "bg-gray-50/30"}`}
                   onClick={() => onSelectHolding(holding.symbol)}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                    {holding.symbol}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {holding.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {holding.price}
-                    <span
-                      className={`ml-1 text-xs ${
-                        holding.priceChange >= 0
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      ({holding.priceChange >= 0 ? "+" : ""}
-                      {holding.priceChange.toFixed(2)}%)
-                    </span>
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <MiniChart
-                      data={priceHistories[holding.symbol]}
-                      color={
-                        parseFloat(holding.totalReturn.percentage) >= 0
-                          ? "#10B981"
-                          : "#EF4444"
-                      }
-                    />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {holding.quantity}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {holding.marketValue}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center">
-                      <span
-                        className={`text-sm font-medium ${
-                          parseFloat(holding.totalReturn.percentage) >= 0
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }`}
-                      >
-                        {holding.totalReturn.value}
-                      </span>
-                      <span
-                        className={`ml-1 text-xs ${
-                          parseFloat(holding.totalReturn.percentage) >= 0
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }`}
-                      >
-                        ({holding.totalReturn.percentage})
+                      <span className="text-sm font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                        {holding.symbol}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {holding.weight}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {holding.name}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewDetail(holding.symbol);
-                      }}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                    >
-                      詳情
-                    </button>
-                    <button
-                      className="text-gray-400 hover:text-gray-600"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <EllipsisHorizontalIcon className="h-5 w-5" />
-                    </button>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="space-y-1">
+                      <div className="text-sm font-semibold text-gray-900">
+                        {holding.price}
+                      </div>
+                      <div
+                        className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          holding.priceChange >= 0
+                            ? "text-emerald-700 bg-emerald-100"
+                            : "text-red-700 bg-red-100"
+                        }`}
+                      >
+                        {holding.priceChange >= 0 ? "+" : ""}
+                        {holding.priceChange.toFixed(2)}%
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <MiniChart
+                        data={priceHistories[holding.symbol]}
+                        color={
+                          parseFloat(holding.totalReturn.percentage) >= 0
+                            ? "#10B981"
+                            : "#EF4444"
+                        }
+                      />
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
+                    {holding.quantity}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-bold text-gray-900">
+                      {holding.marketValue}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className={`text-sm font-bold px-3 py-1 rounded-full ${
+                          parseFloat(holding.totalReturn.percentage) >= 0
+                            ? "text-emerald-700 bg-emerald-100"
+                            : "text-red-700 bg-red-100"
+                        }`}
+                      >
+                        {holding.totalReturn.value}
+                      </div>
+                      <div
+                        className={`text-xs font-medium ${
+                          parseFloat(holding.totalReturn.percentage) >= 0
+                            ? "text-emerald-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        ({holding.totalReturn.percentage})
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="text-sm font-semibold text-gray-900 mr-2">
+                        {holding.weight}
+                      </div>
+                      <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-500"
+                          style={{ width: `${parseFloat(holding.weight)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetail(holding.symbol);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-full transition-all duration-200 font-medium"
+                      >
+                        詳情
+                      </button>
+                      <button
+                        className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <EllipsisHorizontalIcon className="h-5 w-5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -646,17 +714,23 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
               {/* 當沒有數據時顯示 */}
               {sortedHoldings.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={9}
-                    className="px-6 py-8 text-center text-gray-500"
-                  >
-                    <div className="flex flex-col items-center">
-                      <ChartBarIcon className="h-12 w-12 text-gray-300 mb-2" />
-                      <p className="text-sm">
-                        {searchTerm || filterType !== "all"
-                          ? "沒有符合條件的資產"
-                          : "尚無持倉資料"}
-                      </p>
+                  <td colSpan={9} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                        <ChartBarIcon className="h-10 w-10 text-gray-400" />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-lg font-medium text-gray-500">
+                          {searchTerm || filterType !== "all"
+                            ? "沒有符合條件的資產"
+                            : "尚無持倉資料"}
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          {searchTerm || filterType !== "all"
+                            ? "請嘗試調整搜尋條件或篩選器"
+                            : "開始您的投資之旅"}
+                        </p>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -666,46 +740,50 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
         </div>
 
         {/* 表格底部摘要 */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-t border-gray-200">
           <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              總市值:{" "}
-              <span className="font-semibold text-gray-900">
-                {holdings
-                  .reduce((acc, curr) => {
-                    const value = parseFloat(
-                      curr.marketValue.replace(/[^0-9.-]+/g, "")
-                    );
-                    return acc + value;
-                  }, 0)
-                  .toLocaleString()}
-                NT$
-              </span>
+            <div className="space-y-1">
+              <div className="text-sm text-gray-600">
+                總市值:{" "}
+                <span className="text-lg font-bold text-gray-900">
+                  {holdings
+                    .reduce((acc, curr) => {
+                      const value = parseFloat(
+                        curr.marketValue.replace(/[^0-9.-]+/g, "")
+                      );
+                      return acc + value;
+                    }, 0)
+                    .toLocaleString()}
+                  NT$
+                </span>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">
-              總收益:{" "}
-              <span
-                className={`font-semibold ${
-                  holdings.reduce((acc, curr) => {
-                    const value = parseFloat(
-                      curr.totalReturn.value.replace(/[^0-9.-]+/g, "")
-                    );
-                    return acc + value;
-                  }, 0) >= 0
-                    ? "text-green-500"
-                    : "text-red-500"
-                }`}
-              >
-                {holdings
-                  .reduce((acc, curr) => {
-                    const value = parseFloat(
-                      curr.totalReturn.value.replace(/[^0-9.-]+/g, "")
-                    );
-                    return acc + value;
-                  }, 0)
-                  .toLocaleString()}
-                NT$
-              </span>
+            <div className="space-y-1 text-right">
+              <div className="text-sm text-gray-600">
+                總收益:{" "}
+                <span
+                  className={`text-lg font-bold px-3 py-1 rounded-full ${
+                    holdings.reduce((acc, curr) => {
+                      const value = parseFloat(
+                        curr.totalReturn.value.replace(/[^0-9.-]+/g, "")
+                      );
+                      return acc + value;
+                    }, 0) >= 0
+                      ? "text-emerald-700 bg-emerald-100"
+                      : "text-red-700 bg-red-100"
+                  }`}
+                >
+                  {holdings
+                    .reduce((acc, curr) => {
+                      const value = parseFloat(
+                        curr.totalReturn.value.replace(/[^0-9.-]+/g, "")
+                      );
+                      return acc + value;
+                    }, 0)
+                    .toLocaleString()}
+                  NT$
+                </span>
+              </div>
             </div>
           </div>
         </div>

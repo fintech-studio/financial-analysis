@@ -1,13 +1,5 @@
 // 導入必要的 Model 類別
-import {
-  UserModel,
-  PortfolioModel,
-  CommunityModel,
-  StockModel,
-  NewsModel,
-  MarketModel,
-  EducationModel,
-} from "../models";
+import { UserModel, PortfolioModel } from "../models";
 
 // 統一錯誤處理類
 export class ErrorHandler {
@@ -175,7 +167,6 @@ export class DIContainer {
 export const SERVICE_KEYS = {
   USER_MODEL: "UserModel",
   PORTFOLIO_MODEL: "PortfolioModel",
-  COMMUNITY_MODEL: "CommunityModel",
   STOCK_MODEL: "StockModel",
   NEWS_MODEL: "NewsModel",
   MARKET_MODEL: "MarketModel",
@@ -192,9 +183,6 @@ export function initializeDIContainer(): void {
   );
   container.registerSingleton(SERVICE_KEYS.PORTFOLIO_MODEL, () =>
     PortfolioModel.getInstance()
-  );
-  container.registerSingleton(SERVICE_KEYS.COMMUNITY_MODEL, () =>
-    CommunityModel.getInstance()
   );
   // ... 其他模型
 }

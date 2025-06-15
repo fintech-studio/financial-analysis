@@ -360,7 +360,7 @@ const AuthPage = () => {
   // 監聽控制器錯誤
   useEffect(() => {
     if (controllerError) {
-      setErrors({ email: controllerError.message || "發生錯誤" });
+      setErrors({ email: controllerError || "發生錯誤" });
     }
   }, [controllerError]);
 

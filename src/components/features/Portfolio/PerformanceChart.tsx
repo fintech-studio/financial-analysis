@@ -120,38 +120,43 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 
   // 根據時間範圍篩選數據
   const filteredData = useMemo((): PerformanceData => {
+    // 安全地訪問 data.daily 和 data.daily.benchmark
+    const dailyLabels = data?.daily?.labels || [];
+    const dailyPortfolio = data?.daily?.portfolio || [];
+    const dailyBenchmark = data?.daily?.benchmark;
+
     switch (timeRange) {
       case "1W":
         return {
-          labels: data.daily.labels.slice(-7),
-          portfolio: data.daily.portfolio.slice(-7),
-          benchmark: data.daily.benchmark?.slice(-7),
+          labels: dailyLabels.slice(-7),
+          portfolio: dailyPortfolio.slice(-7),
+          benchmark: dailyBenchmark ? dailyBenchmark.slice(-7) : [],
         };
       case "1M":
         return {
-          labels: data.daily.labels.slice(-30),
-          portfolio: data.daily.portfolio.slice(-30),
-          benchmark: data.daily.benchmark?.slice(-30),
+          labels: dailyLabels.slice(-30),
+          portfolio: dailyPortfolio.slice(-30),
+          benchmark: dailyBenchmark ? dailyBenchmark.slice(-30) : [],
         };
       case "3M":
         return {
-          labels: data.daily.labels.slice(-90),
-          portfolio: data.daily.portfolio.slice(-90),
-          benchmark: data.daily.benchmark?.slice(-90),
+          labels: dailyLabels.slice(-90),
+          portfolio: dailyPortfolio.slice(-90),
+          benchmark: dailyBenchmark ? dailyBenchmark.slice(-90) : [],
         };
       case "6M":
-        return data.weekly;
+        return data?.weekly || { labels: [], portfolio: [] };
       case "1Y":
-        return data.weekly;
+        return data?.weekly || { labels: [], portfolio: [] };
       case "YTD":
         return {
-          labels: data.daily.labels.slice(-150),
-          portfolio: data.daily.portfolio.slice(-150),
-          benchmark: data.daily.benchmark?.slice(-150),
+          labels: dailyLabels.slice(-150),
+          portfolio: dailyPortfolio.slice(-150),
+          benchmark: dailyBenchmark ? dailyBenchmark.slice(-150) : [],
         };
       case "ALL":
       default:
-        return data.monthly;
+        return data?.monthly || { labels: [], portfolio: [] };
     }
   }, [data, timeRange]);
 
@@ -211,14 +216,27 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 
   // 計算關鍵指標
   const metrics = useMemo((): Metrics => {
-    const highest = Math.max(...filteredData.portfolio);
-    const lowest = Math.min(...filteredData.portfolio);
-    const current = filteredData.portfolio[filteredData.portfolio.length - 1];
-    const first = filteredData.portfolio[0];
+    const portfolioData = filteredData?.portfolio || [];
+    if (portfolioData.length === 0) {
+      return {
+        drawdown: "0.00",
+        volatility: "0.00",
+        totalReturn: "0.00",
+        annualizedReturn: "0.00",
+        highest: formatCurrency(0),
+        lowest: formatCurrency(0),
+        current: formatCurrency(0),
+      };
+    }
 
-    const drawdown = ((highest - current) / highest) * 100;
-    const volatility = calculateVolatility(filteredData.portfolio);
-    const totalReturn = ((current - first) / first) * 100;
+    const highest = Math.max(...portfolioData);
+    const lowest = Math.min(...portfolioData);
+    const current = portfolioData[portfolioData.length - 1];
+    const first = portfolioData[0];
+
+    const drawdown = highest !== 0 ? ((highest - current) / highest) * 100 : 0;
+    const volatility = calculateVolatility(portfolioData);
+    const totalReturn = first !== 0 ? ((current - first) / first) * 100 : 0;
     const annualizedReturn = calculateAnnualizedReturn(totalReturn, timeRange);
 
     return {
@@ -234,10 +252,14 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 
   // 圖表數據
   const getChartData = (): FormattedChartData => {
-    const datasets: ChartDataset[] = [
-      {
+    const datasets: ChartDataset[] = [];
+    const currentPortfolioData = filteredData?.portfolio || [];
+    const currentLabels = filteredData?.labels || [];
+
+    if (currentPortfolioData.length > 0) {
+      datasets.push({
         label: "投資組合",
-        data: filteredData.portfolio,
+        data: currentPortfolioData,
         borderColor: "rgb(53, 162, 235)",
         backgroundColor:
           chartType === "area"
@@ -246,16 +268,18 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
         tension: 0.3,
         fill: chartType === "area",
         borderWidth: 2,
-      },
-    ];
+      });
+    }
 
     if (showBenchmark) {
       compareIndices.forEach((indexId) => {
         const option = benchmarkOptions.find((opt) => opt.id === indexId);
-        if (option && filteredData[indexId]) {
+        // 安全地訪問 filteredData[indexId]
+        const benchmarkSpecificData = filteredData?.[indexId] as number[] | undefined;
+        if (option && benchmarkSpecificData && benchmarkSpecificData.length > 0) {
           datasets.push({
             label: option.name,
-            data: filteredData[indexId] as number[],
+            data: benchmarkSpecificData,
             borderColor: option.color,
             backgroundColor: `${option.color}${
               chartType === "bar" ? "70" : "20"
@@ -269,17 +293,19 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
       });
     }
 
-    if (highlightPeriods && data.keyPeriods) {
+    // 安全地訪問 data.keyPeriods
+    if (highlightPeriods && data?.keyPeriods && data.keyPeriods.length > 0) {
       data.keyPeriods.forEach((period) => {
         if (
           period.range[0] >= 0 &&
-          period.range[1] < filteredData.labels.length
+          period.range[1] < currentLabels.length &&
+          currentPortfolioData.length > 0 // 確保有數據可以高亮
         ) {
           const highlightData: (number | null)[] = Array(
-            filteredData.labels.length
+            currentLabels.length
           ).fill(null);
           for (let i = period.range[0]; i <= period.range[1]; i++) {
-            highlightData[i] = filteredData.portfolio[i];
+            highlightData[i] = currentPortfolioData[i];
           }
 
           datasets.push({
@@ -297,7 +323,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     }
 
     return {
-      labels: filteredData.labels,
+      labels: currentLabels,
       datasets,
     };
   };
@@ -376,13 +402,13 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
               {timeRange}期間報酬率：
               <span
                 className={
-                  data.returns[timeRange] >= 0
+                  (data?.returns?.[timeRange] ?? 0) >= 0
                     ? "text-green-600"
                     : "text-red-600"
                 }
               >
-                {data.returns[timeRange] >= 0 ? "+" : ""}
-                {data.returns[timeRange]}%
+                {(data?.returns?.[timeRange] ?? 0) >= 0 ? "+" : ""}
+                {data?.returns?.[timeRange] ?? 0}%
               </span>
             </span>
           )}
@@ -550,7 +576,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
               </div>
               <div className="p-4">
                 <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(data.returns).map(([period, value]) => (
+                  {Object.entries(data?.returns || {}).map(([period, value]) => (
                     <div
                       key={period}
                       className="flex justify-between items-center"
@@ -585,7 +611,8 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">初始價值:</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {formatCurrency(filteredData.portfolio[0])}
+                      {/* 安全地訪問 filteredData.portfolio[0] */}
+                      {formatCurrency(filteredData?.portfolio?.[0] ?? 0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
