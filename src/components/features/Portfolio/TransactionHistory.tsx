@@ -15,7 +15,14 @@ import {
   TagIcon,
   AdjustmentsVerticalIcon,
   EyeIcon,
+  SparklesIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+  DocumentChartBarIcon,
 } from "@heroicons/react/24/outline";
+import { SparklesIcon as SparklesSolidIcon } from "@heroicons/react/24/solid";
 import { Bar, Line, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -60,7 +67,7 @@ ChartJS.register(
   Filler
 );
 
-// 交易詳情模態框
+// 交易詳情模態框 - 重新設計
 const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
   transaction,
   onClose,
@@ -70,113 +77,153 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
   const isPositive = transaction.type === "買入";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <div className="flex items-center">
-            <span
-              className={`p-2 rounded-md ${
-                isPositive ? "bg-green-100" : "bg-red-100"
-              }`}
-            >
-              <CurrencyDollarIcon
-                className={`h-5 w-5 ${
-                  isPositive ? "text-green-600" : "text-red-600"
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-5xl w-full border border-white/20 overflow-hidden">
+        {/* 模態框標題 */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div
+                className={`p-3 rounded-2xl ${
+                  isPositive ? "bg-green-500/20" : "bg-red-500/20"
                 }`}
-              />
-            </span>
-            <h3 className="ml-3 text-lg font-semibold">
-              {transaction.type === "買入" ? "買入交易" : "賣出交易"}
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+              >
+                <CurrencyDollarIcon
+                  className={`h-7 w-7 ${
+                    isPositive ? "text-green-100" : "text-red-100"
+                  }`}
+                />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white">
+                  {transaction.type === "買入"
+                    ? "買入交易詳情"
+                    : "賣出交易詳情"}
+                </h3>
+                <p className="text-blue-100 text-sm">
+                  {transaction.symbol} • {transaction.date}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all duration-200"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* 左欄：交易基本信息 */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">
-                交易資訊
-              </h4>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <div className="text-sm text-gray-500">交易日期</div>
-                  <div className="text-sm font-medium">{transaction.date}</div>
-                </div>
-                <div className="flex justify-between">
-                  <div className="text-sm text-gray-500">交易類型</div>
-                  <div className="text-sm font-medium">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        transaction.type === "買入"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {transaction.type}
-                    </span>
+            <div className="space-y-6">
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <InformationCircleIcon className="h-5 w-5 text-blue-600 mr-2" />
+                  交易資訊
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        交易日期
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {transaction.date}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        交易類型
+                      </div>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                          transaction.type === "買入"
+                            ? "bg-green-100 text-green-800 border border-green-200"
+                            : "bg-red-100 text-red-800 border border-red-200"
+                        }`}
+                      >
+                        {transaction.type}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        證券代號
+                      </div>
+                      <div className="text-sm font-semibold text-blue-600">
+                        {transaction.symbol}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex justify-between">
-                  <div className="text-sm text-gray-500">證券代號</div>
-                  <div className="text-sm font-medium text-blue-600">
-                    {transaction.symbol}
-                  </div>
-                </div>
-                <div className="flex justify-between">
-                  <div className="text-sm text-gray-500">證券名稱</div>
-                  <div className="text-sm font-medium">{transaction.name}</div>
-                </div>
-                <div className="flex justify-between">
-                  <div className="text-sm text-gray-500">交易所/市場</div>
-                  <div className="text-sm font-medium">
-                    {transaction.exchange || "台灣證券交易所"}
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        證券名稱
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {transaction.name}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        交易所
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {transaction.exchange || "台灣證券交易所"}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-5 pt-5 border-t border-gray-200">
-                <h4 className="text-sm font-medium text-gray-500 mb-3">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <ChartBarIcon className="h-5 w-5 text-blue-600 mr-2" />
                   交易細節
                 </h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <div className="text-sm text-gray-500">數量</div>
-                    <div className="text-sm font-medium">
-                      {transaction.quantity}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      數量
+                    </div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {transaction.quantity.toLocaleString()}
                     </div>
                   </div>
-                  <div className="flex justify-between">
-                    <div className="text-sm text-gray-500">價格</div>
-                    <div className="text-sm font-medium">
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      價格
+                    </div>
+                    <div className="text-lg font-bold text-gray-900">
                       {transaction.price}
                     </div>
                   </div>
-                  <div className="flex justify-between">
-                    <div className="text-sm text-gray-500">總額</div>
-                    <div className="text-sm font-bold">{transaction.total}</div>
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      總額
+                    </div>
+                    <div className="text-xl font-bold text-blue-600">
+                      {transaction.total}
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <div className="text-sm text-gray-500">手續費</div>
-                    <div className="text-sm font-medium">
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      手續費
+                    </div>
+                    <div className="text-lg font-bold text-orange-600">
                       NT${" "}
                       {(
                         parseFloat(
@@ -188,74 +235,95 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
                 </div>
               </div>
 
-              <div className="mt-5 pt-5 border-t border-gray-200">
-                <h4 className="text-sm font-medium text-gray-500 mb-3">
+              {/* 交易備註 */}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
+                <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <TagIcon className="h-5 w-5 text-amber-600 mr-2" />
                   交易備註
                 </h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-gray-700">
                   {transaction.note || "無交易備註"}
                 </p>
               </div>
             </div>
 
-            {/* 右欄：市場數據與績效 */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-500 mb-3">
-                市場數據
-              </h4>
-
-              {/* 假設價格資料 */}
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-sm text-gray-500">當日開盤價</div>
-                  <div className="text-sm font-medium">
-                    NT${" "}
-                    {(
-                      parseFloat(transaction.price.replace(/[^0-9.-]+/g, "")) *
-                      (1 - Math.random() * 0.01)
-                    ).toFixed(2)}
+            {/* 右欄：市場數據與分析 */}
+            <div className="space-y-6">
+              {/* 市場數據 */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <ArrowTrendingUpIcon className="h-5 w-5 text-green-600 mr-2" />
+                  當日市場數據
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      開盤價
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      NT${" "}
+                      {(
+                        parseFloat(
+                          transaction.price.replace(/[^0-9.-]+/g, "")
+                        ) *
+                        (1 - Math.random() * 0.01)
+                      ).toFixed(2)}
+                    </div>
                   </div>
-                </div>
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-sm text-gray-500">當日收盤價</div>
-                  <div className="text-sm font-medium">
-                    NT${" "}
-                    {(
-                      parseFloat(transaction.price.replace(/[^0-9.-]+/g, "")) *
-                      (1 + Math.random() * 0.01)
-                    ).toFixed(2)}
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      收盤價
+                    </div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      NT${" "}
+                      {(
+                        parseFloat(
+                          transaction.price.replace(/[^0-9.-]+/g, "")
+                        ) *
+                        (1 + Math.random() * 0.01)
+                      ).toFixed(2)}
+                    </div>
                   </div>
-                </div>
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-sm text-gray-500">當日最高價</div>
-                  <div className="text-sm font-medium">
-                    NT${" "}
-                    {(
-                      parseFloat(transaction.price.replace(/[^0-9.-]+/g, "")) *
-                      (1 + Math.random() * 0.02)
-                    ).toFixed(2)}
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      最高價
+                    </div>
+                    <div className="text-sm font-semibold text-green-600">
+                      NT${" "}
+                      {(
+                        parseFloat(
+                          transaction.price.replace(/[^0-9.-]+/g, "")
+                        ) *
+                        (1 + Math.random() * 0.02)
+                      ).toFixed(2)}
+                    </div>
                   </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-500">當日最低價</div>
-                  <div className="text-sm font-medium">
-                    NT${" "}
-                    {(
-                      parseFloat(transaction.price.replace(/[^0-9.-]+/g, "")) *
-                      (1 - Math.random() * 0.02)
-                    ).toFixed(2)}
+                  <div>
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      最低價
+                    </div>
+                    <div className="text-sm font-semibold text-red-600">
+                      NT${" "}
+                      {(
+                        parseFloat(
+                          transaction.price.replace(/[^0-9.-]+/g, "")
+                        ) *
+                        (1 - Math.random() * 0.02)
+                      ).toFixed(2)}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* 成本圖表 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h5 className="text-sm font-medium text-gray-700 mb-3">
+              {/* 成本分析圖表 */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/50 shadow-lg">
+                <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <ChartBarIcon className="h-5 w-5 text-purple-600 mr-2" />
                   {transaction.type === "買入"
                     ? "買入成本分析"
                     : "賣出收益分析"}
                 </h5>
-                <div className="h-40">
+                <div className="h-48">
                   <Pie
                     data={{
                       labels:
@@ -274,17 +342,11 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
                           ],
                           backgroundColor: [
                             transaction.type === "買入"
-                              ? "rgba(59, 130, 246, 0.5)"
-                              : "rgba(34, 197, 94, 0.5)",
-                            "rgba(239, 68, 68, 0.5)",
+                              ? "rgba(59, 130, 246, 0.8)"
+                              : "rgba(34, 197, 94, 0.8)",
+                            "rgba(239, 68, 68, 0.8)",
                           ],
-                          borderColor: [
-                            transaction.type === "買入"
-                              ? "rgb(59, 130, 246)"
-                              : "rgb(34, 197, 94)",
-                            "rgb(239, 68, 68)",
-                          ],
-                          borderWidth: 1,
+                          borderWidth: 0,
                         },
                       ],
                     }}
@@ -294,12 +356,7 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
                       plugins: {
                         legend: {
                           position: "bottom",
-                          labels: {
-                            font: {
-                              size: 11,
-                            },
-                            boxWidth: 15,
-                          },
+                          labels: { font: { size: 12 }, boxWidth: 12 },
                         },
                       },
                     }}
@@ -307,39 +364,33 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
                 </div>
               </div>
 
-              {/* 交易建議 */}
-              <div className="mt-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <div className="flex items-center mb-2">
-                  <InformationCircleIcon className="h-5 w-5 text-blue-600 mr-2" />
-                  <h5 className="text-sm font-medium text-blue-900">
-                    投資建議
+              {/* AI 投資建議 */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
+                <div className="flex items-center mb-4">
+                  <SparklesSolidIcon className="h-6 w-6 text-purple-600 mr-2" />
+                  <h5 className="text-lg font-semibold text-purple-900">
+                    AI 投資建議
                   </h5>
                 </div>
-                <p className="text-xs text-blue-800">
+                <p className="text-sm text-purple-800 leading-relaxed">
                   {transaction.type === "買入"
-                    ? "設置適當的停損停利點，可考慮以10%的停損幅度和20%的停利目標來管理該投資風險。"
-                    : "賣出後請檢視整體組合配置，並考慮將資金重新分配至目前被低估的資產類別。"}
+                    ? "建議設置適當的停損停利點，可考慮以10%的停損幅度和20%的停利目標來管理該投資風險。持續關注公司基本面變化。"
+                    : "賣出後請檢視整體組合配置，並考慮將資金重新分配至目前被低估的資產類別。建議保持適當的現金比例以應對市場波動。"}
                 </p>
-              </div>
-
-              {/* 相關交易按鈕 */}
-              <div className="mt-4">
-                <button className="w-full px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200">
-                  查看相關交易紀錄
-                </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-3 flex justify-end">
+          {/* 底部操作按鈕 */}
+          <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end space-x-4">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 mr-3"
+              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all duration-200"
             >
               關閉
             </button>
-            <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700">
-              編輯交易
+            <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl">
+              相關分析
             </button>
           </div>
         </div>
@@ -956,337 +1007,159 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 交易概況儀表板 */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">交易概況</h3>
-          <div className="flex items-center space-x-2">
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value as PeriodType)}
-              className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="all">全部時間</option>
-              <option value="last7days">最近7天</option>
-              <option value="last30days">最近30天</option>
-              <option value="last90days">最近90天</option>
-              <option value="thisYear">本年度</option>
-            </select>
-            <CalendarIcon className="h-5 w-5 text-gray-400" />
+      {/* 簡約頁面標題 */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">交易歷史</h1>
+          <p className="text-gray-600 text-sm mt-1">投資交易記錄與統計</p>
+        </div>
+        <select
+          value={selectedPeriod}
+          onChange={(e) => setSelectedPeriod(e.target.value as PeriodType)}
+          className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">全部時間</option>
+          <option value="last7days">最近7天</option>
+          <option value="last30days">最近30天</option>
+          <option value="last90days">最近90天</option>
+          <option value="thisYear">本年度</option>
+        </select>
+      </div>
+
+      {/* 簡約統計卡片 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="text-gray-500 text-xs font-medium">總交易</div>
+          <div className="text-xl font-bold text-gray-900 mt-1">
+            {filteredTransactions.length}
           </div>
         </div>
-
-        {/* 交易統計卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex justify-between items-center mb-1">
-              <div className="text-sm text-gray-500">總交易次數</div>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              {filteredTransactions.length}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              買入：{transactionStats.basic.買入.count} | 賣出：
-              {transactionStats.basic.賣出.count}
-            </div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex justify-between items-center mb-1">
-              <div className="text-sm text-gray-500">買入總額</div>
-            </div>
-            <div className="text-2xl font-bold text-green-600">
-              NT$ {transactionStats.basic.買入.total.toLocaleString()}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              平均每筆 NT${" "}
-              {(
-                transactionStats.basic.買入.total /
-                Math.max(1, transactionStats.basic.買入.count)
-              ).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex justify-between items-center mb-1">
-              <div className="text-sm text-gray-500">賣出總額</div>
-            </div>
-            <div className="text-2xl font-bold text-red-600">
-              NT$ {transactionStats.basic.賣出.total.toLocaleString()}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              平均每筆 NT${" "}
-              {(
-                transactionStats.basic.賣出.total /
-                Math.max(1, transactionStats.basic.賣出.count)
-              ).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex justify-between items-center mb-1">
-              <div className="text-sm text-gray-500">淨現金流</div>
-            </div>
-            <div
-              className={`text-2xl font-bold ${
-                transactionStats.netCashFlow >= 0
-                  ? "text-green-600"
-                  : "text-red-600"
-              }`}
-            >
-              NT$ {transactionStats.netCashFlow.toLocaleString()}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              {transactionStats.netCashFlow >= 0 ? "淨賣出" : "淨買入"}資產
-            </div>
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="text-gray-500 text-xs font-medium">買入總額</div>
+          <div className="text-xl font-bold text-green-600 mt-1">
+            {(transactionStats.basic.買入.total / 1000).toFixed(0)}K
           </div>
         </div>
-
-        {/* 圖表分析 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
-              月度交易金額趨勢
-            </h4>
-            <div className="bg-gray-50 rounded-lg p-4 h-64">
-              <Bar
-                data={chartData.monthlyChart}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  scales: {
-                    x: {
-                      grid: {
-                        display: false,
-                      },
-                    },
-                    y: {
-                      grid: {
-                        color: "rgba(0, 0, 0, 0.05)",
-                      },
-                      ticks: {
-                        callback: function (value: any): string {
-                          return typeof value === "number" && value >= 1000000
-                            ? `${(value / 1000000).toFixed(1)}M`
-                            : `${(Number(value) / 1000).toFixed(0)}K`;
-                        },
-                      },
-                    },
-                  },
-                  plugins: {
-                    legend: {
-                      display: true,
-                      position: "top",
-                      labels: {
-                        boxWidth: 15,
-                        padding: 10,
-                        font: {
-                          size: 11,
-                        },
-                      },
-                    },
-                  },
-                }}
-              />
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
-              交易標的分布
-            </h4>
-            <div className="bg-gray-50 rounded-lg p-4 h-64 flex items-center justify-center">
-              <Pie
-                data={chartData.symbolChart}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: "bottom",
-                      labels: {
-                        font: {
-                          size: 11,
-                        },
-                        boxWidth: 15,
-                      },
-                    },
-                  },
-                }}
-              />
-            </div>
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="text-gray-500 text-xs font-medium">賣出總額</div>
+          <div className="text-xl font-bold text-red-600 mt-1">
+            {(transactionStats.basic.賣出.total / 1000).toFixed(0)}K
           </div>
         </div>
-
-        {/* 熱門交易標的 */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">
-            熱門交易標的
-          </h4>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {transactionStats.symbols.slice(0, 5).map((item, index) => (
-              <div key={index} className="bg-gray-50 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="text-xs text-gray-500">{item.symbol}</div>
-                  <div className="text-xs font-medium">{item.count}筆交易</div>
-                </div>
-                <div
-                  className="text-sm font-bold text-gray-900 truncate"
-                  title={item.name}
-                >
-                  {item.name}
-                </div>
-                <div className="mt-1 flex justify-between">
-                  <span className="text-xs text-green-600">
-                    買：{item.買入.toLocaleString()}
-                  </span>
-                  <span className="text-xs text-red-600">
-                    賣：{item.賣出.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            ))}
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="text-gray-500 text-xs font-medium">淨現金流</div>
+          <div
+            className={`text-xl font-bold mt-1 ${
+              transactionStats.netCashFlow >= 0
+                ? "text-green-600"
+                : "text-red-600"
+            }`}
+          >
+            {transactionStats.netCashFlow >= 0 ? "+" : ""}
+            {(transactionStats.netCashFlow / 1000).toFixed(0)}K
           </div>
         </div>
       </div>
 
-      {/* 交易歷史表格 */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 flex flex-wrap justify-between items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-semibold text-gray-900">交易歷史</h3>
-            <span className="bg-blue-100 text-blue-800 text-xs font-medium rounded-full px-2.5 py-0.5">
-              共 {filteredTransactions.length} 筆
-            </span>
-          </div>
+      {/* 簡約圖表區塊 */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          月度交易趨勢
+        </h3>
+        <div className="h-64">
+          <Bar
+            data={chartData.monthlyChart}
+            options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: {
+                  grid: { color: "rgba(0, 0, 0, 0.05)" },
+                  ticks: {
+                    callback: function (value: any): string {
+                      return `${(Number(value) / 1000).toFixed(0)}K`;
+                    },
+                  },
+                },
+              },
+            }}
+          />
+        </div>
+      </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center space-x-2">
+      {/* 簡約表格 */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {/* 簡約表格控制項 */}
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <h3 className="text-lg font-semibold text-gray-900">交易記錄</h3>
+              <span className="text-sm text-gray-500">
+                {filteredTransactions.length} 筆
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-3">
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as FilterType)}
-                className="text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="text-sm border border-gray-300 rounded px-3 py-1"
               >
-                <option value="all">所有交易</option>
-                <option value="買入">僅買入</option>
-                <option value="賣出">僅賣出</option>
+                <option value="all">全部</option>
+                <option value="買入">買入</option>
+                <option value="賣出">賣出</option>
               </select>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="搜尋代號或名稱..."
-                  className="pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm("")}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
 
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={handleExport}
-                className="px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
-                title="匯出交易歷史"
-              >
-                <DocumentArrowDownIcon className="h-4 w-4 mr-1" />
-                匯出
-              </button>
-              <button
-                onClick={() => {
-                  setSortField("date");
-                  setSortDirection("desc");
-                  setSearchTerm("");
-                  setFilterType("all");
-                  setSelectedPeriod("all");
-                }}
-                className="px-3 py-1.5 text-sm text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
-                title="重設篩選"
-              >
-                <ArrowPathIcon className="h-4 w-4 mr-1" />
-                重設
-              </button>
+              <input
+                type="text"
+                placeholder="搜尋..."
+                className="text-sm border border-gray-300 rounded px-3 py-1 w-32 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
           </div>
         </div>
 
+        {/* 簡約表格內容 */}
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("date")}
-                >
-                  日期 <SortIcon field="date" />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  日期
                 </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("type")}
-                >
-                  類型 <SortIcon field="type" />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  類型
                 </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("symbol")}
-                >
-                  代號 <SortIcon field="symbol" />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  股票
                 </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("name")}
-                >
-                  名稱 <SortIcon field="name" />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  數量
                 </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("quantity")}
-                >
-                  數量 <SortIcon field="quantity" />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  價格
                 </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("price")}
-                >
-                  價格 <SortIcon field="price" />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  總額
                 </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                  onClick={() => handleSort("total")}
-                >
-                  總額 <SortIcon field="total" />
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                   操作
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {currentTransactions.map((transaction) => (
+            <tbody className="divide-y divide-gray-200">
+              {currentTransactions.map((transaction, index) => (
                 <tr key={transaction.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 text-sm text-gray-900">
                     {transaction.date}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                     <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
                         transaction.type === "買入"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
@@ -1295,28 +1168,31 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                       {transaction.type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
-                    {transaction.symbol}
+                  <td className="px-6 py-4">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {transaction.symbol}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {transaction.name}
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {transaction.name}
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {transaction.quantity.toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {transaction.quantity}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 text-sm text-gray-900">
                     {transaction.price}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     {transaction.total}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="px-6 py-4 text-right">
                     <button
                       onClick={() => handleViewTransaction(transaction)}
-                      className="text-blue-600 hover:text-blue-900 text-sm font-medium inline-flex items-center"
+                      className="text-blue-600 hover:text-blue-800 text-sm"
                     >
-                      <EyeIcon className="h-4 w-4 mr-1" />
-                      詳細
+                      查看
                     </button>
                   </td>
                 </tr>
@@ -1325,10 +1201,10 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               {currentTransactions.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
-                    className="px-6 py-10 text-center text-gray-500"
+                    colSpan={7}
+                    className="px-6 py-8 text-center text-gray-500"
                   >
-                    沒有找到符合條件的交易紀錄
+                    沒有找到交易記錄
                   </td>
                 </tr>
               )}
@@ -1336,18 +1212,17 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           </table>
         </div>
 
-        {/* 分頁控制 */}
+        {/* 簡約分頁 */}
         {totalPages > 1 && (
-          <div className="px-6 py-3 bg-white border-t border-gray-200 flex items-center justify-between">
-            <div className="flex-1 flex justify-between sm:hidden">
+          <div className="px-6 py-3 border-t border-gray-200 flex justify-between items-center">
+            <div className="text-sm text-gray-500">
+              第 {currentPage} 頁，共 {totalPages} 頁
+            </div>
+            <div className="flex space-x-1">
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                  currentPage === 1
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                }`}
+                className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50"
               >
                 上一頁
               </button>
@@ -1356,355 +1231,102 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   setCurrentPage(Math.min(totalPages, currentPage + 1))
                 }
                 disabled={currentPage === totalPages}
-                className={`relative ml-3 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                  currentPage === totalPages
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                }`}
+                className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50"
               >
                 下一頁
               </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  顯示第{" "}
-                  <span className="font-medium">
-                    {(currentPage - 1) * itemsPerPage + 1}
-                  </span>{" "}
-                  至{" "}
-                  <span className="font-medium">
-                    {Math.min(
-                      currentPage * itemsPerPage,
-                      filteredTransactions.length
-                    )}
-                  </span>{" "}
-                  筆，共{" "}
-                  <span className="font-medium">
-                    {filteredTransactions.length}
-                  </span>{" "}
-                  筆
-                </p>
-              </div>
-              <div>
-                <nav
-                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                  aria-label="Pagination"
-                >
-                  <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                      currentPage === 1
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-gray-500 hover:bg-gray-50"
-                    }`}
-                  >
-                    <span className="sr-only">上一頁</span>
-                    <ChevronLeftIcon className="h-5 w-5" />
-                  </button>
-
-                  {/* 頁碼按鈕 - 只顯示附近的幾頁 */}
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum: number;
-
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === pageNum
-                            ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                            : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-
-                  <button
-                    onClick={() =>
-                      setCurrentPage(Math.min(totalPages, currentPage + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                      currentPage === totalPages
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-gray-500 hover:bg-gray-50"
-                    }`}
-                  >
-                    <span className="sr-only">下一頁</span>
-                    <ChevronRightIcon className="h-5 w-5" />
-                  </button>
-                </nav>
-              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* 交易績效分析區塊 */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <ChartBarIcon className="h-6 w-6 text-blue-600 mr-2" />
-            <h3 className="text-lg font-semibold text-gray-900">
-              交易績效分析
-            </h3>
-          </div>
-          <AdjustmentsVerticalIcon className="h-5 w-5 text-gray-400" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                買賣比例
-              </h4>
-              <div className="flex items-center">
-                <div className="flex-1">
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-500 rounded-full"
-                      style={{
-                        width: `${
-                          (transactionStats.basic.買入.count /
-                            Math.max(1, filteredTransactions.length)) *
-                          100
-                        }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="ml-3 text-sm font-medium">
-                  {Math.round(
-                    (transactionStats.basic.買入.count /
-                      Math.max(1, filteredTransactions.length)) *
-                      100
-                  )}
-                  %
-                </div>
-              </div>
-              <div className="flex justify-between text-xs mt-2">
-                <div>買入次數: {transactionStats.basic.買入.count}</div>
-                <div>賣出次數: {transactionStats.basic.賣出.count}</div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                交易節奏
-              </h4>
-              <div className="flex justify-between text-sm">
-                <div>
-                  <div className="text-gray-500">平均持有時間</div>
-                  <div className="font-medium text-gray-900">
-                    約 {Math.floor(Math.random() * 100 + 30)} 天
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-500">交易頻率</div>
-                  <div className="font-medium text-gray-900">
-                    {(
-                      filteredTransactions.length /
-                      Math.max(1, transactionStats.monthly.length)
-                    ).toFixed(1)}{" "}
-                    筆/月
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-500">最後交易</div>
-                  <div className="font-medium text-gray-900">
-                    {filteredTransactions.length > 0
-                      ? filteredTransactions[0].date
-                      : "-"}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                交易習慣分析
-              </h4>
-              <div className="space-y-3">
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">
-                    最常交易的資產類型
-                  </div>
-                  <div className="text-sm font-medium">
-                    個股 (佔總交易的76%)
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">
-                    最常交易的時間
-                  </div>
-                  <div className="text-sm font-medium">
-                    每月中旬 (佔總交易的42%)
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 mb-1">平均交易金額</div>
-                  <div className="text-sm font-medium">
-                    NT${" "}
-                    {(
-                      (transactionStats.basic.買入.total +
-                        transactionStats.basic.賣出.total) /
-                      filteredTransactions.length
-                    ).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <div className="flex items-center mb-2">
-                <TagIcon className="h-5 w-5 text-blue-600 mr-2" />
-                <h4 className="text-sm font-medium text-blue-900">
-                  交易習慣改善建議
-                </h4>
-              </div>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center">
-                    <span className="block h-2 w-2 rounded-full bg-blue-600"></span>
-                  </div>
-                  <p className="ml-2 text-sm text-blue-800">
-                    考慮減少個股交易頻率，增加ETF等低成本指數化商品的配置比例。
-                  </p>
-                </li>
-                <li className="flex items-start">
-                  <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center">
-                    <span className="block h-2 w-2 rounded-full bg-blue-600"></span>
-                  </div>
-                  <p className="ml-2 text-sm text-blue-800">
-                    買賣比例接近平衡，可考慮增加長期持有策略的比重，減少短期交易次數。
-                  </p>
-                </li>
-                <li className="flex items-start">
-                  <div className="flex-shrink-0 h-5 w-5 flex items-center justify-center">
-                    <span className="block h-2 w-2 rounded-full bg-blue-600"></span>
-                  </div>
-                  <p className="ml-2 text-sm text-blue-800">
-                    建議採用固定時間定期投資策略，避免過度交易帶來的成本增加。
-                  </p>
-                </li>
-              </ul>
-              <div className="mt-4 pt-3 border-t border-blue-200">
-                <button className="px-3 py-1.5 bg-white border border-blue-300 rounded-md text-xs font-medium text-blue-700 hover:bg-blue-50">
-                  查看完整建議報告 →
+      {/* 簡約交易詳情模態框 */}
+      {showDetails && selectedTransaction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  交易詳情
+                </h3>
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                成本分析
-              </h4>
-              <div className="space-y-3">
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
-                    <span>總交易成本</span>
-                    <span>
-                      NT$ {(filteredTransactions.length * 20).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div
-                      className="bg-purple-600 h-1.5 rounded-full"
-                      style={{ width: "8%" }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    佔總交易金額的0.21%
+                  <div className="text-sm text-gray-500">交易日期</div>
+                  <div className="font-medium">{selectedTransaction.date}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500">交易類型</div>
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-medium rounded ${
+                      selectedTransaction.type === "買入"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {selectedTransaction.type}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500">股票代號</div>
+                  <div className="font-medium">
+                    {selectedTransaction.symbol}
                   </div>
                 </div>
-
                 <div>
-                  <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
-                    <span>證券交易稅</span>
-                    <span>
-                      NT${" "}
-                      {Math.round(
-                        transactionStats.basic.賣出.total * 0.003
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div
-                      className="bg-indigo-600 h-1.5 rounded-full"
-                      style={{ width: "12%" }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    賣出交易金額的0.3%
+                  <div className="text-sm text-gray-500">股票名稱</div>
+                  <div className="font-medium">{selectedTransaction.name}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500">數量</div>
+                  <div className="font-medium">
+                    {selectedTransaction.quantity.toLocaleString()}
                   </div>
                 </div>
-
                 <div>
-                  <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
-                    <span>交易手續費</span>
-                    <span>
-                      NT${" "}
-                      {Math.round(
-                        (transactionStats.basic.買入.total +
-                          transactionStats.basic.賣出.total) *
-                          0.001425
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div
-                      className="bg-blue-600 h-1.5 rounded-full"
-                      style={{ width: "10%" }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    交易金額的0.1425%
+                  <div className="text-sm text-gray-500">價格</div>
+                  <div className="font-medium">{selectedTransaction.price}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-sm text-gray-500">總額</div>
+                  <div className="text-lg font-bold">
+                    {selectedTransaction.total}
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-              <div className="flex items-center mb-2">
-                <InformationCircleIcon className="h-5 w-5 text-green-600 mr-2" />
-                <h4 className="text-sm font-medium text-green-900">投資知識</h4>
+              <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end">
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                >
+                  關閉
+                </button>
               </div>
-              <p className="text-sm text-green-800 mb-3">
-                長期投資者與頻繁交易者相比，一般能獲得更高的複合回報率。減少交易頻率可以降低交易成本和稅負影響，增加投資淨收益。
-              </p>
-              <a
-                href="#"
-                className="text-xs font-medium text-green-700 hover:text-green-800"
-              >
-                了解更多投資策略 →
-              </a>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 交易詳情模態框 */}
-      {showDetails && (
-        <TransactionDetailsModal
-          transaction={selectedTransaction}
-          onClose={() => setShowDetails(false)}
-        />
       )}
     </div>
   );

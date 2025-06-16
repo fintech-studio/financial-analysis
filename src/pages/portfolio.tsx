@@ -239,54 +239,10 @@ const PortfolioPage: React.FC = () => {
   // 數據載入中
   if (preloadLoading && !isComplete) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        {/* 統一的頁面標題區域 */}
-        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-xl relative overflow-hidden">
-          {/* 裝飾性背景元素 */}
-          <div className="absolute top-0 left-0 w-full h-full">
-            <div className="absolute top-10 left-10 w-20 h-20 bg-white opacity-5 rounded-full"></div>
-            <div className="absolute bottom-10 right-20 w-32 h-32 bg-white opacity-5 rounded-full"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
-          </div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-4">
-                <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm">
-                  <BriefcaseIcon className="h-8 w-8 text-white" />
-                </div>
-              </div>
-              <h1 className="text-4xl font-bold text-white tracking-tight mb-4">
-                投資組合管理
-              </h1>
-              <p className="text-blue-100 text-lg max-w-2xl mx-auto">
-                智能投資組合管理系統，追蹤績效表現、風險評估，並提供最佳化建議
-              </p>
-
-              {/* 載入進度 */}
-              <div className="max-w-md mx-auto mt-8">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-blue-100">
-                    載入進度
-                  </span>
-                  <span className="text-sm font-medium text-white">
-                    {Math.round((progress.loaded / progress.total) * 100)}%
-                  </span>
-                </div>
-                <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="h-full bg-white rounded-full transition-all duration-500 ease-out"
-                    style={{
-                      width: `${(progress.loaded / progress.total) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-                <p className="text-blue-100 text-sm mt-4">
-                  正在載入您的投資數據... ({progress.loaded}/{progress.total})
-                </p>
-              </div>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">載入投資組合數據中...</p>
         </div>
       </div>
     );
