@@ -267,10 +267,300 @@ const HoldingDetail: React.FC<HoldingDetailProps> = ({ holding, onClose }) => {
 };
 
 const HoldingsTable: React.FC<HoldingsTableProps> = ({
-  holdings,
+  holdings: initialHoldings,
   onSelectHolding,
   selectedHolding,
 }) => {
+  // 模擬持倉數據 - 如果沒有傳入初始數據，使用這些測試數據
+  const mockHoldings: Holding[] = [
+    {
+      symbol: "2330",
+      name: "台積電",
+      price: "NT$ 585.00",
+      priceChange: 1.75,
+      quantity: "1000",
+      marketValue: "NT$ 585,000",
+      totalReturn: {
+        value: "NT$ 85,000",
+        percentage: "+17.0%",
+      },
+      weight: "23.8%",
+      costBasis: "NT$ 500,000",
+    },
+    {
+      symbol: "AAPL",
+      name: "蘋果公司",
+      price: "US$ 192.35",
+      priceChange: 2.43,
+      quantity: "100",
+      marketValue: "NT$ 598,400",
+      totalReturn: {
+        value: "NT$ 76,200",
+        percentage: "+14.6%",
+      },
+      weight: "24.3%",
+      costBasis: "NT$ 522,200",
+    },
+    {
+      symbol: "2317",
+      name: "鴻海",
+      price: "NT$ 108.50",
+      priceChange: -0.92,
+      quantity: "2000",
+      marketValue: "NT$ 217,000",
+      totalReturn: {
+        value: "NT$ 17,000",
+        percentage: "+8.5%",
+      },
+      weight: "8.8%",
+      costBasis: "NT$ 200,000",
+    },
+    {
+      symbol: "0050",
+      name: "元大台灣50",
+      price: "NT$ 142.30",
+      priceChange: 0.35,
+      quantity: "1000",
+      marketValue: "NT$ 142,300",
+      totalReturn: {
+        value: "NT$ 17,300",
+        percentage: "+13.8%",
+      },
+      weight: "5.8%",
+      costBasis: "NT$ 125,000",
+    },
+    {
+      symbol: "NVDA",
+      name: "輝達",
+      price: "US$ 875.28",
+      priceChange: 3.25,
+      quantity: "50",
+      marketValue: "NT$ 1,360,850",
+      totalReturn: {
+        value: "NT$ 485,350",
+        percentage: "+55.4%",
+      },
+      weight: "55.3%",
+      costBasis: "NT$ 875,500",
+    },
+    {
+      symbol: "2454",
+      name: "聯發科",
+      price: "NT$ 765.00",
+      priceChange: -1.42,
+      quantity: "300",
+      marketValue: "NT$ 229,500",
+      totalReturn: {
+        value: "-NT$ 10,500",
+        percentage: "-4.4%",
+      },
+      weight: "9.3%",
+      costBasis: "NT$ 240,000",
+    },
+    {
+      symbol: "MSFT",
+      name: "微軟",
+      price: "US$ 424.73",
+      priceChange: 1.18,
+      quantity: "80",
+      marketValue: "NT$ 1,056,280",
+      totalReturn: {
+        value: "NT$ 156,280",
+        percentage: "+17.4%",
+      },
+      weight: "42.9%",
+      costBasis: "NT$ 900,000",
+    },
+    {
+      symbol: "2882",
+      name: "國泰金",
+      price: "NT$ 61.80",
+      priceChange: 0.65,
+      quantity: "3000",
+      marketValue: "NT$ 185,400",
+      totalReturn: {
+        value: "NT$ 15,400",
+        percentage: "+9.1%",
+      },
+      weight: "7.5%",
+      costBasis: "NT$ 170,000",
+    },
+    {
+      symbol: "TSLA",
+      name: "特斯拉",
+      price: "US$ 248.42",
+      priceChange: -2.15,
+      quantity: "60",
+      marketValue: "NT$ 463,235",
+      totalReturn: {
+        value: "-NT$ 36,765",
+        percentage: "-7.4%",
+      },
+      weight: "18.8%",
+      costBasis: "NT$ 500,000",
+    },
+    {
+      symbol: "VTI",
+      name: "Vanguard整體股市ETF",
+      price: "US$ 245.73",
+      priceChange: 0.82,
+      quantity: "200",
+      marketValue: "NT$ 1,528,530",
+      totalReturn: {
+        value: "NT$ 228,530",
+        percentage: "+17.6%",
+      },
+      weight: "62.1%",
+      costBasis: "NT$ 1,300,000",
+    },
+    {
+      symbol: "2308",
+      name: "台達電",
+      price: "NT$ 312.00",
+      priceChange: 1.95,
+      quantity: "500",
+      marketValue: "NT$ 156,000",
+      totalReturn: {
+        value: "NT$ 6,000",
+        percentage: "+4.0%",
+      },
+      weight: "6.3%",
+      costBasis: "NT$ 150,000",
+    },
+    {
+      symbol: "BTC",
+      name: "比特幣",
+      price: "US$ 67,542.30",
+      priceChange: 4.75,
+      quantity: "0.5",
+      marketValue: "NT$ 1,050,690",
+      totalReturn: {
+        value: "NT$ 200,690",
+        percentage: "+23.6%",
+      },
+      weight: "42.7%",
+      costBasis: "NT$ 850,000",
+    },
+    {
+      symbol: "2891",
+      name: "中信金",
+      price: "NT$ 35.85",
+      priceChange: -0.28,
+      quantity: "2500",
+      marketValue: "NT$ 89,625",
+      totalReturn: {
+        value: "NT$ 4,625",
+        percentage: "+5.4%",
+      },
+      weight: "3.6%",
+      costBasis: "NT$ 85,000",
+    },
+    {
+      symbol: "GOOGL",
+      name: "Alphabet",
+      price: "US$ 166.54",
+      priceChange: 1.35,
+      quantity: "150",
+      marketValue: "NT$ 777,030",
+      totalReturn: {
+        value: "NT$ 77,030",
+        percentage: "+11.0%",
+      },
+      weight: "31.6%",
+      costBasis: "NT$ 700,000",
+    },
+    {
+      symbol: "006208",
+      name: "富邦台50",
+      price: "NT$ 85.40",
+      priceChange: 0.47,
+      quantity: "1200",
+      marketValue: "NT$ 102,480",
+      totalReturn: {
+        value: "NT$ 12,480",
+        percentage: "+13.9%",
+      },
+      weight: "4.2%",
+      costBasis: "NT$ 90,000",
+    },
+    {
+      symbol: "ETH",
+      name: "以太坊",
+      price: "US$ 3,845.67",
+      priceChange: 2.89,
+      quantity: "2",
+      marketValue: "NT$ 239,200",
+      totalReturn: {
+        value: "NT$ 39,200",
+        percentage: "+19.6%",
+      },
+      weight: "9.7%",
+      costBasis: "NT$ 200,000",
+    },
+    {
+      symbol: "2412",
+      name: "中華電",
+      price: "NT$ 124.50",
+      priceChange: -0.4,
+      quantity: "800",
+      marketValue: "NT$ 99,600",
+      totalReturn: {
+        value: "NT$ 4,600",
+        percentage: "+4.8%",
+      },
+      weight: "4.0%",
+      costBasis: "NT$ 95,000",
+    },
+    {
+      symbol: "SPY",
+      name: "SPDR S&P 500 ETF",
+      price: "US$ 521.23",
+      priceChange: 0.95,
+      quantity: "100",
+      marketValue: "NT$ 1,620,830",
+      totalReturn: {
+        value: "NT$ 220,830",
+        percentage: "+15.8%",
+      },
+      weight: "65.8%",
+      costBasis: "NT$ 1,400,000",
+    },
+    {
+      symbol: "2002",
+      name: "中鋼",
+      price: "NT$ 30.15",
+      priceChange: -1.15,
+      quantity: "5000",
+      marketValue: "NT$ 150,750",
+      totalReturn: {
+        value: "-NT$ 14,250",
+        percentage: "-8.6%",
+      },
+      weight: "6.1%",
+      costBasis: "NT$ 165,000",
+    },
+    {
+      symbol: "META",
+      name: "Meta Platforms",
+      price: "US$ 502.31",
+      priceChange: 1.67,
+      quantity: "70",
+      marketValue: "NT$ 1,093,540",
+      totalReturn: {
+        value: "NT$ 143,540",
+        percentage: "+15.1%",
+      },
+      weight: "44.4%",
+      costBasis: "NT$ 950,000",
+    },
+  ];
+
+  // 實際使用的持倉數據 - 優先使用傳入的數據，否則使用模擬數據
+  const holdings =
+    initialHoldings && initialHoldings.length > 0
+      ? initialHoldings
+      : mockHoldings;
+
   const [sortField, setSortField] = useState<SortField>("marketValue");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -446,7 +736,7 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
                 <ChartBarIcon className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                <h3 className="text-2xl font-bold  text-gray-800 bg-clip-text ">
                   持倉明細
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">

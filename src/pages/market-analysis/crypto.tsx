@@ -1,5 +1,6 @@
 import React from "react";
 import Footer from "@/components/Layout/Footer";
+import { CurrencyDollarIcon } from "@heroicons/react/24/outline";
 
 const CryptoMarket: React.FC = () => {
   return (
@@ -23,19 +24,7 @@ const CryptoMarket: React.FC = () => {
         <div className="bg-white rounded-xl shadow-lg p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-12 h-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                />
-              </svg>
+              <CurrencyDollarIcon className="w-12 h-12 text-gray-400" />
             </div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               頁面建構中

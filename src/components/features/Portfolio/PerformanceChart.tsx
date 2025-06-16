@@ -13,13 +13,12 @@ import {
   ChartOptions,
   TooltipItem,
 } from "chart.js";
-import { Line, Bar } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   ChartBarIcon,
   AdjustmentsHorizontalIcon,
-  ArrowsPointingOutIcon,
   DocumentChartBarIcon,
 } from "@heroicons/react/24/outline";
 
@@ -110,6 +109,17 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   const [compareIndices, setCompareIndices] = useState<string[]>(["benchmark"]);
   const [highlightPeriods, setHighlightPeriods] = useState<boolean>(false);
   const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<string>(timeRange);
+
+  // 時間範圍選項
+  const timeRangeOptions = [
+    { label: "1週", value: "1W" },
+    { label: "1月", value: "1M" },
+    { label: "3月", value: "3M" },
+    { label: "6月", value: "6M" },
+    { label: "1年", value: "1Y" },
+    { label: "全部", value: "ALL" },
+  ];
 
   const benchmarkOptions: BenchmarkOption[] = [
     { id: "benchmark", name: "大盤指數", color: "rgb(255, 99, 132)" },
@@ -118,14 +128,73 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     { id: "peers", name: "同類型投資者", color: "rgb(75, 192, 192)" },
   ];
 
+  // 模擬不同時間範圍的績效數據
+  const performanceData = {
+    "1W": {
+      labels: ["6/10", "6/11", "6/12", "6/13", "6/14", "6/15", "6/16"],
+      portfolio: [
+        2450600, 2456800, 2463200, 2458900, 2465400, 2471800, 2475300,
+      ],
+      benchmark: [18500, 18520, 18545, 18532, 18558, 18575, 18583],
+      return: "+1.01%",
+      isPositive: true,
+    },
+    "1M": {
+      labels: ["5/17", "5/24", "5/31", "6/7", "6/14", "6/16"],
+      portfolio: [2385000, 2398500, 2415600, 2435800, 2455200, 2475300],
+      benchmark: [18200, 18280, 18350, 18420, 18520, 18583],
+      return: "+3.79%",
+      isPositive: true,
+    },
+    "3M": {
+      labels: ["4月", "5月", "6月"],
+      portfolio: [2280000, 2385000, 2475300],
+      benchmark: [17800, 18200, 18583],
+      return: "+8.56%",
+      isPositive: true,
+    },
+    "6M": {
+      labels: ["1月", "2月", "3月", "4月", "5月", "6月"],
+      portfolio: [2150000, 2195000, 2245000, 2280000, 2385000, 2475300],
+      benchmark: [17200, 17350, 17500, 17800, 18200, 18583],
+      return: "+15.13%",
+      isPositive: true,
+    },
+    "1Y": {
+      labels: ["2023/6", "2023/9", "2023/12", "2024/3", "2024/6"],
+      portfolio: [2000000, 2088000, 2156000, 2245000, 2475300],
+      benchmark: [16500, 16800, 17100, 17500, 18583],
+      return: "+23.77%",
+      isPositive: true,
+    },
+    ALL: {
+      labels: ["2022", "2023", "2024"],
+      portfolio: [1800000, 2156000, 2475300],
+      benchmark: [15800, 17100, 18583],
+      return: "+37.52%",
+      isPositive: true,
+    },
+  };
+
   // 根據時間範圍篩選數據
   const filteredData = useMemo((): PerformanceData => {
-    // 安全地訪問 data.daily 和 data.daily.benchmark
+    const currentData =
+      performanceData[selectedTimeRange as keyof typeof performanceData];
+
+    if (currentData) {
+      return {
+        labels: currentData.labels,
+        portfolio: currentData.portfolio,
+        benchmark: currentData.benchmark,
+      };
+    }
+
+    // 備用邏輯：使用原有的 data
     const dailyLabels = data?.daily?.labels || [];
     const dailyPortfolio = data?.daily?.portfolio || [];
     const dailyBenchmark = data?.daily?.benchmark;
 
-    switch (timeRange) {
+    switch (selectedTimeRange) {
       case "1W":
         return {
           labels: dailyLabels.slice(-7),
@@ -158,221 +227,491 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
       default:
         return data?.monthly || { labels: [], portfolio: [] };
     }
-  }, [data, timeRange]);
+  }, [data, selectedTimeRange]);
 
-  // 格式化貨幣
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat("zh-TW", {
-      style: "currency",
-      currency: "TWD",
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  // 績效指標數據
+  const performanceMetrics = useMemo(() => {
+    const currentData =
+      performanceData[selectedTimeRange as keyof typeof performanceData];
 
-  // 簡化的波動率計算
-  const calculateVolatility = (dataPoints: number[]): number => {
-    if (dataPoints.length <= 1) return 0;
+    return [
+      {
+        title: "總回報率",
+        value: currentData?.return || "+0.00%",
+        isPositive: currentData?.isPositive || false,
+        description: `${selectedTimeRange}期間表現`,
+        icon: currentData?.isPositive
+          ? ArrowTrendingUpIcon
+          : ArrowTrendingDownIcon,
+      },
+      {
+        title: "年化收益率",
+        value: "+22.4%",
+        isPositive: true,
+        description: "折算年度表現",
+        icon: ArrowTrendingUpIcon,
+      },
+      {
+        title: "最大回撤",
+        value: "-8.2%",
+        isPositive: false,
+        description: "最大下跌幅度",
+        icon: ArrowTrendingDownIcon,
+      },
+      {
+        title: "波動率",
+        value: "15.3%",
+        isPositive: null,
+        description: "風險水平指標",
+        icon: ChartBarIcon,
+      },
+    ];
+  }, [selectedTimeRange]);
 
-    let sum = 0;
-    const changes: number[] = [];
-
-    for (let i = 1; i < dataPoints.length; i++) {
-      const change =
-        ((dataPoints[i] - dataPoints[i - 1]) / dataPoints[i - 1]) * 100;
-      changes.push(change);
-      sum += change;
-    }
-
-    const mean = sum / changes.length;
-
-    let variance = 0;
-    for (const change of changes) {
-      variance += Math.pow(change - mean, 2);
-    }
-    variance = variance / changes.length;
-
-    const annualizedVolatility = Math.sqrt(variance) * Math.sqrt(252);
-    return annualizedVolatility;
-  };
-
-  // 簡化的年化回報率計算
-  const calculateAnnualizedReturn = (
-    totalReturn: number,
-    timeRange: string
-  ): number => {
-    const yearsMapping: Record<string, number> = {
-      "1W": 1 / 52,
-      "1M": 1 / 12,
-      "3M": 3 / 12,
-      "6M": 6 / 12,
-      "1Y": 1,
-      YTD: 0.5,
-      ALL: 3,
-    };
-
-    const years = yearsMapping[timeRange] || 1;
-    return Math.pow(1 + totalReturn / 100, 1 / years) - 1;
-  };
-
-  // 計算關鍵指標
-  const metrics = useMemo((): Metrics => {
-    const portfolioData = filteredData?.portfolio || [];
-    if (portfolioData.length === 0) {
+  // 計算績效指標
+  const calculateMetrics = useMemo((): Metrics => {
+    const portfolioValues = filteredData.portfolio;
+    if (portfolioValues.length === 0) {
       return {
-        drawdown: "0.00",
-        volatility: "0.00",
-        totalReturn: "0.00",
-        annualizedReturn: "0.00",
-        highest: formatCurrency(0),
-        lowest: formatCurrency(0),
-        current: formatCurrency(0),
+        drawdown: "0.0",
+        volatility: "0.0",
+        totalReturn: "0.0",
+        annualizedReturn: "0.0",
+        highest: "0",
+        lowest: "0",
+        current: "0",
       };
     }
 
-    const highest = Math.max(...portfolioData);
-    const lowest = Math.min(...portfolioData);
-    const current = portfolioData[portfolioData.length - 1];
-    const first = portfolioData[0];
+    const highest = Math.max(...portfolioValues);
+    const lowest = Math.min(...portfolioValues);
+    const current = portfolioValues[portfolioValues.length - 1];
+    const initial = portfolioValues[0];
 
-    const drawdown = highest !== 0 ? ((highest - current) / highest) * 100 : 0;
-    const volatility = calculateVolatility(portfolioData);
-    const totalReturn = first !== 0 ? ((current - first) / first) * 100 : 0;
-    const annualizedReturn = calculateAnnualizedReturn(totalReturn, timeRange);
+    // 計算總回報率
+    const totalReturn = (((current - initial) / initial) * 100).toFixed(1);
+
+    // 計算最大回撤
+    let maxDrawdown = 0;
+    let peak = portfolioValues[0];
+
+    for (const value of portfolioValues) {
+      if (value > peak) {
+        peak = value;
+      }
+      const drawdown = ((peak - value) / peak) * 100;
+      maxDrawdown = Math.max(maxDrawdown, drawdown);
+    }
+
+    // 計算波動率（簡化計算）
+    const returns = portfolioValues
+      .slice(1)
+      .map(
+        (value, index) =>
+          (value - portfolioValues[index]) / portfolioValues[index]
+      );
+    const avgReturn =
+      returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
+    const variance =
+      returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) /
+      returns.length;
+    const volatility = Math.sqrt(variance) * Math.sqrt(252) * 100; // 年化波動率
+
+    // 年化收益率
+    const dayCount = portfolioValues.length;
+    const annualizedReturn = Math.pow(current / initial, 365 / dayCount) - 1;
 
     return {
-      drawdown: drawdown.toFixed(2),
-      volatility: volatility.toFixed(2),
-      totalReturn: totalReturn.toFixed(2),
-      annualizedReturn: annualizedReturn.toFixed(2),
-      highest: formatCurrency(highest),
-      lowest: formatCurrency(lowest),
-      current: formatCurrency(current),
+      drawdown: maxDrawdown.toFixed(1),
+      volatility: volatility.toFixed(1),
+      totalReturn: totalReturn,
+      annualizedReturn: (annualizedReturn * 100).toFixed(1),
+      highest: highest.toLocaleString(),
+      lowest: lowest.toLocaleString(),
+      current: current.toLocaleString(),
     };
-  }, [filteredData, timeRange]);
+  }, [filteredData]);
 
-  // 圖表數據
-  const getChartData = (): FormattedChartData => {
-    const datasets: ChartDataset[] = [];
-    const currentPortfolioData = filteredData?.portfolio || [];
-    const currentLabels = filteredData?.labels || [];
-
-    if (currentPortfolioData.length > 0) {
-      datasets.push({
-        label: "投資組合",
-        data: currentPortfolioData,
-        borderColor: "rgb(53, 162, 235)",
+  // 格式化圖表數據
+  const formatChartData = useMemo((): FormattedChartData => {
+    const baseDatasets: ChartDataset[] = [
+      {
+        label: "投資組合價值",
+        data: filteredData.portfolio,
+        borderColor: "rgb(59, 130, 246)",
         backgroundColor:
-          chartType === "area"
-            ? "rgba(53, 162, 235, 0.2)"
-            : "rgba(53, 162, 235, 0.7)",
-        tension: 0.3,
+          chartType === "area" ? "rgba(59, 130, 246, 0.1)" : "transparent",
+        tension: 0.4,
         fill: chartType === "area",
         borderWidth: 2,
-      });
-    }
+        pointRadius: chartType === "line" ? 0 : 3,
+      },
+    ];
 
-    if (showBenchmark) {
-      compareIndices.forEach((indexId) => {
-        const option = benchmarkOptions.find((opt) => opt.id === indexId);
-        // 安全地訪問 filteredData[indexId]
-        const benchmarkSpecificData = filteredData?.[indexId] as number[] | undefined;
-        if (option && benchmarkSpecificData && benchmarkSpecificData.length > 0) {
-          datasets.push({
+    // 添加基準指標
+    if (showBenchmark && filteredData.benchmark) {
+      compareIndices.forEach((benchmarkId, index) => {
+        const option = benchmarkOptions.find((opt) => opt.id === benchmarkId);
+        if (option && filteredData.benchmark) {
+          baseDatasets.push({
             label: option.name,
-            data: benchmarkSpecificData,
+            data: filteredData.benchmark,
             borderColor: option.color,
-            backgroundColor: `${option.color}${
-              chartType === "bar" ? "70" : "20"
-            }`,
-            tension: 0.3,
-            fill: chartType === "area",
-            borderDash: indexId === "benchmark" ? [5, 5] : undefined,
-            borderWidth: 2,
-          });
-        }
-      });
-    }
-
-    // 安全地訪問 data.keyPeriods
-    if (highlightPeriods && data?.keyPeriods && data.keyPeriods.length > 0) {
-      data.keyPeriods.forEach((period) => {
-        if (
-          period.range[0] >= 0 &&
-          period.range[1] < currentLabels.length &&
-          currentPortfolioData.length > 0 // 確保有數據可以高亮
-        ) {
-          const highlightData: (number | null)[] = Array(
-            currentLabels.length
-          ).fill(null);
-          for (let i = period.range[0]; i <= period.range[1]; i++) {
-            highlightData[i] = currentPortfolioData[i];
-          }
-
-          datasets.push({
-            label: period.name,
-            data: highlightData,
-            borderColor: period.color || "rgba(255, 99, 132, 1)",
-            backgroundColor: period.color || "rgba(255, 99, 132, 0.4)",
+            backgroundColor: "transparent",
+            tension: 0.4,
+            fill: false,
+            borderWidth: 1.5,
+            borderDash: [5, 5],
             pointRadius: 0,
-            borderWidth: 0,
-            fill: true,
-            tension: 0.3,
           });
         }
       });
     }
 
     return {
-      labels: currentLabels,
-      datasets,
+      labels: filteredData.labels,
+      datasets: baseDatasets,
     };
-  };
+  }, [
+    filteredData,
+    chartType,
+    showBenchmark,
+    compareIndices,
+    benchmarkOptions,
+  ]);
 
-  const chartData = getChartData();
+  // 圖表配置
+  const chartOptions: ChartOptions<"line" | "bar"> = useMemo(() => {
+    const baseOptions: any = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "top" as const,
+          labels: {
+            usePointStyle: true,
+            pointStyle: "line",
+          },
+        },
+        tooltip: {
+          mode: "index" as const,
+          intersect: false,
+          callbacks: {
+            label: function (context: TooltipItem<"line" | "bar">) {
+              let label = context.dataset.label || "";
+              if (label) {
+                label += ": ";
+              }
+              const value = context.parsed.y;
+              if (context.dataset.label?.includes("投資組合")) {
+                label += `NT$${value.toLocaleString()}`;
+              } else {
+                label += value.toLocaleString();
+              }
+              return label;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: {
+            display: false,
+          },
+          title: {
+            display: true,
+            text: "時間",
+          },
+        },
+        y: {
+          grid: {
+            color: "rgba(0, 0, 0, 0.1)",
+          },
+          title: {
+            display: true,
+            text: "投資組合價值 (NT$)",
+          },
+          ticks: {
+            callback: function (value: any) {
+              return `NT$${(value / 1000000).toFixed(1)}M`;
+            },
+          },
+        },
+      },
+      interaction: {
+        mode: "nearest" as const,
+        axis: "x" as const,
+        intersect: false,
+      },
+    };
+
+    // 如果顯示基準，添加右側 Y 軸
+    if (showBenchmark && filteredData.benchmark) {
+      baseOptions.scales.y1 = {
+        type: "linear" as const,
+        display: true,
+        position: "right" as const,
+        title: {
+          display: true,
+          text: "基準指數",
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      };
+    }
+
+    return baseOptions;
+  }, [showBenchmark, filteredData.benchmark]);
+
+  // 更多績效詳情內容
+  const renderPerformanceDetails = () => (
+    <div className="mt-6 border-t border-gray-200 pt-6 relative z-10">
+      <h4 className="text-lg font-semibold text-gray-800 mb-4">績效詳細數據</h4>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <div className="text-sm text-blue-700 font-medium mb-1">總回報率</div>
+          <div
+            className={`text-2xl font-bold ${
+              Number(calculateMetrics.totalReturn) >= 0
+                ? "text-green-600"
+                : "text-red-600"
+            }`}
+          >
+            {Number(calculateMetrics.totalReturn) >= 0 ? "+" : ""}
+            {calculateMetrics.totalReturn}%
+          </div>
+          <div className="text-xs text-gray-500 mt-1">期間累計收益</div>
+        </div>
+
+        <div className="bg-green-50 p-4 rounded-lg">
+          <div className="text-sm text-green-700 font-medium mb-1">
+            年化報酬
+          </div>
+          <div className="text-2xl font-bold text-green-600">
+            +{calculateMetrics.annualizedReturn}%
+          </div>
+          <div className="text-xs text-gray-500 mt-1">年度化收益率</div>
+        </div>
+
+        <div className="bg-red-50 p-4 rounded-lg">
+          <div className="text-sm text-red-700 font-medium mb-1">最大回撤</div>
+          <div className="text-2xl font-bold text-red-600">
+            -{calculateMetrics.drawdown}%
+          </div>
+          <div className="text-xs text-gray-500 mt-1">從最高點下跌</div>
+        </div>
+
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="text-sm text-gray-700 font-medium mb-1">波動率</div>
+          <div className="text-2xl font-bold text-gray-800">
+            {calculateMetrics.volatility}%
+          </div>
+          <div className="text-xs text-gray-500 mt-1">年化標準差</div>
+        </div>
+      </div>
+
+      {/* 詳細統計表格 */}
+      <div className="mt-6 bg-white rounded-lg shadow overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h5 className="text-lg font-medium text-gray-900">統計數據</h5>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  指標
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  投資組合
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  基準指數
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  超額表現
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  風險指標
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              <tr>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  總回報率
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
+                  +{calculateMetrics.totalReturn}%
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  +{(Number(calculateMetrics.totalReturn) - 21.5).toFixed(1)}%
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-green-600">
+                  +18.3%
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium">
+                  1.65
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  // 費率與報酬率分析內容
+  const renderFeeAnalysis = () => (
+    <div className="mt-6 border-t border-gray-200 pt-6 relative z-10">
+      <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <ChartBarIcon className="h-5 w-5 text-blue-600 mr-2" />
+        投資成本影響分析
+      </h4>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 費率影響分析 */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h5 className="font-medium text-gray-700 mb-3">管理費用影響</h5>
+          <p className="text-sm text-gray-600 mb-4">
+            目前投資組合的加權平均管理費率為 1.2%，略高於建議的 0.8%。
+          </p>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">年度費用影響:</span>
+              <span className="font-medium text-red-600">-0.4%</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">長期影響 (10年):</span>
+              <span className="font-medium text-red-600">-7.02%</span>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-blue-600 font-medium">
+            建議: 考慮將部分主動式基金轉為低費率ETF
+          </div>
+        </div>
+
+        {/* 再平衡效益分析 */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h5 className="font-medium text-gray-700 mb-3">再平衡效益分析</h5>
+          <p className="text-sm text-gray-600 mb-4">
+            定期再平衡可以維持您的風險水平，同時可能提高長期回報率。
+          </p>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">上次再平衡:</span>
+              <span className="font-medium text-gray-800">30天前</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">建議頻率:</span>
+              <span className="font-medium text-blue-600">每季度</span>
+            </div>
+          </div>
+          <div className="mt-3 text-xs text-green-600 font-medium">
+            下次建議再平衡: 2024年9月15日
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   // 圖表配置選項
-  const chartOptions: ChartOptions<"line" | "bar"> = {
+  const performanceChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "top",
+        position: "top" as const,
       },
       tooltip: {
-        mode: "index",
+        mode: "index" as const,
         intersect: false,
         callbacks: {
-          label: function (context: TooltipItem<"line" | "bar">) {
+          label: function (context: any) {
             let label = context.dataset.label || "";
             if (label) {
               label += ": ";
             }
-            if (context.parsed.y !== null) {
-              label += formatCurrency(context.parsed.y);
+            if (context.datasetIndex === 0) {
+              // 投資組合數據 - 顯示為貨幣
+              label += "NT$" + context.parsed.y.toLocaleString();
+            } else {
+              // 基準指數 - 顯示數值
+              label += context.parsed.y.toLocaleString();
             }
             return label;
           },
         },
       },
     },
-    hover: {
-      mode: "nearest",
-      intersect: false,
-    },
     scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+      },
       y: {
-        beginAtZero: false,
+        type: "linear" as const,
+        display: true,
+        position: "left" as const,
+        title: {
+          display: true,
+          text: "投資組合價值 (NT$)",
+        },
         ticks: {
-          callback: function (value: string | number) {
-            return formatCurrency(Number(value));
+          callback: function (value: any) {
+            return "NT$" + (value / 1000000).toFixed(1) + "M";
           },
+        },
+      },
+      y1: {
+        type: "linear" as const,
+        display: true,
+        position: "right" as const,
+        title: {
+          display: true,
+          text: "基準指數",
+        },
+        grid: {
+          drawOnChartArea: false,
         },
       },
     },
     interaction: {
+      mode: "nearest" as const,
+      axis: "x" as const,
       intersect: false,
-      mode: "index",
     },
+  };
+
+  // 績效圖表數據
+  const performanceChartData = {
+    labels: filteredData.labels,
+    datasets: [
+      {
+        label: "投資組合",
+        data: filteredData.portfolio,
+        borderColor: "rgb(59, 130, 246)",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+        yAxisID: "y",
+      },
+      {
+        label: "台股加權指數",
+        data: filteredData.benchmark || [],
+        borderColor: "rgb(156, 163, 175)",
+        backgroundColor: "rgba(156, 163, 175, 0.1)",
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4,
+        borderDash: [5, 5],
+        yAxisID: "y1",
+      },
+    ],
   };
 
   // 處理基準指標選擇
@@ -386,45 +725,88 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-lg p-6 ${
+      className={`bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 relative overflow-hidden ${
         isFullScreen ? "fixed inset-0 z-50 overflow-auto" : ""
       }`}
     >
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <DocumentChartBarIcon className="h-6 w-6 text-blue-600 mr-2" />
-          <h3 className="text-lg font-semibold text-gray-900">績效走勢分析</h3>
+      {/* 背景裝飾 */}
+      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-green-100/30 to-blue-100/30 rounded-full blur-3xl -translate-y-32 -translate-x-32"></div>
+
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 relative z-10">
+        <div className="flex items-center space-x-3 mb-4 lg:mb-0">
+          <div className="p-3 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl shadow-lg">
+            <DocumentChartBarIcon className="h-7 w-7 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 bg-clip-text">
+              績效走勢分析
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">投資組合歷史表現追蹤</p>
+          </div>
         </div>
 
         <div className="flex items-center space-x-2">
-          {showDetails && (
-            <span className="text-sm font-medium px-3 py-1 bg-gray-100 rounded-full">
-              {timeRange}期間報酬率：
-              <span
-                className={
-                  (data?.returns?.[timeRange] ?? 0) >= 0
-                    ? "text-green-600"
-                    : "text-red-600"
-                }
+          {/* 時間範圍選擇器 */}
+          <div className="flex flex-wrap gap-2">
+            {timeRangeOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setSelectedTimeRange(option.value)}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  selectedTimeRange === option.value
+                    ? "bg-blue-600 text-white shadow-lg"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
               >
-                {(data?.returns?.[timeRange] ?? 0) >= 0 ? "+" : ""}
-                {data?.returns?.[timeRange] ?? 0}%
-              </span>
-            </span>
-          )}
-
-          <button
-            className="p-1 text-gray-400 hover:text-gray-600 rounded-md"
-            onClick={() => setIsFullScreen(!isFullScreen)}
-            title={isFullScreen ? "退出全屏" : "全屏查看"}
-          >
-            <ArrowsPointingOutIcon className="h-5 w-5" />
-          </button>
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
+      {/* 績效指標卡片 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 relative z-10">
+        {performanceMetrics.map((metric, index) => {
+          const IconComponent = metric.icon;
+          return (
+            <div
+              key={index}
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/50"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-gray-600">
+                  {metric.title}
+                </div>
+                <IconComponent
+                  className={`h-5 w-5 ${
+                    metric.isPositive === true
+                      ? "text-green-500"
+                      : metric.isPositive === false
+                      ? "text-red-500"
+                      : "text-gray-500"
+                  }`}
+                />
+              </div>
+              <div
+                className={`text-2xl font-bold mb-1 ${
+                  metric.isPositive === true
+                    ? "text-green-600"
+                    : metric.isPositive === false
+                    ? "text-red-600"
+                    : "text-gray-800"
+                }`}
+              >
+                {metric.value}
+              </div>
+              <div className="text-xs text-gray-500">{metric.description}</div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* 圖表類型和指標選擇 */}
-      <div className="flex flex-wrap justify-between items-center mb-4">
+      <div className="flex flex-wrap justify-between items-center mb-4 relative z-10">
         <div className="flex space-x-2 mb-2 sm:mb-0">
           <div className="inline-flex rounded-md shadow-sm" role="group">
             <button
@@ -499,288 +881,85 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
         )}
       </div>
 
-      {/* 圖表顯示 */}
-      <div className="h-[400px]">
-        {chartType === "bar" ? (
-          <Bar options={chartOptions as ChartOptions<"bar">} data={chartData} />
-        ) : (
-          <Line
-            options={chartOptions as ChartOptions<"line">}
-            data={chartData}
-          />
-        )}
+      {/* 績效圖表 */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/50 relative z-10">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">
+            投資組合 vs 基準指數
+          </h3>
+          <div className="flex items-center space-x-4 text-sm">
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+              <span className="text-gray-600">投資組合</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-0.5 bg-gray-400 mr-2"></div>
+              <span className="text-gray-600">台股加權指數</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-[400px]">
+          <Line options={performanceChartOptions} data={performanceChartData} />
+        </div>
+
+        {/* 圖表底部說明 */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="text-center">
+              <div className="text-gray-500">期間回報率</div>
+              <div className="text-lg font-bold text-green-600">
+                {performanceData[
+                  selectedTimeRange as keyof typeof performanceData
+                ]?.return || "+0.00%"}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-gray-500">超額回報率</div>
+              <div className="text-lg font-bold text-blue-600">+5.2%</div>
+            </div>
+            <div className="text-center">
+              <div className="text-gray-500">夏普比率</div>
+              <div className="text-lg font-bold text-gray-800">1.65</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 績效指標卡片 */}
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="text-sm text-blue-700 font-medium mb-1">總回報率</div>
-          <div
-            className={`text-2xl font-bold ${
-              Number(metrics.totalReturn) >= 0
-                ? "text-green-600"
-                : "text-red-600"
-            }`}
-          >
-            {Number(metrics.totalReturn) >= 0 ? "+" : ""}
-            {metrics.totalReturn}%
+      {/* 績效分析洞察 */}
+      <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 relative z-10">
+        <div className="flex items-start space-x-3">
+          <div className="p-2 bg-blue-500 rounded-lg">
+            <ChartBarIcon className="h-5 w-5 text-white" />
           </div>
-          <div className="text-xs text-gray-500 mt-1">{timeRange} 期間</div>
-        </div>
-
-        <div className="bg-indigo-50 p-4 rounded-lg">
-          <div className="text-sm text-indigo-700 font-medium mb-1">
-            年化回報率
+          <div className="flex-1">
+            <h4 className="text-base font-semibold text-blue-900 mb-2">
+              績效分析洞察
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-blue-800 mb-2">
+                  <span className="font-medium">✓ 表現優異：</span>
+                  您的投資組合在{selectedTimeRange}
+                  期間表現優於市場基準指數5.2%，顯示良好的選股和配置策略。
+                </p>
+              </div>
+              <div>
+                <p className="text-blue-800">
+                  <span className="font-medium">→ 風險控制：</span>
+                  夏普比率1.65表示在承擔相對風險下獲得了不錯的回報，風險調整後收益表現良好。
+                </p>
+              </div>
+            </div>
           </div>
-          <div
-            className={`text-2xl font-bold ${
-              Number(metrics.annualizedReturn) >= 0
-                ? "text-green-600"
-                : "text-red-600"
-            }`}
-          >
-            {Number(metrics.annualizedReturn) >= 0 ? "+" : ""}
-            {metrics.annualizedReturn}%
-          </div>
-          <div className="text-xs text-gray-500 mt-1">折算年度表現</div>
-        </div>
-
-        <div className="bg-red-50 p-4 rounded-lg">
-          <div className="text-sm text-red-700 font-medium mb-1">最大回撤</div>
-          <div className="text-2xl font-bold text-red-600">
-            {metrics.drawdown}%
-          </div>
-          <div className="text-xs text-gray-500 mt-1">從最高點下跌</div>
-        </div>
-
-        <div className="bg-green-50 p-4 rounded-lg">
-          <div className="text-sm text-green-700 font-medium mb-1">波動率</div>
-          <div className="text-2xl font-bold text-gray-800">
-            {metrics.volatility}%
-          </div>
-          <div className="text-xs text-gray-500 mt-1">年化標準差</div>
         </div>
       </div>
 
       {/* 更多績效詳情 */}
-      {showDetails && (
-        <div className="mt-6 border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">
-            績效詳細數據
-          </h4>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <h5 className="font-medium text-gray-700">期間回報率</h5>
-              </div>
-              <div className="p-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {Object.entries(data?.returns || {}).map(([period, value]) => (
-                    <div
-                      key={period}
-                      className="flex justify-between items-center"
-                    >
-                      <span className="text-sm text-gray-600">{period}:</span>
-                      <span
-                        className={`text-sm font-medium ${
-                          value >= 0 ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {value >= 0 ? "+" : ""}
-                        {value}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <h5 className="font-medium text-gray-700">資產價值走勢</h5>
-              </div>
-              <div className="p-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">當前價值:</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {metrics.current}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">初始價值:</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {/* 安全地訪問 filteredData.portfolio[0] */}
-                      {formatCurrency(filteredData?.portfolio?.[0] ?? 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">最高點:</span>
-                    <span className="text-sm font-medium text-green-600">
-                      {metrics.highest}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">最低點:</span>
-                    <span className="text-sm font-medium text-red-600">
-                      {metrics.lowest}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden md:col-span-2">
-              <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                <h5 className="font-medium text-gray-700">績效對比</h5>
-              </div>
-              <div className="p-4">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        指標
-                      </th>
-                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        報酬率
-                      </th>
-                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        超額報酬
-                      </th>
-                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        年化報酬
-                      </th>
-                      <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        夏普比率
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        投資組合
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-green-600">
-                        +{metrics.totalReturn}%
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium">
-                        -
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-green-600">
-                        +{metrics.annualizedReturn}%
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium">
-                        1.45
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        大盤指數
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-green-600">
-                        +16.8%
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-green-600">
-                        +{(Number(metrics.totalReturn) - 16.8).toFixed(1)}%
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-green-600">
-                        +14.2%
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium">
-                        1.12
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                        S&P 500
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-green-600">
-                        +21.5%
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-red-600">
-                        {(Number(metrics.totalReturn) - 21.5).toFixed(1)}%
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-green-600">
-                        +18.3%
-                      </td>
-                      <td className="px-3 py-2 whitespace-nowrap text-sm text-right font-medium">
-                        1.65
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {showDetails && renderPerformanceDetails()}
 
       {/* 費率與報酬率分析 */}
-      {showDetails && (
-        <div className="mt-6 border-t border-gray-200 pt-6">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <ChartBarIcon className="h-5 w-5 text-blue-600 mr-2" />
-            投資的影響因素分析
-          </h4>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <h5 className="font-medium text-gray-700 mb-3">投資成本影響</h5>
-              <p className="text-sm text-gray-600 mb-4">
-                交易費用和管理費會影響您的實際報酬率。減少不必要的交易和選擇低費率產品可以提高收益。
-              </p>
-              <div className="mt-3 flex items-center justify-between text-sm">
-                <span className="text-gray-600">平均費率:</span>
-                <span className="font-medium text-red-600">-0.68%/年</span>
-              </div>
-              <div className="mt-1 flex items-center justify-between text-sm">
-                <span className="text-gray-600">長期影響 (10年):</span>
-                <span className="font-medium text-red-600">-7.02%</span>
-              </div>
-              <div className="mt-3 text-xs text-blue-600 font-medium">
-                建議: 考慮將部分主動式基金轉為低費率ETF
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <h5 className="font-medium text-gray-700 mb-3">再平衡效益分析</h5>
-              <p className="text-sm text-gray-600 mb-4">
-                定期再平衡可以維持您的風險水平，同時可能提高長期回報率。
-              </p>
-              <div className="mt-3 flex items-center justify-between text-sm">
-                <span className="text-gray-600">上次再平衡:</span>
-                <span className="font-medium text-gray-800">90天前</span>
-              </div>
-              <div className="mt-1 flex items-center justify-between text-sm">
-                <span className="text-gray-600">預估效益:</span>
-                <span className="font-medium text-green-600">+0.35%/年</span>
-              </div>
-              <div className="mt-3 text-xs text-blue-600 font-medium">
-                建議: 考慮進行季度再平衡
-              </div>
-            </div>
-
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <h5 className="font-medium text-gray-700 mb-3">稅務效率分析</h5>
-              <p className="text-sm text-gray-600 mb-4">
-                稅務策略可以顯著影響您的淨回報。稅務損失收割和稅務遞延帳戶可以優化稅後回報。
-              </p>
-              <div className="mt-3 flex items-center justify-between text-sm">
-                <span className="text-gray-600">稅務損失機會:</span>
-                <span className="font-medium text-green-600">NT$15,400</span>
-              </div>
-              <div className="mt-1 flex items-center justify-between text-sm">
-                <span className="text-gray-600">稅務效率指數:</span>
-                <span className="font-medium text-gray-800">7.5/10</span>
-              </div>
-              <div className="mt-3 text-xs text-blue-600 font-medium">
-                建議: 考慮賣出特斯拉實現稅務損失
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {showDetails && renderFeeAnalysis()}
     </div>
   );
 };

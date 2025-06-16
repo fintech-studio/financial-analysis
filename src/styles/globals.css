@@ -126,7 +126,8 @@
     box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
   }
   50% {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8),
+      0 0 30px rgba(59, 130, 246, 0.6);
   }
 }
 
@@ -180,10 +181,11 @@
   }
 
   .animate-shimmer {
-    background: linear-gradient(90deg, 
-      rgba(255, 255, 255, 0) 0%, 
-      rgba(255, 255, 255, 0.2) 20%, 
-      rgba(255, 255, 255, 0.5) 60%, 
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0.5) 60%,
       rgba(255, 255, 255, 0)
     );
     background-size: 200px 100%;
@@ -198,8 +200,7 @@
   .btn {
     @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium 
            rounded-lg transition-all duration-200 focus:outline-none 
-           focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-           transform hover:scale-105 active:scale-95;
+           focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
@@ -264,8 +265,7 @@
   }
 
   .card-hover {
-    @apply card hover:shadow-2xl cursor-pointer 
-           transform transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1;
+    @apply card hover:shadow-2xl cursor-pointer transition-all duration-300;
   }
 
   .card-header {
@@ -310,7 +310,7 @@
   .grid-auto {
     @apply grid gap-6;
   }
-  
+
   .grid-2 {
     @apply grid-cols-1 md:grid-cols-2;
   }
@@ -370,7 +370,7 @@
   .portfolio-card::before {
     @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent
            transform -skew-x-12 -translate-x-full transition-transform duration-700;
-    content: '';
+    content: "";
   }
 
   .portfolio-card:hover::before {
@@ -379,8 +379,7 @@
 
   .metric-card {
     @apply bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 
-           p-6 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl
-           relative overflow-hidden;
+           p-6 transition-all duration-300 relative overflow-hidden;
   }
 
   .metric-value {
@@ -434,10 +433,10 @@
   .chart-container::before {
     @apply absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-purple-100/30 
            rounded-full blur-3xl -translate-y-32 translate-x-32;
-    content: '';
+    content: "";
   }
 
-  /* ===== 滾動條組件 ===== */
+  /* ===== 滾动條組件 ===== */
   .scrollbar-thin::-webkit-scrollbar {
     @apply w-1.5 h-1.5;
   }
@@ -638,8 +637,7 @@
 
   /* 響應式卡片 */
   .card-responsive {
-    @apply rounded-lg shadow-sm hover:shadow-md transition-all duration-200
-           sm:hover:scale-[1.02] transform;
+    @apply rounded-lg shadow-sm hover:shadow-md transition-all duration-200;
   }
 
   /* 響應式陰影 */
@@ -696,7 +694,7 @@
     @apply backdrop-blur-md bg-black/20;
   }
 
-  /* ===== 滾动条控制工具類別 ===== */
+  /* ===== 滾动條控制工具類別 ===== */
   /* 完全隱藏水平滾動條 */
   .hide-horizontal-scroll {
     overflow-x: hidden;

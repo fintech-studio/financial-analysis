@@ -199,7 +199,7 @@ export function useMvcController<T>(initialData?: T) {
 // 重試機制 Hook
 export function useControllerWithRetry<T>(
   controllerFn: () => Promise<T>,
-  options: RetryOptions = {}
+  options: RetryOptions & { enabled?: boolean } = {}
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
@@ -211,54 +211,110 @@ export function useControllerWithRetry<T>(
     retryDelay = 1000,
     retryCondition = () => true,
     onRetry,
+    enabled = true,
+    cacheKey,
+    cacheTTL = 300000,
     ...baseOptions
   } = options;
 
+  // 使用 ref 來穩定函數引用，避免重複執行
+  const controllerFnRef = useRef(controllerFn);
+  controllerFnRef.current = controllerFn;
+
+  const isMountedRef = useRef(true);
+  const isExecutingRef = useRef(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const execute = useCallback(async () => {
+    // 防止重複執行和組件卸載後執行
+    if (isExecutingRef.current || !isMountedRef.current || !enabled) {
+      return;
+    }
+
+    // 檢查緩存
+    if (cacheKey) {
+      const cachedData = globalCacheManager.get(cacheKey);
+      if (cachedData) {
+        setData(cachedData);
+        return;
+      }
+    }
+
+    isExecutingRef.current = true;
     setLoading(true);
     setError(null);
     setRetryCount(0);
 
     const attemptExecution = async (attempt: number): Promise<void> => {
       try {
-        const result = await controllerFn();
-        setData(result);
-        baseOptions.onSuccess?.(result);
+        const result = await controllerFnRef.current();
+
+        if (isMountedRef.current) {
+          setData(result);
+          // 緩存結果
+          if (cacheKey) {
+            globalCacheManager.set(cacheKey, result, cacheTTL);
+          }
+          baseOptions.onSuccess?.(result);
+        }
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Unknown error");
 
-        if (attempt < maxRetries && retryCondition(error)) {
+        if (
+          attempt < maxRetries &&
+          retryCondition(error) &&
+          isMountedRef.current
+        ) {
           setRetryCount(attempt + 1);
           onRetry?.(attempt + 1, error);
           await new Promise((resolve) => setTimeout(resolve, retryDelay));
           return attemptExecution(attempt + 1);
         } else {
-          setError(error);
-          baseOptions.onError?.(error);
+          if (isMountedRef.current) {
+            setError(error);
+            baseOptions.onError?.(error);
+          }
         }
       }
     };
 
     await attemptExecution(0);
-    setLoading(false);
+
+    if (isMountedRef.current) {
+      setLoading(false);
+    }
+    isExecutingRef.current = false;
   }, [
-    controllerFn,
+    enabled,
     maxRetries,
     retryDelay,
     retryCondition,
     onRetry,
+    cacheKey,
+    cacheTTL,
     baseOptions,
   ]);
 
   const retry = useCallback(() => {
+    if (!enabled) return;
     execute();
-  }, [execute]);
+  }, [execute, enabled]);
+
+  // 修復：只在 enabled 狀態改變或組件掛載時執行
+  const hasExecutedRef = useRef(false);
 
   useEffect(() => {
-    if (baseOptions.autoStart !== false) {
+    if (enabled && baseOptions.autoStart !== false && !hasExecutedRef.current) {
+      hasExecutedRef.current = true;
       execute();
     }
-  }, [execute, baseOptions.autoStart]);
+  }, [enabled]); // 移除 execute 依賴，避免無限循環
 
   return { data, loading, error, retryCount, execute, retry };
 }
@@ -404,7 +460,7 @@ export function useDataLoader<T>(
   options: ControllerHookOptions = {}
 ) {
   const { data, loading, error, execute } = useMvcController<T>(defaultValue);
-  
+
   useEffect(() => {
     if (options.autoStart !== false) {
       execute(loader);
