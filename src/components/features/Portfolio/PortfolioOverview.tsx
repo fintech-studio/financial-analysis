@@ -593,16 +593,20 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
 
               <div className="text-xs text-blue-700 mt-2 flex justify-between">
                 <span>
-                  可用餘額 NT${" "}
+                  可用餘額{" "}
                   <span className="font-semibold">
+                    NT${" "}
                     {(
                       investmentGoalProgress.targetAmount -
                       investmentGoalProgress.currentAmount
                     ).toLocaleString()}
                   </span>
                 </span>
-                <span className="font-semibold">
-                  資金運用率 {investmentGoalProgress.progress.toFixed(1)}%
+                <span>
+                  資金運用率{" "}
+                  <span className="font-semibold">
+                    {investmentGoalProgress.progress.toFixed(1)}%
+                  </span>
                 </span>
               </div>
             </div>

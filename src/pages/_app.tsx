@@ -4,6 +4,7 @@ import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import PageTransition from "../components/Layout/PageTransition";
 import Navigation from "../components/Layout/Navigation";
+import ScrollToTop from "../components/common/ScrollToTop";
 import "../styles/globals.css";
 import Head from "next/head";
 import React from "react";
@@ -88,7 +89,11 @@ function AppWrapper({ Component, pageProps }: AppPropsWithLayout) {
 
   // 將整個應用包裹在 PageTransition 中
   return (
-    <PageTransition>{getLayout(<Component {...pageProps} />)}</PageTransition>
+    <>
+      <PageTransition>{getLayout(<Component {...pageProps} />)}</PageTransition>
+      {/* 將 ScrollToTop 移到 PageTransition 外面，避免定位問題 */}
+      <ScrollToTop />
+    </>
   );
 }
 

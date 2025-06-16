@@ -3,19 +3,9 @@ import {
   XMarkIcon,
   MagnifyingGlassIcon,
   ChartBarIcon,
-  InformationCircleIcon,
-  EllipsisHorizontalIcon,
   ArrowUpIcon,
   ArrowDownIcon,
-  TagIcon,
-  ChartPieIcon,
-  CurrencyDollarIcon,
-  DocumentIcon,
-  SparklesIcon,
-  PlusIcon,
-  MinusIcon,
-  EyeIcon,
-  ArrowsRightLeftIcon,
+  FunnelIcon,
 } from "@heroicons/react/24/outline";
 
 // 類型定義
@@ -30,18 +20,24 @@ interface Holding {
     value: string;
     percentage: string;
   };
-  weight: string;
+  weight?: string; // 改為可選，因為權重是動態計算的
   costBasis: string;
+  assetType: AssetType; // 新增資產類型字段
 }
+
+// 資產類型枚舉
+type AssetType =
+  | "tw_stock"
+  | "us_stock"
+  | "etf"
+  | "crypto"
+  | "bond"
+  | "reit"
+  | "commodity";
 
 interface MiniChartProps {
   data: number[];
   color?: string;
-}
-
-interface HoldingDetailProps {
-  holding: Holding | null;
-  onClose: () => void;
 }
 
 interface HoldingsTableProps {
@@ -61,6 +57,8 @@ interface HoldingTypes {
   etf: HoldingType;
   crypto: HoldingType;
   bond: HoldingType;
+  reit: HoldingType;
+  commodity: HoldingType;
 }
 
 type SortField =
@@ -73,10 +71,17 @@ type SortField =
   | "costBasis"
   | "totalReturn";
 type SortDirection = "asc" | "desc";
-type FilterType = "all" | "stock" | "etf" | "crypto" | "bond";
+type FilterType =
+  | "all"
+  | "stock"
+  | "etf"
+  | "crypto"
+  | "bond"
+  | "reit"
+  | "commodity";
 
-// 簡易折線圖元件 (不使用 Chart.js，為了輕量化)
-const MiniChart: React.FC<MiniChartProps> = ({ data, color }) => {
+// 簡化的迷你圖表元件
+const MiniChart: React.FC<MiniChartProps> = ({ data, color = "#6366f1" }) => {
   const normalizedData = useMemo(() => {
     if (!data || data.length === 0) return [];
 
@@ -115,7 +120,7 @@ const MiniChart: React.FC<MiniChartProps> = ({ data, color }) => {
   const strokeColor = trend === "up" ? color || "#10B981" : "#EF4444";
 
   return (
-    <svg width={width} height={height} className="overflow-visible">
+    <svg width={60} height={20} className="overflow-visible">
       <polyline
         points={points}
         fill="none"
@@ -125,144 +130,6 @@ const MiniChart: React.FC<MiniChartProps> = ({ data, color }) => {
         strokeLinejoin="round"
       />
     </svg>
-  );
-};
-
-// 股票詳情面板
-const HoldingDetail: React.FC<HoldingDetailProps> = ({ holding, onClose }) => {
-  if (!holding) return null;
-
-  const priceChangeClass =
-    holding.priceChange >= 0 ? "text-green-500" : "text-red-500";
-  const returnClass =
-    parseFloat(holding.totalReturn.percentage) >= 0
-      ? "text-green-500"
-      : "text-red-500";
-
-  return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full overflow-hidden">
-        <div className="px-6 py-4 bg-gray-50 border-b flex justify-between items-center">
-          <div className="flex items-center">
-            <TagIcon className="h-5 w-5 text-blue-500 mr-2" />
-            <h2 className="text-xl font-semibold text-gray-900">資產詳情</h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900">
-                {holding.name}
-              </h3>
-              <div className="text-gray-500">{holding.symbol}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold">{holding.price}</div>
-              <div className={priceChangeClass}>
-                {holding.priceChange >= 0 ? "+" : ""}
-                {holding.priceChange}%
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <div className="border-b pb-4">
-                <div className="text-sm text-gray-500">市值</div>
-                <div className="text-lg font-semibold">
-                  {holding.marketValue}
-                </div>
-              </div>
-
-              <div className="border-b pb-4">
-                <div className="text-sm text-gray-500">持有數量</div>
-                <div className="text-lg font-semibold">
-                  {holding.quantity}股
-                </div>
-              </div>
-
-              <div className="border-b pb-4">
-                <div className="text-sm text-gray-500">成本</div>
-                <div className="text-lg font-semibold">{holding.costBasis}</div>
-              </div>
-
-              <div className="border-b pb-4">
-                <div className="text-sm text-gray-500">總收益</div>
-                <div className={`text-lg font-semibold ${returnClass}`}>
-                  {holding.totalReturn.value} ({holding.totalReturn.percentage})
-                </div>
-              </div>
-
-              <div className="border-b pb-4">
-                <div className="text-sm text-gray-500">投資組合權重</div>
-                <div className="text-lg font-semibold">{holding.weight}</div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <div className="flex items-center mb-2">
-                  <SparklesIcon className="h-5 w-5 text-blue-500 mr-2" />
-                  <div className="text-sm font-medium text-blue-700">
-                    AI 分析
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600">
-                  基於目前市場趨勢與產業分析，{holding.name}（{holding.symbol}）
-                  {parseFloat(holding.totalReturn.percentage) >= 15
-                    ? "已經有不錯的收益，可考慮適度獲利了結一部分倉位，降低風險。"
-                    : parseFloat(holding.totalReturn.percentage) <= -10
-                    ? "處於虧損狀態，建議評估基本面是否改變，決定是否止損或加碼攤平成本。"
-                    : "表現穩健，可持續持有，並在價格回檔時考慮增持。"}
-                </p>
-                <div className="mt-3 flex items-center space-x-2">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      parseFloat(holding.totalReturn.percentage) >= 15
-                        ? "bg-green-100 text-green-800"
-                        : parseFloat(holding.totalReturn.percentage) <= -10
-                        ? "bg-red-100 text-red-800"
-                        : "bg-blue-100 text-blue-800"
-                    }`}
-                  >
-                    {parseFloat(holding.totalReturn.percentage) >= 15
-                      ? "考慮獲利了結"
-                      : parseFloat(holding.totalReturn.percentage) <= -10
-                      ? "評估風險"
-                      : "持續持有"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <button className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                  <PlusIcon className="h-4 w-4 mr-1" /> 買入
-                </button>
-                <button className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
-                  <MinusIcon className="h-4 w-4 mr-1" /> 賣出
-                </button>
-              </div>
-
-              <div className="mt-2 grid grid-cols-2 gap-4">
-                <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  <EyeIcon className="h-4 w-4 mr-1" /> 詳細資訊
-                </button>
-                <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  <ArrowsRightLeftIcon className="h-4 w-4 mr-1" /> 交易歷史
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 };
 
@@ -284,50 +151,8 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
         value: "NT$ 85,000",
         percentage: "+17.0%",
       },
-      weight: "23.8%",
       costBasis: "NT$ 500,000",
-    },
-    {
-      symbol: "AAPL",
-      name: "蘋果公司",
-      price: "US$ 192.35",
-      priceChange: 2.43,
-      quantity: "100",
-      marketValue: "NT$ 598,400",
-      totalReturn: {
-        value: "NT$ 76,200",
-        percentage: "+14.6%",
-      },
-      weight: "24.3%",
-      costBasis: "NT$ 522,200",
-    },
-    {
-      symbol: "2317",
-      name: "鴻海",
-      price: "NT$ 108.50",
-      priceChange: -0.92,
-      quantity: "2000",
-      marketValue: "NT$ 217,000",
-      totalReturn: {
-        value: "NT$ 17,000",
-        percentage: "+8.5%",
-      },
-      weight: "8.8%",
-      costBasis: "NT$ 200,000",
-    },
-    {
-      symbol: "0050",
-      name: "元大台灣50",
-      price: "NT$ 142.30",
-      priceChange: 0.35,
-      quantity: "1000",
-      marketValue: "NT$ 142,300",
-      totalReturn: {
-        value: "NT$ 17,300",
-        percentage: "+13.8%",
-      },
-      weight: "5.8%",
-      costBasis: "NT$ 125,000",
+      assetType: "tw_stock",
     },
     {
       symbol: "NVDA",
@@ -340,64 +165,22 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
         value: "NT$ 485,350",
         percentage: "+55.4%",
       },
-      weight: "55.3%",
       costBasis: "NT$ 875,500",
+      assetType: "us_stock",
     },
     {
-      symbol: "2454",
-      name: "聯發科",
-      price: "NT$ 765.00",
-      priceChange: -1.42,
-      quantity: "300",
-      marketValue: "NT$ 229,500",
+      symbol: "AAPL",
+      name: "蘋果公司",
+      price: "US$ 192.35",
+      priceChange: 2.43,
+      quantity: "100",
+      marketValue: "NT$ 598,400",
       totalReturn: {
-        value: "-NT$ 10,500",
-        percentage: "-4.4%",
+        value: "NT$ 76,200",
+        percentage: "+14.6%",
       },
-      weight: "9.3%",
-      costBasis: "NT$ 240,000",
-    },
-    {
-      symbol: "MSFT",
-      name: "微軟",
-      price: "US$ 424.73",
-      priceChange: 1.18,
-      quantity: "80",
-      marketValue: "NT$ 1,056,280",
-      totalReturn: {
-        value: "NT$ 156,280",
-        percentage: "+17.4%",
-      },
-      weight: "42.9%",
-      costBasis: "NT$ 900,000",
-    },
-    {
-      symbol: "2882",
-      name: "國泰金",
-      price: "NT$ 61.80",
-      priceChange: 0.65,
-      quantity: "3000",
-      marketValue: "NT$ 185,400",
-      totalReturn: {
-        value: "NT$ 15,400",
-        percentage: "+9.1%",
-      },
-      weight: "7.5%",
-      costBasis: "NT$ 170,000",
-    },
-    {
-      symbol: "TSLA",
-      name: "特斯拉",
-      price: "US$ 248.42",
-      priceChange: -2.15,
-      quantity: "60",
-      marketValue: "NT$ 463,235",
-      totalReturn: {
-        value: "-NT$ 36,765",
-        percentage: "-7.4%",
-      },
-      weight: "18.8%",
-      costBasis: "NT$ 500,000",
+      costBasis: "NT$ 522,200",
+      assetType: "us_stock",
     },
     {
       symbol: "VTI",
@@ -410,134 +193,36 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
         value: "NT$ 228,530",
         percentage: "+17.6%",
       },
-      weight: "62.1%",
       costBasis: "NT$ 1,300,000",
+      assetType: "etf",
     },
     {
-      symbol: "2308",
-      name: "台達電",
-      price: "NT$ 312.00",
-      priceChange: 1.95,
-      quantity: "500",
-      marketValue: "NT$ 156,000",
+      symbol: "MSFT",
+      name: "微軟",
+      price: "US$ 424.73",
+      priceChange: 1.18,
+      quantity: "80",
+      marketValue: "NT$ 1,056,280",
       totalReturn: {
-        value: "NT$ 6,000",
-        percentage: "+4.0%",
+        value: "NT$ 156,280",
+        percentage: "+17.4%",
       },
-      weight: "6.3%",
-      costBasis: "NT$ 150,000",
+      costBasis: "NT$ 900,000",
+      assetType: "us_stock",
     },
     {
       symbol: "BTC",
       name: "比特幣",
       price: "US$ 67,542.30",
       priceChange: 4.75,
-      quantity: "0.5",
+      quantity: "25.5",
       marketValue: "NT$ 1,050,690",
       totalReturn: {
         value: "NT$ 200,690",
         percentage: "+23.6%",
       },
-      weight: "42.7%",
       costBasis: "NT$ 850,000",
-    },
-    {
-      symbol: "2891",
-      name: "中信金",
-      price: "NT$ 35.85",
-      priceChange: -0.28,
-      quantity: "2500",
-      marketValue: "NT$ 89,625",
-      totalReturn: {
-        value: "NT$ 4,625",
-        percentage: "+5.4%",
-      },
-      weight: "3.6%",
-      costBasis: "NT$ 85,000",
-    },
-    {
-      symbol: "GOOGL",
-      name: "Alphabet",
-      price: "US$ 166.54",
-      priceChange: 1.35,
-      quantity: "150",
-      marketValue: "NT$ 777,030",
-      totalReturn: {
-        value: "NT$ 77,030",
-        percentage: "+11.0%",
-      },
-      weight: "31.6%",
-      costBasis: "NT$ 700,000",
-    },
-    {
-      symbol: "006208",
-      name: "富邦台50",
-      price: "NT$ 85.40",
-      priceChange: 0.47,
-      quantity: "1200",
-      marketValue: "NT$ 102,480",
-      totalReturn: {
-        value: "NT$ 12,480",
-        percentage: "+13.9%",
-      },
-      weight: "4.2%",
-      costBasis: "NT$ 90,000",
-    },
-    {
-      symbol: "ETH",
-      name: "以太坊",
-      price: "US$ 3,845.67",
-      priceChange: 2.89,
-      quantity: "2",
-      marketValue: "NT$ 239,200",
-      totalReturn: {
-        value: "NT$ 39,200",
-        percentage: "+19.6%",
-      },
-      weight: "9.7%",
-      costBasis: "NT$ 200,000",
-    },
-    {
-      symbol: "2412",
-      name: "中華電",
-      price: "NT$ 124.50",
-      priceChange: -0.4,
-      quantity: "800",
-      marketValue: "NT$ 99,600",
-      totalReturn: {
-        value: "NT$ 4,600",
-        percentage: "+4.8%",
-      },
-      weight: "4.0%",
-      costBasis: "NT$ 95,000",
-    },
-    {
-      symbol: "SPY",
-      name: "SPDR S&P 500 ETF",
-      price: "US$ 521.23",
-      priceChange: 0.95,
-      quantity: "100",
-      marketValue: "NT$ 1,620,830",
-      totalReturn: {
-        value: "NT$ 220,830",
-        percentage: "+15.8%",
-      },
-      weight: "65.8%",
-      costBasis: "NT$ 1,400,000",
-    },
-    {
-      symbol: "2002",
-      name: "中鋼",
-      price: "NT$ 30.15",
-      priceChange: -1.15,
-      quantity: "5000",
-      marketValue: "NT$ 150,750",
-      totalReturn: {
-        value: "-NT$ 14,250",
-        percentage: "-8.6%",
-      },
-      weight: "6.1%",
-      costBasis: "NT$ 165,000",
+      assetType: "crypto",
     },
     {
       symbol: "META",
@@ -550,8 +235,345 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
         value: "NT$ 143,540",
         percentage: "+15.1%",
       },
-      weight: "44.4%",
       costBasis: "NT$ 950,000",
+      assetType: "us_stock",
+    },
+    {
+      symbol: "SPY",
+      name: "SPDR S&P 500 ETF",
+      price: "US$ 521.23",
+      priceChange: 0.95,
+      quantity: "100",
+      marketValue: "NT$ 1,620,830",
+      totalReturn: {
+        value: "NT$ 220,830",
+        percentage: "+15.8%",
+      },
+      costBasis: "NT$ 1,400,000",
+      assetType: "etf",
+    },
+    {
+      symbol: "GOOGL",
+      name: "Alphabet",
+      price: "US$ 166.54",
+      priceChange: 1.35,
+      quantity: "150",
+      marketValue: "NT$ 777,030",
+      totalReturn: {
+        value: "NT$ 77,030",
+        percentage: "+11.0%",
+      },
+      costBasis: "NT$ 700,000",
+      assetType: "us_stock",
+    },
+    {
+      symbol: "TLT",
+      name: "iShares 20年期美國公債ETF",
+      price: "US$ 94.27",
+      priceChange: -0.45,
+      quantity: "400",
+      marketValue: "NT$ 1,171,836",
+      totalReturn: {
+        value: "NT$ 71,836",
+        percentage: "+6.5%",
+      },
+      costBasis: "NT$ 1,100,000",
+      assetType: "bond",
+    },
+    {
+      symbol: "VNQ",
+      name: "Vanguard Real Estate ETF",
+      price: "US$ 89.45",
+      priceChange: 0.78,
+      quantity: "300",
+      marketValue: "NT$ 833,850",
+      totalReturn: {
+        value: "NT$ 83,850",
+        percentage: "+11.2%",
+      },
+      costBasis: "NT$ 750,000",
+      assetType: "reit",
+    },
+    {
+      symbol: "AMD",
+      name: "超微半導體",
+      price: "US$ 158.73",
+      priceChange: 4.12,
+      quantity: "120",
+      marketValue: "NT$ 592,248",
+      totalReturn: {
+        value: "NT$ 92,248",
+        percentage: "+18.4%",
+      },
+      costBasis: "NT$ 500,000",
+      assetType: "us_stock",
+    },
+    {
+      symbol: "2317",
+      name: "鴻海",
+      price: "NT$ 108.50",
+      priceChange: -0.92,
+      quantity: "2000",
+      marketValue: "NT$ 217,000",
+      totalReturn: {
+        value: "NT$ 17,000",
+        percentage: "+8.5%",
+      },
+      costBasis: "NT$ 200,000",
+      assetType: "tw_stock",
+    },
+    {
+      symbol: "TSLA",
+      name: "特斯拉",
+      price: "US$ 248.42",
+      priceChange: -2.15,
+      quantity: "60",
+      marketValue: "NT$ 463,235",
+      totalReturn: {
+        value: "-NT$ 36,765",
+        percentage: "-7.4%",
+      },
+      costBasis: "NT$ 500,000",
+      assetType: "us_stock",
+    },
+    {
+      symbol: "2454",
+      name: "聯發科",
+      price: "NT$ 765.00",
+      priceChange: -1.42,
+      quantity: "300",
+      marketValue: "NT$ 229,500",
+      totalReturn: {
+        value: "-NT$ 10,500",
+        percentage: "-4.4%",
+      },
+      costBasis: "NT$ 240,000",
+      assetType: "tw_stock",
+    },
+    {
+      symbol: "ETH",
+      name: "以太坊",
+      price: "US$ 3,845.67",
+      priceChange: 2.89,
+      quantity: "2",
+      marketValue: "NT$ 239,200",
+      totalReturn: {
+        value: "NT$ 39,200",
+        percentage: "+19.6%",
+      },
+      costBasis: "NT$ 200,000",
+      assetType: "crypto",
+    },
+    {
+      symbol: "2882",
+      name: "國泰金",
+      price: "NT$ 61.80",
+      priceChange: 0.65,
+      quantity: "3000",
+      marketValue: "NT$ 185,400",
+      totalReturn: {
+        value: "NT$ 15,400",
+        percentage: "+9.1%",
+      },
+      costBasis: "NT$ 170,000",
+      assetType: "tw_stock",
+    },
+    {
+      symbol: "DOT",
+      name: "波卡幣",
+      price: "US$ 6.82",
+      priceChange: -2.18,
+      quantity: "2000",
+      marketValue: "NT$ 424,240",
+      totalReturn: {
+        value: "-NT$ 75,760",
+        percentage: "-15.2%",
+      },
+      costBasis: "NT$ 500,000",
+      assetType: "crypto",
+    },
+    {
+      symbol: "2308",
+      name: "台達電",
+      price: "NT$ 312.00",
+      priceChange: 1.95,
+      quantity: "500",
+      marketValue: "NT$ 156,000",
+      totalReturn: {
+        value: "NT$ 6,000",
+        percentage: "+4.0%",
+      },
+      costBasis: "NT$ 150,000",
+      assetType: "tw_stock",
+    },
+    {
+      symbol: "0050",
+      name: "元大台灣50",
+      price: "NT$ 142.30",
+      priceChange: 0.35,
+      quantity: "1000",
+      marketValue: "NT$ 142,300",
+      totalReturn: {
+        value: "NT$ 17,300",
+        percentage: "+13.8%",
+      },
+      costBasis: "NT$ 125,000",
+      assetType: "etf",
+    },
+    {
+      symbol: "2002",
+      name: "中鋼",
+      price: "NT$ 30.15",
+      priceChange: -1.15,
+      quantity: "5000",
+      marketValue: "NT$ 150,750",
+      totalReturn: {
+        value: "-NT$ 14,250",
+        percentage: "-8.6%",
+      },
+      costBasis: "NT$ 165,000",
+      assetType: "tw_stock",
+    },
+    {
+      symbol: "1216",
+      name: "統一",
+      price: "NT$ 68.50",
+      priceChange: 1.48,
+      quantity: "1500",
+      marketValue: "NT$ 102,750",
+      totalReturn: {
+        value: "NT$ 12,750",
+        percentage: "+14.2%",
+      },
+      costBasis: "NT$ 90,000",
+      assetType: "tw_stock",
+    },
+    {
+      symbol: "006208",
+      name: "富邦台50",
+      price: "NT$ 85.40",
+      priceChange: 0.47,
+      quantity: "1200",
+      marketValue: "NT$ 102,480",
+      totalReturn: {
+        value: "NT$ 12,480",
+        percentage: "+13.9%",
+      },
+      costBasis: "NT$ 90,000",
+      assetType: "etf",
+    },
+    {
+      symbol: "2412",
+      name: "中華電",
+      price: "NT$ 124.50",
+      priceChange: -0.4,
+      quantity: "800",
+      marketValue: "NT$ 99,600",
+      totalReturn: {
+        value: "NT$ 4,600",
+        percentage: "+4.8%",
+      },
+      costBasis: "NT$ 95,000",
+      assetType: "tw_stock",
+    },
+    {
+      symbol: "2891",
+      name: "中信金",
+      price: "NT$ 35.85",
+      priceChange: -0.28,
+      quantity: "2500",
+      marketValue: "NT$ 89,625",
+      totalReturn: {
+        value: "NT$ 4,625",
+        percentage: "+5.4%",
+      },
+      costBasis: "NT$ 85,000",
+      assetType: "tw_stock",
+    },
+    {
+      symbol: "ADA",
+      name: "艾達幣",
+      price: "US$ 0.48",
+      priceChange: 3.45,
+      quantity: "10000",
+      marketValue: "NT$ 149,280",
+      totalReturn: {
+        value: "NT$ 29,280",
+        percentage: "+24.4%",
+      },
+      costBasis: "NT$ 120,000",
+      assetType: "crypto",
+    },
+    {
+      symbol: "00679B",
+      name: "元大美債20年",
+      price: "NT$ 36.78",
+      priceChange: 0.22,
+      quantity: "3000",
+      marketValue: "NT$ 110,340",
+      totalReturn: {
+        value: "NT$ 10,340",
+        percentage: "+10.3%",
+      },
+      costBasis: "NT$ 100,000",
+      assetType: "bond",
+    },
+    {
+      symbol: "2883",
+      name: "開發金REIT",
+      price: "NT$ 14.85",
+      priceChange: -0.34,
+      quantity: "5000",
+      marketValue: "NT$ 74,250",
+      totalReturn: {
+        value: "NT$ 4,250",
+        percentage: "+6.1%",
+      },
+      costBasis: "NT$ 70,000",
+      assetType: "reit",
+    },
+    {
+      symbol: "1301",
+      name: "台塑",
+      price: "NT$ 85.20",
+      priceChange: -0.93,
+      quantity: "800",
+      marketValue: "NT$ 68,160",
+      totalReturn: {
+        value: "NT$ 3,160",
+        percentage: "+4.9%",
+      },
+      costBasis: "NT$ 65,000",
+      assetType: "tw_stock",
+    },
+    // 新增商品類別
+    {
+      symbol: "GLD",
+      name: "SPDR黃金ETF",
+      price: "US$ 198.42",
+      priceChange: 2.15,
+      quantity: "150",
+      marketValue: "NT$ 925,950",
+      totalReturn: {
+        value: "NT$ 125,950",
+        percentage: "+15.7%",
+      },
+      costBasis: "NT$ 800,000",
+      assetType: "commodity",
+    },
+    {
+      symbol: "USO",
+      name: "美國原油基金",
+      price: "US$ 72.18",
+      priceChange: -1.85,
+      quantity: "200",
+      marketValue: "NT$ 448,518",
+      totalReturn: {
+        value: "-NT$ 51,482",
+        percentage: "-10.3%",
+      },
+      costBasis: "NT$ 500,000",
+      assetType: "commodity",
     },
   ];
 
@@ -565,57 +587,124 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterType, setFilterType] = useState<FilterType>("all");
-  const [showDetail, setShowDetail] = useState<boolean>(false);
-  const [detailHolding, setDetailHolding] = useState<Holding | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 15;
+
+  // 計算總市值和每個資產的權重
+  const holdingsWithWeight = useMemo(() => {
+    // 計算總市值
+    const totalMarketValue = holdings.reduce((acc, holding) => {
+      const value = parseFloat(holding.marketValue.replace(/[^0-9.-]+/g, ""));
+      return acc + value;
+    }, 0);
+
+    // 為每個持倉添加計算出的權重
+    return holdings.map((holding) => {
+      const marketValue = parseFloat(
+        holding.marketValue.replace(/[^0-9.-]+/g, "")
+      );
+      const weight =
+        totalMarketValue > 0
+          ? ((marketValue / totalMarketValue) * 100).toFixed(1) + "%"
+          : "0.0%";
+
+      return {
+        ...holding,
+        weight,
+      };
+    });
+  }, [holdings]);
 
   // 產生一些隨機的價格歷史數據供迷你圖表使用
   const priceHistories: Record<string, number[]> = useMemo(() => {
-    return holdings.reduce((acc, holding) => {
-      const baseValue = Math.abs(parseFloat(holding.totalReturn.percentage));
-      const trend = parseFloat(holding.totalReturn.percentage) >= 0;
-      // 生成15個隨機數據點，整體趨勢向上或向下
+    return holdingsWithWeight.reduce((acc, holding) => {
+      const totalReturnValue = parseFloat(holding.totalReturn.percentage);
+      const isPositiveTrend = totalReturnValue >= 0;
+
+      // 根據不同的資產類型和收益率生成不同的趨勢模式
       let history: number[] = [];
-      let value = 100;
+      let baseValue = 100;
+
+      // 為每個資產生成一個基於其代號的種子，確保相同資產每次都生成相同的圖表
+      const seed = holding.symbol
+        .split("")
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const random = (index: number) => {
+        const x = Math.sin(seed + index) * 10000;
+        return x - Math.floor(x);
+      };
+
       for (let i = 0; i < 15; i++) {
-        // 生成 -3 到 +3 之間的隨機變化，但整體趨勢保持
-        const change = Math.random() * 6 - 3 + (trend ? 1 : -1);
-        value = Math.max(50, Math.min(150, value + change));
-        history.push(value);
+        let changeIntensity = Math.abs(totalReturnValue) / 10; // 根據收益率調整波動強度
+        changeIntensity = Math.max(0.5, Math.min(3, changeIntensity)); // 限制在合理範圍
+
+        // 生成變化值
+        let change = (random(i) - 0.5) * changeIntensity * 2;
+
+        // 根據總收益趨勢調整整體方向
+        if (isPositiveTrend) {
+          change += 0.3; // 正收益傾向向上
+        } else {
+          change -= 0.3; // 負收益傾向向下
+        }
+
+        // 加入一些週期性變化，讓圖表更自然
+        const cyclicalChange = Math.sin(i / 3) * 0.5;
+        change += cyclicalChange;
+
+        baseValue += change;
+        // 確保值在合理範圍內
+        baseValue = Math.max(70, Math.min(130, baseValue));
+        history.push(baseValue);
       }
+
       acc[holding.symbol] = history;
       return acc;
     }, {} as Record<string, number[]>);
-  }, [holdings]);
+  }, [holdingsWithWeight]);
 
   // 持股分類
   const holdingTypes: HoldingTypes = useMemo(() => {
     const types: HoldingTypes = {
-      all: { label: "全部", count: holdings.length },
+      all: { label: "全部", count: holdingsWithWeight.length },
       stock: { label: "股票", count: 0 },
       etf: { label: "ETF", count: 0 },
       crypto: { label: "加密貨幣", count: 0 },
       bond: { label: "債券", count: 0 },
+      reit: { label: "REIT", count: 0 },
+      commodity: { label: "商品", count: 0 },
     };
 
-    holdings.forEach((holding) => {
-      // 基於股票代號來簡單分類
-      if (holding.symbol.includes("0") && holding.symbol.length <= 4) {
-        types.etf.count++;
-      } else if (
-        holding.symbol.includes("BTC") ||
-        holding.symbol.includes("ETH") ||
-        holding.name.includes("幣")
-      ) {
-        types.crypto.count++;
-      } else if (holding.name.includes("債") || holding.name.includes("債券")) {
-        types.bond.count++;
-      } else {
-        types.stock.count++;
+    holdingsWithWeight.forEach((holding) => {
+      // 基於 assetType 字段進行分類
+      switch (holding.assetType) {
+        case "tw_stock":
+        case "us_stock":
+          types.stock.count++;
+          break;
+        case "etf":
+          types.etf.count++;
+          break;
+        case "crypto":
+          types.crypto.count++;
+          break;
+        case "bond":
+          types.bond.count++;
+          break;
+        case "reit":
+          types.reit.count++;
+          break;
+        case "commodity":
+          types.commodity.count++;
+          break;
+        default:
+          types.stock.count++; // 預設歸類為股票
+          break;
       }
     });
 
     return types;
-  }, [holdings]);
+  }, [holdingsWithWeight]);
 
   const handleSort = (field: SortField): void => {
     if (field === sortField) {
@@ -628,33 +717,39 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
 
   const sortedHoldings = useMemo(() => {
     // 先過濾類型
-    let filtered = [...holdings].filter((holding) => {
+    let filtered = [...holdingsWithWeight].filter((holding) => {
       // 搜尋條件
       const matchesSearch =
         holding.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         holding.symbol.toLowerCase().includes(searchTerm.toLowerCase());
 
-      // 類型過濾
+      // 類型過濾 - 使用 assetType 字段
       let matchesType = true;
       if (filterType !== "all") {
-        if (filterType === "stock") {
-          matchesType =
-            !(holding.symbol.includes("0") && holding.symbol.length <= 4) &&
-            !holding.symbol.includes("BTC") &&
-            !holding.symbol.includes("ETH") &&
-            !holding.name.includes("幣") &&
-            !holding.name.includes("債");
-        } else if (filterType === "etf") {
-          matchesType =
-            holding.symbol.includes("0") && holding.symbol.length <= 4;
-        } else if (filterType === "crypto") {
-          matchesType =
-            holding.symbol.includes("BTC") ||
-            holding.symbol.includes("ETH") ||
-            holding.name.includes("幣");
-        } else if (filterType === "bond") {
-          matchesType =
-            holding.name.includes("債") || holding.name.includes("債券");
+        switch (filterType) {
+          case "stock":
+            matchesType =
+              holding.assetType === "tw_stock" ||
+              holding.assetType === "us_stock";
+            break;
+          case "etf":
+            matchesType = holding.assetType === "etf";
+            break;
+          case "crypto":
+            matchesType = holding.assetType === "crypto";
+            break;
+          case "bond":
+            matchesType = holding.assetType === "bond";
+            break;
+          case "reit":
+            matchesType = holding.assetType === "reit";
+            break;
+          case "commodity":
+            matchesType = holding.assetType === "commodity";
+            break;
+          default:
+            matchesType = true;
+            break;
         }
       }
 
@@ -663,7 +758,6 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
 
     // 然後排序
     return filtered.sort((a, b) => {
-      // 數值欄位特殊處理
       // 數值欄位特殊處理
       if (
         [
@@ -705,7 +799,7 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
         return bValue.localeCompare(aValue);
       }
     });
-  }, [holdings, sortField, sortDirection, searchTerm, filterType]);
+  }, [holdingsWithWeight, sortField, sortDirection, searchTerm, filterType]);
 
   const SortIcon: React.FC<{ field: SortField }> = ({ field }) => {
     if (sortField !== field) return null;
@@ -716,207 +810,368 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
     );
   };
 
-  // 處理查看詳情
-  const handleViewDetail = (holdingSymbol: string): void => {
-    const holding = holdings.find((h) => h.symbol === holdingSymbol);
-    setDetailHolding(holding || null);
-    setShowDetail(true);
+  // 根據資產類型獲取對應的單位
+  const getAssetUnit = (assetType: AssetType): string => {
+    switch (assetType) {
+      case "tw_stock":
+      case "us_stock":
+        return "股";
+      case "etf":
+        return "張";
+      case "crypto":
+        return "顆";
+      case "bond":
+        return "張";
+      case "reit":
+        return "單位";
+      case "commodity":
+        return "單位";
+      default:
+        return "單位";
+    }
   };
 
+  // 格式化價格顯示
+  const formatPrice = (price: string, assetType: AssetType): string => {
+    // 移除現有的貨幣符號
+    const numericPrice = price.replace(/^(NT\$|US\$)\s*/, "");
+
+    // 根據資產類型決定貨幣符號
+    switch (assetType) {
+      case "tw_stock":
+      case "etf":
+      case "bond":
+      case "reit":
+        // 台灣相關資產使用 NT$
+        return `NT$ ${numericPrice}`;
+      case "us_stock":
+      case "commodity":
+        // 美股和商品使用 US$
+        return `US$ ${numericPrice}`;
+      case "crypto":
+        // 加密貨幣使用 US$
+        return `US$ ${numericPrice}`;
+      default:
+        // 預設使用原始價格，如果沒有貨幣符號則加上 NT$
+        return price.includes("$") ? price : `NT$ ${numericPrice}`;
+    }
+  };
+
+  // 格式化數量顯示
+  const formatQuantity = (quantity: string, assetType: AssetType): string => {
+    const numericQuantity = parseFloat(quantity);
+    const unit = getAssetUnit(assetType);
+
+    // 根據資產類型決定小數位數
+    if (assetType === "crypto") {
+      // 加密貨幣可能有小數，顯示到合適的小數位
+      if (numericQuantity < 1) {
+        return `${numericQuantity.toFixed(4)} ${unit}`;
+      } else if (numericQuantity < 100) {
+        return `${numericQuantity.toFixed(2)} ${unit}`;
+      } else {
+        return `${Math.floor(numericQuantity).toLocaleString()} ${unit}`;
+      }
+    } else {
+      // 其他資產類型通常是整數
+      return `${Math.floor(numericQuantity).toLocaleString()} ${unit}`;
+    }
+  };
+
+  // 簡化的資產類型樣式
+  const getAssetTypeStyle = (holding: Holding) => {
+    switch (holding.assetType) {
+      case "etf":
+        return {
+          color: "text-purple-600",
+          bg: "bg-purple-50",
+          dot: "bg-purple-500",
+          label: "ETF",
+          labelBg: "bg-purple-100",
+          labelText: "text-purple-700",
+        };
+      case "crypto":
+        return {
+          color: "text-orange-600",
+          bg: "bg-orange-50",
+          dot: "bg-orange-500",
+          label: "加密貨幣",
+          labelBg: "bg-orange-100",
+          labelText: "text-orange-700",
+        };
+      case "bond":
+        return {
+          color: "text-green-600",
+          bg: "bg-green-50",
+          dot: "bg-green-500",
+          label: "債券",
+          labelBg: "bg-green-100",
+          labelText: "text-green-700",
+        };
+      case "reit":
+        return {
+          color: "text-red-600",
+          bg: "bg-red-50",
+          dot: "bg-red-500",
+          label: "REIT",
+          labelBg: "bg-red-100",
+          labelText: "text-red-700",
+        };
+      case "commodity":
+        return {
+          color: "text-yellow-600",
+          bg: "bg-yellow-50",
+          dot: "bg-yellow-500",
+          label: "商品",
+          labelBg: "bg-yellow-100",
+          labelText: "text-yellow-700",
+        };
+      case "us_stock":
+        return {
+          color: "text-blue-600",
+          bg: "bg-blue-50",
+          dot: "bg-blue-500",
+          label: "美股",
+          labelBg: "bg-blue-100",
+          labelText: "text-blue-700",
+        };
+      case "tw_stock":
+        return {
+          color: "text-indigo-600",
+          bg: "bg-indigo-50",
+          dot: "bg-indigo-500",
+          label: "台股",
+          labelBg: "bg-indigo-100",
+          labelText: "text-indigo-700",
+        };
+      default:
+        return {
+          color: "text-gray-600",
+          bg: "bg-gray-50",
+          dot: "bg-gray-500",
+          label: "其他",
+          labelBg: "bg-gray-100",
+          labelText: "text-gray-700",
+        };
+    }
+  };
+
+  // 計算分頁資訊
+  const totalPages = Math.ceil(sortedHoldings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, sortedHoldings.length);
+
+  // 重置頁面當篩選或搜尋改變時
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType]);
+
+  // 計算當前頁面顯示的持倉
+  const paginatedHoldings = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedHoldings.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedHoldings, currentPage, itemsPerPage]);
+
   return (
-    <>
-      <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-        {/* 表格頭部 */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-100 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      {/* 簡化的頭部 */}
+      <div className="p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">持倉明細</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {sortedHoldings.length} 項資產
+            </p>
+          </div>
 
-          <div className="flex flex-wrap justify-between items-center gap-4 relative z-10">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
-                <ChartBarIcon className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold  text-gray-800 bg-clip-text ">
-                  持倉明細
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  共 {sortedHoldings.length} 項資產 • 總市值{" "}
-                  {holdings
-                    .reduce((acc, curr) => {
-                      const value = parseFloat(
-                        curr.marketValue.replace(/[^0-9.-]+/g, "")
-                      );
-                      return acc + value;
-                    }, 0)
-                    .toLocaleString()}{" "}
-                  NT$
-                </p>
-              </div>
-            </div>
+          <div className="flex items-center gap-3">
+            {/* 修改為標籤樣式的篩選器 */}
+            <div className="flex items-center gap-2">
+              {Object.entries(holdingTypes).map(([type, data]) => {
+                // 為每個篩選器類型定義對應的顏色
+                const getFilterTypeStyle = (
+                  filterType: string,
+                  isActive: boolean
+                ) => {
+                  if (!isActive) {
+                    // 未選中狀態統一為灰色
+                    return {
+                      style:
+                        "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200",
+                    };
+                  }
 
-            <div className="flex flex-wrap items-center gap-3">
-              {/* 類型過濾器 */}
-              <div className="flex space-x-2">
-                {Object.entries(holdingTypes).map(([type, data]) => (
+                  // 選中狀態才顯示對應顏色
+                  switch (filterType) {
+                    case "all":
+                      return {
+                        style: "bg-blue-600 text-white border-blue-600",
+                      };
+                    case "stock":
+                      return {
+                        style: "bg-indigo-500 text-white border-indigo-500",
+                      };
+                    case "etf":
+                      return {
+                        style: "bg-purple-500 text-white border-purple-500",
+                      };
+                    case "crypto":
+                      return {
+                        style: "bg-orange-500 text-white border-orange-500",
+                      };
+                    case "bond":
+                      return {
+                        style: "bg-green-500 text-white border-green-500",
+                      };
+                    case "reit":
+                      return {
+                        style: "bg-red-500 text-white border-red-500",
+                      };
+                    case "commodity":
+                      return {
+                        style: "bg-yellow-500 text-white border-yellow-500",
+                      };
+                    default:
+                      return {
+                        style: "bg-gray-500 text-white border-gray-500",
+                      };
+                  }
+                };
+
+                const isActive = filterType === type;
+                const style = getFilterTypeStyle(type, isActive);
+
+                return (
                   <button
                     key={type}
-                    className={`px-4 py-2 text-sm rounded-full flex items-center transition-all duration-200 transform hover:scale-105 ${
-                      filterType === type
-                        ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg"
-                        : "bg-white/70 text-gray-600 hover:bg-white border border-gray-200 hover:shadow-md"
-                    }`}
                     onClick={() => setFilterType(type as FilterType)}
+                    className={`px-3 py-1.5 text-sm rounded-full border transition-all duration-200 ${style.style}`}
                   >
-                    {type === "stock" && <TagIcon className="h-4 w-4 mr-2" />}
-                    {type === "etf" && (
-                      <ChartPieIcon className="h-4 w-4 mr-2" />
-                    )}
-                    {type === "crypto" && (
-                      <CurrencyDollarIcon className="h-4 w-4 mr-2" />
-                    )}
-                    {type === "bond" && (
-                      <DocumentIcon className="h-4 w-4 mr-2" />
-                    )}
-                    {data.label}{" "}
-                    <span className="ml-1 bg-white/30 px-2 py-0.5 rounded-full text-xs">
-                      ({data.count})
-                    </span>
+                    {data.label} ({data.count})
                   </button>
-                ))}
-              </div>
+                );
+              })}
+            </div>
 
-              {/* 搜尋框 */}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="搜尋資產..."
-                  className="pl-10 pr-4 py-3 border border-gray-200 rounded-2xl bg-white/70 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-3.5" />
-                {searchTerm && (
-                  <button
-                    className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                    onClick={() => setSearchTerm("")}
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
-                )}
-              </div>
+            {/* 簡化的搜尋框 */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="搜尋..."
+                className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-48"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <MagnifyingGlassIcon className="h-4 w-4 text-gray-400 absolute left-3 top-2.5" />
+              {searchTerm && (
+                <button
+                  className="absolute right-2 top-2.5 text-gray-400 hover:text-gray-600"
+                  onClick={() => setSearchTerm("")}
+                >
+                  <XMarkIcon className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* 表格內容 */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-              <tr>
-                <th
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                  onClick={() => handleSort("symbol")}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>代號</span>
-                    <SortIcon field="symbol" />
-                  </div>
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                  onClick={() => handleSort("name")}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>名稱</span>
-                    <SortIcon field="name" />
-                  </div>
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                  onClick={() => handleSort("price")}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>當前價格</span>
-                    <SortIcon field="price" />
-                  </div>
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  趨勢
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                  onClick={() => handleSort("quantity")}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>持有數量</span>
-                    <SortIcon field="quantity" />
-                  </div>
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                  onClick={() => handleSort("marketValue")}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>市值</span>
-                    <SortIcon field="marketValue" />
-                  </div>
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                  onClick={() => handleSort("totalReturn")}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>收益率</span>
-                    <SortIcon field="totalReturn" />
-                  </div>
-                </th>
-                <th
-                  className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-200"
-                  onClick={() => handleSort("weight")}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span>權重</span>
-                    <SortIcon field="weight" />
-                  </div>
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
-              {sortedHoldings.map((holding, index) => (
+      {/* 簡化的表格 */}
+      <div className="overflow-x-auto">
+        <table className="w-full table-fixed">
+          <thead>
+            <tr className="border-b border-gray-100">
+              <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider w-60">
+                資產
+              </th>
+              <th
+                className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 w-32"
+                onClick={() => handleSort("price")}
+              >
+                <div className="flex items-center gap-1">
+                  價格
+                  <SortIcon field="price" />
+                </div>
+              </th>
+              <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                趨勢
+              </th>
+              <th
+                className="text-right py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 w-40"
+                onClick={() => handleSort("marketValue")}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  市值
+                  <SortIcon field="marketValue" />
+                </div>
+              </th>
+              <th
+                className="text-right py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 w-32"
+                onClick={() => handleSort("totalReturn")}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  收益
+                  <SortIcon field="totalReturn" />
+                </div>
+              </th>
+              <th
+                className="text-right py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 w-28"
+                onClick={() => handleSort("weight")}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  權重
+                  <SortIcon field="weight" />
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {paginatedHoldings.map((holding) => {
+              const style = getAssetTypeStyle(holding);
+              const isPositive =
+                parseFloat(holding.totalReturn.percentage) >= 0;
+
+              return (
                 <tr
                   key={holding.symbol}
-                  className={`transition-all duration-200 cursor-pointer ${
-                    selectedHolding === holding.symbol
-                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500"
-                      : "hover:bg-gray-50"
-                  } ${index % 2 === 0 ? "bg-white" : "bg-gray-50/30"}`}
+                  className={`hover:bg-gray-50 cursor-pointer transition-colors ${
+                    selectedHolding === holding.symbol ? "bg-blue-50" : ""
+                  }`}
                   onClick={() => onSelectHolding(holding.symbol)}
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className="text-sm font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
-                        {holding.symbol}
-                      </span>
+                  <td className="py-4 px-6 w-60">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-md font-medium ${style.labelBg} ${style.labelText} whitespace-nowrap`}
+                          >
+                            {style.label}
+                          </span>
+                          <span className="font-medium text-gray-900 whitespace-nowrap">
+                            {holding.symbol}
+                          </span>
+                        </div>
+                        <div
+                          className="text-sm text-gray-500 truncate mt-1"
+                          title={holding.name}
+                        >
+                          {holding.name}
+                        </div>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {holding.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="space-y-1">
-                      <div className="text-sm font-semibold text-gray-900">
-                        {holding.price}
+
+                  <td className="py-4 px-6 w-32">
+                    <div>
+                      <div className="font-medium text-gray-900 whitespace-nowrap">
+                        {formatPrice(holding.price, holding.assetType)}
                       </div>
                       <div
-                        className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        className={`text-sm whitespace-nowrap ${
                           holding.priceChange >= 0
-                            ? "text-emerald-700 bg-emerald-100"
-                            : "text-red-700 bg-red-100"
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
                         {holding.priceChange >= 0 ? "+" : ""}
@@ -924,169 +1179,201 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="bg-gray-50 p-2 rounded-lg">
+
+                  <td className="py-4 px-6 w-24">
+                    <div className="flex justify-center">
                       <MiniChart
                         data={priceHistories[holding.symbol]}
                         color={
-                          parseFloat(holding.totalReturn.percentage) >= 0
-                            ? "#10B981"
-                            : "#EF4444"
+                          priceHistories[holding.symbol] &&
+                          priceHistories[holding.symbol][0] <
+                            priceHistories[holding.symbol][
+                              priceHistories[holding.symbol].length - 1
+                            ]
+                            ? "#10b981" // 綠色：趨勢向上
+                            : "#ef4444" // 紅色：趨勢向下
                         }
                       />
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
-                    {holding.quantity}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-gray-900">
-                      {holding.marketValue}
+
+                  <td className="py-4 px-6 text-right w-40">
+                    <div className="font-medium text-gray-900 whitespace-nowrap">
+                      {holding.marketValue.replace("NT$ ", "NT$ ")}
+                    </div>
+                    <div className="text-sm text-gray-500 whitespace-nowrap">
+                      持有:{" "}
+                      {formatQuantity(holding.quantity, holding.assetType)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
+
+                  <td className="py-4 px-6 text-right w-32">
+                    <div
+                      className={`font-medium whitespace-nowrap ${
+                        isPositive ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {holding.totalReturn.percentage}
+                    </div>
+                    <div className="text-sm text-gray-500 whitespace-nowrap">
+                      {holding.totalReturn.value}
+                    </div>
+                  </td>
+
+                  <td className="py-4 px-6 text-right w-28">
+                    <div className="font-medium text-gray-900 whitespace-nowrap">
+                      {holding.weight}
+                    </div>
+                    <div className="w-16 h-1.5 bg-gray-200 rounded-full ml-auto mt-1">
                       <div
-                        className={`text-sm font-bold px-3 py-1 rounded-full ${
-                          parseFloat(holding.totalReturn.percentage) >= 0
-                            ? "text-emerald-700 bg-emerald-100"
-                            : "text-red-700 bg-red-100"
-                        }`}
-                      >
-                        {holding.totalReturn.value}
-                      </div>
-                      <div
-                        className={`text-xs font-medium ${
-                          parseFloat(holding.totalReturn.percentage) >= 0
-                            ? "text-emerald-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        ({holding.totalReturn.percentage})
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="text-sm font-semibold text-gray-900 mr-2">
-                        {holding.weight}
-                      </div>
-                      <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-500"
-                          style={{ width: `${parseFloat(holding.weight)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetail(holding.symbol);
+                        className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                        style={{
+                          width: `${Math.min(
+                            parseFloat(holding.weight),
+                            100
+                          )}%`,
                         }}
-                        className="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-full transition-all duration-200 font-medium"
-                      >
-                        詳情
-                      </button>
-                      <button
-                        className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all duration-200"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <EllipsisHorizontalIcon className="h-5 w-5" />
-                      </button>
+                      />
                     </div>
                   </td>
                 </tr>
-              ))}
+              );
+            })}
+          </tbody>
+        </table>
 
-              {/* 當沒有數據時顯示 */}
-              {sortedHoldings.length === 0 && (
-                <tr>
-                  <td colSpan={9} className="px-6 py-16 text-center">
-                    <div className="flex flex-col items-center space-y-4">
-                      <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                        <ChartBarIcon className="h-10 w-10 text-gray-400" />
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-lg font-medium text-gray-500">
-                          {searchTerm || filterType !== "all"
-                            ? "沒有符合條件的資產"
-                            : "尚無持倉資料"}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          {searchTerm || filterType !== "all"
-                            ? "請嘗試調整搜尋條件或篩選器"
-                            : "開始您的投資之旅"}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {/* 空狀態 */}
+        {sortedHoldings.length === 0 && (
+          <div className="text-center py-12">
+            <ChartBarIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-sm font-medium text-gray-900 mb-1">
+              {searchTerm || filterType !== "all"
+                ? "找不到符合的資產"
+                : "尚無持倉"}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {searchTerm || filterType !== "all"
+                ? "試試其他搜尋條件"
+                : "開始建立您的投資組合"}
+            </p>
+          </div>
+        )}
+      </div>
 
-        {/* 表格底部摘要 */}
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-t border-gray-200">
-          <div className="flex justify-between items-center">
-            <div className="space-y-1">
-              <div className="text-sm text-gray-600">
-                總市值:{" "}
-                <span className="text-lg font-bold text-gray-900">
-                  {holdings
-                    .reduce((acc, curr) => {
-                      const value = parseFloat(
-                        curr.marketValue.replace(/[^0-9.-]+/g, "")
-                      );
-                      return acc + value;
-                    }, 0)
-                    .toLocaleString()}
-                  NT$
-                </span>
-              </div>
+      {/* 分頁控制 */}
+      {totalPages > 1 && (
+        <div className="bg-white px-6 py-4 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              顯示 {startIndex} 到 {endIndex} 筆，共 {sortedHoldings.length}{" "}
+              筆資料
             </div>
-            <div className="space-y-1 text-right">
-              <div className="text-sm text-gray-600">
-                總收益:{" "}
-                <span
-                  className={`text-lg font-bold px-3 py-1 rounded-full ${
-                    holdings.reduce((acc, curr) => {
-                      const value = parseFloat(
-                        curr.totalReturn.value.replace(/[^0-9.-]+/g, "")
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                上一頁
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => {
+                    // 只顯示當前頁面附近的頁碼
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 text-sm rounded-md ${
+                            currentPage === page
+                              ? "bg-blue-500 text-white"
+                              : "border border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
                       );
-                      return acc + value;
-                    }, 0) >= 0
-                      ? "text-emerald-700 bg-emerald-100"
-                      : "text-red-700 bg-red-100"
-                  }`}
-                >
-                  {holdings
-                    .reduce((acc, curr) => {
-                      const value = parseFloat(
-                        curr.totalReturn.value.replace(/[^0-9.-]+/g, "")
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span key={page} className="px-2 text-gray-400">
+                          ...
+                        </span>
                       );
-                      return acc + value;
-                    }, 0)
-                    .toLocaleString()}
-                  NT$
-                </span>
+                    }
+                    return null;
+                  }
+                )}
               </div>
+
+              <button
+                onClick={() =>
+                  setCurrentPage(Math.min(totalPages, currentPage + 1))
+                }
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                下一頁
+              </button>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 資產詳情彈窗 */}
-      {showDetail && (
-        <HoldingDetail
-          holding={detailHolding}
-          onClose={() => setShowDetail(false)}
-        />
       )}
-    </>
+
+      {/* 簡化的底部摘要 */}
+      <div className="bg-gray-50 px-6 py-4 border-t border-gray-100">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600">
+            總市值:{" "}
+            <span className="font-semibold text-gray-900">
+              NT${" "}
+              {holdings
+                .reduce((acc, curr) => {
+                  const value = parseFloat(
+                    curr.marketValue.replace(/[^0-9.-]+/g, "")
+                  );
+                  return acc + value;
+                }, 0)
+                .toLocaleString()}
+            </span>
+          </span>
+          <span className="text-gray-600">
+            總收益:{" "}
+            <span
+              className={`font-semibold ${
+                holdings.reduce((acc, curr) => {
+                  const value = parseFloat(
+                    curr.totalReturn.value.replace(/[^0-9.-]+/g, "")
+                  );
+                  return acc + value;
+                }, 0) >= 0
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              NT${" "}
+              {holdings
+                .reduce((acc, curr) => {
+                  const value = parseFloat(
+                    curr.totalReturn.value.replace(/[^0-9.-]+/g, "")
+                  );
+                  return acc + value;
+                }, 0)
+                .toLocaleString()}
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -15,16 +15,16 @@
 
   body {
     @apply bg-gray-50 text-gray-900 leading-relaxed;
-    /* 全域隱藏水平滾動條但保持功能 */
-    overflow-x: hidden;
   }
 
-  /* 動畫效能優化 */
-  * {
-    /* 啟用硬體加速 */
-    transform: translate3d(0, 0, 0);
-    backface-visibility: hidden;
-    perspective: 1000px;
+  /* 為 fixed 定位元素特別處理 */
+  [data-fixed-element],
+  [style*="position: fixed"],
+  .fixed {
+    transform: none !important;
+    backface-visibility: initial !important;
+    perspective: none !important;
+    position: fixed !important;
   }
 
   /* 頁面轉場容器優化 */
@@ -100,6 +100,17 @@
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes float {
   0%,
   100% {
@@ -154,6 +165,29 @@
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* 新增滑入動畫 */
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 新增彈跳效果 */
+@keyframes gentle-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
   }
 }
 
@@ -588,6 +622,9 @@
   }
   .animate-scale-in {
     animation: scaleIn 0.2s ease-out forwards;
+  }
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
   }
   .animate-pulse-custom {
     animation: pulse 2s ease-in-out infinite;
