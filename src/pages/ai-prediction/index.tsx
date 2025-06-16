@@ -1,4 +1,3 @@
-// src/pages/ai-prediction/index.tsx
 import React, { useState, useEffect } from "react";
 import {
   ChartBarIcon,
@@ -8,6 +7,7 @@ import {
   ClockIcon,
   BeakerIcon,
   ArrowPathIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import {
   Chart as ChartJS,
@@ -313,7 +313,7 @@ const AIPredictionPage: React.FC = () => {
   // 應用程式載入檢查
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600">正在初始化AI系統...</p>
@@ -338,7 +338,7 @@ const AIPredictionPage: React.FC = () => {
   // 錯誤處理
   if (Object.keys(pageErrors).length > 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <h2 className="text-lg font-semibold text-red-800 mb-2">
@@ -370,124 +370,113 @@ const AIPredictionPage: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* 頁面標題區域 */}
-          <div className="mb-10">
-            <div className="relative overflow-hidden bg-white rounded-3xl shadow-xl border border-gray-100">
-              {/* 裝飾性漸變背景 */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-indigo-500/5" />
-              <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-full transform translate-x-32 -translate-y-32" />
+      <div className="min-h-screen bg-gray-50">
+        {/* 統一的頁面標題區域 */}
+        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-xl relative overflow-hidden">
+          {/* 裝飾性背景元素 */}
+          <div className="absolute top-0 left-0 w-full h-full">
+            <div className="absolute top-10 left-10 w-20 h-20 bg-white opacity-5 rounded-full"></div>
+            <div className="absolute bottom-10 right-20 w-32 h-32 bg-white opacity-5 rounded-full"></div>
+            <div className="absolute top-20 right-40 w-16 h-16 bg-white opacity-5 rounded-full"></div>
+          </div>
 
-              <div className="relative z-10 p-8">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                  <div className="mb-8 lg:mb-0">
-                    <div className="flex items-start mb-6">
-                      <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-4 rounded-2xl mr-6 shadow-lg">
-                        <CpuChipIcon className="h-10 w-10 text-white" />
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-4 mb-3">
-                          <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent">
-                            AI 投資智能分析
-                          </h1>
-                          <button
-                            onClick={handleRefreshData}
-                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
-                            title="刷新數據"
-                          >
-                            <ArrowPathIcon className="h-6 w-6" />
-                          </button>
-                        </div>
-                        <p className="text-gray-600 text-xl max-w-2xl leading-relaxed">
-                          結合深度學習與量化分析，為您的投資決策提供科學化的智能洞察
-                        </p>
-                        <div className="flex flex-wrap items-center gap-4 mt-4">
-                          <div className="flex items-center text-sm text-gray-500">
-                            <BeakerIcon className="h-4 w-4 mr-1" />
-                            深度神經網路
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <ChartBarIcon className="h-4 w-4 mr-1" />
-                            即時市場數據
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <ShieldCheckIcon className="h-4 w-4 mr-1" />
-                            風險控制
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
+            {/* 頂部區域 */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+              <div className="flex items-center">
+                <div className="p-3 bg-white bg-opacity-15 backdrop-blur-sm rounded-2xl shadow-lg mr-4">
+                  <CpuChipIcon className="h-9 w-9 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-white tracking-tight">
+                    AI 投資智能分析
+                  </h1>
+                  <p className="text-blue-100 mt-1 text-sm">
+                    結合深度學習與量化分析的智能投資決策平台
+                  </p>
+                </div>
+              </div>
 
-                  {/* AI 狀態儀表板 */}
-                  <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-2 border border-gray-200 shadow-2xl min-w-[300px]">
-                    <div className="space-y-2">
-                      {currentPrediction?.signals?.map((signal, index) => (
-                        <div
-                          key={index}
-                          className="bg-white/60 rounded-xl p-4 backdrop-blur-sm border border-gray-100"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-gray-700">
-                              {signal.type}
-                            </span>
-                            <span
-                              className={`text-sm font-bold ${signal.color}`}
-                            >
-                              {signal.strength}
-                            </span>
-                          </div>
-                          <div className="relative">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className={`h-2 rounded-full transition-all duration-1000 ${
-                                  signal.score >= 80
-                                    ? "bg-gradient-to-r from-green-400 to-green-600"
-                                    : signal.score >= 60
-                                    ? "bg-gradient-to-r from-yellow-400 to-yellow-600"
-                                    : "bg-gradient-to-r from-red-400 to-red-600"
-                                }`}
-                                style={{ width: `${signal.score}%` }}
-                              />
-                            </div>
-                            <div className="flex justify-between items-center mt-1">
-                              <span className="text-xs font-semibold text-gray-600">
-                                {signal.score}/100
-                              </span>
-                              <div className="flex items-center space-x-1">
-                                <div
-                                  className={`w-2 h-2 rounded-full ${
-                                    isAnalyzing
-                                      ? "bg-orange-400 animate-bounce"
-                                      : signal.score >= 80
-                                      ? "bg-green-400"
-                                      : signal.score >= 60
-                                      ? "bg-yellow-400"
-                                      : "bg-red-400"
-                                  }`}
-                                />
-                                <span className="text-xs text-gray-500">
-                                  {isAnalyzing ? "更新中" : "即時"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+              <div className="flex items-center mt-4 md:mt-0 space-x-3">
+                <button
+                  onClick={handleRefreshData}
+                  className="p-2 bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl border border-indigo-400 border-opacity-30 text-blue-200 hover:text-white transition-colors"
+                  title="刷新數據"
+                >
+                  <ArrowPathIcon className="h-5 w-5" />
+                </button>
+
+                <div className="bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400 border-opacity-30 flex items-center space-x-3">
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      isAnalyzing
+                        ? "bg-orange-400 animate-pulse"
+                        : "bg-green-400"
+                    }`}
+                  ></div>
+                  <div>
+                    <div className="text-xs text-blue-200">AI 狀態</div>
+                    <div className="text-sm font-medium text-white">
+                      {isAnalyzing ? "分析中..." : "就緒"}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* 主要內容區域 */}
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              {/* 左側內容 */}
+              <div className="space-y-6">
+                <div>
+                  <div className="inline-flex items-center px-4 py-2 bg-blue-800 bg-opacity-50 backdrop-blur-sm rounded-full text-blue-200 text-sm font-medium mb-4">
+                    <SparklesIcon className="w-4 h-4 mr-2" />
+                    AI 深度分析引擎
+                  </div>
+                  <p className="text-blue-100 text-lg leading-relaxed">
+                    運用前沿 AI 技術與量化分析，提供個人化投資洞察、
+                    <span className="text-blue-300 font-semibold">
+                      智能風險管理
+                    </span>
+                    與
+                    <span className="text-purple-300 font-semibold">
+                      精準市場預測
+                    </span>
+                    ，讓投資決策更加明智且高效。
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center text-sm text-blue-200">
+                    <BeakerIcon className="h-4 w-4 mr-1" />
+                    深度神經網路
+                  </div>
+                  <div className="flex items-center text-sm text-blue-200">
+                    <ChartBarIcon className="h-4 w-4 mr-1" />
+                    即時市場數據
+                  </div>
+                  <div className="flex items-center text-sm text-blue-200">
+                    <ShieldCheckIcon className="h-4 w-4 mr-1" />
+                    風險控制
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 主要內容區域 */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
             {/* 左側主面板 */}
             <div className="xl:col-span-3 space-y-8">
               {/* 股票分析面板 */}
-              <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
+              <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-100">
+                  <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                    <ChartBarIcon className="h-6 w-6 text-blue-600 mr-3" />
+                    股票分析與預測
+                  </h2>
+                </div>
                 <StockSearchCard
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
@@ -531,7 +520,7 @@ const AIPredictionPage: React.FC = () => {
               </div>
 
               {/* 技術指標面板 */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+              <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-100">
                   <h2 className="text-xl font-bold text-gray-900 flex items-center">
                     <ChartPieIcon className="h-6 w-6 text-purple-600 mr-3" />
@@ -565,7 +554,7 @@ const AIPredictionPage: React.FC = () => {
 
             {/* 右側控制面板 */}
             <div className="xl:col-span-1 space-y-6">
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300">
+              <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
                 <PredictionSidebar
                   activeTab={activeTab as ComponentActiveTab}
                   setActiveTab={handleActiveTabChange}
@@ -583,8 +572,6 @@ const AIPredictionPage: React.FC = () => {
 
                     // 這裡可以處理投資組合項目的更新
                     console.log("更新投資組合項目:", items);
-                    // 如果需要持久化，可以調用控制器
-                    // predictionController.updatePortfolioItems(user.id, items);
                   }}
                 />
               </div>
@@ -592,22 +579,25 @@ const AIPredictionPage: React.FC = () => {
           </div>
 
           {/* 系統資訊頁腳 */}
-          <div className="mt-12 bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+          <div className="mt-12 bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">系統資訊</h4>
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <ClockIcon className="h-5 w-5 text-blue-600 mr-2" />
+                  系統資訊
+                </h4>
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex items-center">
-                    <ClockIcon className="h-4 w-4 mr-2" />
+                    <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                     最後更新：{currentTime || "載入中..."}
                   </div>
                   <div className="flex items-center">
-                    <CpuChipIcon className="h-4 w-4 mr-2" />
+                    <CpuChipIcon className="h-4 w-4 mr-2 text-gray-500" />
                     AI 模型：GPT-4 Enhanced v2.1.0
                   </div>
                   {currentPrediction && (
                     <div className="flex items-center">
-                      <ShieldCheckIcon className="h-4 w-4 mr-2" />
+                      <ShieldCheckIcon className="h-4 w-4 mr-2 text-gray-500" />
                       預測信心度：{currentPrediction.confidence}%
                     </div>
                   )}
@@ -615,7 +605,10 @@ const AIPredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">數據來源</h4>
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <ChartBarIcon className="h-5 w-5 text-green-600 mr-2" />
+                  數據來源
+                </h4>
                 <div className="text-sm text-gray-600 space-y-1">
                   <div>• 即時市場數據</div>
                   <div>• 技術分析指標</div>
@@ -627,7 +620,10 @@ const AIPredictionPage: React.FC = () => {
               </div>
 
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">免責聲明</h4>
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <ShieldCheckIcon className="h-5 w-5 text-orange-600 mr-2" />
+                  免責聲明
+                </h4>
                 <p className="text-sm text-gray-600">
                   本系統提供的分析僅供參考，投資決策請自行評估風險。
                 </p>

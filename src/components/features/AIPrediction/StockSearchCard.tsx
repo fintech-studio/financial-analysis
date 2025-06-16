@@ -1,7 +1,7 @@
 // src/components/features/AIPrediction/StockSearchCard.tsx
 import React from "react";
 import { Line } from "react-chartjs-2";
-import { SparklesIcon } from "@heroicons/react/24/solid";
+import { SparklesIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import TimeRangeButtons from "./TimeRangeButtons";
 import type { StockData, TimeRange, ChartData } from "@/types/prediction";
 
@@ -33,36 +33,44 @@ const StockSearchCard: React.FC<StockSearchCardProps> = ({
   isDataReady,
 }) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm  border-gray-200 overflow-hidden">
+    <div className="p-6">
       {/* 搜尋框 */}
-      <div className="p-5 pb-0">
-        <div className="relative w-full">
+      <div className="mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-4">
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+          </div>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜尋加密貨幣、股票等等..."
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm pl-3 pr-10 py-2"
+            placeholder="搜尋股票代號或名稱 (例: TSMC, 台積電)"
+            className="block w-full pl-12 pr-20 py-3 border border-gray-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 placeholder-gray-500 bg-white transition-all duration-200"
           />
           <div className="absolute inset-y-0 right-0 flex items-center">
-            <button className="bg-green-600 text-white px-4 py-2 rounded-r-md h-full hover:bg-green-700 transition-colors">
+            <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-r-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg">
               分析
             </button>
           </div>
         </div>
       </div>
 
-      {/* 股票數據 */}
-      <div className="p-5">
-        <div className="flex items-center justify-between">
+      {/* 股票資訊卡片 */}
+      <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 mb-6 border border-gray-100">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{selectedStock}</h2>
-            <div className="text-3xl font-bold text-gray-900 mt-1">
-              {stockData.price}
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">
+              {selectedStock}
+            </h2>
+            <div className="text-3xl font-bold text-gray-900">
+              NT$ {stockData.price}
             </div>
           </div>
-          <div className="bg-green-100 text-green-800 py-1 px-3 rounded-full text-sm font-medium">
-            +32.80 (+0.47%)
+          <div className="text-right">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-2 px-4 rounded-xl text-sm font-medium shadow-lg">
+              +32.80 (+0.47%)
+            </div>
+            <div className="text-xs text-gray-500 mt-1">今日變化</div>
           </div>
         </div>
 
@@ -71,55 +79,58 @@ const StockSearchCard: React.FC<StockSearchCardProps> = ({
           currentRange={timeRange}
           onRangeChange={onTimeRangeChange}
         />
+      </div>
 
-        {/* 圖表區域 */}
-        <div className="h-64 relative">
-          <div className="absolute top-0 right-0 bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs font-medium flex items-center z-10">
+      {/* 圖表區域 */}
+      <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">價格走勢</h3>
+          <div className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 px-3 py-1 rounded-lg text-xs font-medium flex items-center">
             <SparklesIcon className="h-3 w-3 mr-1" />
             AI預測區間
           </div>
+        </div>
+
+        <div className="h-64 relative">
           {isDataReady && <Line data={chartData} options={chartOptions} />}
         </div>
+      </div>
 
-        {/* AI 預測說明 */}
-        <div className="mt-4 bg-blue-50 p-4 rounded-lg">
-          <div className="flex items-center mb-2">
-            <SparklesIcon className="h-5 w-5 text-blue-500 mr-2" />
-            <h4 className="font-medium text-blue-800">AI預測分析</h4>
+      {/* AI 預測說明 */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 mb-6">
+        <div className="flex items-center mb-3">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg mr-3">
+            <SparklesIcon className="h-5 w-5 text-white" />
           </div>
-          <p className="text-sm text-blue-700">
-            根據{timeRange}歷史數據分析，AI模型預測未來{trendDirection}趨勢，
-            預期價格變動幅度約為{trendPercent}%。
-          </p>
+          <h4 className="font-semibold text-blue-900">AI預測分析</h4>
         </div>
+        <p className="text-sm text-blue-800 leading-relaxed">
+          根據{timeRange}歷史數據分析，AI模型預測未來{trendDirection}趨勢，
+          預期價格變動幅度約為
+          <span className="font-semibold">{trendPercent}%</span>。
+          建議投資者密切關注市場動態並適時調整投資策略。
+        </p>
+      </div>
 
-        {/* 股票詳細信息 */}
-        <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
-          <div className="p-2 bg-gray-50 rounded">
-            <div className="text-gray-500">開盤價</div>
-            <div className="font-medium text-gray-900">{stockData.open}</div>
+      {/* 股票詳細信息 */}
+      <div className="grid grid-cols-3 gap-4">
+        {/*
+          { label: "開盤價", value: stockData.open, color: "text-gray-900" },
+          { label: "最高價", value: stockData.high, color: "text-green-600" },
+          { label: "最低價", value: stockData.low, color: "text-red-600" },
+          { label: "成交量", value: stockData.lot, color: "text-blue-600" },
+          { label: "市值", value: stockData.value, color: "text-purple-600" },
+          { label: "週轉率", value: stockData.freq, color: "text-indigo-600" },
+        */}
+        {Object.entries(stockData).map(([key, value], index) => (
+          <div
+            key={index}
+            className="bg-white rounded-xl p-4 border border-gray-100 hover:shadow-md transition-shadow duration-200"
+          >
+            <div className="text-xs text-gray-500 mb-1">{key}</div>
+            <div className="font-semibold text-gray-900">{value}</div>
           </div>
-          <div className="p-2 bg-gray-50 rounded">
-            <div className="text-gray-500">最高價</div>
-            <div className="font-medium text-pink-600">{stockData.high}</div>
-          </div>
-          <div className="p-2 bg-gray-50 rounded">
-            <div className="text-gray-500">最低價</div>
-            <div className="font-medium text-gray-900">{stockData.low}</div>
-          </div>
-          <div className="p-2 bg-gray-50 rounded">
-            <div className="text-gray-500">Lot</div>
-            <div className="font-medium text-gray-900">{stockData.lot}</div>
-          </div>
-          <div className="p-2 bg-gray-50 rounded">
-            <div className="text-gray-500">Value</div>
-            <div className="font-medium text-gray-900">{stockData.value}</div>
-          </div>
-          <div className="p-2 bg-gray-50 rounded">
-            <div className="text-gray-500">Freq</div>
-            <div className="font-medium text-gray-900">{stockData.freq}</div>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
