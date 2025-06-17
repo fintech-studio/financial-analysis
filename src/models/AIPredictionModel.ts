@@ -52,6 +52,81 @@ export interface PredictionRequest {
   model?: "lstm" | "transformer" | "ensemble";
 }
 
+export interface MarketTrendPrediction {
+  timeframe: "short" | "medium" | "long"; // 短期/中期/長期
+  period: string; // "1週", "1個月", "3個月"
+  direction: "bullish" | "bearish" | "neutral";
+  confidence: number;
+  expectedReturn: number;
+  keyFactors: string[];
+  riskLevel: "低" | "中等" | "高";
+}
+
+export interface PricePredictionChart {
+  symbol: string;
+  currentPrice: number;
+  predictions: Array<{
+    date: string;
+    predictedPrice: number;
+    confidence: number;
+    range: {
+      high: number;
+      low: number;
+    };
+  }>;
+  historicalAccuracy: number;
+  lastUpdated: string;
+}
+
+export interface AccuracyMetrics {
+  overall: number;
+  shortTerm: number; // 1-7天
+  mediumTerm: number; // 1-4週
+  longTerm: number; // 1-3個月
+  bySymbol: Array<{
+    symbol: string;
+    accuracy: number;
+    totalPredictions: number;
+  }>;
+  lastUpdated: string;
+}
+
+export interface RiskAssessment {
+  symbol: string;
+  overallRisk: "低" | "中等" | "高" | "極高";
+  riskScore: number; // 0-100
+  factors: Array<{
+    category: string;
+    risk: "低" | "中等" | "高";
+    impact: number;
+    description: string;
+  }>;
+  volatilityScore: number;
+  liquidityRisk: "低" | "中等" | "高";
+  recommendation: string;
+}
+
+export interface DashboardSummary {
+  totalPredictions: number;
+  accuracy: AccuracyMetrics;
+  activeModels: number;
+  marketTrends: MarketTrendPrediction[];
+  topPerformingStocks: Array<{
+    symbol: string;
+    name: string;
+    expectedReturn: number;
+    confidence: number;
+    riskLevel: string;
+  }>;
+  recentPredictions: Array<{
+    symbol: string;
+    confidence: number;
+    direction: "up" | "down" | "neutral";
+    time: string;
+    actualResult?: "correct" | "incorrect" | "pending";
+  }>;
+}
+
 export class AIPredictionModel {
   private static instance: AIPredictionModel;
   private predictions: Map<string, StockAnalysis> = new Map();
@@ -255,5 +330,233 @@ export class AIPredictionModel {
   clearCache(): void {
     this.predictions.clear();
     this.initializeDefaultData();
+  }
+
+  async getMarketTrendPredictions(): Promise<MarketTrendPrediction[]> {
+    // 模擬市場趨勢預測
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
+    return [
+      {
+        timeframe: "short",
+        period: "1週",
+        direction: "bullish",
+        confidence: 78,
+        expectedReturn: 3.2,
+        keyFactors: ["技術面突破", "成交量放大", "外資買超"],
+        riskLevel: "中等",
+      },
+      {
+        timeframe: "medium",
+        period: "1個月",
+        direction: "neutral",
+        confidence: 65,
+        expectedReturn: 1.5,
+        keyFactors: ["財報季影響", "政策不確定性", "國際情勢"],
+        riskLevel: "中等",
+      },
+      {
+        timeframe: "long",
+        period: "3個月",
+        direction: "bullish",
+        confidence: 72,
+        expectedReturn: 8.7,
+        keyFactors: ["AI科技趨勢", "半導體循環", "經濟復甦"],
+        riskLevel: "高",
+      },
+    ];
+  }
+
+  async getPricePredictionChart(
+    symbol: string,
+    days: number = 30
+  ): Promise<PricePredictionChart> {
+    // 模擬價格預測圖表數據
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const currentPrice = this.predictions.get(symbol)?.currentPrice || 580;
+    const predictions = [];
+
+    for (let i = 1; i <= days; i++) {
+      const trend = Math.sin(i * 0.1) * 0.02; // 模擬趨勢
+      const volatility = (Math.random() - 0.5) * 0.03; // 模擬波動
+      const predictedPrice = currentPrice * (1 + trend + volatility);
+
+      predictions.push({
+        date: new Date(Date.now() + i * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        predictedPrice: Math.round(predictedPrice * 100) / 100,
+        confidence: Math.max(60, 95 - i * 1.5), // 隨時間降低信心度
+        range: {
+          high: Math.round(predictedPrice * 1.05 * 100) / 100,
+          low: Math.round(predictedPrice * 0.95 * 100) / 100,
+        },
+      });
+    }
+
+    return {
+      symbol,
+      currentPrice,
+      predictions,
+      historicalAccuracy: 84.7,
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+
+  async getAccuracyMetrics(): Promise<AccuracyMetrics> {
+    // 模擬準確度指標
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    return {
+      overall: 84.7,
+      shortTerm: 89.2,
+      mediumTerm: 82.5,
+      longTerm: 78.9,
+      bySymbol: [
+        { symbol: "TSMC", accuracy: 87.3, totalPredictions: 156 },
+        { symbol: "AAPL", accuracy: 83.1, totalPredictions: 142 },
+        { symbol: "NVDA", accuracy: 91.4, totalPredictions: 98 },
+        { symbol: "MSFT", accuracy: 79.8, totalPredictions: 134 },
+      ],
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+
+  async getRiskAssessment(symbol: string): Promise<RiskAssessment> {
+    // 模擬風險評估
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    const riskFactors = [
+      {
+        category: "市場風險",
+        risk: "中等" as const,
+        impact: 0.25,
+        description: "整體市場波動影響",
+      },
+      {
+        category: "流動性風險",
+        risk: "低" as const,
+        impact: 0.15,
+        description: "股票流動性充足",
+      },
+      {
+        category: "基本面風險",
+        risk: "低" as const,
+        impact: 0.2,
+        description: "公司基本面穩健",
+      },
+      {
+        category: "技術面風險",
+        risk: "中等" as const,
+        impact: 0.2,
+        description: "技術指標顯示整理格局",
+      },
+      {
+        category: "產業風險",
+        risk: "高" as const,
+        impact: 0.2,
+        description: "產業週期性波動風險",
+      },
+    ];
+
+    // 計算風險分數
+    const riskScore = riskFactors.reduce((acc, factor) => {
+      const riskValue =
+        factor.risk === "低" ? 1 : factor.risk === "中等" ? 2 : 3;
+      return acc + riskValue * factor.impact * 33.33;
+    }, 0);
+
+    const overallRisk =
+      riskScore < 40
+        ? "低"
+        : riskScore < 60
+        ? "中等"
+        : riskScore < 80
+        ? "高"
+        : "極高";
+
+    return {
+      symbol,
+      overallRisk,
+      riskScore: Math.round(riskScore),
+      factors: riskFactors,
+      volatilityScore: 68.5,
+      liquidityRisk: "低",
+      recommendation:
+        overallRisk === "低"
+          ? "適合積極投資"
+          : overallRisk === "中等"
+          ? "建議適度配置"
+          : "建議謹慎投資或避免",
+    };
+  }
+
+  async getDashboardSummary(): Promise<DashboardSummary> {
+    // 並行獲取所有儀表板數據
+    const [marketTrends, accuracy] = await Promise.all([
+      this.getMarketTrendPredictions(),
+      this.getAccuracyMetrics(),
+    ]);
+
+    return {
+      totalPredictions: 1247,
+      accuracy,
+      activeModels: 3,
+      marketTrends,
+      topPerformingStocks: [
+        {
+          symbol: "NVDA",
+          name: "輝達",
+          expectedReturn: 15.3,
+          confidence: 91,
+          riskLevel: "中等",
+        },
+        {
+          symbol: "TSMC",
+          name: "台積電",
+          expectedReturn: 12.7,
+          confidence: 87,
+          riskLevel: "低",
+        },
+        {
+          symbol: "AAPL",
+          name: "蘋果",
+          expectedReturn: 8.9,
+          confidence: 82,
+          riskLevel: "低",
+        },
+      ],
+      recentPredictions: [
+        {
+          symbol: "TSMC",
+          confidence: 87,
+          direction: "up",
+          time: "5分鐘前",
+          actualResult: "pending",
+        },
+        {
+          symbol: "AAPL",
+          confidence: 82,
+          direction: "up",
+          time: "12分鐘前",
+          actualResult: "correct",
+        },
+        {
+          symbol: "NVDA",
+          confidence: 91,
+          direction: "up",
+          time: "18分鐘前",
+          actualResult: "correct",
+        },
+        {
+          symbol: "MSFT",
+          confidence: 75,
+          direction: "down",
+          time: "25分鐘前",
+          actualResult: "incorrect",
+        },
+      ],
+    };
   }
 }

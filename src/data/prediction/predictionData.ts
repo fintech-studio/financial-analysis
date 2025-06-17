@@ -2,7 +2,7 @@
 import type { StockData, TechnicalIndicator } from "@/types/prediction";
 
 export const STOCK_DATA: Record<string, StockData> = {
-  IHSG: {
+  TWSE: {
     price: "7,056.04",
     open: "7,091.76",
     high: "7,100.81",
@@ -44,8 +44,8 @@ export const TECHNICAL_INDICATORS: TechnicalIndicator[] = [
   {
     name: "布林通道",
     value: "上軌: 7,150",
-    status: "中軌: 7,050 | 下軌: 6,950",
-    statusColor: "text-gray-600",
+    status: "突破上軌",
+    statusColor: "text-orange-600",
   },
   {
     name: "成交量",
