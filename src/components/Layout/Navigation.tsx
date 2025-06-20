@@ -18,6 +18,7 @@ import {
   CurrencyDollarIcon,
   GlobeAltIcon,
   SparklesIcon,
+  BeakerIcon,
 } from "@heroicons/react/24/outline";
 
 // TypeScript 接口定義
@@ -121,6 +122,12 @@ const Navigation: React.FC = () => {
       href: "/community",
       icon: ChatBubbleLeftRightIcon,
       description: "投資者交流平台",
+    },
+    {
+      name: "開發測試",
+      href: "/test",
+      icon: BeakerIcon,
+      description: "開發測試工具",
     },
   ];
 

@@ -3,6 +3,7 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
   message?: string;
+  timestamp?: string;
 }
 
 export interface ApiConfig {
@@ -134,17 +135,61 @@ export class ApiService {
     }
   }
 
+  /**
+   * 改進的錯誤處理機制
+   */
   private handleError<T>(error: any): ApiResponse<T> {
+    // 記錄詳細錯誤信息
+    console.error("API Service Error:", {
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      timestamp: new Date().toISOString(),
+    });
+
     if (error.name === "AbortError") {
       return {
         success: false,
-        error: "請求超時",
+        error: "請求已取消",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    // 網路連接錯誤
+    if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
+      return {
+        success: false,
+        error: "無法連接到伺服器，請檢查網路連接",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    // HTTP 狀態錯誤
+    if (error.status) {
+      const statusMessages: Record<number, string> = {
+        400: "請求參數錯誤",
+        401: "身份驗證失敗，請重新登入",
+        403: "權限不足，無法存取此資源",
+        404: "請求的資源不存在",
+        408: "請求逾時，請稍後重試",
+        429: "請求過於頻繁，請稍後重試",
+        500: "伺服器內部錯誤",
+        502: "伺服器暫時無法使用",
+        503: "服務暫時無法使用",
+        504: "請求逾時，請稍後重試",
+      };
+
+      return {
+        success: false,
+        error: statusMessages[error.status] || `HTTP 錯誤 ${error.status}`,
+        timestamp: new Date().toISOString(),
       };
     }
 
     return {
       success: false,
-      error: error.message || "網路錯誤",
+      error: error.message || "發生未知錯誤，請稍後重試",
+      timestamp: new Date().toISOString(),
     };
   }
 }

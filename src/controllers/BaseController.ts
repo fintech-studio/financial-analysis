@@ -82,8 +82,78 @@ export class ResponseHelper {
 
 // 控制器基類
 export abstract class BaseController {
+  /**
+   * 記錄信息日誌
+   */
+  protected logInfo(message: string, data?: any): void {
+    console.log(`[INFO] ${message}`, data || "");
+  }
+
+  /**
+   * 記錄錯誤日誌
+   */
+  protected logError(message: string, error?: any): void {
+    console.error(`[ERROR] ${message}`, error || "");
+  }
+
+  /**
+   * 記錄警告日誌
+   */
+  protected logWarning(message: string, data?: any): void {
+    console.warn(`[WARNING] ${message}`, data || "");
+  }
+
+  /**
+   * 改進錯誤處理 - 添加更詳細的錯誤信息和恢復機制
+   */
   protected handleError(error: any, context: string): never {
-    return ErrorHandler.handleControllerError(error, context);
+    const errorMessage = error instanceof Error ? error.message : "未知錯誤";
+
+    // 記錄詳細錯誤信息
+    console.error(`[${context}] Error Details:`, {
+      message: errorMessage,
+      stack: error?.stack,
+      timestamp: new Date().toISOString(),
+      context,
+    });
+
+    // 根據錯誤類型提供更友好的用戶提示
+    if (error instanceof TypeError) {
+      throw new Error(`${context}: 數據格式錯誤，請檢查輸入數據`);
+    }
+
+    if (error instanceof ReferenceError) {
+      throw new Error(`${context}: 系統參考錯誤，請聯繫技術支援`);
+    }
+
+    // 網路相關錯誤
+    if (
+      errorMessage.includes("網路") ||
+      errorMessage.includes("network") ||
+      error.code === "ECONNREFUSED"
+    ) {
+      throw new Error(`${context}: 網路連線異常，請檢查網路設定並稍後重試`);
+    }
+
+    // 權限相關錯誤
+    if (
+      errorMessage.includes("權限") ||
+      errorMessage.includes("permission") ||
+      errorMessage.includes("unauthorized")
+    ) {
+      throw new Error(`${context}: 權限不足，請重新登入或聯繫管理員`);
+    }
+
+    // 資料庫相關錯誤
+    if (
+      errorMessage.includes("Login failed") ||
+      errorMessage.includes("database")
+    ) {
+      throw new Error(`${context}: 資料庫連接失敗，請檢查設定或聯繫技術支援`);
+    }
+
+    // 預設錯誤
+    throw new Error(`${context}: ${errorMessage}`);
   }
 
   protected async executeWithErrorHandling<T>(

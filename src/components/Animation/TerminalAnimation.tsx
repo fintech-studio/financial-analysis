@@ -173,9 +173,25 @@ const TerminalAnimation = () => {
     scrollToBottom();
   }, [lines]);
 
-  // 執行命令
+  // 清理所有 timeout 和 interval
   useEffect(() => {
-    let isMounted = true; // 新增：檢查組件是否仍然掛載
+    return () => {
+      // 清理所有定時器
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
+    };
+  }, []);
+
+  // 執行命令 - 修復內存洩漏
+  useEffect(() => {
+    let isMounted = true;
+    let commandTimeout: NodeJS.Timeout;
 
     const executeCommand = async () => {
       if (!isMounted) return;
@@ -185,51 +201,62 @@ const TerminalAnimation = () => {
 
       // 檢查是否需要重置
       if (commandIndex >= commands.length) {
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        if (!isMounted) return;
-        setCommandIndex(0);
-        setLines([
-          { text: "金融分析智能終端 v3.0.1", type: "system" },
-          { text: "© 2025 智慧金融分析平台", type: "system" },
-          { text: "正在連接加密安全通道...", type: "system" },
-          { text: "連接成功! 正在讀取市場數據...", type: "success" },
-          { text: "", type: "spacer" },
-        ]);
+        commandTimeout = setTimeout(async () => {
+          if (!isMounted) return;
+          setCommandIndex(0);
+          setLines([
+            { text: "金融分析智能終端 v3.0.1", type: "system" },
+            { text: "© 2025 智慧金融分析平台", type: "system" },
+            { text: "正在連接加密安全通道...", type: "system" },
+            { text: "連接成功! 正在讀取市場數據...", type: "success" },
+            { text: "", type: "spacer" },
+          ]);
+        }, 3000);
         return;
       }
 
       const command = commands[commandIndex];
 
-      // 開始輸入命令
-      setIsTyping(true);
-      await typeCommand(command.cmd);
-      if (!isMounted) return;
-      setIsTyping(false);
-
-      // 顯示載入動畫
-      if (command.loading) {
-        setIsLoading(true);
-        await new Promise((resolve) =>
-          setTimeout(resolve, command.loadingTime || 1500)
-        );
+      try {
+        // 開始輸入命令
+        setIsTyping(true);
+        await typeCommand(command.cmd);
         if (!isMounted) return;
-        setIsLoading(false);
+        setIsTyping(false);
+
+        // 顯示載入動畫
+        if (command.loading) {
+          setIsLoading(true);
+          await new Promise((resolve) =>
+            setTimeout(resolve, command.loadingTime || 1500)
+          );
+          if (!isMounted) return;
+          setIsLoading(false);
+        }
+
+        // 顯示回應
+        setIsResponding(true);
+        await typeResponse(command.response);
+        if (!isMounted) return;
+        setIsResponding(false);
+
+        // 在執行完回應後等待
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        if (!isMounted) return;
+
+        // 準備下一個命令
+        commandTimeout = setTimeout(() => {
+          if (!isMounted) return;
+          setCommandIndex((prev) => prev + 1);
+        }, command.delay);
+      } catch (error) {
+        console.error("終端動畫執行錯誤:", error);
+        if (isMounted) {
+          setIsTyping(false);
+          setIsLoading(false);
+          setIsResponding(false);
+        }
       }
-
-      // 顯示回應
-      setIsResponding(true);
-      await typeResponse(command.response);
-      if (!isMounted) return;
-      setIsResponding(false);
-
-      // 在執行完回應後等待
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      if (!isMounted) return;
-
-      // 準備下一個命令
-      await new Promise((resolve) => setTimeout(resolve, command.delay));
-      if (!isMounted) return;
-      setCommandIndex((prev) => prev + 1);
     };
 
     executeCommand();
@@ -237,6 +264,9 @@ const TerminalAnimation = () => {
     // 清理函數
     return () => {
       isMounted = false;
+      if (commandTimeout) {
+        clearTimeout(commandTimeout);
+      }
     };
   }, [commandIndex]); // 只依賴 commandIndex
 

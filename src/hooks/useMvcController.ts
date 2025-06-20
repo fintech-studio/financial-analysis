@@ -56,23 +56,22 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
   optionsRef.current = options;
 
   const reload = useCallback(async () => {
-    const currentLoaders = loadersRef.current;
     const currentOptions = optionsRef.current;
+    const currentLoaders = loadersRef.current;
+
+    setLoading((prev) => {
+      const newLoading = {} as Record<keyof T, boolean>;
+      Object.keys(currentLoaders).forEach((key) => {
+        newLoading[key as keyof T] = true;
+      });
+      return newLoading;
+    });
+
+    setErrors({} as Record<keyof T, string>);
+    setProgress({ loaded: 0, total: Object.keys(currentLoaders).length });
 
     const keys = Object.keys(currentLoaders) as Array<keyof T>;
-    const total = keys.length;
     let loaded = 0;
-
-    setIsComplete(false);
-
-    // 初始化loading狀態
-    const initialLoading = {} as Record<keyof T, boolean>;
-    keys.forEach((key) => {
-      initialLoading[key] = true;
-    });
-    setLoading(initialLoading);
-    setErrors({} as Record<keyof T, string>);
-    setProgress({ loaded: 0, total });
 
     // 使用 Promise.allSettled 來並行載入，避免一個失敗影響其他
     const results = await Promise.allSettled(
@@ -115,13 +114,13 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
     setData((prev) => ({ ...prev, ...newData }));
     setErrors(newErrors);
     setLoading(newLoading);
-    setProgress({ loaded, total });
+    setProgress({ loaded, total: keys.length });
     setIsComplete(true);
 
-    currentOptions.onProgress?.(loaded, total);
-  }, []); // 空依賴陣列，因為我們使用 ref
+    currentOptions.onProgress?.(loaded, keys.length);
+  }, []); // 修復：使用空依賴數組，通過 ref 訪問最新值
 
-  // 修復：只在組件掛載時執行一次
+  // 修復：只在組件掛載時執行一次，避免無限重載
   const hasExecutedRef = useRef(false);
 
   useEffect(() => {

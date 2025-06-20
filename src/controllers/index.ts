@@ -5,3 +5,4 @@ export * from "./StockController";
 export * from "./PortfolioController";
 export * from "./MarketController";
 export * from "./AIPredictionController";
+export { DatabaseController } from "./DatabaseController";
