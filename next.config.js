@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 根據環境變數控制靜態輸出
+  ...(process.env.STATIC_EXPORT === "true"
+    ? {
+        output: "export",
+        trailingSlash: true,
+      }
+    : {}),
   images: {
     unoptimized: true,
   },

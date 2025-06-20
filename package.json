@@ -5,10 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:static": "cross-env STATIC_EXPORT=true NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
     "export": "next build && next export",
-    "deploy": "next build && next export && touch out/.nojekyll",
+    "deploy": "npm run build:static && touch out/.nojekyll",
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "cross-env": "^7.0.3",
     "postcss": "^8.5.4",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3"
