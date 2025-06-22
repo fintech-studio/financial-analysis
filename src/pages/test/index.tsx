@@ -5,6 +5,7 @@ import {
   ChartBarIcon,
   CogIcon,
   BeakerIcon,
+  ArrowTrendingUpIcon,
 } from "@heroicons/react/24/outline";
 
 const TestPage: React.FC = () => {
@@ -18,6 +19,16 @@ const TestPage: React.FC = () => {
       bgColor: "bg-blue-50",
       borderColor: "border-blue-200",
       hoverColor: "hover:border-blue-300",
+    },
+    {
+      title: "股票查詢測試",
+      description: "輸入股票代號查詢資料庫數據",
+      href: "/test/stock-query",
+      icon: ArrowTrendingUpIcon,
+      color: "text-pink-600",
+      bgColor: "bg-pink-50",
+      borderColor: "border-pink-200",
+      hoverColor: "hover:border-pink-300",
     },
     {
       title: "圖表測試",

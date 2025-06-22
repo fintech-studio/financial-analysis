@@ -149,93 +149,93 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
     {
       label: "查詢最新",
       query:
-        "SELECT TOP 100 *\nFROM stock_data\nWHERE symbol = 'AAPL' ORDER BY date DESC;",
+        "SELECT TOP 100 *\nFROM stock_data_1D\nWHERE symbol = 'AAPL' ORDER BY datetime DESC;",
       category: "query",
       color: "bg-blue-100 hover:bg-blue-200 text-blue-700",
     },
     {
       label: "RSI 比較",
       query:
-        "SELECT TOP 100 symbol, date, rsi_14, close_price\nFROM stock_data\nWHERE symbol IN ('2330', 'AAPL') AND date >= DATEADD(MONTH, -3, GETDATE())\nORDER BY date DESC, symbol;",
+        "SELECT TOP 100 symbol, datetime, rsi_14, close_price\nFROM stock_data_1D\nWHERE datetime = (SELECT MAX(datetime) FROM stock_data_1D)\nORDER BY datetime DESC, symbol;",
       category: "analysis",
       color: "bg-purple-100 hover:bg-purple-200 text-purple-700",
     },
     {
       label: "日期範圍",
       query:
-        "SELECT TOP 100 *\nFROM stock_data\nWHERE date BETWEEN '2025-01-01' AND '2025-12-31'\nORDER BY date DESC;",
+        "SELECT TOP 100 *\nFROM stock_data_1H\nWHERE datetime BETWEEN '2025-06-20T09:00:00' AND '2025-12-31'\nORDER BY datetime ASC;",
       category: "query",
       color: "bg-blue-100 hover:bg-blue-200 text-blue-700",
     },
     {
       label: "特定股票",
       query:
-        "SELECT TOP 100 *\nFROM stock_data\nWHERE symbol = 'AAPL'\nORDER BY date DESC;",
+        "SELECT TOP 100 *\nFROM stock_data_1D\nWHERE symbol = 'AAPL'\nORDER BY datetime DESC;",
       category: "query",
       color: "bg-blue-100 hover:bg-blue-200 text-blue-700",
     },
     {
       label: "技術指標異常",
       query:
-        "SELECT *\nFROM stock_data\nWHERE date = (SELECT MAX(date) FROM stock_data) AND (rsi_14 < 30 OR rsi_14 > 70)\nORDER BY date DESC;",
+        "SELECT SYMBOL, DATETIME, OPEN_PRICE, HIGH_PRICE, LOW_PRICE, CLOSE_PRICE, VOLUME, RSI_14\nFROM stock_data_1D\nWHERE datetime = (SELECT MAX(datetime) FROM stock_data_1D) AND (rsi_14 < 30 OR rsi_14 > 70)\nORDER BY datetime DESC;",
       category: "analysis",
       color: "bg-purple-100 hover:bg-purple-200 text-purple-700",
     },
     {
       label: "統計股票數量",
       query:
-        "SELECT symbol, COUNT(*) as record_count\nFROM stock_data\nGROUP BY symbol\nORDER BY symbol ASC;",
+        "SELECT symbol, COUNT(*) as record_count\nFROM stock_data_1D\nGROUP BY symbol\nORDER BY symbol ASC;",
       category: "stats",
       color: "bg-green-100 hover:bg-green-200 text-green-700",
     },
     {
       label: "⚠️ 修改數據",
       query:
-        "-- 危險操作\nUPDATE stock_data\nSET open_price='0.00'\nWHERE id = 0",
+        "-- 危險操作 --\nUPDATE TABLE_NAME\nSET open_price='0.00', high_price='0.00', low_price='0.00', close_price='0.00', volume='0'\nWHERE id = 0",
       category: "danger",
       color: "bg-red-100 hover:bg-red-200 text-red-700 border-red-300",
     },
     {
       label: "⚠️ 新增數據",
       query:
-        "-- 危險操作\nINSERT INTO stock_data (symbol, date, open_price, high_price, low_price, close_price, volume)\nVALUES ('SYMBOL', '2030-01-01', '0.00', '0.00', '0.00', '0.00', 0);",
+        "-- 危險操作 --\nINSERT INTO TABLE_NAME (symbol, datetime, open_price, high_price, low_price, close_price, volume)\nVALUES ('SYMBOL', '2030-01-01T00:00:00', '0.00', '0.00', '0.00', '0.00', '0');",
       category: "danger",
       color: "bg-red-100 hover:bg-red-200 text-red-700 border-red-300",
     },
     {
       label: "⚠️ 刪除數據",
-      query: "-- 危險操作\nDELETE FROM stock_data\nWHERE id = 0",
+      query: "-- 危險操作 --\nDELETE FROM TABLE_NAME\nWHERE id = 0",
       category: "danger",
       color: "bg-red-100 hover:bg-red-200 text-red-700 border-red-300",
     },
     {
       label: "⚠️ 新增資料表",
       query:
-        "-- 危險操作\nCREATE TABLE TABLE_NAME (\n  id INT PRIMARY KEY,\n  symbol VARCHAR(10),\n  date DATE,\n  open_price DECIMAL(10, 2),\n  high_price DECIMAL(10, 2),\n  low_price DECIMAL(10, 2),\n  close_price DECIMAL(10, 2),\n  volume INT\n);",
+        "-- 危險操作 --\nCREATE TABLE TABLE_NAME (\n  id INT PRIMARY KEY,\n  symbol VARCHAR(10),\n  datetime DATETIME,\n  open_price DECIMAL(10, 2),\n  high_price DECIMAL(10, 2),\n  low_price DECIMAL(10, 2),\n  close_price DECIMAL(10, 2),\n  volume INT\n);",
       category: "danger",
       color: "bg-red-100 hover:bg-red-200 text-red-700 border-red-300",
     },
     {
       label: "⚠️ 清空資料表",
-      query: "-- 危險操作\nTRUNCATE TABLE stock_data",
+      query: "-- 危險操作 --\nTRUNCATE TABLE TABLE_NAME",
       category: "danger",
       color: "bg-red-100 hover:bg-red-200 text-red-700 border-red-300",
     },
     {
       label: "⚠️ 刪除資料表",
-      query: "-- 危險操作\nDROP TABLE IF EXISTS TABLE_NAME",
+      query: "-- 危險操作 --\nDROP TABLE IF EXISTS TABLE_NAME",
       category: "danger",
       color: "bg-red-100 hover:bg-red-200 text-red-700 border-red-300",
     },
     {
       label: "⚠️ 新增資料庫",
-      query: "-- 危險操作\nCREATE DATABASE DATABASE_NAME;",
+      query: "-- 危險操作 --\nCREATE DATABASE DATABASE_NAME;",
       category: "danger",
       color: "bg-red-100 hover:bg-red-200 text-red-700 border-red-300",
     },
     {
       label: "⚠️ 刪除資料庫",
-      query: "-- 危險操作\nDROP DATABASE IF EXISTS DATABASE_NAME",
+      query: "-- 危險操作 --\nDROP DATABASE IF EXISTS DATABASE_NAME",
       category: "danger",
       color: "bg-red-100 hover:bg-red-200 text-red-700 border-red-300",
     },
@@ -254,7 +254,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
       color: "bg-green-100 hover:bg-green-200 text-green-700",
     },
     {
-      label: "查詢資料庫檔案",
+      label: "查詢資料庫屬性",
       query: "select  * from sys.database_files",
       category: "stats",
       color: "bg-green-100 hover:bg-green-200 text-green-700",

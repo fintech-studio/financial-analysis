@@ -1,0 +1,233 @@
+import { useState, useEffect, useCallback, useMemo } from "react";
+
+interface StockData {
+  symbol: string;
+  datetime: string;
+  open_price?: number;
+  high_price?: number;
+  low_price?: number;
+  close_price: number;
+  volume?: number;
+  [key: string]: any;
+}
+
+interface CandlestickData {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume?: number;
+}
+
+interface StockStats {
+  latest: number;
+  change: number;
+  changePercent: number;
+  isRising: boolean;
+  high: number;
+  low: number;
+  volume?: number;
+  open_price?: number;
+  open?: number;
+  datetime?: string;
+}
+
+interface DatabaseConfig {
+  server: string;
+  user: string;
+  password: string;
+  database: string;
+  port?: string;
+}
+
+const TIMEFRAMES = {
+  "1d": { name: "日線", table: "stock_data_1d" },
+  "1h": { name: "時線", table: "stock_data_1h" },
+};
+
+export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
+  const [data, setData] = useState<StockData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const databaseConfig = useMemo<DatabaseConfig>(
+    () => ({
+      server: "localhost",
+      user: "testuser",
+      password: "testuserPass123!",
+      database: "StockData",
+      port: "1433",
+    }),
+    []
+  );
+
+  const fetchData = useCallback(async () => {
+    if (!symbol.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const query = `
+        SELECT
+          symbol, datetime, open_price, high_price, low_price, close_price, volume,
+          rsi_5, rsi_7, rsi_10, rsi_14, rsi_21,
+          dif, macd, macd_histogram,
+          rsv, k_value, d_value, j_value,
+          ma5, ma10, ma20, ma60, ema12, ema26,
+          bb_upper, bb_middle, bb_lower,
+          atr, cci, willr, mom
+        FROM ${TIMEFRAMES[timeframe].table} 
+        WHERE symbol = @symbol
+        ORDER BY datetime DESC
+      `;
+
+      const response = await fetch("/api/database/execute-query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          config: databaseConfig,
+          query: query.trim(),
+          params: { symbol: symbol.toUpperCase() },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`查詢失敗: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setData(result.data || []);
+      } else {
+        throw new Error(result.error || "查詢失敗");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "未知錯誤");
+    } finally {
+      setLoading(false);
+    }
+  }, [symbol, timeframe, databaseConfig]);
+
+  const candlestickData = useMemo((): CandlestickData[] => {
+    if (!data.length) return [];
+
+    return data
+      .filter(
+        (item) =>
+          item.open_price !== undefined &&
+          item.high_price !== undefined &&
+          item.low_price !== undefined &&
+          item.close_price !== undefined
+      )
+      .slice()
+      .reverse()
+      .map((item) => ({
+        date: item.datetime,
+        open: Number(item.open_price),
+        high: Number(item.high_price),
+        low: Number(item.low_price),
+        close: Number(item.close_price),
+        volume: item.volume ? Number(item.volume) : undefined,
+      }));
+  }, [data]);
+
+  const technicalData = useMemo(() => {
+    if (!data.length) return undefined;
+
+    const reversedData = data.slice().reverse();
+    const result: any = {};
+
+    const indicators = [
+      "rsi_5",
+      "rsi_7",
+      "rsi_10",
+      "rsi_14",
+      "rsi_21",
+      "dif",
+      "macd",
+      "macd_histogram",
+      "k_value",
+      "d_value",
+      "j_value",
+      "ma5",
+      "ma10",
+      "ma20",
+      "ma60",
+      "ema12",
+      "ema26",
+      "bb_upper",
+      "bb_middle",
+      "bb_lower",
+      "atr",
+      "cci",
+      "willr",
+      "mom",
+    ];
+
+    indicators.forEach((indicator) => {
+      const values = reversedData
+        .map((d) => d[indicator])
+        .filter((v) => v != null && !isNaN(Number(v)))
+        .map((v) => Number(v));
+
+      if (values.length > 0) {
+        result[indicator] = values;
+      }
+    });
+
+    return result;
+  }, [data]);
+  const stats = useMemo((): StockStats | null => {
+    if (!candlestickData.length || !data.length) return null;
+
+    const latest = candlestickData[candlestickData.length - 1];
+    const latestOriginalData = data[0]; // 因為 data 是按 datetime DESC 排序，所以第一個是最新的
+
+    const previous =
+      candlestickData.length > 1
+        ? candlestickData[candlestickData.length - 2]
+        : latest;
+
+    const change = latest.close - previous.close;
+    const changePercent = (change / previous.close) * 100;
+
+    return {
+      latest: latest.close,
+      change,
+      changePercent,
+      isRising: change >= 0,
+      high: latest.high,
+      low: latest.low,
+      volume: latest.volume,
+      open_price: latest.open,
+      open: latest.open,
+      datetime: latestOriginalData?.datetime || latest.date,
+    };
+  }, [candlestickData, data]);
+
+  const refetch = useCallback(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    data,
+    loading,
+    error,
+    stats,
+    candlestickData,
+    technicalData,
+    refetch,
+    clearError,
+  };
+};
