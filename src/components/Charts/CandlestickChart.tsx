@@ -707,6 +707,13 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
     technicalIndicators,
   ]);
 
+  // 修正全螢幕時自動滾到最上方
+  useEffect(() => {
+    if (isFullscreen) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [isFullscreen]);
+
   // 優化的視窗大小處理
   useEffect(() => {
     const handleResize = () => {

@@ -161,14 +161,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col xl:flex-row gap-4 items-end">
           {/* 股票搜尋 */}
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <MagnifyingGlassIcon className="w-4 h-4 inline mr-1" />
-              股票代號
+              金融代號
             </label>
             <div className="relative">
               <input
@@ -178,7 +178,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 onKeyDown={handleKeyDown}
                 onFocus={handleFocus}
                 onBlur={handleBlur}
-                placeholder="輸入股票代號 (例: 2330, AAPL)"
+                placeholder="輸入金融代號 (例: 2330, AAPL, 0050, CL=F)"
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
                 disabled={loading}
                 aria-autocomplete="list"

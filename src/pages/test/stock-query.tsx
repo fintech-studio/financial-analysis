@@ -100,10 +100,10 @@ const StockAnalysisPage: React.FC = () => {
           className="text-center py-8"
         >
           <h1 className="text-4xl font-light text-gray-900 mb-3">
-            股票分析平台
+            金融分析查詢平台
           </h1>
           <p className="text-gray-600 text-lg font-light max-w-xl mx-auto">
-            專業技術分析與智能投資建議
+            專業技術分析、即時數據查詢。
           </p>
         </motion.div>
 
