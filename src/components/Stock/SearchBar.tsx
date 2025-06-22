@@ -21,14 +21,24 @@ interface SearchBarProps {
 }
 
 const POPULAR_STOCKS = [
-  { symbol: "2330", name: "台積電", type: "TW" },
-  { symbol: "2454", name: "聯發科", type: "TW" },
-  { symbol: "2317", name: "鴻海", type: "TW" },
-  { symbol: "0050", name: "元大台灣50", type: "TW" },
+  { symbol: "2317", name: "鴻海", type: "上市" },
+  { symbol: "2330", name: "台積電", type: "上市" },
+  { symbol: "2454", name: "聯發科", type: "上市" },
+  { symbol: "9950", name: "萬國通", type: "上櫃" },
   { symbol: "AAPL", name: "Apple", type: "US" },
   { symbol: "TSLA", name: "Tesla", type: "US" },
   { symbol: "NVDA", name: "NVIDIA", type: "US" },
   { symbol: "MSFT", name: "Microsoft", type: "US" },
+  { symbol: "^DJI", name: "道瓊工業指數", type: "US" },
+  { symbol: "^GSPC", name: "標普500指數", type: "US" },
+  { symbol: "^HSI", name: "恆生指數", type: "HK" },
+  { symbol: "^IXIC", name: "納斯達克指數", type: "US" },
+  { symbol: "^N225", name: "日經225指數", type: "JP" },
+  { symbol: "^TWII", name: "台灣加權指數", type: "TW" },
+  { symbol: "0050", name: "元大台灣50", type: "ETF" },
+  { symbol: "00878", name: "國泰永續高股息", type: "ETF" },
+  { symbol: "CL=F", name: "原油期貨", type: "Commodity" },
+  { symbol: "GC=F", name: "黃金期貨", type: "Commodity" },
 ];
 
 // 防抖 Hook

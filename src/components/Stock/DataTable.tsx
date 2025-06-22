@@ -47,10 +47,36 @@ const COLUMNS: ColumnConfig[] = [
   { key: "low_price", name: "最低", type: "price_low", width: "w-24" },
   { key: "close_price", name: "收盤", type: "price_close", width: "w-24" },
   { key: "volume", name: "成交量", type: "volume", width: "w-32" },
+  { key: "rsi_5", name: "RSI(5)", type: "indicator", width: "w-20" },
+  { key: "rsi_7", name: "RSI(7)", type: "indicator", width: "w-20" },
+  { key: "rsi_10", name: "RSI(10)", type: "indicator", width: "w-20" },
   { key: "rsi_14", name: "RSI(14)", type: "indicator", width: "w-20" },
+  { key: "rsi_21", name: "RSI(21)", type: "indicator", width: "w-20" },
+  { key: "dif", name: "DIF", type: "indicator", width: "w-20" },
   { key: "macd", name: "MACD", type: "indicator", width: "w-20" },
+  {
+    key: "macd_histogram",
+    name: "MACD Histogram",
+    type: "indicator",
+    width: "w-20",
+  },
+  { key: "rsv", name: "RSV", type: "indicator", width: "w-20" },
   { key: "k_value", name: "K值", type: "indicator", width: "w-20" },
+  { key: "d_value", name: "D值", type: "indicator", width: "w-20" },
+  { key: "j_value", name: "J值", type: "indicator", width: "w-20" },
   { key: "ma5", name: "MA5", type: "indicator", width: "w-20" },
+  { key: "ma10", name: "MA10", type: "indicator", width: "w-20" },
+  { key: "ma20", name: "MA20", type: "indicator", width: "w-20" },
+  { key: "ma60", name: "MA60", type: "indicator", width: "w-20" },
+  { key: "ema12", name: "EMA12", type: "indicator", width: "w-20" },
+  { key: "ema26", name: "EMA26", type: "indicator", width: "w-20" },
+  { key: "bb_upper", name: "布林上軌", type: "indicator", width: "w-20" },
+  { key: "bb_middle", name: "布林中軌", type: "indicator", width: "w-20" },
+  { key: "bb_lower", name: "布林下軌", type: "indicator", width: "w-20" },
+  { key: "atr", name: "ATR平均真實波幅", type: "indicator", width: "w-20" },
+  { key: "cci", name: "CCI商品通道指標", type: "indicator", width: "w-20" },
+  { key: "willr", name: "威廉指標", type: "indicator", width: "w-20" },
+  { key: "mom", name: "動量指標", type: "indicator", width: "w-20" },
 ];
 
 const DataTable: React.FC<DataTableProps> = ({ data, timeframe }) => {
@@ -59,9 +85,19 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [showFilters, setShowFilters] = useState(false);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(
-    COLUMNS.map((col) => col.key)
-  );
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([
+    "datetime",
+    "open_price",
+    "high_price",
+    "low_price",
+    "close_price",
+    "volume",
+    "rsi_14",
+    "ma5",
+    "macd",
+    "k_value",
+    "d_value",
+  ]);
 
   // 格式化函數
   const formatValue = (value: any, column: ColumnConfig): string => {
@@ -100,8 +136,8 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe }) => {
       const minute = String(date.getUTCMinutes()).padStart(2, "0");
 
       return timeframe === "1h"
-        ? `${month}/${day} ${hour}:${minute}`
-        : `${month}/${day}`;
+        ? `${year}/${month}/${day} ${hour}:${minute}`
+        : `${year}/${month}/${day}`;
     } catch {
       return dateString;
     }
@@ -383,6 +419,13 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe }) => {
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                首頁
+              </button>
+              <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -400,6 +443,13 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe }) => {
                 className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 下一頁
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                末頁
               </button>
             </div>
           </div>

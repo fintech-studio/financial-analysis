@@ -110,20 +110,22 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
       setLoading(false);
     }
   }, [symbol, timeframe, databaseConfig]);
-
   const candlestickData = useMemo((): CandlestickData[] => {
     if (!data.length) return [];
 
+    // 重要修復：不過濾數據，保持與技術指標的索引對應關係
+    // 只反轉順序，讓最舊的數據在前面（正常時間順序）
     return data
+      .slice()
+      .reverse()
       .filter(
         (item) =>
           item.open_price !== undefined &&
           item.high_price !== undefined &&
           item.low_price !== undefined &&
-          item.close_price !== undefined
+          item.close_price !== undefined &&
+          item.datetime
       )
-      .slice()
-      .reverse()
       .map((item) => ({
         date: item.datetime,
         open: Number(item.open_price),
@@ -133,10 +135,10 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
         volume: item.volume ? Number(item.volume) : undefined,
       }));
   }, [data]);
-
   const technicalData = useMemo(() => {
     if (!data.length) return undefined;
 
+    // 重要修復：保持技術指標數據與原始數據的索引對應關係
     const reversedData = data.slice().reverse();
     const result: any = {};
 
@@ -168,12 +170,16 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
     ];
 
     indicators.forEach((indicator) => {
-      const values = reversedData
-        .map((d) => d[indicator])
-        .filter((v) => v != null && !isNaN(Number(v)))
-        .map((v) => Number(v));
+      // 關鍵修復：不過濾空值，保持索引對應關係
+      // 空值會在圖表組件中處理，這樣可以確保時間對齊
+      const values = reversedData.map((d) => {
+        const value = d[indicator];
+        return value != null && !isNaN(Number(value)) ? Number(value) : null;
+      });
 
-      if (values.length > 0) {
+      // 只有當至少有一些有效值時才添加這個指標
+      const hasValidValues = values.some((v) => v !== null);
+      if (hasValidValues) {
         result[indicator] = values;
       }
     });

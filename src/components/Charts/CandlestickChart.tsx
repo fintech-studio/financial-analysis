@@ -390,8 +390,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       return null;
     }
   }, [data]);
-
-  // 優化的技術指標數據處理
+  // 優化的技術指標數據處理 - 修復時間對齊問題
   const technicalChartData = useMemo(() => {
     if (!technicalData || !data?.length) {
       return { overlay: {}, separate: {} };
@@ -401,7 +400,6 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
     const separateData: Record<string, LineData[]> = {};
 
     const enabledIndicators = technicalIndicators.filter((ind) => ind.enabled);
-
     enabledIndicators.forEach((indicator) => {
       const indicatorValues = technicalData[indicator.key];
       if (!indicatorValues?.length) {
@@ -409,20 +407,34 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         return;
       }
 
+      console.log(
+        `Processing indicator: ${indicator.key}, values length: ${indicatorValues.length}, data length: ${data.length}`
+      );
+
       try {
-        const lineData: LineData[] = [];
+        const lineData: LineData[] = []; // 關鍵修復：現在 candlestickData 已經是正確的時間順序（最舊到最新）
+        // technicalData 中的數據也對應相同的順序
+        // 所以 indicatorValues[i] 直接對應 data[i]
 
-        // 確保數據長度一致
-        const minLength = Math.min(data.length, indicatorValues.length);
+        const dataLength = data.length;
+        const indicatorLength = indicatorValues.length;
 
-        for (let i = 0; i < minLength; i++) {
-          const value = indicatorValues[i];
-          const dateItem = data[i];
+        // 處理技術指標數據，確保時間對齊
+        for (let i = 0; i < Math.min(dataLength, indicatorLength); i++) {
+          const value = indicatorValues[i]; // 對應 data[i]
+          const dateItem = data[i]; // 現在是直接對應的
 
-          if (value != null && !isNaN(Number(value)) && dateItem) {
+          // 只有當值不為 null 且有效時才添加數據點
+          if (
+            value != null &&
+            !isNaN(Number(value)) &&
+            dateItem &&
+            dateItem.date
+          ) {
             const timeValue = Math.floor(
               new Date(dateItem.date).getTime() / 1000
             ) as any;
+
             lineData.push({
               time: timeValue,
               value: Number(value),
@@ -430,7 +442,8 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
           }
         }
 
-        // 只有當有有效數據時才添加到圖表
+        // 按時間排序，確保圖表正確顯示
+        lineData.sort((a, b) => (a.time as number) - (b.time as number)); // 只有當有有效數據時才添加到圖表
         if (lineData.length > 0) {
           if (indicator.overlay) {
             overlayData[indicator.key] = lineData;

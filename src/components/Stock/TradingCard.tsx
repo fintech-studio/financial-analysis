@@ -38,7 +38,7 @@ const TradingCard: React.FC<TradingCardProps> = ({
   };
 
   const formatPrice = (price?: number): string => {
-    return price ? `$${price.toFixed(2)}` : "--";
+    return price ? `${price.toFixed(2)}` : "--";
   };
   const formatDateTime = (datetime?: string): string => {
     if (!datetime) return "--";
