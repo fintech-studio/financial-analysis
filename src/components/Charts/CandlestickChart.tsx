@@ -381,7 +381,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         .map((item) => ({
           time: Math.floor(new Date(item.date).getTime() / 1000) as any,
           value: Number(item.volume),
-          color: item.close >= item.open ? "#10b98160" : "#ef444460",
+          color: item.close >= item.open ? "#ef444460" : "#10b98160", // 上漲紅色，下跌綠色
         }));
 
       return { candleData, volumeData };
@@ -549,12 +549,12 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
       // 添加K線圖
       const candlestickSeries = chart.addCandlestickSeries({
-        upColor: "#10b981",
-        downColor: "#ef4444",
-        borderDownColor: "#dc2626",
-        borderUpColor: "#059669",
-        wickDownColor: "#dc2626",
-        wickUpColor: "#059669",
+        upColor: "#ef4444", // 上漲紅色
+        downColor: "#10b981", // 下跌綠色
+        borderUpColor: "#dc2626", // 上漲紅色
+        borderDownColor: "#059669", // 下跌綠色
+        wickUpColor: "#dc2626", // 上漲紅色
+        wickDownColor: "#059669", // 下跌綠色
         priceLineVisible: true,
         lastValueVisible: true,
       });
@@ -810,11 +810,17 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
               <div className="hidden lg:flex items-center space-x-4 text-sm">
                 <span className="text-gray-600">
                   最新價格:{" "}
-                  <strong>{Number(stats.latest.close).toFixed(2)}</strong>
+                  <strong
+                    className={`${
+                      stats.isRising ? "text-red-600" : "text-green-600"
+                    }`}
+                  >
+                    {Number(stats.latest.close).toFixed(2)}
+                  </strong>
                 </span>
                 <span
                   className={`font-medium ${
-                    stats.isRising ? "text-green-600" : "text-red-600"
+                    stats.isRising ? "text-red-600" : "text-green-600"
                   }`}
                 >
                   {stats.change > 0 ? "+" : ""}
@@ -835,7 +841,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
                   : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
-              技術指標
+              技術指標設定
             </button>
 
             <button
@@ -914,19 +920,19 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
                 {groupedIndicators[selectedCategory]?.map((indicator) => (
                   <label
                     key={indicator.key}
-                    className={`flex items-center p-3 rounded-md border cursor-pointer transition-colors ${
+                    className={`flex flex-col items-start p-3 rounded-md border cursor-pointer transition-colors ${
                       indicator.enabled
                         ? "border-gray-900 bg-gray-50"
                         : "border-gray-200 bg-white hover:border-gray-300"
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={indicator.enabled}
-                      onChange={() => toggleIndicator(indicator.key)}
-                      className="sr-only"
-                    />
                     <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={indicator.enabled}
+                        onChange={() => toggleIndicator(indicator.key)}
+                        className="sr-only"
+                      />
                       <div
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: indicator.color }}
@@ -935,6 +941,11 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
                         {indicator.name}
                       </span>
                     </div>
+                    {indicator.description && (
+                      <span className="mt-1 text-xs text-gray-500">
+                        {indicator.description}
+                      </span>
+                    )}
                   </label>
                 ))}
               </div>

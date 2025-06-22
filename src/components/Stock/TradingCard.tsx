@@ -92,12 +92,16 @@ const TradingCard: React.FC<TradingCardProps> = ({
 
         {/* Price */}
         <div className="text-right">
-          <div className="text-2xl font-bold text-gray-900 mb-1">
+          <div
+            className={`text-2xl font-bold text-gray-900 mb-1 ${
+              isPositive ? "text-red-600" : "text-green-600"
+            }`}
+          >
             {formatPrice(stats.latest)}
           </div>
           <div
             className={`flex items-center text-sm font-medium ${
-              isPositive ? "text-green-600" : "text-red-600"
+              isPositive ? "text-red-600" : "text-green-600"
             }`}
           >
             {isPositive ? (
@@ -128,7 +132,7 @@ const TradingCard: React.FC<TradingCardProps> = ({
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
             最高 (H)
           </p>
-          <p className="text-lg font-semibold text-green-600">
+          <p className="text-lg font-semibold text-gray-900">
             {formatPrice(stats.high)}
           </p>
         </div>
@@ -137,7 +141,7 @@ const TradingCard: React.FC<TradingCardProps> = ({
           <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
             最低 (L)
           </p>
-          <p className="text-lg font-semibold text-red-600">
+          <p className="text-lg font-semibold text-gray-900">
             {formatPrice(stats.low)}
           </p>
         </div>
@@ -148,7 +152,7 @@ const TradingCard: React.FC<TradingCardProps> = ({
           </p>
           <p
             className={`text-lg font-semibold ${
-              isPositive ? "text-green-600" : "text-red-600"
+              isPositive ? "text-red-600" : "text-green-600"
             }`}
           >
             {formatPrice(stats.latest)}
