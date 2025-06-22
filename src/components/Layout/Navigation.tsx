@@ -6,7 +6,6 @@ import {
   XMarkIcon,
   UserCircleIcon,
   ChevronDownIcon,
-  HomeIcon,
   ChartBarIcon,
   NewspaperIcon,
   ChatBubbleLeftRightIcon,
@@ -53,11 +52,18 @@ const Navigation: React.FC = () => {
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [openMobileDropdown, setOpenMobileDropdown] = useState<string | null>(
+    null
+  );
 
   // 通知狀態
   const [notifications, setNotifications] = useState<Notification[]>([
-    { id: 1, text: "台股大盤上漲 1.2%", read: false },
-    { id: 2, text: "您關注的台積電今日漲幅超過 3%", read: false },
+    {
+      id: 1,
+      text: "🥳新增了一些股票、指數、ETF和期貨的數據啦，趕快去看看吧!!",
+      read: false,
+    },
+    { id: 2, text: "網站全新設計~ 來體驗看看吧😆", read: false },
   ]);
   const [isNotificationsOpen, setIsNotificationsOpen] =
     useState<boolean>(false);
@@ -160,6 +166,18 @@ const Navigation: React.FC = () => {
     };
   }, [router.events]);
 
+  // 禁止背景滾动（手機選單開啟時）
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
   // 檢查路由是否活躍
   const isActive = (path: string): boolean => {
     if (path === "/") {
@@ -217,6 +235,11 @@ const Navigation: React.FC = () => {
     [openDropdown]
   );
 
+  // 手機版子選單展開/收合
+  const handleMobileDropdown = (itemName: string) => {
+    setOpenMobileDropdown(openMobileDropdown === itemName ? null : itemName);
+  };
+
   // 標記所有通知為已讀
   const markAllAsRead = (): void => {
     setNotifications(notifications.map((n) => ({ ...n, read: true })));
@@ -232,7 +255,7 @@ const Navigation: React.FC = () => {
             : "bg-white shadow-lg border-b border-gray-200"
         }`}
       >
-        <div className="container mx-auto px-4 lg:px-6">
+        <div className="container mx-auto px-2 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-20">
             {/* 左側 - 品牌Logo區域 */}
             <div className="flex items-center space-x-8">
@@ -363,7 +386,14 @@ const Navigation: React.FC = () => {
               {/* 通知按鈕 */}
               <div className="relative" onClick={handleMenuClick}>
                 <button
-                  onClick={handleNotificationClick}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) {
+                      router.push("/notifications");
+                      setIsNotificationsOpen(false);
+                    } else {
+                      handleNotificationClick(event as any);
+                    }
+                  }}
                   className="flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                 >
                   <div className="relative">
@@ -374,9 +404,12 @@ const Navigation: React.FC = () => {
                   </div>
                 </button>
 
-                {/* 通知下拉選單 */}
-                {isNotificationsOpen && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-0 animate-fade-in-down">
+                {/* 通知下拉選單（popover dropdown，僅桌面顯示） */}
+                {isNotificationsOpen && window.innerWidth >= 1024 && (
+                  <div
+                    className="absolute right-0 left-auto mt-2 w-80 max-w-[95vw] bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-0 animate-fade-in-down z-[300]"
+                    style={{ minWidth: "260px" }}
+                  >
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                       <span className="font-semibold text-gray-900">通知</span>
                       <button
@@ -485,81 +518,88 @@ const Navigation: React.FC = () => {
             </div>
           </div>
 
-          {/* 手機版下拉選單 - 重新設計 */}
+          {/* 手機版下拉選單 - 右上角浮動選單 */}
           {isMobileMenuOpen && (
-            <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-200/50 shadow-2xl">
-              <div className="px-4 py-6 space-y-1">
-                {/* 手機版搜尋框 */}
-                <div className="mb-6">
-                  <form onSubmit={handleSearchSubmit}>
-                    <div className="relative">
-                      <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="搜尋股票、新聞、討論..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                      />
-                    </div>
-                  </form>
-                </div>
-
-                {/* 導覽項目 */}
-                {navigationItems.map((item) => (
-                  <div key={item.name}>
-                    <Link
-                      href={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center space-x-4 px-4 py-4 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group"
-                    >
-                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                        <item.icon className="h-5 w-5 text-blue-600" />
+            <div className="lg:hidden absolute right-4 top-16 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/50 z-[200] animate-fade-in-down">
+              <div className="relative">
+                <div
+                  className="px-4 py-4 space-y-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* 手機版搜尋框 */}
+                  <div className="mb-4">
+                    <form onSubmit={handleSearchSubmit}>
+                      <div className="relative">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="搜尋股票、新聞、討論..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        />
                       </div>
-                      <div className="flex-1">
-                        <span className="font-medium text-base">
-                          {item.name}
-                        </span>
-                        {item.description && (
-                          <p className="text-sm text-gray-500 mt-0.5">
-                            {item.description}
-                          </p>
+                    </form>
+                  </div>
+                  {/* 導覽項目 */}
+                  {navigationItems.map((item) => (
+                    <div key={item.name} className="relative">
+                      {/* 容器點擊直接導航，右側按鈕展開子選單 */}
+                      <div className="flex items-center w-full">
+                        <button
+                          type="button"
+                          className="flex items-center flex-1 space-x-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 group focus:outline-none"
+                          onClick={() => router.push(item.href)}
+                        >
+                          <div className="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                            <item.icon className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <span className="font-medium text-base">
+                              {item.name}
+                            </span>
+                          </div>
+                        </button>
+                        {item.children && (
+                          <button
+                            type="button"
+                            className="ml-1 p-2 rounded-full hover:bg-blue-50 focus:outline-none"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMobileDropdown(item.name);
+                            }}
+                            aria-label="展開子選單"
+                          >
+                            <ChevronDownIcon
+                              className={`h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors ${
+                                openMobileDropdown === item.name
+                                  ? "rotate-180"
+                                  : ""
+                              }`}
+                            />
+                          </button>
                         )}
                       </div>
-                      <ChevronRightIcon className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
-                    </Link>
-
-                    {/* 手機版子選單 */}
-                    {item.children && (
-                      <div className="ml-6 mt-2 space-y-1">
-                        {item.children.map((subItem) => (
-                          <Link
-                            key={subItem.name}
-                            href={subItem.href}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all"
-                          >
-                            {subItem.icon && (
-                              <subItem.icon className="h-4 w-4" />
-                            )}
-                            <span className="text-sm">{subItem.name}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {/* 手機版操作按鈕 */}
-                <div className="pt-6 mt-6 border-t border-gray-200 space-y-3">
-                  <Link
-                    href="/auth"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center justify-center w-full px-4 py-3 text-white font-medium rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/25"
-                  >
-                    <UserCircleIcon className="h-5 w-5 mr-2" />
-                    登入帳戶
-                  </Link>
+                      {/* 子選單（展開/收合） */}
+                      {item.children && openMobileDropdown === item.name && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {item.children.map((subItem) => (
+                            <Link
+                              key={subItem.name}
+                              href={subItem.href}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all"
+                            >
+                              {subItem.icon && (
+                                <subItem.icon className="h-4 w-4" />
+                              )}
+                              <span className="text-sm">{subItem.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
