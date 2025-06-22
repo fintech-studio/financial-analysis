@@ -241,10 +241,10 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden"
+      className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
     >
       {/* Table Header */}
-      <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gray-100 rounded-lg">
@@ -255,8 +255,9 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
               {symbol}
             </h3>
             <p className="text-sm text-gray-500">
-              {timeframe === "1d" ? "日線數據" : "小時線數據"} • {data.length}{" "}
-              筆記錄
+              {timeframe === "1d" ? "日線" : "小時線"} • {data.length} 筆數據 •{" "}
+              {formatDate(data[data.length - 1].datetime)} ~{" "}
+              {formatDate(data[0].datetime)}
             </p>
             {/* </div> */}
           </div>
@@ -264,22 +265,24 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-2 rounded-lg transition-all duration-200 ${
+              className={`p-2 rounded-lg transition-all duration-200 flex items-center ${
                 showFilters
                   ? "bg-blue-100 text-blue-600"
                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"
               }`}
               title="顯示/隱藏篩選器"
             >
-              <FunnelIcon className="h-4 w-4" />
+              <FunnelIcon className="h-4 w-4 mr-1" />
+              <span className="text-sm font-normal">篩選</span>
             </button>
 
             <button
               onClick={exportToCSV}
-              className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-all duration-200"
+              className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-all duration-200 flex items-center"
               title="匯出 CSV"
             >
               <DocumentArrowDownIcon className="h-4 w-4" />
+              <span className="text-sm font-normal">下載 CSV</span>
             </button>
           </div>
         </div>
@@ -390,12 +393,8 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
                     <td
                       key={column.key}
                       className={`px-4 py-3 whitespace-nowrap text-sm ${
-                        column.type === "price_high"
-                          ? "text-green-600 font-medium"
-                          : column.type === "price_low"
-                          ? "text-red-600 font-medium"
-                          : column.type === "price_close"
-                          ? "text-gray-900 font-semibold"
+                        column.type === "datetime"
+                          ? "text-gray-700 font-medium"
                           : column.type === "indicator"
                           ? "text-blue-600 font-mono"
                           : "text-gray-700"

@@ -242,7 +242,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <div className="flex bg-gray-100 p-1 rounded-md">
               {[
                 { value: "1d", label: "日線" },
-                { value: "1h", label: "小時" },
+                { value: "1h", label: "小時線" },
               ].map((option) => (
                 <button
                   key={option.value}
@@ -260,26 +260,28 @@ const SearchBar: React.FC<SearchBarProps> = ({
             </div>
           </div>
           {/* 查詢按鈕 */}
-          <motion.button
-            whileHover={{ scale: loading ? 1 : 1.02 }}
-            whileTap={{ scale: loading ? 1 : 0.98 }}
-            onClick={() => {
-              onSymbolChange(inputValue);
-              onSearch();
-            }}
-            disabled={loading || !inputValue.trim()}
-            className="px-8 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium min-w-[100px]"
-            type="button"
-          >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />
-                查詢中
-              </div>
-            ) : (
-              "查詢"
-            )}
-          </motion.button>
+          <div className="w-[120px]">
+            <motion.button
+              whileHover={{ scale: loading ? 1 : 1.02 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              onClick={() => {
+                onSymbolChange(inputValue);
+                onSearch();
+              }}
+              disabled={loading || !inputValue.trim()}
+              className="px-4 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium w-full"
+              type="button"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />
+                  查詢中
+                </div>
+              ) : (
+                "查詢"
+              )}
+            </motion.button>
+          </div>
         </div>
         {/* 熱門股票 */}
         <div className="mt-6 pt-6 border-t border-gray-200">

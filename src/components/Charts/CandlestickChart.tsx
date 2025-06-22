@@ -779,6 +779,27 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
     );
   }, []);
 
+  // 新增：數據期間格式化（含時間）
+  const formatDateRange = (dataArr: any[]) => {
+    if (!dataArr || dataArr.length === 0) return "--";
+    const format = (d: any) => {
+      if (!d) return "--";
+      const date = new Date(d.datetime || d.date);
+      if (isNaN(date.getTime())) return "--";
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      if (timeframe === "1d") {
+        return `${year}/${month}/${day}`;
+      } else {
+        const hour = String(date.getUTCHours()).padStart(2, "0");
+        const minute = String(date.getUTCMinutes()).padStart(2, "0");
+        return `${year}/${month}/${day} ${hour}:${minute}`;
+      }
+    };
+    return `${format(dataArr[0])} ~ ${format(dataArr[dataArr.length - 1])}`;
+  };
+
   // 空狀態優化
   if (!chartData) {
     return (
@@ -807,11 +828,15 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <ChartBarIcon className="h-5 w-5 text-gray-600" />
+            </div>
             <h3 className="pt-2 text-2xl font-semibold text-gray-900">
               {title}
             </h3>
             <span className="text-sm text-gray-500">
-              {timeframe === "1d" ? "日線" : "小時線"} • {data.length} 筆數據
+              {timeframe === "1d" ? "日線" : "小時線"} • {data.length} 筆數據 •{" "}
+              {formatDateRange(data)}
             </span>
           </div>
 
