@@ -32,7 +32,7 @@ const ChartContainer: React.FC<ChartContainerProps> = ({
     <CandlestickChart
       data={data}
       technicalData={technicalData}
-      title={`${symbol} K線圖`}
+      title={`${symbol}`}
       height={600}
       showVolume={true}
       timeframe={timeframe}

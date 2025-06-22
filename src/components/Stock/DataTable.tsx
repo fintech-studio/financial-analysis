@@ -23,6 +23,7 @@ interface StockData {
 interface DataTableProps {
   data: StockData[];
   timeframe: "1d" | "1h";
+  symbol: string;
 }
 
 interface ColumnConfig {
@@ -79,7 +80,7 @@ const COLUMNS: ColumnConfig[] = [
   { key: "mom", name: "動量指標", type: "indicator", width: "w-20" },
 ];
 
-const DataTable: React.FC<DataTableProps> = ({ data, timeframe }) => {
+const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
   const [sortColumn, setSortColumn] = useState<string>("datetime");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -246,16 +247,18 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe }) => {
       <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <TableCellsIcon className="h-5 w-5 text-blue-600" />
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <TableCellsIcon className="h-5 w-5 text-gray-600" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">數據表格</h3>
-              <p className="text-sm text-gray-500">
-                {timeframe === "1d" ? "日線數據" : "小時線數據"} • {data.length}{" "}
-                筆記錄
-              </p>
-            </div>
+            {/* <div> */}
+            <h3 className="pt-2 text-2xl font-semibold text-gray-900">
+              {symbol}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {timeframe === "1d" ? "日線數據" : "小時線數據"} • {data.length}{" "}
+              筆記錄
+            </p>
+            {/* </div> */}
           </div>
 
           <div className="flex items-center gap-2">

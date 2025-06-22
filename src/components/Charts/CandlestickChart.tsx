@@ -807,36 +807,12 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <h3 className="pt-2 text-2xl font-semibold text-gray-900">
+              {title}
+            </h3>
             <span className="text-sm text-gray-500">
               {timeframe === "1d" ? "日線" : "小時線"} • {data.length} 筆數據
             </span>
-
-            {/* 價格統計 */}
-            {stats && (
-              <div className="hidden lg:flex items-center space-x-4 text-sm">
-                <span className="text-gray-600">
-                  最新價格:{" "}
-                  <strong
-                    className={`${
-                      stats.isRising ? "text-red-600" : "text-green-600"
-                    }`}
-                  >
-                    {Number(stats.latest.close).toFixed(2)}
-                  </strong>
-                </span>
-                <span
-                  className={`font-medium ${
-                    stats.isRising ? "text-red-600" : "text-green-600"
-                  }`}
-                >
-                  {stats.change > 0 ? "+" : ""}
-                  {stats.change.toFixed(2)} (
-                  {stats.changePercent > 0 ? "+" : ""}
-                  {stats.changePercent.toFixed(2)}%)
-                </span>
-              </div>
-            )}
           </div>
 
           <div className="flex items-center space-x-2">

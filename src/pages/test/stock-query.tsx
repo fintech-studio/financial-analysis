@@ -7,6 +7,7 @@ import DataTable from "@/components/Stock/DataTable";
 import LoadingSpinner from "@/components/Stock/LoadingSpinner";
 import { EmptyState, ErrorState } from "@/components/Stock/StateComponents";
 import { useStockData } from "@/hooks/useStockData";
+import { ChartBarIcon, TableCellsIcon } from "@heroicons/react/24/outline";
 
 const StockAnalysisPage: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState<string>("");
@@ -39,8 +40,20 @@ const StockAnalysisPage: React.FC = () => {
 
   const views = useMemo(
     () => [
-      { key: "chart", label: "圖表", icon: "📊" },
-      { key: "table", label: "數據", icon: "📋" },
+      {
+        key: "chart",
+        label: "圖表",
+        icon: (
+          <ChartBarIcon className="h-5 w-5 inline-block align-text-bottom" />
+        ),
+      },
+      {
+        key: "table",
+        label: "數據",
+        icon: (
+          <TableCellsIcon className="h-5 w-5 inline-block align-text-bottom" />
+        ),
+      },
     ],
     []
   );
@@ -71,7 +84,13 @@ const StockAnalysisPage: React.FC = () => {
           />
         );
       case "table":
-        return <DataTable data={data} timeframe={timeframe} />;
+        return (
+          <DataTable
+            data={data}
+            timeframe={timeframe}
+            symbol={selectedSymbol}
+          />
+        );
       default:
         return null;
     }
@@ -125,21 +144,6 @@ const StockAnalysisPage: React.FC = () => {
           />
         </motion.div>
 
-        {/* 交易卡片 */}
-        {stats && data && data.length > 0 && !loading && !error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <TradingCard
-              symbol={selectedSymbol}
-              stats={stats}
-              timeframe={timeframe}
-            />
-          </motion.div>
-        ) : null}
-
         {/* 簡約視圖切換 */}
         {data && data.length > 0 && (
           <motion.div
@@ -168,6 +172,21 @@ const StockAnalysisPage: React.FC = () => {
             </div>
           </motion.div>
         )}
+
+        {/* 交易卡片 */}
+        {stats && data && data.length > 0 && !loading && !error ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <TradingCard
+              symbol={selectedSymbol}
+              stats={stats}
+              timeframe={timeframe}
+            />
+          </motion.div>
+        ) : null}
 
         {/* 主要內容區域 */}
         <AnimatePresence mode="wait">

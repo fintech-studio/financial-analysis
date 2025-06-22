@@ -69,38 +69,66 @@ const TradingCard: React.FC<TradingCardProps> = ({
     }
   };
 
+  // 新增：根據 timeframe 顯示不同格式
+  const formatDateByTimeframe = (datetime?: string) => {
+    if (!datetime) return "--";
+    try {
+      let date = new Date(datetime);
+      if (isNaN(date.getTime())) {
+        const normalizedDatetime = datetime.replace("T", " ").replace("Z", "");
+        date = new Date(normalizedDatetime);
+      }
+      if (isNaN(date.getTime())) return datetime;
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      if (timeframe === "1d") {
+        return `${year}/${month}/${day}`;
+      } else {
+        const hour = String(date.getUTCHours()).padStart(2, "0");
+        const minute = String(date.getUTCMinutes()).padStart(2, "0");
+        return `${year}/${month}/${day} ${hour}:${minute}`;
+      }
+    } catch (error) {
+      return datetime;
+    }
+  };
+
   const isPositive = stats.change >= 0;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm hover:shadow-lg transition-shadow duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gray-100 rounded-lg">
-            <ChartBarIcon className="h-5 w-5 text-gray-600" />
-          </div>{" "}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        {/* 左側：圖標與標題 */}
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gray-50 rounded-xl flex items-center justify-center">
+            <ArrowTrendingUpIcon className="h-7 w-7 text-gray-500" />
+          </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">{symbol}</h2>
-            <p className="text-sm text-gray-500">
-              {timeframe === "1d" ? "日線" : "小時線"} - 最新數據
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              數據時間：{formatDateTime(stats.datetime)}
-            </p>
+            <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight leading-tight mb-1">
+              {symbol}
+            </h2>
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+              <span className="font-medium">
+                {timeframe === "1d" ? "日線" : "小時線"}
+              </span>
+              <span className="hidden sm:inline">|</span>
+              <span>最後更新：{formatDateByTimeframe(stats.datetime)}</span>
+            </div>
           </div>
         </div>
-
-        {/* Price */}
-        <div className="text-right">
+        {/* 右側：價格與漲跌幅 */}
+        <div className="text-right min-w-[120px] flex flex-col items-end justify-center">
           <div
-            className={`text-2xl font-bold text-gray-900 mb-1 ${
+            className={`text-3xl font-extrabold mb-1 ${
               isPositive ? "text-red-600" : "text-green-600"
             }`}
           >
             {formatPrice(stats.latest)}
           </div>
           <div
-            className={`flex items-center text-sm font-medium ${
+            className={`flex items-center text-base font-semibold ${
               isPositive ? "text-red-600" : "text-green-600"
             }`}
           >
@@ -112,60 +140,56 @@ const TradingCard: React.FC<TradingCardProps> = ({
             {isPositive ? "+" : ""}
             {stats.change ? stats.change.toFixed(2) : "0.00"} (
             {isPositive ? "+" : ""}
-            {stats.changePercent ? stats.changePercent.toFixed(2) : "0.00"}%)
+            {stats.changePercent ? stats.changePercent.toFixed(2) : "0.00"}% )
           </div>
         </div>
       </div>
 
       {/* OHLCV Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="flex flex-col items-center p-3 bg-gray-50 rounded-xl">
+          <span className="text-xs text-gray-500 uppercase tracking-wide mb-1">
             開盤 (O)
-          </p>
-          <p className="text-lg font-semibold text-gray-900">
+          </span>
+          <span className="text-lg font-bold text-gray-900">
             {formatPrice(stats.open_price || stats.open)}
-          </p>
+          </span>
         </div>
-
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+        <div className="flex flex-col items-center p-3 bg-gray-50 rounded-xl">
+          <span className="text-xs text-gray-500 uppercase tracking-wide mb-1">
             最高 (H)
-          </p>
-          <p className="text-lg font-semibold text-gray-900">
+          </span>
+          <span className="text-lg font-bold text-gray-900">
             {formatPrice(stats.high)}
-          </p>
+          </span>
         </div>
-
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+        <div className="flex flex-col items-center p-3 bg-gray-50 rounded-xl">
+          <span className="text-xs text-gray-500 uppercase tracking-wide mb-1">
             最低 (L)
-          </p>
-          <p className="text-lg font-semibold text-gray-900">
+          </span>
+          <span className="text-lg font-bold text-gray-900">
             {formatPrice(stats.low)}
-          </p>
+          </span>
         </div>
-
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+        <div className="flex flex-col items-center p-3 bg-gray-50 rounded-xl">
+          <span className="text-xs text-gray-500 uppercase tracking-wide mb-1">
             收盤 (C)
-          </p>
-          <p
-            className={`text-lg font-semibold ${
+          </span>
+          <span
+            className={`text-lg font-bold ${
               isPositive ? "text-red-600" : "text-green-600"
             }`}
           >
             {formatPrice(stats.latest)}
-          </p>
+          </span>
         </div>
-
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+        <div className="flex flex-col items-center p-3 bg-gray-50 rounded-xl">
+          <span className="text-xs text-gray-500 uppercase tracking-wide mb-1">
             成交量 (V)
-          </p>
-          <p className="text-lg font-semibold text-gray-900">
+          </span>
+          <span className="text-lg font-bold text-gray-900">
             {formatVolume(stats.volume)}
-          </p>
+          </span>
         </div>
       </div>
     </div>
