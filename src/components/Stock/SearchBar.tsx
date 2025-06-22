@@ -194,42 +194,44 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   <ArrowPathIcon className="w-5 h-5 text-gray-500 animate-spin" />
                 </div>
               )}
+              {/* 建議列表 */}
+              <AnimatePresence>
+                {showSuggestions && filteredStocks.length > 0 && (
+                  <motion.div
+                    ref={suggestionsRef}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute z-20 left-0 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                    id="stock-suggestions"
+                    role="listbox"
+                  >
+                    {filteredStocks.map((stock, index) => (
+                      <button
+                        key={stock.symbol}
+                        id={`suggestion-${index}`}
+                        onClick={() => handleSuggestionClick(stock.symbol)}
+                        className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                          index === selectedSuggestionIndex ? "bg-gray-50" : ""
+                        }`}
+                        role="option"
+                        aria-selected={index === selectedSuggestionIndex}
+                      >
+                        <div className="font-medium text-gray-900">
+                          {stock.symbol}
+                          <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                            {stock.type}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {stock.name}
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            {/* 建議列表 */}
-            <AnimatePresence>
-              {showSuggestions && filteredStocks.length > 0 && (
-                <motion.div
-                  ref={suggestionsRef}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto"
-                  id="stock-suggestions"
-                  role="listbox"
-                >
-                  {filteredStocks.map((stock, index) => (
-                    <button
-                      key={stock.symbol}
-                      id={`suggestion-${index}`}
-                      onClick={() => handleSuggestionClick(stock.symbol)}
-                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                        index === selectedSuggestionIndex ? "bg-gray-50" : ""
-                      }`}
-                      role="option"
-                      aria-selected={index === selectedSuggestionIndex}
-                    >
-                      <div className="font-medium text-gray-900">
-                        {stock.symbol}
-                        <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                          {stock.type}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-500">{stock.name}</div>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
           {/* 時間週期 */}
           <div className="min-w-[140px]">

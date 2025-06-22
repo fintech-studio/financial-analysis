@@ -9,7 +9,7 @@ import { EmptyState, ErrorState } from "@/components/Stock/StateComponents";
 import { useStockData } from "@/hooks/useStockData";
 
 const StockAnalysisPage: React.FC = () => {
-  const [selectedSymbol, setSelectedSymbol] = useState<string>("2330");
+  const [selectedSymbol, setSelectedSymbol] = useState<string>("");
   const [activeView, setActiveView] = useState<"chart" | "table" | "analytics">(
     "chart"
   );
@@ -126,7 +126,7 @@ const StockAnalysisPage: React.FC = () => {
         </motion.div>
 
         {/* 交易卡片 */}
-        {stats && (
+        {stats && data && data.length > 0 && !loading && !error ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -138,7 +138,7 @@ const StockAnalysisPage: React.FC = () => {
               timeframe={timeframe}
             />
           </motion.div>
-        )}
+        ) : null}
 
         {/* 簡約視圖切換 */}
         {data && data.length > 0 && (

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 interface StockData {
   symbol: string;
@@ -50,6 +50,11 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
   const [data, setData] = useState<StockData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const latestSymbolRef = useRef(symbol);
+
+  useEffect(() => {
+    latestSymbolRef.current = symbol;
+  }, [symbol]);
 
   const databaseConfig = useMemo<DatabaseConfig>(
     () => ({
@@ -67,6 +72,7 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
 
     setLoading(true);
     setError(null);
+    const currentSymbol = symbol;
 
     try {
       const query = `
@@ -93,6 +99,11 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
         }),
       });
 
+      if (latestSymbolRef.current !== currentSymbol) {
+        // symbol 已變動，丟棄這次請求結果
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`查詢失敗: ${response.status}`);
       }
@@ -101,13 +112,24 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
 
       if (result.success) {
         setData(result.data || []);
+        if (!result.data || result.data.length === 0) {
+          setError("查無資料");
+        }
       } else {
+        setData([]); // 查詢失敗時清空
         throw new Error(result.error || "查詢失敗");
       }
     } catch (err) {
+      if (latestSymbolRef.current !== currentSymbol) {
+        // symbol 已變動，丟棄這次請求錯誤
+        return;
+      }
+      setData([]); // 捕獲錯誤時也清空
       setError(err instanceof Error ? err.message : "未知錯誤");
     } finally {
-      setLoading(false);
+      if (latestSymbolRef.current === currentSymbol) {
+        setLoading(false);
+      }
     }
   }, [symbol, timeframe, databaseConfig]);
   const candlestickData = useMemo((): CandlestickData[] => {
@@ -225,6 +247,13 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // 修正：當 symbol 變動時，立即清空 data、stats 狀態，避免殘留舊資料
+  useEffect(() => {
+    setData([]);
+    // 這裡不需要 setStats，因為 stats 是 useMemo 計算的
+    setError(null);
+  }, [symbol, timeframe]);
 
   return {
     data,
