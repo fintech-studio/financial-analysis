@@ -6,6 +6,7 @@ import {
   CogIcon,
   BeakerIcon,
   ArrowTrendingUpIcon,
+  CodeBracketIcon,
 } from "@heroicons/react/24/outline";
 
 const TestPage: React.FC = () => {
@@ -21,14 +22,24 @@ const TestPage: React.FC = () => {
       hoverColor: "hover:border-blue-300",
     },
     {
-      title: "股票查詢測試",
-      description: "輸入股票代號查詢資料庫數據",
+      title: "金融市場查詢測試",
+      description: "輸入金融代號查詢資料庫數據",
       href: "/test/stock-query",
       icon: ArrowTrendingUpIcon,
       color: "text-pink-600",
       bgColor: "bg-pink-50",
       borderColor: "border-pink-200",
       hoverColor: "hover:border-pink-300",
+    },
+    {
+      title: "Python 測試",
+      description: "Python 腳本執行與測試",
+      href: "/test/run-python",
+      icon: CodeBracketIcon,
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50",
+      borderColor: "border-yellow-200",
+      hoverColor: "hover:border-yellow-300",
     },
     {
       title: "圖表測試",

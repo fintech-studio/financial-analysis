@@ -16,16 +16,9 @@ import {
 } from "lightweight-charts";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
-  AdjustmentsHorizontalIcon,
   ChartBarIcon,
-  SparklesIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 
 interface CandlestickData {
