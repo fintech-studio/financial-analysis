@@ -16,6 +16,9 @@ from utils.display_utils import (
 # 抑制警告
 warnings.filterwarnings("ignore")
 
+# 設置標準輸出為行緩衝模式，確保即時輸出
+sys.stdout.reconfigure(line_buffering=True)
+
 
 def parse_arguments():
     """解析命令行參數"""
@@ -73,7 +76,6 @@ def parse_arguments():
 def main():
     """主程式"""
     try:
-
         # 解析命令行參數
         (stocks, interval, indicators_only,
          show_all_stats, expand_history) = parse_arguments()
@@ -139,7 +141,7 @@ def main():
             )
 
             # 顯示處理結果摘要
-            print(format_processing_summary(results))
+            print(format_processing_summary(results), flush=True)
 
             # 顯示指定間隔的資料庫統計資訊
             stats = service.get_database_statistics(interval_str)

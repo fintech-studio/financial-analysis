@@ -21,7 +21,6 @@ interface SearchBarProps {
 }
 
 const POPULAR_STOCKS = [
-  { symbol: "2317", name: "鴻海", type: "上市" },
   { symbol: "2330", name: "台積電", type: "上市" },
   { symbol: "9950", name: "萬國通", type: "上櫃" },
   { symbol: "AAPL", name: "Apple", type: "US" },
@@ -29,17 +28,19 @@ const POPULAR_STOCKS = [
   { symbol: "000001.SS", name: "上證綜合指數", type: "CN" },
   { symbol: "^DJI", name: "道瓊工業指數", type: "US" },
   { symbol: "^GSPC", name: "標普500指數", type: "US" },
-  { symbol: "^HSI", name: "恆生指數", type: "HK" },
-  { symbol: "^IXIC", name: "納斯達克指數", type: "US" },
   { symbol: "^N225", name: "日經225指數", type: "JP" },
   { symbol: "^TWII", name: "台灣加權指數", type: "TW" },
   { symbol: "^TWOII", name: "台灣櫃買指數", type: "TWO" },
   { symbol: "0050", name: "元大台灣50", type: "ETF" },
   { symbol: "00878", name: "國泰永續高股息", type: "ETF" },
-  { symbol: "TWD=X", name: "美元/台幣", type: "CCY" },
-  { symbol: "JPYTWD=X", name: "日圓/台幣", type: "CCY" },
-  { symbol: "CL=F", name: "原油期貨", type: "Commodity" },
-  { symbol: "GC=F", name: "黃金期貨", type: "Commodity" },
+  { symbol: "TWD=X", name: "美元/台幣", type: "外匯" },
+  { symbol: "JPYTWD=X", name: "日圓/台幣", type: "外匯" },
+  { symbol: "CL=F", name: "原油", type: "期貨" },
+  { symbol: "GC=F", name: "黃金", type: "期貨" },
+  { symbol: "BTC-USD", name: "Bitcoin", type: "Crypto" },
+  { symbol: "ETH-USD", name: "Ethereum", type: "Crypto" },
+  { symbol: "TSM", name: "台積電", type: "ADR" },
+  { symbol: "HNHPF", name: "鴻海", type: "ADR" },
 ];
 
 // 防抖 Hook

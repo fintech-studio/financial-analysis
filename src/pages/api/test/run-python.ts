@@ -20,7 +20,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const scriptPath = path.resolve(
     process.cwd(),
-    "src/pages/api/test/python-app/main.py"
+    "public/python-app/Technical-Indicators/main.py"
   );
   // 支援多個 symbol（用空格分隔）
   const symbols = symbol.match(/"[^"]+"|[^\s]+/g) || [];
@@ -37,15 +37,21 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   py.stdout.on("data", (data) => {
     (data.toString().split(/\r?\n/) as string[]).forEach((line: string) => {
       if (line) res.write(`data: ${line}\n\n`);
+      // @ts-ignore
+      res.flush && res.flush();
     });
   });
   py.stderr.on("data", (data) => {
     (data.toString().split(/\r?\n/) as string[]).forEach((line: string) => {
       if (line) res.write(`data: [stderr] ${line}\n\n`);
+      // @ts-ignore
+      res.flush && res.flush();
     });
   });
   py.on("close", (code) => {
     res.write(`event: end\ndata: 程式結束 (code=${code})\n\n`);
+    // @ts-ignore
+    res.flush && res.flush();
     res.end();
   });
   req.on("close", () => {

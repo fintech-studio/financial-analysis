@@ -113,9 +113,13 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
       case "price_high":
       case "price_low":
       case "price_close":
-        return Number(value).toFixed(2);
+        return Number(value)
+          .toFixed(2)
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       case "indicator":
-        return Number(value).toFixed(3);
+        return Number(value)
+          .toFixed(3)
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
       default:
         return String(value);
     }
