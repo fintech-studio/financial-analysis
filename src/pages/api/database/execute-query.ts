@@ -9,6 +9,8 @@ export default async function handler(
     return res.status(405).json({
       success: false,
       message: "只允許 POST 請求",
+      data: [],
+      count: 0,
     });
   }
 
@@ -20,6 +22,8 @@ export default async function handler(
       return res.status(400).json({
         success: false,
         message: "請提供完整的連接資訊：伺服器地址、使用者名稱和密碼",
+        data: [],
+        count: 0,
       });
     }
 
@@ -27,6 +31,8 @@ export default async function handler(
       return res.status(400).json({
         success: false,
         message: "請提供要執行的 SQL 查詢語句",
+        data: [],
+        count: 0,
       });
     }
 
@@ -88,9 +94,24 @@ export default async function handler(
       console.error("[API] 資料庫查詢錯誤", dbError);
 
       let errorMessage = "資料庫查詢失敗";
-
-      if (dbError.code === "ELOGIN") {
-        errorMessage = "登入失敗：請檢查使用者名稱和密碼";
+      // 權限相關錯誤辨識（優先處理）
+      const permissionKeywords = [
+        "permission was denied",
+        "permission denied",
+        "The SELECT permission was denied",
+        "權限",
+        "denied",
+      ];
+      if (
+        dbError.message &&
+        permissionKeywords.some((kw) =>
+          dbError.message.toLowerCase().includes(kw)
+        )
+      ) {
+        errorMessage = "權限不足：您沒有存取此資料的權限，請聯絡資料庫管理員。";
+      } else if (dbError.code === "ELOGIN") {
+        errorMessage =
+          "登入失敗：請檢查使用者名稱和密碼，或確認帳號是否有存取該資料庫的權限。";
       } else if (dbError.code === "ESOCKET") {
         errorMessage = "網路連接失敗：請檢查伺服器地址和端口";
       } else if (dbError.code === "ETIMEOUT") {
@@ -102,6 +123,8 @@ export default async function handler(
       res.status(400).json({
         success: false,
         message: errorMessage,
+        data: [],
+        count: 0,
       });
     } finally {
       if (pool) {
@@ -118,6 +141,8 @@ export default async function handler(
     res.status(500).json({
       success: false,
       message: `伺服器錯誤: ${error.message || "未知錯誤"}`,
+      data: [],
+      count: 0,
     });
   }
 }

@@ -25,7 +25,9 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
-      error: "僅支援 POST 方法",
+      message: "僅支援 POST 方法",
+      data: [],
+      count: 0,
     });
   }
 
@@ -36,7 +38,9 @@ export default async function handler(
   if (!action || !config) {
     return res.status(400).json({
       success: false,
-      error: "缺少必要參數：action 和 config",
+      message: "缺少必要參數：action 和 config",
+      data: [],
+      count: 0,
     });
   }
 
@@ -44,14 +48,18 @@ export default async function handler(
   if (!config.server) {
     return res.status(400).json({
       success: false,
-      error: "伺服器地址不能為空",
+      message: "伺服器地址不能為空",
+      data: [],
+      count: 0,
     });
   }
 
   if (!config.user || !config.password) {
     return res.status(400).json({
       success: false,
-      error: "需要提供使用者名稱和密碼",
+      message: "需要提供使用者名稱和密碼",
+      data: [],
+      count: 0,
     });
   }
 
@@ -62,7 +70,9 @@ export default async function handler(
   ) {
     return res.status(400).json({
       success: false,
-      error: "需要指定資料庫名稱",
+      message: "需要指定資料庫名稱",
+      data: [],
+      count: 0,
     });
   }
 
@@ -80,7 +90,9 @@ export default async function handler(
         if (!query) {
           return res.status(400).json({
             success: false,
-            error: "執行查詢需要提供 query 參數",
+            message: "執行查詢需要提供 query 參數",
+            data: [],
+            count: 0,
           });
         }
         result = await dbService.executeQuery(config, query, params);
@@ -99,7 +111,9 @@ export default async function handler(
         if (!tableName) {
           return res.status(400).json({
             success: false,
-            error: "獲取表結構需要提供 tableName 參數",
+            message: "獲取表結構需要提供 tableName 參數",
+            data: [],
+            count: 0,
           });
         }
         const schema = await dbService.getTableSchema(config, tableName);
@@ -122,18 +136,32 @@ export default async function handler(
       default:
         return res.status(400).json({
           success: false,
-          error: `不支援的操作：${action}`,
+          message: `不支援的操作：${action}`,
+          data: [],
+          count: 0,
         });
     }
 
-    res.status(200).json(result);
+    // 統一回傳格式
+    if (typeof result === "object" && result !== null) {
+      return res.status(result.success ? 200 : 400).json({
+        ...result,
+        data: result.data || [],
+        count: result.count || 0,
+        message: result.message || (result.success ? "操作成功" : "操作失敗"),
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        data: result,
+        count: Array.isArray(result) ? result.length : 0,
+        message: "操作成功",
+      });
+    }
   } catch (error: any) {
     console.error("API 錯誤:", error);
-
-    // 根據錯誤類型返回適當的狀態碼
     let statusCode = 500;
     let errorMessage = error.message || "伺服器內部錯誤";
-
     if (
       error.message?.includes("連接失敗") ||
       error.message?.includes("登入失敗") ||
@@ -152,10 +180,11 @@ export default async function handler(
     ) {
       statusCode = 400;
     }
-
     res.status(statusCode).json({
       success: false,
-      error: errorMessage,
+      message: errorMessage,
+      data: [],
+      count: 0,
     });
   }
 }

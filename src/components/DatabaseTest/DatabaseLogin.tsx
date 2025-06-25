@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { DatabaseController } from "@/controllers/DatabaseController";
 import { useMvcController } from "@/hooks/useMvcController";
 import { DatabaseConfig } from "@/services/DatabaseService";
@@ -6,6 +6,109 @@ import { DatabaseConfig } from "@/services/DatabaseService";
 interface DatabaseLoginPageProps {
   onLoginSuccess: (config: DatabaseConfig) => void;
 }
+
+// Input 欄位元件
+const InputField = memo(
+  ({
+    label,
+    type = "text",
+    value,
+    onChange,
+    placeholder,
+    required = false,
+    ...props
+  }: React.InputHTMLAttributes<HTMLInputElement> & {
+    label: string;
+    required?: boolean;
+  }) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        {...props}
+      />
+    </div>
+  )
+);
+
+const PasswordField = memo(
+  ({
+    label,
+    value,
+    onChange,
+    showPassword,
+    onToggle,
+    required = false,
+    ...props
+  }: {
+    label: string;
+    value: string;
+    onChange: React.ChangeEventHandler<HTMLInputElement>;
+    showPassword: boolean;
+    onToggle: () => void;
+    required?: boolean;
+  }) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          value={value}
+          onChange={onChange}
+          placeholder="密碼"
+          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          {...props}
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        >
+          {showPassword ? "隱藏" : "顯示"}
+        </button>
+      </div>
+    </div>
+  )
+);
+
+const DatabaseList = memo(
+  ({
+    databaseList,
+    selected,
+    onSelect,
+  }: {
+    databaseList: string[];
+    selected: string;
+    onSelect: (dbName: string) => void;
+  }) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        選擇資料庫
+      </label>
+      <div className="max-h-32 overflow-y-auto border border-gray-200 rounded">
+        {databaseList.map((dbName) => (
+          <button
+            key={dbName}
+            onClick={() => onSelect(dbName)}
+            className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 hover:bg-gray-50 ${
+              selected === dbName ? "bg-blue-50 text-blue-900" : ""
+            }`}
+          >
+            {dbName}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+);
 
 const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
   onLoginSuccess,
@@ -34,13 +137,12 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
   // 使用 MVC Hook 管理連接測試
   const { loading: connectionLoading, execute: executeConnectionTest } =
     useMvcController<{ success: boolean; message: string }>();
-
   // 使用 MVC Hook 管理資料庫列表
   const { loading: databaseListLoading, execute: executeGetDatabaseList } =
     useMvcController<string[]>();
 
   // 快速登入 - 自動填入測試資料
-  const handleQuickLogin = () => {
+  const handleQuickLogin = useCallback(() => {
     setConfig({
       user: "testuser",
       password: "testuserPass123!",
@@ -52,39 +154,41 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
         trustServerCertificate: true,
       },
     });
-  };
+  }, []);
 
   // 測試並登入資料庫
-  const handleLogin = async () => {
-    if (!validateConfig()) return;
-
+  const handleLogin = useCallback(async () => {
+    // 若未輸入資料庫名稱，預設為 master
+    const loginConfig = {
+      ...config,
+      database:
+        config.database && config.database.trim()
+          ? config.database
+          : "master",
+    };
+    if (!validateConfig(loginConfig)) return;
     await executeConnectionTest(async () => {
-      const result = await databaseController.testConnection(config);
+      const result = await databaseController.testConnection(loginConfig);
       setConnectionStatus(result);
-
       if (result.success) {
-        // 登入成功，傳遞配置給父組件
         setTimeout(() => {
-          onLoginSuccess(config);
+          onLoginSuccess(loginConfig);
         }, 1000);
       }
-
       return result;
     });
-  };
+  }, [config, executeConnectionTest, onLoginSuccess]);
 
   // 獲取資料庫列表
-  const handleGetDatabaseList = async () => {
+  const handleGetDatabaseList = useCallback(async () => {
     if (!config.server) {
       alert("請先填寫伺服器地址");
       return;
     }
-
     if (!config.user || !config.password) {
       alert("請填寫使用者名稱和密碼");
       return;
     }
-
     await executeGetDatabaseList(async () => {
       try {
         const result = await databaseController.getDatabaseList(config);
@@ -95,32 +199,26 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
         throw error;
       }
     });
-  };
+  }, [config, executeGetDatabaseList]);
 
   // 驗證配置
-  const validateConfig = (): boolean => {
-    if (!config.server) {
+  const validateConfig = useCallback((cfg: DatabaseConfig = config): boolean => {
+    if (!cfg.server) {
       alert("請填寫伺服器地址");
       return false;
     }
-
-    if (!config.user || !config.password) {
+    if (!cfg.user || !cfg.password) {
       alert("請填寫使用者名稱和密碼");
       return false;
     }
-
-    if (!config.database) {
-      alert("請填寫數據庫名稱");
-      return false;
-    }
-
+    // database 可為空，因為預設會用 master
     return true;
-  };
+  }, [config]);
 
   // 從資料庫列表選擇資料庫
-  const handleSelectDatabase = (dbName: string) => {
-    setConfig({ ...config, database: dbName });
-  };
+  const handleSelectDatabase = useCallback((dbName: string) => {
+    setConfig((prev) => ({ ...prev, database: dbName }));
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -152,81 +250,46 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
 
           {/* 表單 */}
           <div className="space-y-4">
-            {/* 伺服器地址和埠號 */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  伺服器地址 *
-                </label>
-                <input
-                  type="text"
-                  value={config.server}
-                  onChange={(e) =>
-                    setConfig({ ...config, server: e.target.value })
-                  }
-                  placeholder="localhost"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  埠號
-                </label>
-                <input
-                  type="number"
-                  value={config.port}
-                  onChange={(e) =>
-                    setConfig({
-                      ...config,
-                      port: parseInt(e.target.value) || 1433,
-                    })
-                  }
-                  placeholder="1433"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* 使用者名稱 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                使用者名稱 *
-              </label>
-              <input
-                type="text"
-                value={config.user || ""}
-                onChange={(e) => setConfig({ ...config, user: e.target.value })}
-                placeholder="SQL Server 帳號"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              <InputField
+                label="伺服器地址"
+                required
+                value={config.server}
+                onChange={(e) =>
+                  setConfig({ ...config, server: e.target.value })
+                }
+                placeholder="localhost"
+              />
+              <InputField
+                label="連接埠號"
+                type="number"
+                value={config.port}
+                onChange={(e) =>
+                  setConfig({
+                    ...config,
+                    port: parseInt(e.target.value) || 1433,
+                  })
+                }
+                placeholder="1433"
               />
             </div>
-
-            {/* 密碼 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                密碼 *
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={config.password || ""}
-                  onChange={(e) =>
-                    setConfig({ ...config, password: e.target.value })
-                  }
-                  placeholder="密碼"
-                  className="w-full px-3 py-2 pr-10 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? "隱藏" : "顯示"}
-                </button>
-              </div>
-            </div>
-
-            {/* 資料庫名稱 */}
+            <InputField
+              label="使用者名稱"
+              required
+              value={config.user || ""}
+              onChange={(e) => setConfig({ ...config, user: e.target.value })}
+              placeholder="SQL Server 帳號"
+            />
+            <PasswordField
+              label="密碼"
+              required
+              value={config.password || ""}
+              onChange={(e) =>
+                setConfig({ ...config, password: e.target.value })
+              }
+              showPassword={showPassword}
+              onToggle={() => setShowPassword((v) => !v)}
+            />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 資料庫名稱 *
@@ -250,32 +313,13 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
                 </button>
               </div>
             </div>
-
-            {/* 資料庫列表 */}
             {databaseList.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  選擇資料庫
-                </label>
-                <div className="max-h-32 overflow-y-auto border border-gray-200 rounded">
-                  {databaseList.map((dbName) => (
-                    <button
-                      key={dbName}
-                      onClick={() => handleSelectDatabase(dbName)}
-                      className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 hover:bg-gray-50 ${
-                        config.database === dbName
-                          ? "bg-blue-50 text-blue-900"
-                          : ""
-                      }`}
-                    >
-                      {dbName}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <DatabaseList
+                databaseList={databaseList}
+                selected={config.database || ""}
+                onSelect={handleSelectDatabase}
+              />
             )}
-
-            {/* 連接狀態 */}
             {connectionStatus && (
               <div
                 className={`p-3 rounded ${
@@ -293,8 +337,6 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
                 </div>
               </div>
             )}
-
-            {/* 登入按鈕 */}
             <button
               onClick={handleLogin}
               disabled={connectionLoading}
@@ -309,9 +351,9 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
             <h3 className="text-sm font-medium text-gray-900 mb-2">連接提示</h3>
             <ul className="text-xs text-gray-600 space-y-1">
               <li>• 確保 SQL Server 服務已啟動</li>
-              <li>• 預設埠號為 1433</li>
+              <li>• 預設連接埠號為 1433</li>
               <li>• 需要啟用 SQL Server 驗證模式</li>
-              <li>• 確認帳戶有連接權限</li>
+              <li>• 確認帳戶有資料庫連接權限</li>
             </ul>
           </div>
         </div>
