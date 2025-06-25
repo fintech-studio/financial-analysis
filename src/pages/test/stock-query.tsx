@@ -9,6 +9,9 @@ import { EmptyState, ErrorState } from "@/components/Stock/StateComponents";
 import { useStockData } from "@/hooks/useStockData";
 import { ChartBarIcon, TableCellsIcon } from "@heroicons/react/24/outline";
 
+// 匯入 MarketType 型別
+import type { MarketType } from "@/components/Stock/SearchBar";
+
 const StockAnalysisPage: React.FC = () => {
   const [selectedSymbol, setSelectedSymbol] = useState<string>("");
   const [activeView, setActiveView] = useState<"chart" | "table" | "analytics">(
@@ -18,6 +21,8 @@ const StockAnalysisPage: React.FC = () => {
   const [dataPeriod, setDataPeriod] = useState<
     "YTD" | "1M" | "3M" | "6M" | "1Y" | "ALL"
   >("1Y");
+  // 新增 market 狀態
+  const [market, setMarket] = useState<MarketType>("market_stock_tw");
 
   const {
     data,
@@ -28,7 +33,7 @@ const StockAnalysisPage: React.FC = () => {
     technicalData,
     refetch,
     clearError,
-  } = useStockData(selectedSymbol, timeframe);
+  } = useStockData(selectedSymbol, timeframe, market);
 
   const handleSymbolChange = useCallback((symbol: string) => {
     setSelectedSymbol(symbol);
@@ -111,21 +116,6 @@ const StockAnalysisPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* 簡約標題區域 */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center py-8"
-        >
-          <h1 className="text-4xl font-light text-gray-900 mb-3">
-            金融分析查詢平台
-          </h1>
-          <p className="text-gray-600 text-lg font-light max-w-xl mx-auto">
-            專業技術分析、即時數據查詢。
-          </p>
-        </motion.div>
-
         {/* 搜索欄 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -141,6 +131,8 @@ const StockAnalysisPage: React.FC = () => {
             onSearch={refetch}
             dataPeriod={dataPeriod}
             onDataPeriodChange={setDataPeriod}
+            market={market}
+            onMarketChange={setMarket}
           />
         </motion.div>
 

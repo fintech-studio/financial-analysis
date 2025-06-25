@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import type { MarketType } from "@/components/Stock/SearchBar";
 
 interface StockData {
   symbol: string;
@@ -46,7 +47,11 @@ const TIMEFRAMES = {
   "1h": { name: "時線", table: "stock_data_1h" },
 };
 
-export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
+export const useStockData = (
+  symbol: string,
+  timeframe: "1d" | "1h",
+  market: MarketType
+) => {
   const [data, setData] = useState<StockData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,10 +66,10 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
       server: "localhost",
       user: "testuser",
       password: "testuserPass123!",
-      database: "StockData",
+      database: market,
       port: "1433",
     }),
-    []
+    [market]
   );
 
   const fetchData = useCallback(async () => {
@@ -73,6 +78,9 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
     setLoading(true);
     setError(null);
     const currentSymbol = symbol;
+
+    // 修正：tableName 固定為 stock_data_{時間選項}
+    const tableName = TIMEFRAMES[timeframe].table;
 
     try {
       const query = `
@@ -84,7 +92,7 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
           ma5, ma10, ma20, ma60, ema12, ema26,
           bb_upper, bb_middle, bb_lower,
           atr, cci, willr, mom
-        FROM ${TIMEFRAMES[timeframe].table} 
+        FROM ${tableName}
         WHERE symbol = @symbol
         ORDER BY datetime DESC
       `;
@@ -131,7 +139,7 @@ export const useStockData = (symbol: string, timeframe: "1d" | "1h") => {
         setLoading(false);
       }
     }
-  }, [symbol, timeframe, databaseConfig]);
+  }, [symbol, timeframe, market, databaseConfig]);
   const candlestickData = useMemo((): CandlestickData[] => {
     if (!data.length) return [];
 

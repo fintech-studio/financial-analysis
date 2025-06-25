@@ -5,6 +5,7 @@ import {
   ClockIcon,
   SparklesIcon,
   ArrowPathIcon,
+  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 
 interface SearchBarProps {
@@ -18,29 +19,121 @@ interface SearchBarProps {
   ) => void;
   loading?: boolean;
   onSearch: () => void;
+  // 新增市場選項
+  market: MarketType;
+  onMarketChange: (market: MarketType) => void;
 }
 
+// 市場型別
+export const MARKET_OPTIONS = [
+  {
+    value: "market_stock_tw",
+    label: "台股",
+    color: "bg-blue-100 text-blue-700 border-blue-200",
+  },
+  {
+    value: "market_stock_us",
+    label: "美股",
+    color: "bg-red-100 text-red-700 border-red-200",
+  },
+  {
+    value: "market_etf",
+    label: "ETF",
+    color: "bg-green-100 text-green-700 border-green-200",
+  },
+  {
+    value: "market_index",
+    label: "指數",
+    color: "bg-orange-100 text-orange-700 border-orange-200",
+  },
+  {
+    value: "market_forex",
+    label: "外匯",
+    color: "bg-purple-100 text-purple-700 border-purple-200",
+  },
+  {
+    value: "market_crypto",
+    label: "加密貨幣",
+    color: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  },
+  {
+    value: "market_futures",
+    label: "期貨",
+    color: "bg-pink-100 text-pink-700 border-pink-200",
+  },
+] as const;
+
+export type MarketType = (typeof MARKET_OPTIONS)[number]["value"];
+
 const POPULAR_STOCKS = [
-  { symbol: "2330", name: "台積電", type: "上市" },
-  { symbol: "9950", name: "萬國通", type: "上櫃" },
-  { symbol: "AAPL", name: "Apple", type: "US" },
-  { symbol: "TSLA", name: "Tesla", type: "US" },
-  { symbol: "000001.SS", name: "上證綜合指數", type: "CN" },
-  { symbol: "^DJI", name: "道瓊工業指數", type: "US" },
-  { symbol: "^GSPC", name: "標普500指數", type: "US" },
-  { symbol: "^N225", name: "日經225指數", type: "JP" },
-  { symbol: "^TWII", name: "台灣加權指數", type: "TW" },
-  { symbol: "^TWOII", name: "台灣櫃買指數", type: "TWO" },
-  { symbol: "0050", name: "元大台灣50", type: "ETF" },
-  { symbol: "00878", name: "國泰永續高股息", type: "ETF" },
-  { symbol: "TWD=X", name: "美元/台幣", type: "外匯" },
-  { symbol: "JPYTWD=X", name: "日圓/台幣", type: "外匯" },
-  { symbol: "CL=F", name: "原油", type: "期貨" },
-  { symbol: "GC=F", name: "黃金", type: "期貨" },
-  { symbol: "BTC-USD", name: "Bitcoin", type: "Crypto" },
-  { symbol: "ETH-USD", name: "Ethereum", type: "Crypto" },
-  { symbol: "TSM", name: "台積電", type: "ADR" },
-  { symbol: "HNHPF", name: "鴻海", type: "ADR" },
+  { symbol: "2330", name: "台積電", type: "上市", market: "market_stock_tw" },
+  { symbol: "9950", name: "萬國通", type: "上櫃", market: "market_stock_tw" },
+  { symbol: "AAPL", name: "Apple", type: "US", market: "market_stock_us" },
+  { symbol: "TSLA", name: "Tesla", type: "US", market: "market_stock_us" },
+  {
+    symbol: "000001.SS",
+    name: "上證綜合指數",
+    type: "CN",
+    market: "market_index",
+  },
+  {
+    symbol: "^DJI",
+    name: "道瓊工業指數",
+    type: "US",
+    market: "market_index",
+  },
+  {
+    symbol: "^GSPC",
+    name: "標普500指數",
+    type: "US",
+    market: "market_index",
+  },
+  {
+    symbol: "^N225",
+    name: "日經225指數",
+    type: "JP",
+    market: "market_index",
+  },
+  {
+    symbol: "^TWII",
+    name: "台灣加權指數",
+    type: "TW",
+    market: "market_index",
+  },
+  {
+    symbol: "^TWOII",
+    name: "台灣櫃買指數",
+    type: "TWO",
+    market: "market_index",
+  },
+  { symbol: "0050", name: "元大台灣50", type: "ETF", market: "market_etf" },
+  {
+    symbol: "00878",
+    name: "國泰永續高股息",
+    type: "ETF",
+    market: "market_etf",
+  },
+  { symbol: "TWD=X", name: "美元/台幣", type: "外匯", market: "market_forex" },
+  {
+    symbol: "JPYTWD=X",
+    name: "日圓/台幣",
+    type: "外匯",
+    market: "market_forex",
+  },
+  { symbol: "CL=F", name: "原油", type: "期貨", market: "market_futures" },
+  { symbol: "GC=F", name: "黃金", type: "期貨", market: "market_futures" },
+  {
+    symbol: "BTC-USD",
+    name: "Bitcoin",
+    type: "Crypto",
+    market: "market_crypto",
+  },
+  {
+    symbol: "ETH-USD",
+    name: "Ethereum",
+    type: "Crypto",
+    market: "market_crypto",
+  },
 ];
 
 // 防抖 Hook
@@ -60,6 +153,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onTimeframeChange,
   loading = false,
   onSearch,
+  // 新增市場 props
+  market,
+  onMarketChange,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -88,8 +184,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [symbol]);
 
   // 處理選擇建議
-  function handleStockSelect(selectedSymbol: string) {
+  function handleStockSelect(
+    selectedSymbol: string,
+    selectedMarket?: MarketType
+  ) {
     setInputValue(selectedSymbol);
+    if (selectedMarket && selectedMarket !== market) {
+      onMarketChange(selectedMarket);
+    }
     onSymbolChange(selectedSymbol);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
@@ -164,10 +266,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col xl:flex-row gap-4 items-end">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-4">
+        {/* 上方區塊：搜尋列與選項 */}
+        <div className="flex flex-col gap-6 xl:flex-row xl:gap-4 xl:items-end">
           {/* 股票搜尋 */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-[220px]">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <MagnifyingGlassIcon className="w-4 h-4 inline mr-1" />
               金融代號
@@ -235,13 +338,59 @@ const SearchBar: React.FC<SearchBarProps> = ({
               </AnimatePresence>
             </div>
           </div>
+          {/* 市場選擇 */}
+          <div className="max-w-[320px] flex flex-col items-start">
+            <div className="flex flex-wrap w-full">
+              {/* 將市場選項分成兩行，每行最多4個 */}
+              <div className="flex w-full gap-2 mb-2">
+                {MARKET_OPTIONS.slice(0, 4).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => onMarketChange(opt.value as MarketType)}
+                    className={`flex-1 flex items-center gap-1 px-3 py-1 rounded-md font-medium text-sm border transition-all duration-150
+                    ${
+                      market === opt.value
+                        ? `${opt.color} shadow`
+                        : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                    }
+                  `}
+                    disabled={loading}
+                    aria-pressed={market === opt.value}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex w-full gap-2">
+                {MARKET_OPTIONS.slice(4).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => onMarketChange(opt.value as MarketType)}
+                    className={`flex-1 flex items-center gap-1 px-3 py-1 rounded-md font-medium text-sm border transition-all duration-150
+                    ${
+                      market === opt.value
+                        ? `${opt.color} shadow`
+                        : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                    }
+                  `}
+                    disabled={loading}
+                    aria-pressed={market === opt.value}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
           {/* 時間週期 */}
-          <div className="min-w-[140px]">
+          <div className="min-w-[140px] flex flex-col items-start">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <ClockIcon className="w-4 h-4 inline mr-1" />
               時間週期
             </label>
-            <div className="flex bg-gray-100 p-1 rounded-md">
+            <div className="flex bg-gray-100 p-1 rounded-md w-full">
               {[
                 { value: "1d", label: "日線" },
                 { value: "1h", label: "小時線" },
@@ -262,7 +411,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             </div>
           </div>
           {/* 查詢按鈕 */}
-          <div className="w-[120px]">
+          <div className="w-[120px] flex flex-col items-end justify-end">
             <motion.button
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
@@ -285,8 +434,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
             </motion.button>
           </div>
         </div>
-        {/* 熱門股票 */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
+        {/* 熱門股票區塊 */}
+        <div className="mt-8 pt-6 border-t border-gray-200">
           <p className="text-sm text-gray-600 mb-3 flex items-center">
             <SparklesIcon className="w-4 h-4 mr-1" />
             熱門股票
@@ -298,7 +447,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onMouseDown={() => handleHotStockMouseDown(stock.symbol)}
-                onClick={() => handleStockSelect(stock.symbol)}
+                onClick={() =>
+                  handleStockSelect(stock.symbol, stock.market as MarketType)
+                }
                 className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors flex items-center gap-1"
                 type="button"
               >

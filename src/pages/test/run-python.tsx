@@ -1,13 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 
-const QuickFillButtons = ({
-  loading,
-  setSymbol,
-}: {
+// 參數快速填入元件
+const ParamQuickFill: React.FC<{
   loading: boolean;
   setSymbol: (s: string) => void;
-}) => (
-  <div className="flex items-center gap-3 mb-8 flex-wrap">
+}> = ({ loading, setSymbol }) => (
+  <div className="flex flex-wrap gap-2 mb-4">
     {Object.entries({
       "--help": "顯示說明",
       "--indicators-only": "重新計算技術指標",
@@ -17,33 +15,89 @@ const QuickFillButtons = ({
       <button
         key={param}
         type="button"
-        className="px-4 py-1.5 rounded-xl bg-blue-500 text-white font-semibold border border-blue-600 hover:bg-blue-600 transition text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+        className="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 font-medium border border-blue-300 hover:bg-blue-200 transition text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
         onClick={() => setSymbol(param)}
         disabled={loading}
       >
-        {param} <span className="text-xs text-blue-200 ml-1">({label})</span>
+        {param}{" "}
+        <span className="text-[10px] text-blue-400 ml-1">({label})</span>
       </button>
     ))}
   </div>
 );
 
+// 市場選擇元件
+const MarketQuickFill: React.FC<{
+  loading: boolean;
+  setSymbol: (cb: (prev: string) => string) => void;
+}> = ({ loading, setSymbol }) => {
+  const marketOptions = [
+    { param: "--tw", label: "台股" },
+    { param: "--us", label: "美股" },
+    { param: "--etf", label: "ETF" },
+    { param: "--index", label: "指數" },
+    { param: "--forex", label: "外匯" },
+    { param: "--crypto", label: "加密貨幣" },
+    { param: "--futures", label: "期貨" },
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {marketOptions.map(({ param, label }) => (
+        <button
+          key={param}
+          type="button"
+          className="px-3 py-1.5 rounded-lg bg-green-100 text-green-700 font-medium border border-green-300 hover:bg-green-200 transition text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-green-200"
+          onClick={() => {
+            setSymbol((prev) => {
+              const marketParams = marketOptions.map((o) => o.param);
+              const filtered = prev
+                .split(/\s+/)
+                .filter((p) => !marketParams.includes(p) && p !== "")
+                .join(" ");
+              return filtered ? filtered + " " + param : param;
+            });
+          }}
+          disabled={loading}
+        >
+          {param}{" "}
+          <span className="text-[10px] text-green-400 ml-1">({label})</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// Log 輸出區塊
 const LogBox = React.forwardRef<
   HTMLDivElement,
-  { logs: string[]; error: string }
->(({ logs, error }, ref) => (
+  { logs: string[]; error: string; loading: boolean }
+>(({ logs, error, loading }, ref) => (
   <div
     ref={ref}
-    className="bg-blue-50 rounded-2xl p-5 min-h-[320px] max-h-[600px] h-[540px] overflow-y-auto text-blue-800 font-mono text-base whitespace-pre-wrap shadow-lg border-2 border-blue-200 focus:ring-2 focus:ring-blue-300 outline-none"
+    className="bg-slate-900 rounded-2xl p-5 min-h-[320px] max-h-[600px] h-[540px] overflow-y-auto text-green-200 font-mono text-base whitespace-pre-wrap shadow-lg border-2 border-slate-700 outline-none relative scrollbar-hide"
     tabIndex={-1}
+    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
   >
-    {logs.length === 0 && !error && (
-      <span className="text-blue-300">輸出結果將顯示於此處...</span>
+    {/* 隱藏滾動條 for Webkit */}
+    <style>{`
+      .scrollbar-hide::-webkit-scrollbar { display: none; }
+    `}</style>
+    {logs.length === 0 && !error && !loading && (
+      <span className="text-slate-500">輸出結果將顯示於此處...</span>
     )}
     {logs.map((line, idx) => (
-      <div key={idx}>{line}</div>
+      <div key={idx} className="break-all">
+        {line}
+      </div>
     ))}
+    {loading && (
+      <div className="absolute left-0 right-0 bottom-2 flex justify-center animate-pulse">
+        <span className="text-blue-300 text-sm">執行中，請稍候...</span>
+      </div>
+    )}
     {error && (
-      <div className="text-red-500 font-bold mt-2 animate-pulse">
+      <div className="text-red-400 font-bold mt-2 animate-pulse">
         錯誤：{error}
       </div>
     )}
@@ -60,6 +114,7 @@ const RunPython: React.FC = () => {
   const logBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // 執行 Python
   const handleRunPython = () => {
     setLogs([]);
     setError("");
@@ -86,9 +141,9 @@ const RunPython: React.FC = () => {
     });
   };
 
+  // 清除輸入與狀態
   const handleClear = () => {
     setSymbol("");
-    setLogs([]);
     setError("");
     setLoading(false);
     if (eventSourceRef.current) eventSourceRef.current.close();
@@ -107,43 +162,43 @@ const RunPython: React.FC = () => {
     if (logBoxRef.current) {
       logBoxRef.current.scrollTop = logBoxRef.current.scrollHeight;
     }
-  }, [logs, error]);
-
-  // 執行時自動 focus 到 log 區塊
-  useEffect(() => {
-    if (loading && logBoxRef.current) {
-      logBoxRef.current.focus();
-    }
-  }, [loading]);
+  }, [logs, error, loading]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-8 pb-20">
-      <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-8 items-start">
-        {/* 左側：標題、輸入、按鈕、QuickFill */}
-        <div className="flex-1 w-full max-w-2xl">
-          <h2 className="text-4xl font-extrabold text-blue-700 mb-3 text-center lg:text-left tracking-tight drop-shadow-sm">
-            手動獲取 / 更新金融數據
+      <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-10 items-stretch">
+        {/* 左側：操作區 */}
+        <div className="flex-1 w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 border border-blue-100 mb-8 lg:mb-0 min-h-[540px] h-[540px] flex flex-col">
+          <h2 className="text-3xl font-extrabold text-blue-700 mb-2 text-center lg:text-left tracking-tight drop-shadow-sm">
+            金融數據手動獲取 / 更新
           </h2>
-          <p className="text-blue-500 text-center lg:text-left mb-10 text-lg font-medium">
-            手動獲取指定金融數據，並存入SQL SERVER。
+          <p className="text-blue-500 text-center lg:text-left mb-6 text-base font-medium">
+            抓取金融數據並存入 SQL SERVER。
             <a
               href="https://github.com/HaoXun97/technical-indicators"
-              className="text-blue-600 underline hover:text-blue-800 ml-2"
+              className="text-blue-600 underline hover:text-blue-800"
               target="_blank"
               rel="noopener noreferrer"
             >
-              程式碼
+              查看程式碼
             </a>
           </p>
-          <div className="flex items-center gap-4 mb-6 w-full">
-            <div className="relative flex-1">
+          <div className="mb-4">
+            <label
+              className="block text-blue-700 font-semibold mb-1"
+              htmlFor="symbol-input"
+            >
+              輸入金融代號或參數
+            </label>
+            <div className="relative flex items-center">
               <input
                 ref={inputRef}
+                id="symbol-input"
                 type="text"
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="請輸入金融代號或參數"
+                placeholder="請輸入金融代號或參數 (可複合)"
                 className="w-full px-5 py-3 rounded-xl border-2 border-blue-200 focus:ring-4 focus:ring-blue-200 focus:outline-none text-lg bg-blue-50 placeholder-blue-300 text-blue-900 shadow-md pr-12 transition-all duration-200"
                 disabled={loading}
                 autoFocus
@@ -172,31 +227,38 @@ const RunPython: React.FC = () => {
               )}
             </div>
           </div>
-          <QuickFillButtons loading={loading} setSymbol={setSymbol} />
-          <button
-            onClick={handleRunPython}
-            disabled={loading || !symbol}
-            className={`w-36 px-7 py-3 rounded-xl font-bold text-white text-lg transition-all duration-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${
-              loading || !symbol
-                ? "bg-blue-200 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">執行中...</span>
-            ) : (
-              "執行"
-            )}
-          </button>
+          <div className="mb-2">
+            <span className="block text-xs text-slate-400 mb-1">參數</span>
+            <ParamQuickFill loading={loading} setSymbol={setSymbol} />
+          </div>
+          <div className="mb-6">
+            <span className="block text-xs text-slate-400 mb-1">市場選項</span>
+            <MarketQuickFill loading={loading} setSymbol={setSymbol} />
+          </div>
+          <div className="flex gap-4 mt-auto">
+            <button
+              onClick={handleRunPython}
+              disabled={loading || !symbol}
+              className={`flex-1 px-7 py-3 rounded-xl font-bold text-white text-lg transition-all duration-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-300 items-center ${
+                loading || !symbol
+                  ? "bg-blue-200 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {loading ? "執行中..." : "執行"}
+            </button>
+            <button
+              onClick={handleClear}
+              disabled={loading && !symbol}
+              className="px-7 py-3 rounded-xl font-bold text-blue-700 border border-blue-300 bg-white hover:bg-blue-50 transition-all duration-200 shadow focus:outline-none focus:ring-2 focus:ring-blue-200"
+            >
+              清除
+            </button>
+          </div>
         </div>
         {/* 右側：LogBox 輸出結果 */}
-        <div>
-          <h3 className="text-2xl font-semibold text-blue-700 mb-4">
-            終端機輸出結果
-          </h3>
-          <div className="w-full lg:w-[640px] flex-shrink-0">
-            <LogBox ref={logBoxRef} logs={logs} error={error} />
-          </div>
+        <div className="w-full lg:w-[640px] flex-shrink-0 min-h-[540px] h-[540px]">
+          <LogBox ref={logBoxRef} logs={logs} error={error} loading={loading} />
         </div>
       </div>
     </div>
