@@ -199,26 +199,40 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
     );
   };
 
+  // CSV 欄位值 escape function
+  const escapeCSV = (value: string) => {
+    if (value == null) return "";
+    const str = String(value);
+    if (/[",\n]/.test(str)) {
+      // 內含逗號、雙引號或換行時需加雙引號，雙引號需變成兩個
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  };
+
   const exportToCSV = () => {
     const headers = COLUMNS.filter((col) => visibleColumns.includes(col.key))
-      .map((col) => col.name)
+      .map((col) => escapeCSV(col.name))
       .join(",");
 
     const rows = sortedData
       .map((row) =>
         COLUMNS.filter((col) => visibleColumns.includes(col.key))
-          .map((col) => formatValue(row[col.key], col))
+          .map((col) => escapeCSV(formatValue(row[col.key], col)))
           .join(",")
       )
       .join("\n");
 
-    const csv = `${headers}\n${rows}`;
-    const blob = new Blob([csv], { type: "text/csv" });
+    // 加入 BOM 讓 Excel 正確辨識 UTF-8
+    const csv = `\uFEFF${headers}\n${rows}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = `stock_data_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 

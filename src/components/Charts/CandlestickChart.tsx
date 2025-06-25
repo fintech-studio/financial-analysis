@@ -96,6 +96,13 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showIndicators, setShowIndicators] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("移動平均");
+  const [hoveredCandle, setHoveredCandle] = useState<CandlestickData | null>(
+    null
+  );
+  const [hoveredPosition, setHoveredPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   // 優化的技術指標配置 - 使用 useMemo 避免重複創建
   const defaultTechnicalIndicators = useMemo<TechnicalIndicator[]>(
@@ -670,8 +677,31 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         });
       }
 
-      // 自動調整視圖
-      chart.timeScale().fitContent();
+      // 滑鼠懸停顯示 OHLCV
+      chart.subscribeCrosshairMove((param) => {
+        if (param && param.time && param.point) {
+          const candle = chartData.candleData.find(
+            (c) => c.time === param.time
+          );
+          if (candle) {
+            const idx = chartData.candleData.findIndex(
+              (c) => c.time === param.time
+            );
+            const origin = data[idx];
+            setHoveredCandle(origin || null);
+            setHoveredPosition({ x: param.point.x, y: param.point.y });
+          } else {
+            setHoveredCandle(null);
+            setHoveredPosition(null);
+          }
+        } else {
+          setHoveredCandle(null);
+          setHoveredPosition(null);
+        }
+      });
+
+      // 自動調整視圖（只在初始化時呼叫，不在每次指標變動時呼叫）
+      // chart.timeScale().fitContent();
 
       console.log(
         `Chart initialized with ${overlayIndicators.length} overlay and ${separateIndicators.length} separate indicators`
@@ -783,15 +813,33 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       const month = String(date.getUTCMonth() + 1).padStart(2, "0");
       const day = String(date.getUTCDate()).padStart(2, "0");
       if (timeframe === "1d") {
-        return `${year}/${month}/${day}`;
+        return `${year}-${month}-${day}`;
       } else {
         const hour = String(date.getUTCHours()).padStart(2, "0");
         const minute = String(date.getUTCMinutes()).padStart(2, "0");
-        return `${year}/${month}/${day} ${hour}:${minute}`;
+        return `${year}-${month}-${day} ${hour}:${minute}`;
       }
     };
     return `${format(dataArr[0])} ~ ${format(dataArr[dataArr.length - 1])}`;
   };
+
+  // 工具函數：格式化日期
+  function formatCandleDate(dateStr: string, timeframe: string) {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+    if (timeframe === "1d") {
+      return `${year}-${month}-${day}`;
+    } else {
+      const hour = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      const sec = pad(d.getSeconds());
+      return `${year}-${month}-${day} ${hour}:${min}:${sec}`;
+    }
+  }
 
   // 空狀態優化
   if (!chartData) {
@@ -956,7 +1004,67 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       </AnimatePresence>
 
       {/* 圖表區域 */}
-      <div className="p-4">
+      <div className="p-4 relative">
+        {hoveredCandle && hoveredPosition && (
+          <div
+            className="absolute z-10 bg-white/90 border border-gray-200 rounded shadow px-4 py-2 text-xs text-gray-800 pointer-events-none min-w-[140px]"
+            style={{
+              left: `calc(${hoveredPosition.x}px + 24px)`,
+              top: `calc(${hoveredPosition.y}px + 12px)`,
+              maxWidth: "220px",
+              // 可加上邊界判斷避免超出
+            }}
+          >
+            <div>日期: {formatCandleDate(hoveredCandle.date, timeframe)}</div>
+            <div>開盤: {hoveredCandle.open}</div>
+            <div>最高: {hoveredCandle.high}</div>
+            <div>最低: {hoveredCandle.low}</div>
+            <div>收盤: {hoveredCandle.close}</div>
+            {hoveredCandle.volume !== undefined && (
+              <div>成交量: {hoveredCandle.volume}</div>
+            )}
+            {/* 技術指標資訊 */}
+            {technicalData &&
+              technicalIndicators.filter((ind) => ind.enabled).length > 0 && (
+                <div className="mt-2 border-t pt-1 border-gray-200">
+                  <div className="font-semibold text-gray-700 mb-1">
+                    技術指標
+                  </div>
+                  {(() => {
+                    const idx = data.findIndex(
+                      (d) => d.date === hoveredCandle.date
+                    );
+                    return technicalIndicators
+                      .filter((ind) => ind.enabled)
+                      .map((ind) => {
+                        const valArr = technicalData[ind.key];
+                        const val =
+                          valArr && valArr[idx] != null
+                            ? valArr[idx]
+                            : undefined;
+                        return (
+                          <div
+                            key={ind.key}
+                            className="flex items-center gap-1"
+                          >
+                            <span
+                              className="inline-block w-2 h-2 rounded-full"
+                              style={{ background: ind.color }}
+                            ></span>
+                            <span>{ind.name}:</span>
+                            <span>
+                              {val !== undefined
+                                ? Number(val).toFixed(2)
+                                : "--"}
+                            </span>
+                          </div>
+                        );
+                      });
+                  })()}
+                </div>
+              )}
+          </div>
+        )}
         <div
           ref={chartContainerRef}
           style={{
@@ -974,6 +1082,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
             數據點: {data.length} | 週期:{" "}
             {timeframe === "1d" ? "日線" : "小時線"}
           </span>
+          <div className="text-center text-[12px] select-none">
+            Charting By TradingView Lightweight Charts
+          </div>
           {technicalIndicators.filter((ind) => ind.enabled).length > 0 && (
             <span>
               啟用指標:{" "}
