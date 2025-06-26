@@ -61,14 +61,9 @@ export const useStockData = (
     latestSymbolRef.current = symbol;
   }, [symbol]);
 
-  const databaseConfig = useMemo<DatabaseConfig>(
-    () => ({
-      server: "localhost",
-      user: "testuser",
-      password: "testuserPass123!",
-      database: market,
-      port: "1433",
-    }),
+  // 僅傳遞 database 名稱，連線資訊應由 API 層處理
+  const databaseConfig = useMemo<Pick<DatabaseConfig, "database">>(
+    () => ({ database: market }),
     [market]
   );
 

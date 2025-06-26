@@ -16,17 +16,26 @@ export default async function handler(
 
   try {
     const { config, query, params } = req.body;
+    // 支援管理頁傳入完整 config（user/password/server/port/database）
+    const user = config?.user || process.env.DB_WEBUSER;
+    const password = config?.password || process.env.DB_WEBUSER_PASSWORD;
+    const server = config?.server || process.env.DB_SERVER;
+    const port = config?.port
+      ? parseInt(config.port)
+      : process.env.DB_PORT
+      ? parseInt(process.env.DB_PORT)
+      : 1433;
+    const database = config?.database;
 
-    // 驗證必要參數
-    if (!config || !config.server || !config.user || !config.password) {
+    if (!server || !user || !password) {
       return res.status(400).json({
         success: false,
-        message: "請提供完整的連接資訊：伺服器地址、使用者名稱和密碼",
+        message:
+          "請於 .env.local 設定 DB_SERVER、DB_WEBUSER、DB_WEBUSER_PASSWORD，或由管理頁傳入完整連線資訊",
         data: [],
         count: 0,
       });
     }
-
     if (!query || !query.trim()) {
       return res.status(400).json({
         success: false,
@@ -37,20 +46,20 @@ export default async function handler(
     }
 
     console.log("[API] 執行資料庫查詢", {
-      server: config.server,
-      port: config.port || 1433,
-      user: config.user,
-      database: config.database || "master",
+      server,
+      port,
+      user,
+      database: database || "master",
       queryLength: query.length,
     });
 
     // 建立資料庫連接配置
     const sqlConfig: sql.config = {
-      user: config.user.trim(),
-      password: config.password,
-      server: config.server.trim(),
-      port: config.port ? parseInt(config.port) : 1433,
-      database: config.database?.trim() || "master",
+      user: user.trim(),
+      password,
+      server: server.trim(),
+      port,
+      database: database?.trim() || "master",
       options: {
         encrypt: false,
         trustServerCertificate: true,
@@ -60,30 +69,22 @@ export default async function handler(
       requestTimeout: 30000,
     };
 
-    // 嘗試連接資料庫並執行查詢
     let pool: sql.ConnectionPool | null = null;
 
     try {
       pool = new sql.ConnectionPool(sqlConfig);
       await pool.connect();
-
       const request = pool.request();
-
-      // 如果有參數，添加到請求中
       if (params && typeof params === "object") {
         Object.keys(params).forEach((key) => {
           request.input(key, params[key]);
         });
       }
-
-      // 執行查詢
       const result = await request.query(query.trim());
-
       console.log("[API] 查詢執行結果", {
         success: true,
         recordCount: result.recordset?.length || 0,
       });
-
       res.status(200).json({
         success: true,
         data: result.recordset || [],
@@ -92,9 +93,7 @@ export default async function handler(
       });
     } catch (dbError: any) {
       console.error("[API] 資料庫查詢錯誤", dbError);
-
       let errorMessage = "資料庫查詢失敗";
-      // 權限相關錯誤辨識（優先處理）
       const permissionKeywords = [
         "permission was denied",
         "permission denied",
@@ -119,7 +118,6 @@ export default async function handler(
       } else if (dbError.message) {
         errorMessage = `查詢錯誤：${dbError.message}`;
       }
-
       res.status(400).json({
         success: false,
         message: errorMessage,
@@ -137,7 +135,6 @@ export default async function handler(
     }
   } catch (error: any) {
     console.error("[API] 查詢執行發生錯誤", error);
-
     res.status(500).json({
       success: false,
       message: `伺服器錯誤: ${error.message || "未知錯誤"}`,

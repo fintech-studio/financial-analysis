@@ -7,6 +7,7 @@ import {
   BeakerIcon,
   ArrowTrendingUpIcon,
   CodeBracketIcon,
+  DocumentMagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
 const TestPage: React.FC = () => {
@@ -40,6 +41,16 @@ const TestPage: React.FC = () => {
       bgColor: "bg-yellow-50",
       borderColor: "border-yellow-200",
       hoverColor: "hover:border-yellow-300",
+    },
+    {
+      title: "金融代號查詢",
+      description: "查詢金融代號相關資訊",
+      href: "/test/financial-code",
+      icon: DocumentMagnifyingGlassIcon,
+      color: "text-teal-600",
+      bgColor: "bg-teal-50",
+      borderColor: "border-teal-200",
+      hoverColor: "hover:border-teal-300",
     },
     {
       title: "圖表測試",

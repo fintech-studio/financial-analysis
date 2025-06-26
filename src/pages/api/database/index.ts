@@ -1,8 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import {
-  DatabaseService,
-  DatabaseConfig,
-} from "../../../services/DatabaseService";
+import { DatabaseService, DatabaseConfig } from "@/services/DatabaseService";
 
 interface DatabaseApiRequest {
   action:

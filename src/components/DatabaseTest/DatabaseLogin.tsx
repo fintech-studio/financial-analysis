@@ -144,10 +144,10 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
   // 快速登入 - 自動填入測試資料
   const handleQuickLogin = useCallback(() => {
     setConfig({
-      user: "testuser",
-      password: "testuserPass123!",
+      user: "webtest",
+      password: "webtestPass123!",
       server: "localhost",
-      database: "StockData",
+      database: "TEST_DATABASE",
       port: 1433,
       options: {
         encrypt: false,
@@ -162,9 +162,7 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
     const loginConfig = {
       ...config,
       database:
-        config.database && config.database.trim()
-          ? config.database
-          : "master",
+        config.database && config.database.trim() ? config.database : "master",
     };
     if (!validateConfig(loginConfig)) return;
     await executeConnectionTest(async () => {
@@ -202,18 +200,21 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
   }, [config, executeGetDatabaseList]);
 
   // 驗證配置
-  const validateConfig = useCallback((cfg: DatabaseConfig = config): boolean => {
-    if (!cfg.server) {
-      alert("請填寫伺服器地址");
-      return false;
-    }
-    if (!cfg.user || !cfg.password) {
-      alert("請填寫使用者名稱和密碼");
-      return false;
-    }
-    // database 可為空，因為預設會用 master
-    return true;
-  }, [config]);
+  const validateConfig = useCallback(
+    (cfg: DatabaseConfig = config): boolean => {
+      if (!cfg.server) {
+        alert("請填寫伺服器地址");
+        return false;
+      }
+      if (!cfg.user || !cfg.password) {
+        alert("請填寫使用者名稱和密碼");
+        return false;
+      }
+      // database 可為空，因為預設會用 master
+      return true;
+    },
+    [config]
+  );
 
   // 從資料庫列表選擇資料庫
   const handleSelectDatabase = useCallback((dbName: string) => {

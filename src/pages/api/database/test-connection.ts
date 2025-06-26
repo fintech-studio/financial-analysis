@@ -28,29 +28,19 @@ export default async function handler(
   }
 
   try {
-    const { server, port, user, password, database } = req.body;
-
-    // 驗證必要參數
+    // 直接從 body 取得所有連線資訊（允許前端傳入 user/password/server/port/database）
+    const { user, password, server, port, database } = req.body;
     if (!server || !user || !password) {
       return res.status(400).json({
         success: false,
-        message: "請提供完整的連接資訊：伺服器地址、使用者名稱和密碼",
+        message: "請填寫完整的連接資訊：伺服器地址、使用者名稱和密碼",
         data: [],
         count: 0,
       });
     }
-
-    console.log("[API] 測試資料庫連接", {
-      server,
-      port: port || 1433,
-      user,
-      database: database || "master",
-    });
-
-    // 建立資料庫連接配置
     const config: sql.config = {
       user: user.trim(),
-      password: password,
+      password,
       server: server.trim(),
       port: port ? parseInt(port) : 1433,
       database: database?.trim() || "master",
@@ -62,9 +52,7 @@ export default async function handler(
       connectionTimeout: 30000,
       requestTimeout: 30000,
     };
-
     let pool: sql.ConnectionPool | null = null;
-
     try {
       if (database && database !== "master") {
         console.log("[API] 檢查指定資料庫是否存在:", database);
