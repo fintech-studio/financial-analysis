@@ -198,7 +198,7 @@ const RunPython: React.FC = () => {
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="請輸入金融代號或參數 (可複合)"
+                placeholder="請輸入金融代號或參數"
                 className="w-full px-5 py-3 rounded-xl border-2 border-blue-200 focus:ring-4 focus:ring-blue-200 focus:outline-none text-lg bg-blue-50 placeholder-blue-300 text-blue-900 shadow-md pr-12 transition-all duration-200"
                 disabled={loading}
                 autoFocus
