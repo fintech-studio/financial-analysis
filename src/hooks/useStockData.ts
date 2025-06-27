@@ -74,29 +74,28 @@ export const useStockData = (
     setError(null);
     const currentSymbol = symbol;
 
-    // 修正：tableName 固定為 stock_data_{時間選項}
     const tableName = TIMEFRAMES[timeframe].table;
+    const db = market; // market 變數就是資料庫名稱
+    const query = `
+      SELECT
+        symbol, datetime, open_price, high_price, low_price, close_price, volume,
+        rsi_5, rsi_7, rsi_10, rsi_14, rsi_21,
+        dif, macd, macd_histogram,
+        rsv, k_value, d_value, j_value,
+        ma5, ma10, ma20, ma60, ema12, ema26,
+        bb_upper, bb_middle, bb_lower,
+        atr, cci, willr, mom
+      FROM [${db}].[dbo].[${tableName}]
+      WHERE symbol = @symbol
+      ORDER BY datetime DESC
+    `;
 
     try {
-      const query = `
-        SELECT
-          symbol, datetime, open_price, high_price, low_price, close_price, volume,
-          rsi_5, rsi_7, rsi_10, rsi_14, rsi_21,
-          dif, macd, macd_histogram,
-          rsv, k_value, d_value, j_value,
-          ma5, ma10, ma20, ma60, ema12, ema26,
-          bb_upper, bb_middle, bb_lower,
-          atr, cci, willr, mom
-        FROM ${tableName}
-        WHERE symbol = @symbol
-        ORDER BY datetime DESC
-      `;
-
       const response = await fetch("/api/database/execute-query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          config: databaseConfig,
+          config: databaseConfig, // 只需一個 config，API 層可忽略 database
           query: query.trim(),
           params: { symbol: symbol.toUpperCase() },
         }),
@@ -239,6 +238,7 @@ export const useStockData = (
     };
   }, [candlestickData, data]);
 
+  // refetch 僅供特殊需求，預設不需手動呼叫，查詢會自動隨 symbol/market/timeframe 變動
   const refetch = useCallback(() => {
     fetchData();
   }, [fetchData]);

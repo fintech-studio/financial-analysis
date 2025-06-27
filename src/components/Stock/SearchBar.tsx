@@ -5,7 +5,6 @@ import {
   ClockIcon,
   SparklesIcon,
   ArrowPathIcon,
-  GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 
 interface SearchBarProps {
@@ -18,10 +17,10 @@ interface SearchBarProps {
     period: "YTD" | "1M" | "3M" | "6M" | "1Y" | "ALL"
   ) => void;
   loading?: boolean;
-  onSearch: () => void;
-  // 新增市場選項
   market: MarketType;
   onMarketChange: (market: MarketType) => void;
+  // 新增：合併設定 symbol 與 market 的 callback
+  onSymbolAndMarketChange?: (symbol: string, market: MarketType) => void;
 }
 
 // 市場型別
@@ -146,36 +145,62 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
+// 型別允許 market_type 為 undefined/null
+interface MarketSuggestion {
+  market_category: string;
+  symbol: string;
+  name: string;
+  market_type?: string | null;
+}
+
 const SearchBar: React.FC<SearchBarProps> = ({
   symbol,
   onSymbolChange,
   timeframe,
   onTimeframeChange,
   loading = false,
-  onSearch,
-  // 新增市場 props
   market,
   onMarketChange,
+  onSymbolAndMarketChange,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [inputValue, setInputValue] = useState(symbol);
+  const [suggestions, setSuggestions] = useState<MarketSuggestion[]>([]);
+  const [fetching, setFetching] = useState(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // 使用防抖來優化搜尋體驗
   const debouncedInputValue = useDebounce(inputValue, 300);
 
-  // 過濾熱門股票
-  const filteredStocks = useMemo(() => {
-    if (!debouncedInputValue.trim()) return [];
-    return POPULAR_STOCKS.filter(
-      (stock) =>
-        stock.symbol
-          .toLowerCase()
-          .includes(debouncedInputValue.toLowerCase()) ||
-        stock.name.toLowerCase().includes(debouncedInputValue.toLowerCase())
-    );
+  // 熱門股票與市場選項 useMemo 優化
+  const hotStocks = useMemo(() => POPULAR_STOCKS, []);
+  const marketOptions = useMemo(() => MARKET_OPTIONS, []);
+
+  // 監聽 debouncedInputValue，呼叫 API，並加上 abort controller
+  useEffect(() => {
+    if (!debouncedInputValue.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    setFetching(true);
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    fetch(`/api/market_data?q=${encodeURIComponent(debouncedInputValue)}`, {
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setSuggestions(Array.isArray(data) ? data.slice(0, 50) : []);
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") setSuggestions([]);
+      })
+      .finally(() => setFetching(false));
+    return () => controller.abort();
   }, [debouncedInputValue]);
 
   // 同步外部 symbol 變化
@@ -183,18 +208,69 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setInputValue(symbol);
   }, [symbol]);
 
+  // 查詢時自動根據 symbol 決定市場
+  async function handleSearch() {
+    if (!inputValue.trim()) return;
+    setFetching(true);
+    try {
+      const res = await fetch(
+        `/api/market_data?q=${encodeURIComponent(inputValue)}`
+      );
+      const data: MarketSuggestion[] = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        const first = data[0];
+        const mappedMarket = CATEGORY_TO_MARKET_TYPE[first.market_category];
+        if (mappedMarket && mappedMarket !== market) {
+          onMarketChange(mappedMarket);
+        }
+      }
+    } catch {
+      // ignore
+    } finally {
+      setFetching(false);
+      onSymbolChange(inputValue);
+    }
+  }
+
+  // 建立 market_category 與 MarketType 的對應表
+  const CATEGORY_TO_MARKET_TYPE: Record<string, MarketType> = {
+    market_stock_tw: "market_stock_tw",
+    market_stock_us: "market_stock_us",
+    market_etf: "market_etf",
+    market_index: "market_index",
+    market_forex: "market_forex",
+    market_crypto: "market_crypto",
+    market_futures: "market_futures",
+    // 中文對應
+    台股: "market_stock_tw",
+    美股: "market_stock_us",
+    ETF: "market_etf",
+    指數: "market_index",
+    外匯: "market_forex",
+    加密貨幣: "market_crypto",
+    期貨: "market_futures",
+  };
+
   // 處理選擇建議
   function handleStockSelect(
     selectedSymbol: string,
-    selectedMarket?: MarketType
+    selectedMarketTypeOrCategory?: string
   ) {
     setInputValue(selectedSymbol);
-    if (selectedMarket && selectedMarket !== market) {
-      onMarketChange(selectedMarket);
+    let willChangeMarket = false;
+    if (selectedMarketTypeOrCategory) {
+      const mappedMarket =
+        CATEGORY_TO_MARKET_TYPE[selectedMarketTypeOrCategory] ||
+        CATEGORY_TO_MARKET_TYPE[selectedMarketTypeOrCategory];
+      if (mappedMarket && mappedMarket !== market) {
+        willChangeMarket = true;
+        onMarketChange(mappedMarket);
+      }
     }
     onSymbolChange(selectedSymbol);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
+    // 不再呼叫 onSearch，查詢交由父層 useEffect 控制
   }
 
   // 處理輸入變化
@@ -207,12 +283,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   // 處理鍵盤事件
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (!showSuggestions || filteredStocks.length === 0) {
+    if (!showSuggestions || suggestions.length === 0) {
       if (e.key === "Enter") {
         e.preventDefault();
         if (!loading && inputValue.trim()) {
-          onSymbolChange(inputValue);
-          onSearch();
+          handleSearch();
         }
       }
       return;
@@ -220,20 +295,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setSelectedSuggestionIndex((prev) =>
-        prev < filteredStocks.length - 1 ? prev + 1 : 0
+        prev < suggestions.length - 1 ? prev + 1 : 0
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelectedSuggestionIndex((prev) =>
-        prev > 0 ? prev - 1 : filteredStocks.length - 1
+        prev > 0 ? prev - 1 : suggestions.length - 1
       );
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (selectedSuggestionIndex >= 0) {
-        handleStockSelect(filteredStocks[selectedSuggestionIndex].symbol);
+        const s = suggestions[selectedSuggestionIndex];
+        handleStockSelect(s.symbol, s.market_type as MarketType);
       } else if (!loading && inputValue.trim()) {
         onSymbolChange(inputValue);
-        onSearch();
         setShowSuggestions(false);
       }
     } else if (e.key === "Escape") {
@@ -243,14 +318,27 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }
 
   // 處理建議點擊
-  function handleSuggestionClick(symbol: string) {
-    handleStockSelect(symbol);
+  function handleSuggestionClick(s: MarketSuggestion) {
+    const targetMarket = s.market_type || s.market_category;
+    const mappedMarket = targetMarket && CATEGORY_TO_MARKET_TYPE[targetMarket];
+    console.log("點擊建議:", s, "mappedMarket:", mappedMarket);
+    if (onSymbolAndMarketChange && mappedMarket) {
+      onSymbolAndMarketChange(s.symbol, mappedMarket);
+    } else {
+      if (mappedMarket && mappedMarket !== market) {
+        onMarketChange(mappedMarket);
+      }
+      onSymbolChange(s.symbol);
+    }
+    setInputValue(s.symbol);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
   }
 
   // 處理 focus/blur
   function handleFocus() {
     setIsFocused(true);
-    if (inputValue.trim() && filteredStocks.length > 0) {
+    if (inputValue.trim() && suggestions.length > 0) {
       setShowSuggestions(true);
     }
   }
@@ -262,6 +350,24 @@ const SearchBar: React.FC<SearchBarProps> = ({
   // 熱門股票按鈕 focus 時自動填入
   function handleHotStockMouseDown(symbol: string) {
     setInputValue(symbol);
+  }
+
+  // 渲染 suggestion label
+  function renderSuggestionLabel(s: MarketSuggestion) {
+    return (
+      <span className="ml-2 px-2 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded">
+        {s.market_category}
+        {s.market_type && (
+          <>
+            <span className="mx-1 text-gray-400">-</span>
+            <span className="text-xs text-blue-700">
+              {marketOptions.find((m) => m.value === s.market_type)?.label ||
+                s.market_type}
+            </span>
+          </>
+        )}
+      </span>
+    );
   }
 
   return (
@@ -294,43 +400,39 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     : undefined
                 }
               />
-              {loading && (
+              {(loading || fetching) && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                   <ArrowPathIcon className="w-5 h-5 text-gray-500 animate-spin" />
                 </div>
               )}
               {/* 建議列表 */}
               <AnimatePresence>
-                {showSuggestions && filteredStocks.length > 0 && (
+                {showSuggestions && suggestions.length > 0 && (
                   <motion.div
                     ref={suggestionsRef}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute z-20 left-0 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                    className="absolute z-20 left-0 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
                     id="stock-suggestions"
                     role="listbox"
                   >
-                    {filteredStocks.map((stock, index) => (
+                    {suggestions.map((s, index) => (
                       <button
-                        key={stock.symbol}
+                        key={s.symbol + (s.market_type || "")}
                         id={`suggestion-${index}`}
-                        onClick={() => handleSuggestionClick(stock.symbol)}
+                        onClick={() => handleSuggestionClick(s)}
                         className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
                           index === selectedSuggestionIndex ? "bg-gray-50" : ""
                         }`}
                         role="option"
                         aria-selected={index === selectedSuggestionIndex}
                       >
-                        <div className="font-medium text-gray-900">
-                          {stock.symbol}
-                          <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
-                            {stock.type}
-                          </span>
+                        <div className="flex items-center gap-2 font-medium text-gray-900">
+                          <span>{s.symbol}</span>
+                          {renderSuggestionLabel(s)}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {stock.name}
-                        </div>
+                        <div className="text-sm text-gray-500">{s.name}</div>
                       </button>
                     ))}
                   </motion.div>
@@ -343,7 +445,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <div className="flex flex-wrap w-full">
               {/* 將市場選項分成兩行，每行最多4個 */}
               <div className="flex w-full gap-2 mb-2">
-                {MARKET_OPTIONS.slice(0, 4).map((opt) => (
+                {marketOptions.slice(0, 4).map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
@@ -363,7 +465,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 ))}
               </div>
               <div className="flex w-full gap-2">
-                {MARKET_OPTIONS.slice(4).map((opt) => (
+                {marketOptions.slice(4).map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
@@ -415,10 +517,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <motion.button
               whileHover={{ scale: loading ? 1 : 1.02 }}
               whileTap={{ scale: loading ? 1 : 0.98 }}
-              onClick={() => {
-                onSymbolChange(inputValue);
-                onSearch();
-              }}
+              onClick={handleSearch}
               disabled={loading || !inputValue.trim()}
               className="px-4 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium w-full"
               type="button"
@@ -441,7 +540,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             熱門股票
           </p>
           <div className="flex flex-wrap gap-2">
-            {POPULAR_STOCKS.map((stock) => (
+            {hotStocks.map((stock) => (
               <motion.button
                 key={stock.symbol}
                 whileHover={{ scale: 1.05 }}

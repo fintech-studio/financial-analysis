@@ -13,7 +13,11 @@ import { ChartBarIcon, TableCellsIcon } from "@heroicons/react/24/outline";
 import type { MarketType } from "@/components/Stock/SearchBar";
 
 const StockAnalysisPage: React.FC = () => {
-  const [selectedSymbol, setSelectedSymbol] = useState<string>("");
+  // 合併 symbol 與 market 狀態
+  const [queryState, setQueryState] = useState<{
+    symbol: string;
+    market: MarketType;
+  }>({ symbol: "", market: "market_stock_tw" });
   const [activeView, setActiveView] = useState<"chart" | "table" | "analytics">(
     "chart"
   );
@@ -21,8 +25,6 @@ const StockAnalysisPage: React.FC = () => {
   const [dataPeriod, setDataPeriod] = useState<
     "YTD" | "1M" | "3M" | "6M" | "1Y" | "ALL"
   >("1Y");
-  // 新增 market 狀態
-  const [market, setMarket] = useState<MarketType>("market_stock_tw");
 
   const {
     data,
@@ -33,11 +35,23 @@ const StockAnalysisPage: React.FC = () => {
     technicalData,
     refetch,
     clearError,
-  } = useStockData(selectedSymbol, timeframe, market);
+  } = useStockData(queryState.symbol, timeframe, queryState.market);
 
   const handleSymbolChange = useCallback((symbol: string) => {
-    setSelectedSymbol(symbol);
+    setQueryState((q) => ({ ...q, symbol }));
   }, []);
+
+  const handleMarketChange = useCallback((market: MarketType) => {
+    setQueryState((q) => ({ ...q, market }));
+  }, []);
+
+  // 新增：同時設定 symbol 與 market
+  const handleSymbolAndMarketChange = useCallback(
+    (symbol: string, market: MarketType) => {
+      setQueryState({ symbol, market });
+    },
+    []
+  );
 
   const handleTimeframeChange = useCallback((tf: "1d" | "1h") => {
     setTimeframe(tf);
@@ -84,7 +98,7 @@ const StockAnalysisPage: React.FC = () => {
           <ChartContainer
             data={candlestickData}
             technicalData={technicalData}
-            symbol={selectedSymbol}
+            symbol={queryState.symbol}
             timeframe={timeframe}
           />
         );
@@ -93,7 +107,7 @@ const StockAnalysisPage: React.FC = () => {
           <DataTable
             data={data}
             timeframe={timeframe}
-            symbol={selectedSymbol}
+            symbol={queryState.symbol}
           />
         );
       default:
@@ -106,7 +120,7 @@ const StockAnalysisPage: React.FC = () => {
     activeView,
     candlestickData,
     technicalData,
-    selectedSymbol,
+    queryState.symbol,
     timeframe,
     refetch,
     clearError,
@@ -123,16 +137,17 @@ const StockAnalysisPage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <SearchBar
-            symbol={selectedSymbol}
+            symbol={queryState.symbol}
             onSymbolChange={handleSymbolChange}
             timeframe={timeframe}
             onTimeframeChange={handleTimeframeChange}
             loading={loading}
-            onSearch={refetch}
             dataPeriod={dataPeriod}
             onDataPeriodChange={setDataPeriod}
-            market={market}
-            onMarketChange={setMarket}
+            market={queryState.market}
+            onMarketChange={handleMarketChange}
+            // 傳入新的 callback
+            onSymbolAndMarketChange={handleSymbolAndMarketChange}
           />
         </motion.div>
 
@@ -173,7 +188,7 @@ const StockAnalysisPage: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <TradingCard
-              symbol={selectedSymbol}
+              symbol={queryState.symbol}
               stats={stats}
               timeframe={timeframe}
             />
