@@ -8,6 +8,7 @@ import LoadingSpinner from "@/components/Stock/LoadingSpinner";
 import { EmptyState, ErrorState } from "@/components/Stock/StateComponents";
 import { useStockData } from "@/hooks/useStockData";
 import { ChartBarIcon, TableCellsIcon } from "@heroicons/react/24/outline";
+import TechnicalAnalysisPanel from "@/components/Stock/TechnicalAnalysisPanel";
 import type { MarketType } from "@/components/Stock/SearchBar";
 
 type ViewType = "chart" | "table";
@@ -94,20 +95,35 @@ const StockAnalysisPage: React.FC = () => {
     switch (activeView) {
       case "chart":
         return (
-          <ChartContainer
-            data={candlestickData}
-            technicalData={technicalData}
-            symbol={queryState.symbol}
-            timeframe={timeframe}
-          />
+          <>
+            <ChartContainer
+              data={candlestickData}
+              technicalData={technicalData}
+              symbol={queryState.symbol}
+              timeframe={timeframe}
+            />
+            <TechnicalAnalysisPanel
+              technicalData={technicalData}
+              symbol={queryState.symbol}
+              timeframe={timeframe}
+              close_price={candlestickData?.slice(-1)[0]?.close} // 使用最新的收盤價
+            />
+          </>
         );
       case "table":
         return (
-          <DataTable
-            data={data}
-            timeframe={timeframe}
-            symbol={queryState.symbol}
-          />
+          <>
+            <DataTable
+              data={data}
+              timeframe={timeframe}
+              symbol={queryState.symbol}
+            />
+            <TechnicalAnalysisPanel
+              technicalData={technicalData}
+              symbol={queryState.symbol}
+              timeframe={timeframe}
+            />
+          </>
         );
       default:
         return null;
