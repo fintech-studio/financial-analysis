@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { MarketType } from "@/components/Stock/SearchBar";
 
-interface StockData {
+// 型別集中管理
+export interface StockData {
   symbol: string;
   datetime: string;
   open_price?: number;
@@ -11,8 +12,7 @@ interface StockData {
   volume?: number;
   [key: string]: any;
 }
-
-interface CandlestickData {
+export interface CandlestickData {
   date: string;
   open: number;
   high: number;
@@ -20,8 +20,7 @@ interface CandlestickData {
   close: number;
   volume?: number;
 }
-
-interface StockStats {
+export interface StockStats {
   latest: number;
   change: number;
   changePercent: number;
@@ -34,22 +33,16 @@ interface StockStats {
   datetime?: string;
 }
 
-interface DatabaseConfig {
-  server: string;
-  user: string;
-  password: string;
-  database: string;
-  port?: string;
-}
-
 const TIMEFRAMES = {
   "1d": { name: "日線", table: "stock_data_1d" },
   "1h": { name: "時線", table: "stock_data_1h" },
-};
+} as const;
+
+type Timeframe = keyof typeof TIMEFRAMES;
 
 export const useStockData = (
   symbol: string,
-  timeframe: "1d" | "1h",
+  timeframe: Timeframe,
   market: MarketType
 ) => {
   const [data, setData] = useState<StockData[]>([]);
@@ -61,21 +54,15 @@ export const useStockData = (
     latestSymbolRef.current = symbol;
   }, [symbol]);
 
-  // 僅傳遞 database 名稱，連線資訊應由 API 層處理
-  const databaseConfig = useMemo<Pick<DatabaseConfig, "database">>(
-    () => ({ database: market }),
-    [market]
-  );
+  const databaseConfig = useMemo(() => ({ database: market }), [market]);
 
   const fetchData = useCallback(async () => {
     if (!symbol.trim()) return;
-
     setLoading(true);
     setError(null);
     const currentSymbol = symbol;
-
     const tableName = TIMEFRAMES[timeframe].table;
-    const db = market; // market 變數就是資料庫名稱
+    const db = market;
     const query = `
       SELECT
         symbol, datetime, open_price, high_price, low_price, close_price, volume,
@@ -89,56 +76,37 @@ export const useStockData = (
       WHERE symbol = @symbol
       ORDER BY datetime DESC
     `;
-
     try {
       const response = await fetch("/api/database/execute-query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          config: databaseConfig, // 只需一個 config，API 層可忽略 database
+          config: databaseConfig,
           query: query.trim(),
           params: { symbol: symbol.toUpperCase() },
         }),
       });
-
-      if (latestSymbolRef.current !== currentSymbol) {
-        // symbol 已變動，丟棄這次請求結果
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(`查詢失敗: ${response.status}`);
-      }
-
+      if (latestSymbolRef.current !== currentSymbol) return;
+      if (!response.ok) throw new Error(`查詢失敗: ${response.status}`);
       const result = await response.json();
-
       if (result.success) {
         setData(result.data || []);
-        if (!result.data || result.data.length === 0) {
-          setError("查無資料");
-        }
+        if (!result.data || result.data.length === 0) setError("查無資料");
       } else {
-        setData([]); // 查詢失敗時清空
+        setData([]);
         throw new Error(result.error || "查詢失敗");
       }
     } catch (err) {
-      if (latestSymbolRef.current !== currentSymbol) {
-        // symbol 已變動，丟棄這次請求錯誤
-        return;
-      }
-      setData([]); // 捕獲錯誤時也清空
+      if (latestSymbolRef.current !== currentSymbol) return;
+      setData([]);
       setError(err instanceof Error ? err.message : "未知錯誤");
     } finally {
-      if (latestSymbolRef.current === currentSymbol) {
-        setLoading(false);
-      }
+      if (latestSymbolRef.current === currentSymbol) setLoading(false);
     }
   }, [symbol, timeframe, market, databaseConfig]);
+
   const candlestickData = useMemo((): CandlestickData[] => {
     if (!data.length) return [];
-
-    // 重要修復：不過濾數據，保持與技術指標的索引對應關係
-    // 只反轉順序，讓最舊的數據在前面（正常時間順序）
     return data
       .slice()
       .reverse()
@@ -159,13 +127,11 @@ export const useStockData = (
         volume: item.volume ? Number(item.volume) : undefined,
       }));
   }, [data]);
+
   const technicalData = useMemo(() => {
     if (!data.length) return undefined;
-
-    // 重要修復：保持技術指標數據與原始數據的索引對應關係
     const reversedData = data.slice().reverse();
-    const result: any = {};
-
+    const result: Record<string, number[]> = {};
     const indicators = [
       "rsi_5",
       "rsi_7",
@@ -192,38 +158,31 @@ export const useStockData = (
       "willr",
       "mom",
     ];
-
     indicators.forEach((indicator) => {
-      // 關鍵修復：不過濾空值，保持索引對應關係
-      // 空值會在圖表組件中處理，這樣可以確保時間對齊
-      const values = reversedData.map((d) => {
-        const value = d[indicator];
-        return value != null && !isNaN(Number(value)) ? Number(value) : null;
-      });
-
-      // 只有當至少有一些有效值時才添加這個指標
-      const hasValidValues = values.some((v) => v !== null);
-      if (hasValidValues) {
+      // 過濾掉 null，只保留 number
+      const values = reversedData
+        .map((d) => {
+          const value = d[indicator];
+          return value != null && !isNaN(Number(value)) ? Number(value) : null;
+        })
+        .filter((v): v is number => v !== null);
+      if (values.length > 0) {
         result[indicator] = values;
       }
     });
-
     return result;
   }, [data]);
+
   const stats = useMemo((): StockStats | null => {
     if (!candlestickData.length || !data.length) return null;
-
     const latest = candlestickData[candlestickData.length - 1];
-    const latestOriginalData = data[0]; // 因為 data 是按 datetime DESC 排序，所以第一個是最新的
-
+    const latestOriginalData = data[0];
     const previous =
       candlestickData.length > 1
         ? candlestickData[candlestickData.length - 2]
         : latest;
-
     const change = latest.close - previous.close;
     const changePercent = (change / previous.close) * 100;
-
     return {
       latest: latest.close,
       change,
@@ -238,11 +197,9 @@ export const useStockData = (
     };
   }, [candlestickData, data]);
 
-  // refetch 僅供特殊需求，預設不需手動呼叫，查詢會自動隨 symbol/market/timeframe 變動
   const refetch = useCallback(() => {
     fetchData();
   }, [fetchData]);
-
   const clearError = useCallback(() => {
     setError(null);
   }, []);
@@ -250,11 +207,8 @@ export const useStockData = (
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  // 修正：當 symbol 變動時，立即清空 data、stats 狀態，避免殘留舊資料
   useEffect(() => {
     setData([]);
-    // 這裡不需要 setStats，因為 stats 是 useMemo 計算的
     setError(null);
   }, [symbol, timeframe]);
 

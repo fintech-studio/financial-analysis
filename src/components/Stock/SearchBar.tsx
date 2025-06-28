@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MagnifyingGlassIcon,
@@ -7,23 +13,7 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
-interface SearchBarProps {
-  symbol: string;
-  onSymbolChange: (symbol: string) => void;
-  timeframe: "1d" | "1h";
-  onTimeframeChange: (timeframe: "1d" | "1h") => void;
-  dataPeriod?: "YTD" | "1M" | "3M" | "6M" | "1Y" | "ALL";
-  onDataPeriodChange?: (
-    period: "YTD" | "1M" | "3M" | "6M" | "1Y" | "ALL"
-  ) => void;
-  loading?: boolean;
-  market: MarketType;
-  onMarketChange: (market: MarketType) => void;
-  // 新增：合併設定 symbol 與 market 的 callback
-  onSymbolAndMarketChange?: (symbol: string, market: MarketType) => void;
-}
-
-// 市場型別
+// 常數與型別
 export const MARKET_OPTIONS = [
   {
     value: "market_stock_tw",
@@ -61,7 +51,6 @@ export const MARKET_OPTIONS = [
     color: "bg-pink-100 text-pink-700 border-pink-200",
   },
 ] as const;
-
 export type MarketType = (typeof MARKET_OPTIONS)[number]["value"];
 
 const POPULAR_STOCKS = [
@@ -133,7 +122,25 @@ const POPULAR_STOCKS = [
     type: "Crypto",
     market: "market_crypto",
   },
-];
+] as const;
+
+const CATEGORY_TO_MARKET_TYPE: Record<string, MarketType> = {
+  market_stock_tw: "market_stock_tw",
+  market_stock_us: "market_stock_us",
+  market_etf: "market_etf",
+  market_index: "market_index",
+  market_forex: "market_forex",
+  market_crypto: "market_crypto",
+  market_futures: "market_futures",
+  // 中文對應
+  台股: "market_stock_tw",
+  美股: "market_stock_us",
+  ETF: "market_etf",
+  指數: "market_index",
+  外匯: "market_forex",
+  加密貨幣: "market_crypto",
+  期貨: "market_futures",
+};
 
 // 防抖 Hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -145,7 +152,52 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-// 型別允許 market_type 為 undefined/null
+// 建議搜尋自訂 hook
+function useMarketSuggestions(query: string) {
+  const [suggestions, setSuggestions] = useState<MarketSuggestion[]>([]);
+  const [fetching, setFetching] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    setFetching(true);
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    fetch(`/api/market_data?q=${encodeURIComponent(query)}`, {
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setSuggestions(Array.isArray(data) ? data.slice(0, 50) : []);
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") setSuggestions([]);
+      })
+      .finally(() => setFetching(false));
+    return () => controller.abort();
+  }, [query]);
+  return { suggestions, fetching };
+}
+
+interface SearchBarProps {
+  symbol: string;
+  onSymbolChange: (symbol: string) => void;
+  timeframe: "1d" | "1h";
+  onTimeframeChange: (timeframe: "1d" | "1h") => void;
+  dataPeriod?: "YTD" | "1M" | "3M" | "6M" | "1Y" | "ALL";
+  onDataPeriodChange?: (
+    period: "YTD" | "1M" | "3M" | "6M" | "1Y" | "ALL"
+  ) => void;
+  loading?: boolean;
+  market: MarketType;
+  onMarketChange: (market: MarketType) => void;
+  onSymbolAndMarketChange?: (symbol: string, market: MarketType) => void;
+}
+
 interface MarketSuggestion {
   market_category: string;
   symbol: string;
@@ -167,41 +219,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [inputValue, setInputValue] = useState(symbol);
-  const [suggestions, setSuggestions] = useState<MarketSuggestion[]>([]);
-  const [fetching, setFetching] = useState(false);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
-
-  // 使用防抖來優化搜尋體驗
   const debouncedInputValue = useDebounce(inputValue, 300);
-
-  // 熱門股票與市場選項 useMemo 優化
-  const hotStocks = useMemo(() => POPULAR_STOCKS, []);
+  const { suggestions, fetching } = useMarketSuggestions(debouncedInputValue);
   const marketOptions = useMemo(() => MARKET_OPTIONS, []);
-
-  // 監聽 debouncedInputValue，呼叫 API，並加上 abort controller
-  useEffect(() => {
-    if (!debouncedInputValue.trim()) {
-      setSuggestions([]);
-      return;
-    }
-    setFetching(true);
-    if (abortRef.current) abortRef.current.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-    fetch(`/api/market_data?q=${encodeURIComponent(debouncedInputValue)}`, {
-      signal: controller.signal,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setSuggestions(Array.isArray(data) ? data.slice(0, 50) : []);
-      })
-      .catch((err) => {
-        if (err.name !== "AbortError") setSuggestions([]);
-      })
-      .finally(() => setFetching(false));
-    return () => controller.abort();
-  }, [debouncedInputValue]);
+  const hotStocks = useMemo(() => POPULAR_STOCKS, []);
 
   // 同步外部 symbol 變化
   useEffect(() => {
@@ -209,9 +230,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [symbol]);
 
   // 查詢時自動根據 symbol 決定市場
-  async function handleSearch() {
+  const handleSearch = useCallback(async () => {
     if (!inputValue.trim()) return;
-    setFetching(true);
     try {
       const res = await fetch(
         `/api/market_data?q=${encodeURIComponent(inputValue)}`
@@ -227,134 +247,128 @@ const SearchBar: React.FC<SearchBarProps> = ({
     } catch {
       // ignore
     } finally {
-      setFetching(false);
       onSymbolChange(inputValue);
     }
-  }
-
-  // 建立 market_category 與 MarketType 的對應表
-  const CATEGORY_TO_MARKET_TYPE: Record<string, MarketType> = {
-    market_stock_tw: "market_stock_tw",
-    market_stock_us: "market_stock_us",
-    market_etf: "market_etf",
-    market_index: "market_index",
-    market_forex: "market_forex",
-    market_crypto: "market_crypto",
-    market_futures: "market_futures",
-    // 中文對應
-    台股: "market_stock_tw",
-    美股: "market_stock_us",
-    ETF: "market_etf",
-    指數: "market_index",
-    外匯: "market_forex",
-    加密貨幣: "market_crypto",
-    期貨: "market_futures",
-  };
+  }, [inputValue, market, onMarketChange, onSymbolChange]);
 
   // 處理選擇建議
-  function handleStockSelect(
-    selectedSymbol: string,
-    selectedMarketTypeOrCategory?: string
-  ) {
-    setInputValue(selectedSymbol);
-    let willChangeMarket = false;
-    if (selectedMarketTypeOrCategory) {
-      const mappedMarket =
-        CATEGORY_TO_MARKET_TYPE[selectedMarketTypeOrCategory] ||
-        CATEGORY_TO_MARKET_TYPE[selectedMarketTypeOrCategory];
-      if (mappedMarket && mappedMarket !== market) {
-        willChangeMarket = true;
-        onMarketChange(mappedMarket);
-      }
-    }
-    onSymbolChange(selectedSymbol);
-    setShowSuggestions(false);
-    setSelectedSuggestionIndex(-1);
-    // 不再呼叫 onSearch，查詢交由父層 useEffect 控制
-  }
-
-  // 處理輸入變化
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value.toUpperCase();
-    setInputValue(value);
-    setShowSuggestions(!!value.trim());
-    setSelectedSuggestionIndex(-1);
-  }
-
-  // 處理鍵盤事件
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (!showSuggestions || suggestions.length === 0) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        if (!loading && inputValue.trim()) {
-          handleSearch();
+  const handleStockSelect = useCallback(
+    (selectedSymbol: string, selectedMarketTypeOrCategory?: string) => {
+      setInputValue(selectedSymbol);
+      if (selectedMarketTypeOrCategory) {
+        const mappedMarket =
+          CATEGORY_TO_MARKET_TYPE[selectedMarketTypeOrCategory];
+        if (mappedMarket && mappedMarket !== market) {
+          onMarketChange(mappedMarket);
         }
       }
-      return;
-    }
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedSuggestionIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : 0
-      );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedSuggestionIndex((prev) =>
-        prev > 0 ? prev - 1 : suggestions.length - 1
-      );
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (selectedSuggestionIndex >= 0) {
-        const s = suggestions[selectedSuggestionIndex];
-        handleStockSelect(s.symbol, s.market_type as MarketType);
-      } else if (!loading && inputValue.trim()) {
-        onSymbolChange(inputValue);
-        setShowSuggestions(false);
-      }
-    } else if (e.key === "Escape") {
+      onSymbolChange(selectedSymbol);
       setShowSuggestions(false);
       setSelectedSuggestionIndex(-1);
-    }
-  }
+    },
+    [market, onMarketChange, onSymbolChange]
+  );
+
+  // 處理輸入變化
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value.toUpperCase();
+      setInputValue(value);
+      setShowSuggestions(!!value.trim());
+      setSelectedSuggestionIndex(-1);
+    },
+    []
+  );
+
+  // 處理鍵盤事件
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!showSuggestions || suggestions.length === 0) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (!loading && inputValue.trim()) {
+            handleSearch();
+          }
+        }
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedSuggestionIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : 0
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedSuggestionIndex((prev) =>
+          prev > 0 ? prev - 1 : suggestions.length - 1
+        );
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0) {
+          const s = suggestions[selectedSuggestionIndex];
+          handleStockSelect(s.symbol, s.market_type as MarketType);
+        } else if (!loading && inputValue.trim()) {
+          onSymbolChange(inputValue);
+          setShowSuggestions(false);
+        }
+      } else if (e.key === "Escape") {
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+      }
+    },
+    [
+      showSuggestions,
+      suggestions,
+      selectedSuggestionIndex,
+      loading,
+      inputValue,
+      handleSearch,
+      handleStockSelect,
+      onSymbolChange,
+    ]
+  );
 
   // 處理建議點擊
-  function handleSuggestionClick(s: MarketSuggestion) {
-    const targetMarket = s.market_type || s.market_category;
-    const mappedMarket = targetMarket && CATEGORY_TO_MARKET_TYPE[targetMarket];
-    console.log("點擊建議:", s, "mappedMarket:", mappedMarket);
-    if (onSymbolAndMarketChange && mappedMarket) {
-      onSymbolAndMarketChange(s.symbol, mappedMarket);
-    } else {
-      if (mappedMarket && mappedMarket !== market) {
-        onMarketChange(mappedMarket);
+  const handleSuggestionClick = useCallback(
+    (s: MarketSuggestion) => {
+      const targetMarket = s.market_type || s.market_category;
+      const mappedMarket =
+        targetMarket && CATEGORY_TO_MARKET_TYPE[targetMarket];
+      if (onSymbolAndMarketChange && mappedMarket) {
+        onSymbolAndMarketChange(s.symbol, mappedMarket);
+      } else {
+        if (mappedMarket && mappedMarket !== market) {
+          onMarketChange(mappedMarket);
+        }
+        onSymbolChange(s.symbol);
       }
-      onSymbolChange(s.symbol);
-    }
-    setInputValue(s.symbol);
-    setShowSuggestions(false);
-    setSelectedSuggestionIndex(-1);
-  }
+      setInputValue(s.symbol);
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+    },
+    [market, onMarketChange, onSymbolChange, onSymbolAndMarketChange]
+  );
 
   // 處理 focus/blur
-  function handleFocus() {
+  const handleFocus = useCallback(() => {
     setIsFocused(true);
     if (inputValue.trim() && suggestions.length > 0) {
       setShowSuggestions(true);
     }
-  }
-  function handleBlur() {
+  }, [inputValue, suggestions]);
+  const handleBlur = useCallback(() => {
     setIsFocused(false);
     setTimeout(() => setShowSuggestions(false), 150);
-  }
+  }, []);
 
   // 熱門股票按鈕 focus 時自動填入
-  function handleHotStockMouseDown(symbol: string) {
+  const handleHotStockMouseDown = useCallback((symbol: string) => {
     setInputValue(symbol);
-  }
+  }, []);
 
   // 渲染 suggestion label
-  function renderSuggestionLabel(s: MarketSuggestion) {
-    return (
+  const renderSuggestionLabel = useCallback(
+    (s: MarketSuggestion) => (
       <span className="ml-2 px-2 py-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded">
         {s.market_category}
         {s.market_type && (
@@ -367,8 +381,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </>
         )}
       </span>
-    );
-  }
+    ),
+    [marketOptions]
+  );
 
   return (
     <div className="w-full">
@@ -409,7 +424,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
               <AnimatePresence>
                 {showSuggestions && suggestions.length > 0 && (
                   <motion.div
-                    ref={suggestionsRef}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}

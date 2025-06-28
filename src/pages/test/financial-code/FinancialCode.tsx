@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 
 interface StockRow {
   symbol: string;
@@ -24,6 +24,22 @@ const tabConfigs = [
       { key: "industry_type", label: "產業類別" },
     ],
     title: "台灣股票代號一覽表",
+  },
+  {
+    key: "us-stock",
+    label: "美股",
+    api: "/api/financial-code?symbol=all_us_stock",
+    columns: [
+      { key: "symbol", label: "股票代號" },
+      { key: "name", label: "股票名稱" },
+      { key: "chinese_name", label: "中文股票名稱" },
+      { key: "isin_code", label: "ISIN 國際證券識別號碼" },
+      { key: "country", label: "國家" },
+      { key: "ipo_year", label: "上市年份" },
+      { key: "sector_type", label: "產業類股" },
+      { key: "industry_type", label: "產業類別" },
+    ],
+    title: "美國股票代號一覽表",
   },
   {
     key: "etf",
@@ -67,6 +83,30 @@ const tabConfigs = [
   },
 ];
 
+// 抽取 Select 篩選元件，減少重複
+const FilterSelect: React.FC<{
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}> = ({ label, value, options, onChange }) => (
+  <>
+    <span className="text-gray-500 text-sm">{label}</span>
+    <select
+      className="border border-blue-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+    >
+      <option value="">全部</option>
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  </>
+);
+
 const FinancialCodeTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState(tabConfigs[0].key);
   const [data, setData] = useState<StockRow[]>([]);
@@ -82,6 +122,9 @@ const FinancialCodeTabs: React.FC = () => {
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [jumpPage, setJumpPage] = useState("");
+
+  const [sectorTypeFilter, setSectorTypeFilter] = useState<string>("");
+  const [countryFilter, setCountryFilter] = useState<string>("");
 
   const currentTab = tabConfigs.find((tab) => tab.key === activeTab)!;
 
@@ -108,37 +151,83 @@ const FinancialCodeTabs: React.FC = () => {
       });
   }, [activeTab]);
 
+  // 合併 setPage(1) 的 useEffect
   useEffect(() => {
     setPage(1);
   }, [
     search,
     marketTypeFilter,
     industryTypeFilter,
+    sectorTypeFilter,
+    countryFilter,
     dateStart,
     dateEnd,
     rowsPerPage,
   ]);
 
-  // 取得所有市場類別與產業類別選項
+  // 取得所有市場類別與產業類別選項（過濾 undefined）
   const marketTypeOptions = useMemo(
     () =>
-      Array.from(new Set(data.map((row) => row.market_type).filter(Boolean))),
+      Array.from(
+        new Set(
+          data
+            .map((row) => row.market_type)
+            .filter((v): v is string => Boolean(v))
+        )
+      ),
     [data]
   );
   const industryTypeOptions = useMemo(
     () =>
-      Array.from(new Set(data.map((row) => row.industry_type).filter(Boolean))),
+      Array.from(
+        new Set(
+          data
+            .map((row) => row.industry_type)
+            .filter((v): v is string => Boolean(v))
+        )
+      ),
+    [data]
+  );
+  // 美股專屬篩選
+  const sectorTypeOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          data
+            .map((row: any) => row.sector_type)
+            .filter((v): v is string => Boolean(v))
+        )
+      ),
+    [data]
+  );
+  const countryOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          data
+            .map((row: any) => row.country)
+            .filter((v): v is string => Boolean(v))
+        )
+      ),
     [data]
   );
 
   // 搜尋、篩選與排序
   const filteredData = useMemo(
     () =>
-      data.filter((row) => {
+      data.filter((row: any) => {
         if (marketTypeFilter && row.market_type !== marketTypeFilter)
           return false;
         if (industryTypeFilter && row.industry_type !== industryTypeFilter)
           return false;
+        // 美股專屬篩選
+        if (activeTab === "us-stock") {
+          if (sectorTypeFilter && row.sector_type !== sectorTypeFilter)
+            return false;
+          if (countryFilter && row.country !== countryFilter) return false;
+          // if (ipoYearFilter && String(row.ipo_year) !== ipoYearFilter)
+          //   return false;
+        }
         if ((dateStart || dateEnd) && row.date) {
           const dateStr = formatDate(row.date);
           if (dateStart && dateStr < dateStart) return false;
@@ -161,6 +250,10 @@ const FinancialCodeTabs: React.FC = () => {
       dateEnd,
       search,
       currentTab.columns,
+      activeTab,
+      sectorTypeFilter,
+      countryFilter,
+      // ipoYearFilter,
     ]
   );
 
@@ -191,6 +284,7 @@ const FinancialCodeTabs: React.FC = () => {
       setSortKey(key);
       setSortOrder("asc");
     }
+    setPage(1); // 排序時自動跳到第一頁
   };
 
   // 日期格式化函式
@@ -210,14 +304,14 @@ const FinancialCodeTabs: React.FC = () => {
     return d;
   }
 
-  // 跳頁功能
-  const handleJumpPage = () => {
+  // 跳頁功能，onBlur 也觸發
+  const handleJumpPage = useCallback(() => {
     const num = Number(jumpPage);
     if (!isNaN(num) && num >= 1 && num <= totalPages) {
       setPage(num);
     }
     setJumpPage("");
-  };
+  }, [jumpPage, totalPages]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-pink-100 flex flex-col items-center py-10">
@@ -270,44 +364,49 @@ const FinancialCodeTabs: React.FC = () => {
           <div className="flex items-center gap-2 ">
             {/* 市場類別篩選 */}
             {currentTab.columns.some((col) => col.key === "market_type") && (
-              <>
-                <span className="text-gray-500 text-sm">市場類別</span>
-                <select
-                  className="border border-blue-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                  value={marketTypeFilter}
-                  onChange={(e) => {
-                    setMarketTypeFilter(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="">全部</option>
-                  {marketTypeOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </>
+              <FilterSelect
+                label="市場類別"
+                value={marketTypeFilter}
+                options={marketTypeOptions}
+                onChange={(v) => {
+                  setMarketTypeFilter(v);
+                  setPage(1);
+                }}
+              />
             )}
             {/* 產業類別篩選 */}
             {currentTab.columns.some((col) => col.key === "industry_type") && (
+              <FilterSelect
+                label="產業類別"
+                value={industryTypeFilter}
+                options={industryTypeOptions}
+                onChange={(v) => {
+                  setIndustryTypeFilter(v);
+                  setPage(1);
+                }}
+              />
+            )}
+            {/* 美股專屬篩選 */}
+            {activeTab === "us-stock" && (
               <>
-                <span className="text-gray-500 text-sm">產業類別</span>
-                <select
-                  className="border border-blue-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                  value={industryTypeFilter}
-                  onChange={(e) => {
-                    setIndustryTypeFilter(e.target.value);
+                <FilterSelect
+                  label="產業類股"
+                  value={sectorTypeFilter}
+                  options={sectorTypeOptions}
+                  onChange={(v) => {
+                    setSectorTypeFilter(v);
                     setPage(1);
                   }}
-                >
-                  <option value="">全部</option>
-                  {industryTypeOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
+                />
+                <FilterSelect
+                  label="國家"
+                  value={countryFilter}
+                  options={countryOptions}
+                  onChange={(v) => {
+                    setCountryFilter(v);
+                    setPage(1);
+                  }}
+                />
               </>
             )}
             {/* 日期範圍篩選 */}
@@ -359,7 +458,7 @@ const FinancialCodeTabs: React.FC = () => {
                 setPage(1);
               }}
             >
-              {[10, 20, 50, 100].map((n) => (
+              {[10, 20, 50, 100, 200, 500].map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>
@@ -485,6 +584,7 @@ const FinancialCodeTabs: React.FC = () => {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleJumpPage();
                 }}
+                onBlur={handleJumpPage}
                 className="w-16 px-2 py-1 border rounded text-center text-sm"
                 placeholder="跳頁"
               />

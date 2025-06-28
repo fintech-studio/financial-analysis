@@ -8,19 +8,19 @@ import LoadingSpinner from "@/components/Stock/LoadingSpinner";
 import { EmptyState, ErrorState } from "@/components/Stock/StateComponents";
 import { useStockData } from "@/hooks/useStockData";
 import { ChartBarIcon, TableCellsIcon } from "@heroicons/react/24/outline";
-
-// 匯入 MarketType 型別
 import type { MarketType } from "@/components/Stock/SearchBar";
 
+type ViewType = "chart" | "table";
+
 const StockAnalysisPage: React.FC = () => {
-  // 合併 symbol 與 market 狀態
   const [queryState, setQueryState] = useState<{
     symbol: string;
     market: MarketType;
-  }>({ symbol: "", market: "market_stock_tw" });
-  const [activeView, setActiveView] = useState<"chart" | "table" | "analytics">(
-    "chart"
-  );
+  }>({
+    symbol: "",
+    market: "market_stock_tw",
+  });
+  const [activeView, setActiveView] = useState<ViewType>("chart");
   const [timeframe, setTimeframe] = useState<"1d" | "1h">("1d");
   const [dataPeriod, setDataPeriod] = useState<
     "YTD" | "1M" | "3M" | "6M" | "1Y" | "ALL"
@@ -45,7 +45,6 @@ const StockAnalysisPage: React.FC = () => {
     setQueryState((q) => ({ ...q, market }));
   }, []);
 
-  // 新增：同時設定 symbol 與 market
   const handleSymbolAndMarketChange = useCallback(
     (symbol: string, market: MarketType) => {
       setQueryState({ symbol, market });
@@ -56,6 +55,13 @@ const StockAnalysisPage: React.FC = () => {
   const handleTimeframeChange = useCallback((tf: "1d" | "1h") => {
     setTimeframe(tf);
   }, []);
+
+  const handleDataPeriodChange = useCallback(
+    (period: "YTD" | "1M" | "3M" | "6M" | "1Y" | "ALL") => {
+      setDataPeriod(period);
+    },
+    []
+  );
 
   const views = useMemo(
     () => [
@@ -77,21 +83,14 @@ const StockAnalysisPage: React.FC = () => {
     []
   );
 
-  const renderContent = useMemo(() => {
-    if (loading) {
-      return <LoadingSpinner />;
-    }
-
-    if (error) {
+  const renderContent = useCallback(() => {
+    if (loading) return <LoadingSpinner />;
+    if (error)
       return (
         <ErrorState error={error} onRetry={refetch} onClear={clearError} />
       );
-    }
-
-    if (!data || data.length === 0) {
+    if (!data || data.length === 0)
       return <EmptyState onQuickSelect={handleSymbolChange} />;
-    }
-
     switch (activeView) {
       case "chart":
         return (
@@ -143,15 +142,14 @@ const StockAnalysisPage: React.FC = () => {
             onTimeframeChange={handleTimeframeChange}
             loading={loading}
             dataPeriod={dataPeriod}
-            onDataPeriodChange={setDataPeriod}
+            onDataPeriodChange={handleDataPeriodChange}
             market={queryState.market}
             onMarketChange={handleMarketChange}
-            // 傳入新的 callback
             onSymbolAndMarketChange={handleSymbolAndMarketChange}
           />
         </motion.div>
 
-        {/* 簡約視圖切換 */}
+        {/* 視圖切換 */}
         {data && data.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -164,7 +162,7 @@ const StockAnalysisPage: React.FC = () => {
                 {views.map((view) => (
                   <motion.button
                     key={view.key}
-                    onClick={() => setActiveView(view.key as any)}
+                    onClick={() => setActiveView(view.key as ViewType)}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                       activeView === view.key
                         ? "bg-gray-900 text-white"
@@ -204,7 +202,7 @@ const StockAnalysisPage: React.FC = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            {renderContent}
+            {renderContent()}
           </motion.div>
         </AnimatePresence>
       </div>
