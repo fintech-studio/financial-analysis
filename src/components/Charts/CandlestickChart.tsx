@@ -407,60 +407,46 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         return;
       }
 
-      console.log(
-        `Processing indicator: ${indicator.key}, values length: ${indicatorValues.length}, data length: ${data.length}`
-      );
-
-      try {
-        const lineData: LineData[] = []; // 關鍵修復：現在 candlestickData 已經是正確的時間順序（最舊到最新）
-        // technicalData 中的數據也對應相同的順序
-        // 所以 indicatorValues[i] 直接對應 data[i]
-
-        const dataLength = data.length;
-        const indicatorLength = indicatorValues.length;
-
-        // 處理技術指標數據，確保時間對齊
-        for (let i = 0; i < Math.min(dataLength, indicatorLength); i++) {
-          const value = indicatorValues[i]; // 對應 data[i]
-          const dateItem = data[i]; // 現在是直接對應的
-
-          // 只有當值不為 null 且有效時才添加數據點
-          if (
-            value != null &&
-            !isNaN(Number(value)) &&
-            dateItem &&
-            dateItem.date
-          ) {
-            const timeValue = Math.floor(
-              new Date(dateItem.date).getTime() / 1000
-            ) as any;
-
-            lineData.push({
-              time: timeValue,
-              value: Number(value),
-            });
-          }
+      // 修正：技術指標右對齊 K 線資料
+      const lineData: LineData[] = [];
+      const dataLength = data.length;
+      const indicatorLength = indicatorValues.length;
+      for (let i = 0; i < dataLength; i++) {
+        const indicatorIdx = i - (dataLength - indicatorLength);
+        const value = indicatorIdx >= 0 ? indicatorValues[indicatorIdx] : null;
+        const dateItem = data[i];
+        if (
+          value != null &&
+          !isNaN(Number(value)) &&
+          dateItem &&
+          dateItem.date
+        ) {
+          const timeValue = Math.floor(
+            new Date(dateItem.date).getTime() / 1000
+          ) as any;
+          lineData.push({
+            time: timeValue,
+            value: Number(value),
+          });
         }
+      }
 
-        // 按時間排序，確保圖表正確顯示
-        lineData.sort((a, b) => (a.time as number) - (b.time as number)); // 只有當有有效數據時才添加到圖表
-        if (lineData.length > 0) {
-          if (indicator.overlay) {
-            overlayData[indicator.key] = lineData;
-            console.log(
-              `Added overlay indicator: ${indicator.key}, data points: ${lineData.length}`
-            );
-          } else {
-            separateData[indicator.key] = lineData;
-            console.log(
-              `Added separate indicator: ${indicator.key}, data points: ${lineData.length}`
-            );
-          }
+      // 按時間排序，確保圖表正確顯示
+      lineData.sort((a, b) => (a.time as number) - (b.time as number)); // 只有當有有效數據時才添加到圖表
+      if (lineData.length > 0) {
+        if (indicator.overlay) {
+          overlayData[indicator.key] = lineData;
+          console.log(
+            `Added overlay indicator: ${indicator.key}, data points: ${lineData.length}`
+          );
         } else {
-          console.warn(`No valid data points for indicator: ${indicator.key}`);
+          separateData[indicator.key] = lineData;
+          console.log(
+            `Added separate indicator: ${indicator.key}, data points: ${lineData.length}`
+          );
         }
-      } catch (error) {
-        console.error(`Error processing indicator ${indicator.key}:`, error);
+      } else {
+        console.warn(`No valid data points for indicator: ${indicator.key}`);
       }
     });
 
@@ -1038,9 +1024,12 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
                       .filter((ind) => ind.enabled)
                       .map((ind) => {
                         const valArr = technicalData[ind.key];
+                        // 修正：指標資料右對齊
+                        const indicatorIdx =
+                          idx - (data.length - (valArr?.length ?? 0));
                         const val =
-                          valArr && valArr[idx] != null
-                            ? valArr[idx]
+                          indicatorIdx >= 0 && valArr
+                            ? valArr[indicatorIdx]
                             : undefined;
                         return (
                           <div
