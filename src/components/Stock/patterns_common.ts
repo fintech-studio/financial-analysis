@@ -1,11 +1,11 @@
-// 型態信號強度
+// 共用型別、enum、輔助函數
+
 export enum SignalStrength {
   WEAK = "weak",
   MODERATE = "moderate",
   STRONG = "strong",
 }
 
-// 型態類型
 export enum PatternType {
   REVERSAL = "reversal",
   CONTINUATION = "continuation",
@@ -37,7 +37,6 @@ export interface Pattern {
   bullish: boolean | null;
 }
 
-// 輔助函數
 export const getBodySize = (data: KLineData): number =>
   Math.abs(data.close - data.open);
 export const getUpperShadow = (data: KLineData): number =>
@@ -204,17 +203,3 @@ export const patternUtils = {
     return headIsLowest && shouldersLevel && timeSpacing;
   },
 };
-
-import patternsPart1 from "./patterns_part1";
-import patternsPart2 from "./patterns_part2";
-import patternsPart3 from "./patterns_part3";
-import patternsPart4 from "./patterns_part4";
-
-const patterns = [
-  ...patternsPart1,
-  ...patternsPart2,
-  ...patternsPart3,
-  ...patternsPart4,
-];
-
-export default patterns;
