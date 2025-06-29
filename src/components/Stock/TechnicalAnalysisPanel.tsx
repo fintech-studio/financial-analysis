@@ -1,11 +1,17 @@
 import React, { useMemo } from "react";
+import { Sparklines, SparklinesLine } from "react-sparklines";
 
 interface TechnicalAnalysisPanelProps {
   technicalData?: Record<string, number[]>;
   symbol: string;
   timeframe: "1d" | "1h";
+  open_price?: number;
+  high_price?: number;
+  low_price?: number;
   close_price: number;
-  loading?: boolean; // 新增 loading 狀態
+  volume?: number;
+  loading?: boolean;
+  candlestickData?: { high: number; low: number }[]; // 新增 K 線資料
 }
 
 // slice(-1)[0] 工具函式
@@ -93,8 +99,13 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
   technicalData,
   symbol,
   timeframe,
+  open_price,
+  high_price,
+  low_price,
   close_price,
+  volume,
   loading = false,
+  candlestickData,
 }) => {
   // loading 狀態
   if (loading) {
@@ -137,18 +148,6 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       BollLower: () => last(technicalData["bb_lower"]),
       Close: () => {
         if (typeof close_price === "number") return close_price;
-        const possibleKeys = [
-          "close",
-          "Close",
-          "closing_price",
-          "price",
-          "adj_close",
-          "adjclose",
-        ];
-        for (const key of possibleKeys) {
-          const value = last(technicalData?.[key]);
-          if (value !== undefined) return value;
-        }
         return undefined;
       },
       Volume: () => last(technicalData["volume"]),
@@ -167,8 +166,52 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       ATR: () => last(technicalData["atr"]),
       CCI: () => last(technicalData["cci"]),
       MOM: () => last(technicalData["mom"]),
+      Support: () => {
+        // 優先用 candlestickData
+        if (Array.isArray(candlestickData) && candlestickData.length > 0) {
+          const lows = candlestickData
+            .map((d) => d.low)
+            .filter((v) => typeof v === "number");
+          if (lows.length > 0) return Math.min(...lows.slice(-20));
+        }
+        // fallback technicalData
+        const possibleKeys = ["low", "lows", "low_price", "Low", "lowPrices"];
+        let lows: number[] | undefined;
+        for (const key of possibleKeys) {
+          if (Array.isArray(technicalData[key])) {
+            lows = technicalData[key];
+            break;
+          }
+        }
+        if (!lows || lows.length === 0) return undefined;
+        return Math.min(...lows.slice(-20));
+      },
+      Resistance: () => {
+        if (Array.isArray(candlestickData) && candlestickData.length > 0) {
+          const highs = candlestickData
+            .map((d) => d.high)
+            .filter((v) => typeof v === "number");
+          if (highs.length > 0) return Math.max(...highs.slice(-20));
+        }
+        const possibleKeys = [
+          "high",
+          "highs",
+          "high_price",
+          "High",
+          "highPrices",
+        ];
+        let highs: number[] | undefined;
+        for (const key of possibleKeys) {
+          if (Array.isArray(technicalData[key])) {
+            highs = technicalData[key];
+            break;
+          }
+        }
+        if (!highs || highs.length === 0) return undefined;
+        return Math.max(...highs.slice(-20));
+      },
     }),
-    [technicalData, close_price]
+    [technicalData, close_price, candlestickData]
   );
 
   // 只計算一次卡片資料
@@ -193,6 +236,8 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
     const atr = get.ATR();
     const cci = get.CCI();
     const mom = get.MOM();
+    const support = get.Support();
+    const resistance = get.Resistance();
 
     return [
       {
@@ -462,7 +507,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           if (atr < 1) return "text-blue-500";
           return "text-gray-400";
         })(),
-        desc: "ATR數值越大代表波動越大，常用於風險管理。",
+        desc: "ATR數值越大代表波動越大 \n 常用於風險管理。",
       },
       {
         key: "CCI",
@@ -493,7 +538,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           if (cci < -100) return "text-green-500";
           return "text-gray-400";
         })(),
-        desc: "CCI>100超買，<-100超賣，常用於判斷趨勢強弱。",
+        desc: "CCI>100超買，<-100超賣 \n 常用於判斷趨勢強弱。",
       },
       {
         key: "MOM",
@@ -524,7 +569,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           if (mom < 0) return "text-red-500";
           return "text-gray-400";
         })(),
-        desc: "動量>0為上升趨勢，<0為下降趨勢。",
+        desc: "動量>0為上升趨勢，<0為下降趨勢 \n 常用於捕捉趨勢轉折。",
       },
       {
         key: "EMA26",
@@ -571,42 +616,165 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           if (close < ema26) return "text-red-500";
           return "text-gray-400";
         })(),
-        desc: "EMA26為26日指數移動平均線，常用於判斷中期趨勢。",
+        desc: "EMA26加權移動平均線 \n 常用於確認趨勢方向。",
+      },
+      {
+        key: "Support",
+        title: "支撐位 (近20日低點)",
+        value: (() => {
+          const v = get.Support();
+          return typeof v === "number" ? v.toFixed(2) : "-";
+        })(),
+        valueUnit: "",
+        tag: "支撐",
+        tagColor: "bg-blue-100 text-blue-700",
+        signal: "參考",
+        signalColor: "text-blue-500",
+        desc: "近20日最低價，常用於判斷下檔支撐區。",
+      },
+      {
+        key: "Resistance",
+        title: "阻力位 (近20日高點)",
+        value: (() => {
+          const v = get.Resistance();
+          return typeof v === "number" ? v.toFixed(2) : "-";
+        })(),
+        valueUnit: "",
+        tag: "阻力",
+        tagColor: "bg-orange-100 text-orange-700",
+        signal: "參考",
+        signalColor: "text-orange-500",
+        desc: "近20日最高價，常用於判斷上檔壓力區。",
       },
     ];
   }, [get]);
 
+  // 動態分組卡片：前面每組3張，最後一組最多4張
+  const cardGroups: Array<typeof cards> = [];
+  let i = 0;
+  while (i < cards.length) {
+    if (cards.length - i === 4) {
+      cardGroups.push(cards.slice(i, i + 4));
+      break;
+    } else {
+      cardGroups.push(cards.slice(i, i + 3));
+      i += 3;
+    }
+  }
+
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {cards.map((card) => (
+    <div className="flex flex-col gap-4 mt-4">
+      {cardGroups.map((group, idx) => (
         <div
-          key={card.key}
-          className="bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow duration-200"
+          key={idx}
+          className={
+            idx === 2
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+              : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+          }
         >
-          <div className="text-xs font-semibold uppercase mb-2 text-gray-500">
-            {card.title}
-          </div>
-          <div className="flex items-baseline">
-            <div className="text-lg font-bold text-gray-800">
-              {card.value}
-              {card.valueUnit && (
-                <span className="text-sm font-medium text-gray-500 ml-1">
-                  {card.valueUnit}
-                </span>
-              )}
-            </div>
+          {group.map((card) => (
             <div
-              className={`ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center ${card.tagColor}`}
+              key={card.key}
+              className="bg-white rounded-2xl p-5 shadow-lg hover:shadow-2xl transition-shadow duration-200 border border-gray-100 flex flex-col"
             >
-              {card.tag}
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs font-semibold uppercase text-gray-500 tracking-wider">
+                  {card.title}
+                </div>
+                <div
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center ${card.tagColor}`}
+                >
+                  {card.tag}
+                </div>
+              </div>
+              {/* value + signal + sparkline 同一橫列 */}
+              <div className="flex items-center justify-between mb-2 w-full">
+                <div className="flex items-baseline">
+                  <span className="text-2xl font-extrabold text-gray-800">
+                    {card.value}
+                  </span>
+                  {card.valueUnit && (
+                    <span className="text-sm font-medium text-gray-400 ml-1">
+                      {card.valueUnit}
+                    </span>
+                  )}
+                  <span
+                    className={`ml-3 text-xs ${card.signalColor} font-bold`}
+                  >
+                    {card.signal}
+                  </span>
+                </div>
+                <div className="h-8 w-32 flex-shrink-0 flex items-center justify-end">
+                  <Sparklines
+                    data={(() => {
+                      if (
+                        card.key === "Support" &&
+                        Array.isArray(candlestickData)
+                      ) {
+                        return candlestickData
+                          .map((d) => d.low)
+                          .filter((v) => typeof v === "number")
+                          .slice(-20);
+                      }
+                      if (
+                        card.key === "Resistance" &&
+                        Array.isArray(candlestickData)
+                      ) {
+                        return candlestickData
+                          .map((d) => d.high)
+                          .filter((v) => typeof v === "number")
+                          .slice(-20);
+                      }
+                      const keyMap: Record<string, string> = {
+                        RSI: "rsi_14",
+                        MACD: "macd",
+                        KD: "k_value",
+                        MA20: "ma20",
+                        BOLL: "bb_middle",
+                        WILLR: "willr",
+                        ATR: "atr",
+                        CCI: "cci",
+                        MOM: "mom",
+                        EMA26: "ema26",
+                      };
+                      const dataKey = keyMap[card.key];
+                      if (
+                        dataKey &&
+                        technicalData &&
+                        Array.isArray(technicalData[dataKey])
+                      ) {
+                        return technicalData[dataKey].slice(-20);
+                      }
+                      return [];
+                    })()}
+                    svgHeight={32}
+                    svgWidth={120}
+                  >
+                    <SparklinesLine
+                      color={
+                        card.signalColor === "text-green-500"
+                          ? "green"
+                          : card.signalColor === "text-red-500"
+                          ? "red"
+                          : card.signalColor === "text-blue-500"
+                          ? "blue"
+                          : card.signalColor === "text-orange-500"
+                          ? "orange"
+                          : card.signalColor === "text-yellow-500"
+                          ? "yellow"
+                          : "gray"
+                      }
+                      style={{ fill: "none" }}
+                    />
+                  </Sparklines>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500 whitespace-pre-line line-clamp-2">
+                {card.desc}
+              </div>
             </div>
-          </div>
-          <div className={`mt-2 text-xs ${card.signalColor} flex items-center`}>
-            {card.signal}
-          </div>
-          <div className="mt-2 text-xs text-gray-500 line-clamp-2">
-            {card.desc}
-          </div>
+          ))}
         </div>
       ))}
     </div>

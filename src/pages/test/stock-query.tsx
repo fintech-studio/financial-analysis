@@ -106,7 +106,13 @@ const StockAnalysisPage: React.FC = () => {
               technicalData={technicalData}
               symbol={queryState.symbol}
               timeframe={timeframe}
+              open_price={candlestickData?.slice(-1)[0]?.open} // 使用最新的開盤價
+              high_price={candlestickData?.slice(-1)[0]?.high} // 使用最新的最高價
+              low_price={candlestickData?.slice(-1)[0]?.low} // 使用最新的最低價
               close_price={candlestickData?.slice(-1)[0]?.close} // 使用最新的收盤價
+              volume={candlestickData?.slice(-1)[0]?.volume} // 使用最新的成交量
+              loading={loading}
+              candlestickData={candlestickData} // 傳入K線資料
             />
           </>
         );
@@ -122,7 +128,13 @@ const StockAnalysisPage: React.FC = () => {
               technicalData={technicalData}
               symbol={queryState.symbol}
               timeframe={timeframe}
+              open_price={candlestickData?.slice(-1)[0]?.open} // 使用最新的開盤價
+              high_price={candlestickData?.slice(-1)[0]?.high} // 使用最新的最高價
+              low_price={candlestickData?.slice(-1)[0]?.low} // 使用最新的最低價
               close_price={candlestickData?.slice(-1)[0]?.close} // 使用最新的收盤價
+              volume={candlestickData?.slice(-1)[0]?.volume} // 使用最新的成交量
+              loading={loading}
+              candlestickData={candlestickData} // 傳入K線資料
             />
           </>
         );
