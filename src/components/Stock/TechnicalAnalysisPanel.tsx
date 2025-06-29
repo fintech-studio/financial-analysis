@@ -739,6 +739,9 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         <ChartBarIcon className="inline-block w-6 h-6 mr-1 text-gray-500" />
         {symbol} 技術分析 -{" "}
         {timeframe === "1d" ? "日線" : timeframe === "1h" ? "小時線" : ""}
+        <span className="text-gray-400 text-sm font-normal ml-2">
+          - Sparkline only shows last 20 data points.
+        </span>
       </div>
       {cardGroups.map((group, idx) => (
         <div

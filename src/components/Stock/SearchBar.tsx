@@ -112,13 +112,19 @@ const POPULAR_STOCKS = [
   { symbol: "GC=F", name: "黃金", type: "期貨", market: "market_futures" },
   {
     symbol: "BTC-USD",
-    name: "Bitcoin",
+    name: "比特幣",
     type: "Crypto",
     market: "market_crypto",
   },
   {
     symbol: "ETH-USD",
-    name: "Ethereum",
+    name: "以太坊",
+    type: "Crypto",
+    market: "market_crypto",
+  },
+  {
+    symbol: "SOL-USD",
+    name: "索拉納",
     type: "Crypto",
     market: "market_crypto",
   },
