@@ -122,6 +122,7 @@ const StockAnalysisPage: React.FC = () => {
               technicalData={technicalData}
               symbol={queryState.symbol}
               timeframe={timeframe}
+              close_price={candlestickData?.slice(-1)[0]?.close} // 使用最新的收盤價
             />
           </>
         );
