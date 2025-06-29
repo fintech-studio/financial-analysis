@@ -11,14 +11,20 @@ interface TechnicalAnalysisPanelProps {
   close_price: number;
   volume?: number;
   loading?: boolean;
-  candlestickData?: { high: number; low: number }[]; // 新增 K 線資料
+  candlestickData?: {
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume?: number;
+  }[];
 }
 
 // slice(-1)[0] 工具函式
 const last = (arr?: number[]) =>
   Array.isArray(arr) && arr.length > 0 ? arr[arr.length - 1] : undefined;
 
-// 工具函式：指標 tag/signal/顏色
+// RSI 標籤
 const getRSITag = (rsi?: number) => {
   if (typeof rsi !== "number")
     return {
@@ -63,6 +69,7 @@ const getRSITag = (rsi?: number) => {
   };
 };
 
+// MACD 標籤
 const getMACDTag = (macd?: number) => {
   if (typeof macd !== "number")
     return {
@@ -93,8 +100,6 @@ const getMACDTag = (macd?: number) => {
   };
 };
 
-// ...可依需求繼續抽取 KD、BOLL、WILLR、ATR、CCI、MOM ...
-
 const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
   technicalData,
   symbol,
@@ -107,7 +112,6 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
   loading = false,
   candlestickData,
 }) => {
-  // loading 狀態
   if (loading) {
     return (
       <div className="bg-white rounded-lg p-4 shadow text-gray-500 text-center mt-2 animate-pulse">
@@ -146,35 +150,46 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       BollUpper: () => last(technicalData["bb_upper"]),
       BollMiddle: () => last(technicalData["bb_middle"]),
       BollLower: () => last(technicalData["bb_lower"]),
-      Close: () => {
-        if (typeof close_price === "number") return close_price;
+      Close: () => (typeof close_price === "number" ? close_price : undefined),
+      Volume: () => (typeof volume === "number" ? volume : undefined),
+      AvgVol: () => {
+        if (Array.isArray(candlestickData) && candlestickData.length > 0) {
+          const vols = candlestickData
+            .map((d) => d.volume)
+            .filter((v) => typeof v === "number");
+          if (vols.length >= 20) {
+            return vols.slice(-20).reduce((a, b) => a + b, 0) / 20;
+          }
+        }
         return undefined;
       },
-      Volume: () => last(technicalData["volume"]),
-      AvgVol: () => {
-        const arr = technicalData["volume"] || [];
-        if (arr.length < 20) return undefined;
-        return arr.slice(-20).reduce((a, b) => a + b, 0) / 20;
-      },
       VolRatio: () => {
-        const v = get.Volume();
-        const avg = get.AvgVol();
-        if (!v || !avg) return undefined;
-        return v / avg;
+        if (Array.isArray(candlestickData) && candlestickData.length > 0) {
+          const vols = candlestickData
+            .map((d) => d.volume)
+            .filter((v) => typeof v === "number");
+          const v = vols.length > 0 ? vols[vols.length - 1] : undefined;
+          const avg =
+            vols.length >= 20
+              ? vols.slice(-20).reduce((a, b) => a + b, 0) / 20
+              : undefined;
+          if (typeof v === "number" && typeof avg === "number" && avg !== 0) {
+            return v / avg;
+          }
+        }
+        return undefined;
       },
       WILLR: () => last(technicalData["willr"]),
       ATR: () => last(technicalData["atr"]),
       CCI: () => last(technicalData["cci"]),
       MOM: () => last(technicalData["mom"]),
       Support: () => {
-        // 優先用 candlestickData
         if (Array.isArray(candlestickData) && candlestickData.length > 0) {
           const lows = candlestickData
             .map((d) => d.low)
             .filter((v) => typeof v === "number");
           if (lows.length > 0) return Math.min(...lows.slice(-20));
         }
-        // fallback technicalData
         const possibleKeys = ["low", "lows", "low_price", "Low", "lowPrices"];
         let lows: number[] | undefined;
         for (const key of possibleKeys) {
@@ -214,7 +229,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
     [technicalData, close_price, candlestickData]
   );
 
-  // 只計算一次卡片資料
+  // 卡片資料
   const cards = useMemo(() => {
     const rsi = get.RSI();
     const macd = get.MACD();
@@ -243,7 +258,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       {
         key: "RSI",
         title: "RSI (14)",
-        value: rsi,
+        value: typeof rsi === "number" ? formatNumber(rsi, 2) : "-",
         valueUnit: "",
         ...getRSITag(rsi),
         desc: "標準區間: 30-70 \n 超買線: 70+ | 超賣線: 30-",
@@ -251,19 +266,23 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       {
         key: "MACD",
         title: "MACD",
-        value: macd,
+        value: typeof macd === "number" ? formatNumber(macd, 2) : "-",
         valueUnit: "",
         ...getMACDTag(macd),
-        desc: `DIF: ${typeof dif === "number" ? dif.toFixed(1) : "-"} | DEA: ${
-          typeof dea === "number" ? dea.toFixed(1) : "-"
-        }\n柱狀圖: ${typeof macdHist === "number" ? macdHist.toFixed(1) : "-"}`,
+        desc: `DIF: ${
+          typeof dif === "number" ? formatNumber(dif, 1) : "-"
+        } | DEA: ${
+          typeof dea === "number" ? formatNumber(dea, 1) : "-"
+        }\n柱狀圖: ${
+          typeof macdHist === "number" ? formatNumber(macdHist, 1) : "-"
+        }`,
       },
       {
         key: "KD",
         title: "KD指標",
         value:
           typeof k === "number" && typeof d === "number"
-            ? `K:${k.toFixed(0)} D:${d.toFixed(0)}`
+            ? `K:${formatNumber(k, 0)} D:${formatNumber(d, 0)}`
             : "-",
         valueUnit: "",
         tag:
@@ -298,14 +317,16 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
               ? "text-green-500"
               : "text-red-500"
             : "text-gray-400",
-        desc: `K值: ${typeof k === "number" ? k.toFixed(1) : "-"} | D值: ${
-          typeof d === "number" ? d.toFixed(1) : "-"
-        } \nJ值: ${typeof j === "number" ? j.toFixed(1) : "-"}`,
+        desc: `K值: ${
+          typeof k === "number" ? formatNumber(k, 1) : "-"
+        } | D值: ${typeof d === "number" ? formatNumber(d, 1) : "-"} \nJ值: ${
+          typeof j === "number" ? formatNumber(j, 1) : "-"
+        }`,
       },
       {
         key: "MA20",
         title: "移動平均線 (20日)",
-        value: typeof ma20 === "number" ? ma20 : "-",
+        value: typeof ma20 === "number" ? formatNumber(ma20, 2) : "-",
         valueUnit: "",
         tag:
           typeof ma20 === "number" && typeof ma60 === "number" && ma20 > ma60
@@ -337,9 +358,11 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
               ? "text-green-500"
               : "text-red-500"
             : "text-gray-400",
-        desc: `5日: ${typeof ma5 === "number" ? ma5.toFixed(0) : "-"} | 10日: ${
-          typeof ma10 === "number" ? ma10.toFixed(0) : "-"
-        } \n 60日: ${typeof ma60 === "number" ? ma60.toFixed(0) : "-"}`,
+        desc: `5日: ${
+          typeof ma5 === "number" ? formatNumber(ma5, 0) : "-"
+        } | 10日: ${
+          typeof ma10 === "number" ? formatNumber(ma10, 0) : "-"
+        }\n60日: ${typeof ma60 === "number" ? formatNumber(ma60, 0) : "-"}`,
       },
       {
         key: "BOLL",
@@ -348,7 +371,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           typeof bollUpper === "number" &&
           typeof bollMiddle === "number" &&
           typeof bollLower === "number"
-            ? `上軌: ${bollUpper.toFixed(2)}`
+            ? `上軌: ${formatNumber(bollUpper, 2)}`
             : "-",
         valueUnit: "",
         tag: (() => {
@@ -440,9 +463,10 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           )
             return "-";
           const width = bollUpper - bollLower;
-          let widthDesc = width >= 0 ? width.toFixed(2) : "-";
+          let widthDesc = width >= 0 ? formatNumber(width, 2) : "-";
           let status = width < 2 ? "收斂" : width > 10 ? "擴張" : "正常";
-          return `中軌: ${bollMiddle.toFixed(2)} | 下軌: ${bollLower.toFixed(
+          return `中軌: ${formatNumber(bollMiddle, 2)} | 下軌: ${formatNumber(
+            bollLower,
             2
           )}\n頻道寬度: ${widthDesc} (${status})`;
         })(),
@@ -450,7 +474,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       {
         key: "WILLR",
         title: "威廉指標 (W%R)",
-        value: typeof willr === "number" ? willr.toFixed(2) : "-",
+        value: typeof willr === "number" ? formatNumber(willr, 2) : "-",
         valueUnit: "",
         tag: (() => {
           if (typeof willr !== "number") return "-";
@@ -481,7 +505,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       {
         key: "ATR",
         title: "ATR (平均真實波幅)",
-        value: typeof atr === "number" ? atr.toFixed(2) : "-",
+        value: typeof atr === "number" ? formatNumber(atr, 2) : "-",
         valueUnit: "",
         tag: (() => {
           if (typeof atr !== "number") return "-";
@@ -512,7 +536,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       {
         key: "CCI",
         title: "CCI (順勢指標)",
-        value: typeof cci === "number" ? cci.toFixed(2) : "-",
+        value: typeof cci === "number" ? formatNumber(cci, 2) : "-",
         valueUnit: "",
         tag: (() => {
           if (typeof cci !== "number") return "-";
@@ -543,7 +567,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       {
         key: "MOM",
         title: "MOM (動量指標)",
-        value: typeof mom === "number" ? mom.toFixed(2) : "-",
+        value: typeof mom === "number" ? formatNumber(mom, 2) : "-",
         valueUnit: "",
         tag: (() => {
           if (typeof mom !== "number") return "-";
@@ -577,7 +601,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         value: (() => {
           const arr = technicalData["ema26"];
           const v = last(arr);
-          return typeof v === "number" ? v.toFixed(2) : "-";
+          return typeof v === "number" ? formatNumber(v, 2) : "-";
         })(),
         valueUnit: "",
         tag: (() => {
@@ -623,7 +647,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         title: "支撐位 (近20日低點)",
         value: (() => {
           const v = get.Support();
-          return typeof v === "number" ? v.toFixed(2) : "-";
+          return typeof v === "number" ? formatNumber(v, 2) : "-";
         })(),
         valueUnit: "",
         tag: "支撐",
@@ -637,7 +661,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         title: "阻力位 (近20日高點)",
         value: (() => {
           const v = get.Resistance();
-          return typeof v === "number" ? v.toFixed(2) : "-";
+          return typeof v === "number" ? formatNumber(v, 2) : "-";
         })(),
         valueUnit: "",
         tag: "阻力",
@@ -645,6 +669,52 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         signal: "參考",
         signalColor: "text-orange-500",
         desc: "近20日最高價，常用於判斷上檔壓力區。",
+      },
+      {
+        key: "Volume",
+        title: "成交量",
+        value: (() => {
+          const v = get.Volume();
+          return typeof v === "number" ? formatVolume(v) : "-";
+        })(),
+        valueUnit: "",
+        tag: (() => {
+          const ratio = get.VolRatio();
+          if (typeof ratio !== "number") return "-";
+          if (ratio > 1.5) return "爆量";
+          if (ratio < 0.7) return "量縮";
+          return "正常";
+        })(),
+        tagColor: (() => {
+          const ratio = get.VolRatio();
+          if (typeof ratio !== "number") return "bg-gray-100 text-gray-400";
+          if (ratio > 1.5) return "bg-orange-100 text-orange-700";
+          if (ratio < 0.7) return "bg-blue-100 text-blue-700";
+          return "bg-gray-100 text-gray-400";
+        })(),
+        signal: (() => {
+          const ratio = get.VolRatio();
+          if (typeof ratio !== "number") return "-";
+          if (ratio > 1.5) return "偏多";
+          if (ratio < 0.7) return "偏空";
+          return "中性";
+        })(),
+        signalColor: (() => {
+          const ratio = get.VolRatio();
+          if (typeof ratio !== "number") return "text-gray-400";
+          if (ratio > 1.5) return "text-orange-500";
+          if (ratio < 0.7) return "text-blue-500";
+          return "text-gray-400";
+        })(),
+        desc: (() => {
+          const avg = get.AvgVol();
+          const ratio = get.VolRatio();
+          return `20日均量: ${
+            typeof avg === "number" ? formatVolume(avg) : "-"
+          }\n量能比: ${
+            typeof ratio === "number" ? formatNumber(ratio, 2) : "-"
+          }`;
+        })(),
       },
     ];
   }, [get]);
@@ -668,7 +738,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         <div
           key={idx}
           className={
-            idx === 2
+            idx === 3
               ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
               : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
           }
@@ -681,6 +751,11 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
               <div className="flex items-center justify-between mb-2">
                 <div className="text-xs font-semibold uppercase text-gray-500 tracking-wider">
                   {card.title}
+                  <span
+                    className={`ml-3 text-xs ${card.signalColor} font-bold`}
+                  >
+                    {card.signal}
+                  </span>
                 </div>
                 <div
                   className={`px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center ${card.tagColor}`}
@@ -699,11 +774,6 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
                       {card.valueUnit}
                     </span>
                   )}
-                  <span
-                    className={`ml-3 text-xs ${card.signalColor} font-bold`}
-                  >
-                    {card.signal}
-                  </span>
                 </div>
                 <div className="h-8 w-32 flex-shrink-0 flex items-center justify-end">
                   <Sparklines
@@ -723,6 +793,15 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
                       ) {
                         return candlestickData
                           .map((d) => d.high)
+                          .filter((v) => typeof v === "number")
+                          .slice(-20);
+                      }
+                      if (
+                        card.key === "Volume" &&
+                        Array.isArray(candlestickData)
+                      ) {
+                        return candlestickData
+                          .map((d) => d.volume)
                           .filter((v) => typeof v === "number")
                           .slice(-20);
                       }
@@ -782,3 +861,32 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
 };
 
 export default TechnicalAnalysisPanel;
+
+// 數字格式化：三位一撇
+const formatNumber = (num?: number, digits = 2) => {
+  if (typeof num !== "number" || isNaN(num)) return "-";
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+};
+// 成交量格式化：K/M/B
+const formatVolume = (num?: number) => {
+  if (typeof num !== "number" || isNaN(num)) return "-";
+  if (num >= 1_000_000_000)
+    return (
+      (num / 1_000_000_000).toLocaleString("en-US", {
+        maximumFractionDigits: 3,
+      }) + "B"
+    );
+  if (num >= 1_000_000)
+    return (
+      (num / 1_000_000).toLocaleString("en-US", { maximumFractionDigits: 3 }) +
+      "M"
+    );
+  if (num >= 1_000)
+    return (
+      (num / 1_000).toLocaleString("en-US", { maximumFractionDigits: 3 }) + "K"
+    );
+  return num.toLocaleString("en-US");
+};
