@@ -1,3 +1,4 @@
+import { ChartBarIcon } from "@heroicons/react/24/outline";
 import React, { useMemo } from "react";
 import { Sparklines, SparklinesLine } from "react-sparklines";
 
@@ -652,9 +653,9 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         valueUnit: "",
         tag: "支撐",
         tagColor: "bg-blue-100 text-blue-700",
-        signal: "參考",
+        signal: "",
         signalColor: "text-blue-500",
-        desc: "近20日最低價，常用於判斷下檔支撐區。",
+        desc: "近20日最低價 \n 常用於判斷下檔支撐區。",
       },
       {
         key: "Resistance",
@@ -666,9 +667,9 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         valueUnit: "",
         tag: "阻力",
         tagColor: "bg-orange-100 text-orange-700",
-        signal: "參考",
+        signal: "",
         signalColor: "text-orange-500",
-        desc: "近20日最高價，常用於判斷上檔壓力區。",
+        desc: "近20日最高價 \n 常用於判斷上檔壓力區。",
       },
       {
         key: "Volume",
@@ -734,12 +735,17 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
 
   return (
     <div className="flex flex-col gap-4 mt-4">
+      <div className="flex items-center text-xl font-semibold text-gray-800 mt-2 mb-2">
+        <ChartBarIcon className="inline-block w-6 h-6 mr-1 text-gray-500" />
+        {symbol} 技術分析 -{" "}
+        {timeframe === "1d" ? "日線" : timeframe === "1h" ? "小時線" : ""}
+      </div>
       {cardGroups.map((group, idx) => (
         <div
           key={idx}
           className={
             idx === 3
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2"
               : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
           }
         >
@@ -750,7 +756,12 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="text-xs font-semibold uppercase text-gray-500 tracking-wider">
-                  {card.title}
+                  {card.title}{" "}
+                  {timeframe === "1d"
+                    ? "(日線)"
+                    : timeframe === "1h"
+                    ? "(小時線)"
+                    : ""}
                   <span
                     className={`ml-3 text-xs ${card.signalColor} font-bold`}
                   >
@@ -838,6 +849,10 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
                           ? "red"
                           : card.signalColor === "text-blue-500"
                           ? "blue"
+                          : card.signalColor === "text-blue-400"
+                          ? "blue"
+                          : card.signalColor === "text-purple-500"
+                          ? "purple"
                           : card.signalColor === "text-orange-500"
                           ? "orange"
                           : card.signalColor === "text-yellow-500"
