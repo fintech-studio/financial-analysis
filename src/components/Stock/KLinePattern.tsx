@@ -165,7 +165,12 @@ const KLinePattern: React.FC<KLinePatternProps> = ({
           return a.name.localeCompare(b.name);
         case "strength":
         default:
-          const strengthOrder = { strong: 3, moderate: 2, weak: 1 };
+          const strengthOrder: Record<SignalStrength, number> = {
+            [SignalStrength.VERY_STRONG]: 4,
+            [SignalStrength.STRONG]: 3,
+            [SignalStrength.MODERATE]: 2,
+            [SignalStrength.WEAK]: 1,
+          };
           return strengthOrder[b.strength] - strengthOrder[a.strength];
       }
     });

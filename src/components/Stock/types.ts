@@ -110,7 +110,7 @@ export interface ExtendedPattern extends Pattern {
   historicalSuccessRate?: number;
 
   // 適用的市場條件
-  marketConditions?: Array<"bull" | "bear" | "sideways">;
+  marketConditions?: Array<"trending" | "ranging" | "volatile" | "calm">;
 
   // 時間框架適用性
   timeframes?: Array<"1m" | "5m" | "15m" | "1h" | "4h" | "1d" | "1w">;
