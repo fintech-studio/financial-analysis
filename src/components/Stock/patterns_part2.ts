@@ -29,7 +29,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData || !prev2Data) return false;
       // 嚴格判斷：第一根大陰線，第二根小實體，第三根大陽線且收盤穿越第一根中點
@@ -40,15 +40,17 @@ const patternsPart2: Pattern[] = [
       const penetration = data.close > (prev2Data.open + prev2Data.close) / 2;
       // 需有明顯下跌趨勢
       let isDownTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -3);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -3);
         isDownTrend =
           pre.length > 2 && pre[0].close > pre[pre.length - 1].close * 1.02;
       }
       // 出現在低檔
       let isLowZone = true;
-      if (historicalData && historicalData.length >= 10) {
-        const minLow = Math.min(...historicalData.slice(-10).map((d) => d.low));
+      if (candlestickData && candlestickData.length >= 10) {
+        const minLow = Math.min(
+          ...candlestickData.slice(-10).map((d) => d.low)
+        );
         isLowZone = data.low < minLow * 1.03;
       }
       return (
@@ -75,7 +77,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData || !prev2Data) return false;
       // 嚴格判斷：第一根大陽線，第二根小實體，第三根大陰線且收盤穿越第一根中點
@@ -86,16 +88,16 @@ const patternsPart2: Pattern[] = [
       const penetration = data.close < (prev2Data.open + prev2Data.close) / 2;
       // 需有明顯上漲趨勢
       let isUpTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -3);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -3);
         isUpTrend =
           pre.length > 2 && pre[0].close < pre[pre.length - 1].close * 0.98;
       }
       // 出現在高檔
       let isHighZone = true;
-      if (historicalData && historicalData.length >= 10) {
+      if (candlestickData && candlestickData.length >= 10) {
         const maxHigh = Math.max(
-          ...historicalData.slice(-10).map((d) => d.high)
+          ...candlestickData.slice(-10).map((d) => d.high)
         );
         isHighZone = data.high > maxHigh * 0.97;
       }
@@ -123,7 +125,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData || !prev2Data) return false;
       // 嚴格判斷：三根連續陽線，實體不能太小，且逐步上漲
@@ -134,15 +136,17 @@ const patternsPart2: Pattern[] = [
         !isSmall(prev2Data) && !isSmall(prevData) && !isSmall(data);
       // 需有明顯下跌趨勢
       let isDownTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -3);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -3);
         isDownTrend =
           pre.length > 2 && pre[0].close > pre[pre.length - 1].close * 1.02;
       }
       // 出現在低檔
       let isLowZone = true;
-      if (historicalData && historicalData.length >= 10) {
-        const minLow = Math.min(...historicalData.slice(-10).map((d) => d.low));
+      if (candlestickData && candlestickData.length >= 10) {
+        const minLow = Math.min(
+          ...candlestickData.slice(-10).map((d) => d.low)
+        );
         isLowZone = data.low < minLow * 1.03;
       }
       return (
@@ -164,7 +168,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData || !prev2Data) return false;
       // 嚴格判斷：三根連續陰線，實體不能太小，且逐步下跌
@@ -175,16 +179,16 @@ const patternsPart2: Pattern[] = [
         !isSmall(prev2Data) && !isSmall(prevData) && !isSmall(data);
       // 需有明顯上漲趨勢
       let isUpTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -3);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -3);
         isUpTrend =
           pre.length > 2 && pre[0].close < pre[pre.length - 1].close * 0.98;
       }
       // 出現在高檔
       let isHighZone = true;
-      if (historicalData && historicalData.length >= 10) {
+      if (candlestickData && candlestickData.length >= 10) {
         const maxHigh = Math.max(
-          ...historicalData.slice(-10).map((d) => d.high)
+          ...candlestickData.slice(-10).map((d) => d.high)
         );
         isHighZone = data.high > maxHigh * 0.97;
       }
@@ -205,7 +209,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData || !prev2Data) return false;
       // 嚴格判斷：第一根大陽線，第二根小陰線，第三根大陽線且突破新高
@@ -218,8 +222,8 @@ const patternsPart2: Pattern[] = [
       const breakout = data.close > prev2Data.high;
       // 需有明顯上漲趨勢
       let isUpTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -3);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -3);
         isUpTrend =
           pre.length > 2 && pre[0].close < pre[pre.length - 1].close * 0.98;
       }
@@ -248,7 +252,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData || !prev2Data) return false;
       // 嚴格判斷：第一根大陰線，第二根小陽線，第三根大陰線且跌破新低
@@ -261,8 +265,8 @@ const patternsPart2: Pattern[] = [
       const breakdown = data.close < prev2Data.low;
       // 需有明顯下跌趨勢
       let isDownTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -3);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -3);
         isDownTrend =
           pre.length > 2 && pre[0].close > pre[pre.length - 1].close * 1.02;
       }
@@ -291,7 +295,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData) return false;
       const firstRed = isRed(prevData) && !isSmall(prevData);
@@ -302,15 +306,17 @@ const patternsPart2: Pattern[] = [
         data.close < prevData.open;
       // 需有明顯下跌趨勢
       let isDownTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -2);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -2);
         isDownTrend =
           pre.length > 2 && pre[0].close > pre[pre.length - 1].close * 1.02;
       }
       // 出現在低檔
       let isLowZone = true;
-      if (historicalData && historicalData.length >= 10) {
-        const minLow = Math.min(...historicalData.slice(-10).map((d) => d.low));
+      if (candlestickData && candlestickData.length >= 10) {
+        const minLow = Math.min(
+          ...candlestickData.slice(-10).map((d) => d.low)
+        );
         isLowZone = data.low < minLow * 1.03;
       }
       return (
@@ -337,7 +343,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData) return false;
       const firstGreen = isGreen(prevData) && !isSmall(prevData);
@@ -348,16 +354,16 @@ const patternsPart2: Pattern[] = [
         data.close > prevData.open;
       // 需有明顯上漲趨勢
       let isUpTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -2);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -2);
         isUpTrend =
           pre.length > 2 && pre[0].close < pre[pre.length - 1].close * 0.98;
       }
       // 出現在高檔
       let isHighZone = true;
-      if (historicalData && historicalData.length >= 10) {
+      if (candlestickData && candlestickData.length >= 10) {
         const maxHigh = Math.max(
-          ...historicalData.slice(-10).map((d) => d.high)
+          ...candlestickData.slice(-10).map((d) => d.high)
         );
         isHighZone = data.high > maxHigh * 0.97;
       }
@@ -385,7 +391,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData) return false;
       const firstBig = isBig(prevData);
@@ -401,8 +407,8 @@ const patternsPart2: Pattern[] = [
       const isBodyDiff = bodyRatio < 0.5;
       // 趨勢背景
       let isTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -2);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -2);
         isTrend =
           pre.length > 2 &&
           (pre[0].close > pre[pre.length - 1].close * 1.02 ||
@@ -432,7 +438,7 @@ const patternsPart2: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (!prevData) return false;
       const firstBig = isBig(prevData);
@@ -442,8 +448,8 @@ const patternsPart2: Pattern[] = [
         data.low > Math.min(prevData.open, prevData.close);
       // 趨勢背景
       let isTrend = true;
-      if (historicalData && historicalData.length >= 6) {
-        const pre = historicalData.slice(-6, -2);
+      if (candlestickData && candlestickData.length >= 6) {
+        const pre = candlestickData.slice(-6, -2);
         isTrend =
           pre.length > 2 &&
           (pre[0].close > pre[pre.length - 1].close * 1.02 ||

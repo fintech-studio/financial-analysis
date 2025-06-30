@@ -91,8 +91,12 @@ const StockAnalysisPage: React.FC = () => {
       <>
         {latest && (
           <KLinePattern
-            candlestickData={candlestickData || []}
-            maxPatternsToShow={5}
+            candlestickData={candlestickData}
+            enableCache={true}
+            historicalDays={30}
+            onPatternDetected={(patterns) => {
+              console.log("檢測到型態:", patterns);
+            }}
           />
         )}
         <TechnicalAnalysisPanel

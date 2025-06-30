@@ -30,11 +30,11 @@ const patternsPart4: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
-      if (!historicalData || historicalData.length < 20) return false;
+      if (!candlestickData || candlestickData.length < 20) return false;
       // 尋找局部低點
-      const minima = patternUtils.findLocalMinima(historicalData, 2);
+      const minima = patternUtils.findLocalMinima(candlestickData, 2);
       if (minima.length < 2) return false;
       // 檢查是否為雙重底
       const isDouble = patternUtils.isDoublePattern(minima, 0.025);
@@ -44,7 +44,7 @@ const patternsPart4: Pattern[] = [
       const timeDiff = secondBottom.index - firstBottom.index;
       if (timeDiff < 5 || timeDiff > 30) return false;
       // 找到兩個底部之間的高點
-      const middleSection = historicalData.slice(
+      const middleSection = candlestickData.slice(
         firstBottom.index,
         secondBottom.index + 1
       );
@@ -52,8 +52,8 @@ const patternsPart4: Pattern[] = [
       // 檢查突破中間高點
       const breakout = data.close > middleHigh * 1.005;
       // 檢查第二個底部成交量較低（賣壓減輕）
-      const firstBottomData = historicalData[firstBottom.index];
-      const secondBottomData = historicalData[secondBottom.index];
+      const firstBottomData = candlestickData[firstBottom.index];
+      const secondBottomData = candlestickData[secondBottom.index];
       const volumeConfirm =
         !secondBottomData.volume ||
         !firstBottomData.volume ||
@@ -63,7 +63,7 @@ const patternsPart4: Pattern[] = [
         middleHigh - Math.min(firstBottom.value, secondBottom.value);
       const significantPattern = patternHeight > firstBottom.value * 0.045; // 至少4.5%的型態高度
       // 型態前須有明顯下跌趨勢
-      const prePattern = historicalData.slice(
+      const prePattern = candlestickData.slice(
         Math.max(0, firstBottom.index - 8),
         firstBottom.index
       );
@@ -89,11 +89,11 @@ const patternsPart4: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
-      if (!historicalData || historicalData.length < 20) return false;
+      if (!candlestickData || candlestickData.length < 20) return false;
       // 尋找局部高點
-      const maxima = patternUtils.findLocalMaxima(historicalData, 2);
+      const maxima = patternUtils.findLocalMaxima(candlestickData, 2);
       if (maxima.length < 2) return false;
       // 檢查是否為雙重頂
       const isDouble = patternUtils.isDoublePattern(maxima, 0.025);
@@ -103,7 +103,7 @@ const patternsPart4: Pattern[] = [
       const timeDiff = secondTop.index - firstTop.index;
       if (timeDiff < 5 || timeDiff > 30) return false;
       // 找到兩個頂部之間的低點
-      const middleSection = historicalData.slice(
+      const middleSection = candlestickData.slice(
         firstTop.index,
         secondTop.index + 1
       );
@@ -111,8 +111,8 @@ const patternsPart4: Pattern[] = [
       // 檢查跌破中間低點
       const breakdown = data.close < middleLow * 0.995;
       // 檢查第二個頂部成交量較低（買盤減弱）
-      const firstTopData = historicalData[firstTop.index];
-      const secondTopData = historicalData[secondTop.index];
+      const firstTopData = candlestickData[firstTop.index];
+      const secondTopData = candlestickData[secondTop.index];
       const volumeConfirm =
         !secondTopData.volume ||
         !firstTopData.volume ||
@@ -122,7 +122,7 @@ const patternsPart4: Pattern[] = [
         Math.max(firstTop.value, secondTop.value) - middleLow;
       const significantPattern = patternHeight > middleLow * 0.045; // 至少4.5%的型態高度
       // 型態前須有明顯上漲趨勢
-      const prePattern = historicalData.slice(
+      const prePattern = candlestickData.slice(
         Math.max(0, firstTop.index - 8),
         firstTop.index
       );
@@ -149,11 +149,11 @@ const patternsPart4: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
-      if (!historicalData || historicalData.length < 30) return false;
+      if (!candlestickData || candlestickData.length < 30) return false;
       // 尋找局部高點
-      const maxima = patternUtils.findLocalMaxima(historicalData, 2);
+      const maxima = patternUtils.findLocalMaxima(candlestickData, 2);
       if (maxima.length < 3) return false;
       // 檢查是否為頭肩頂型態
       const isHeadShoulders = patternUtils.isHeadAndShoulders(maxima);
@@ -167,8 +167,8 @@ const patternsPart4: Pattern[] = [
       )
         return false;
       // 計算頸線位置（兩個肩膀間的低點）
-      const leftSection = historicalData.slice(leftShoulder.index, head.index);
-      const rightSection = historicalData.slice(
+      const leftSection = candlestickData.slice(leftShoulder.index, head.index);
+      const rightSection = candlestickData.slice(
         head.index,
         rightShoulder.index + 5
       );
@@ -178,8 +178,8 @@ const patternsPart4: Pattern[] = [
       // 檢查跌破頸線
       const breakdown = data.close < neckline * 0.995;
       // 檢查成交量確認（右肩成交量通常較低）
-      const headData = historicalData[head.index];
-      const rightShoulderData = historicalData[rightShoulder.index];
+      const headData = candlestickData[head.index];
+      const rightShoulderData = candlestickData[rightShoulder.index];
       const volumeConfirm =
         !rightShoulderData.volume ||
         !headData.volume ||
@@ -188,7 +188,7 @@ const patternsPart4: Pattern[] = [
       const patternHeight = head.value - neckline;
       const significantPattern = patternHeight > neckline * 0.07; // 至少7%的型態高度
       // 型態前須有明顯上漲趨勢
-      const prePattern = historicalData.slice(
+      const prePattern = candlestickData.slice(
         Math.max(0, leftShoulder.index - 8),
         leftShoulder.index
       );
@@ -219,11 +219,11 @@ const patternsPart4: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
-      if (!historicalData || historicalData.length < 30) return false;
+      if (!candlestickData || candlestickData.length < 30) return false;
       // 尋找局部低點
-      const minima = patternUtils.findLocalMinima(historicalData, 2);
+      const minima = patternUtils.findLocalMinima(candlestickData, 2);
       if (minima.length < 3) return false;
       // 檢查是否為倒置頭肩型態
       const isInverseHeadShoulders =
@@ -238,8 +238,8 @@ const patternsPart4: Pattern[] = [
       )
         return false;
       // 計算頸線位置（兩個肩膀間的高點）
-      const leftSection = historicalData.slice(leftShoulder.index, head.index);
-      const rightSection = historicalData.slice(
+      const leftSection = candlestickData.slice(leftShoulder.index, head.index);
+      const rightSection = candlestickData.slice(
         head.index,
         rightShoulder.index + 5
       );
@@ -249,8 +249,8 @@ const patternsPart4: Pattern[] = [
       // 檢查突破頸線
       const breakout = data.close > neckline * 1.005;
       // 檢查成交量確認（右肩成交量通常較低，突破時放量）
-      const headData = historicalData[head.index];
-      const rightShoulderData = historicalData[rightShoulder.index];
+      const headData = candlestickData[head.index];
+      const rightShoulderData = candlestickData[rightShoulder.index];
       const volumeConfirm =
         !rightShoulderData.volume ||
         !headData.volume ||
@@ -261,7 +261,7 @@ const patternsPart4: Pattern[] = [
       const patternHeight = neckline - head.value;
       const significantPattern = patternHeight > head.value * 0.07; // 至少7%的型態高度
       // 型態前須有明顯下跌趨勢
-      const prePattern = historicalData.slice(
+      const prePattern = candlestickData.slice(
         Math.max(0, leftShoulder.index - 8),
         leftShoulder.index
       );
@@ -290,7 +290,7 @@ const patternsPart4: Pattern[] = [
       { close, open, high, low, volume }: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       const body = getBodySize({ close, open, high, low });
       const upperShadow = getUpperShadow({ close, open, high, low });
@@ -302,8 +302,8 @@ const patternsPart4: Pattern[] = [
       const isShortLower = lowerShadow < totalRange * 0.07;
       // 若有歷史資料，需出現在近10根K線的高檔
       let isHighZone = true;
-      if (historicalData && historicalData.length >= 10) {
-        const recent = historicalData.slice(-10);
+      if (candlestickData && candlestickData.length >= 10) {
+        const recent = candlestickData.slice(-10);
         const maxHigh = Math.max(...recent.map((d) => d.high));
         isHighZone = high > maxHigh * 0.97;
       }
@@ -324,7 +324,7 @@ const patternsPart4: Pattern[] = [
       { close, open, high, low, volume }: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       const body = getBodySize({ close, open, high, low });
       const upperShadow = getUpperShadow({ close, open, high, low });
@@ -335,8 +335,8 @@ const patternsPart4: Pattern[] = [
       const isLongLower = lowerShadow > totalRange * 0.75;
       const isShortUpper = upperShadow < totalRange * 0.07;
       let isLowZone = true;
-      if (historicalData && historicalData.length >= 10) {
-        const recent = historicalData.slice(-10);
+      if (candlestickData && candlestickData.length >= 10) {
+        const recent = candlestickData.slice(-10);
         const minLow = Math.min(...recent.map((d) => d.low));
         isLowZone = low < minLow * 1.03;
       }
@@ -356,7 +356,7 @@ const patternsPart4: Pattern[] = [
       { close, open, high, low, volume }: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       const body = getBodySize({ close, open, high, low });
       const upperShadow = getUpperShadow({ close, open, high, low });
@@ -370,8 +370,8 @@ const patternsPart4: Pattern[] = [
         lowerShadow < totalRange * 0.06;
       // 若有歷史資料，成交量需大於近5根均量（放量）
       let isVolumeUp = true;
-      if (historicalData && historicalData.length >= 5 && volume) {
-        const recent = historicalData.slice(-5);
+      if (candlestickData && candlestickData.length >= 5 && volume) {
+        const recent = candlestickData.slice(-5);
         const avgVol = recent.reduce((a, b) => a + (b.volume || 0), 0) / 5;
         isVolumeUp = volume > avgVol * 1.1;
       }
@@ -392,7 +392,7 @@ const patternsPart4: Pattern[] = [
       { close, open, high, low, volume }: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       const body = getBodySize({ close, open, high, low });
       const upperShadow = getUpperShadow({ close, open, high, low });
@@ -406,8 +406,8 @@ const patternsPart4: Pattern[] = [
         lowerShadow < totalRange * 0.06;
       // 若有歷史資料，成交量需大於近5根均量（放量）
       let isVolumeUp = true;
-      if (historicalData && historicalData.length >= 5 && volume) {
-        const recent = historicalData.slice(-5);
+      if (candlestickData && candlestickData.length >= 5 && volume) {
+        const recent = candlestickData.slice(-5);
         const avgVol = recent.reduce((a, b) => a + (b.volume || 0), 0) / 5;
         isVolumeUp = volume > avgVol * 1.1;
       }

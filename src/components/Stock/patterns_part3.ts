@@ -109,17 +109,17 @@ const patternsPart3: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (
         !prevData ||
         !prev2Data ||
-        !historicalData ||
-        historicalData.length < 10
+        !candlestickData ||
+        candlestickData.length < 10
       )
         return false;
       // 取最近10根K線進行分析
-      const recentData = historicalData.slice(-10);
+      const recentData = candlestickData.slice(-10);
       // 旗桿：前3根K線，要求漲幅大、連續陽線
       const flagpole = recentData.slice(0, 3);
       const flagpoleRise = flagpole[2].close / flagpole[0].close - 1;
@@ -161,16 +161,16 @@ const patternsPart3: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (
         !prevData ||
         !prev2Data ||
-        !historicalData ||
-        historicalData.length < 10
+        !candlestickData ||
+        candlestickData.length < 10
       )
         return false;
-      const recentData = historicalData.slice(-10);
+      const recentData = candlestickData.slice(-10);
       // 旗桿：前3根K線，要求跌幅大、連續陰線
       const flagpole = recentData.slice(0, 3);
       const flagpoleDrop = 1 - flagpole[2].close / flagpole[0].close;
@@ -212,16 +212,16 @@ const patternsPart3: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (
         !prevData ||
         !prev2Data ||
-        !historicalData ||
-        historicalData.length < 8
+        !candlestickData ||
+        candlestickData.length < 8
       )
         return false;
-      const recentData = historicalData.slice(-8);
+      const recentData = candlestickData.slice(-8);
       // 高點水平，低點明顯上升
       const highs = recentData.map((d) => d.high);
       const lows = recentData.map((d) => d.low);
@@ -253,16 +253,16 @@ const patternsPart3: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (
         !prevData ||
         !prev2Data ||
-        !historicalData ||
-        historicalData.length < 8
+        !candlestickData ||
+        candlestickData.length < 8
       )
         return false;
-      const recentData = historicalData.slice(-8);
+      const recentData = candlestickData.slice(-8);
       const highs = recentData.map((d) => d.high);
       const lows = recentData.map((d) => d.low);
       const lowTrend = patternUtils.calculateTrend(recentData, "low");
@@ -291,16 +291,16 @@ const patternsPart3: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (
         !prevData ||
         !prev2Data ||
-        !historicalData ||
-        historicalData.length < 10
+        !candlestickData ||
+        candlestickData.length < 10
       )
         return false;
-      const recentData = historicalData.slice(-10);
+      const recentData = candlestickData.slice(-10);
       const highTrend = patternUtils.calculateTrend(recentData, "high");
       const lowTrend = patternUtils.calculateTrend(recentData, "low");
       const bothRising = highTrend > 0 && lowTrend > 0;
@@ -329,16 +329,16 @@ const patternsPart3: Pattern[] = [
       data: KLineData,
       prevData?: KLineData,
       prev2Data?: KLineData,
-      historicalData?: KLineData[]
+      candlestickData?: KLineData[]
     ) => {
       if (
         !prevData ||
         !prev2Data ||
-        !historicalData ||
-        historicalData.length < 10
+        !candlestickData ||
+        candlestickData.length < 10
       )
         return false;
-      const recentData = historicalData.slice(-10);
+      const recentData = candlestickData.slice(-10);
       const highTrend = patternUtils.calculateTrend(recentData, "high");
       const lowTrend = patternUtils.calculateTrend(recentData, "low");
       const bothFalling = highTrend < 0 && lowTrend < 0;
