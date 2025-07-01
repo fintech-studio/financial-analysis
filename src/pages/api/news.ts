@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data, { xmlMode: true });
-    const items = $("item").slice(0, 10);
+    const items = $("item").slice(0, 12);
     const news: { title: string; link: string }[] = [];
     items.each((i, el) => {
       news.push({
