@@ -5,7 +5,6 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   FunnelIcon,
-  EyeIcon,
   DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
 
@@ -36,7 +35,8 @@ interface ColumnConfig {
     | "price_low"
     | "price_close"
     | "volume"
-    | "indicator";
+    | "indicator"
+    | "pattern_signals";
   width?: string;
   format?: (value: any) => string;
 }
@@ -78,6 +78,12 @@ const COLUMNS: ColumnConfig[] = [
   { key: "cci", name: "CCI商品通道指標", type: "indicator", width: "w-20" },
   { key: "willr", name: "威廉指標", type: "indicator", width: "w-20" },
   { key: "mom", name: "動量指標", type: "indicator", width: "w-20" },
+  {
+    key: "pattern_signals",
+    name: "形態信號",
+    type: "pattern_signals",
+    width: "w-20",
+  },
 ];
 
 const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {

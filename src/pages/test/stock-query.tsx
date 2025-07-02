@@ -9,7 +9,6 @@ import { EmptyState, ErrorState } from "@/components/Stock/StateComponents";
 import { useStockData } from "@/hooks/useStockData";
 import { ChartBarIcon, TableCellsIcon } from "@heroicons/react/24/outline";
 import TechnicalAnalysisPanel from "@/components/Stock/TechnicalAnalysisPanel";
-import KLinePattern from "@/components/Stock/KLinePattern";
 import type { MarketType } from "@/components/Stock/SearchBar";
 
 // 型別與預設值集中
@@ -89,16 +88,6 @@ const StockAnalysisPage: React.FC = () => {
   const renderPatternAndPanel = useCallback(
     () => (
       <>
-        {latest && (
-          <KLinePattern
-            candlestickData={candlestickData}
-            enableCache={true}
-            historicalDays={30}
-            onPatternDetected={(patterns) => {
-              console.log("檢測到型態:", patterns);
-            }}
-          />
-        )}
         <TechnicalAnalysisPanel
           technicalData={technicalData}
           symbol={queryState.symbol}
