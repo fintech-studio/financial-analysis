@@ -105,9 +105,6 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
   technicalData,
   symbol,
   timeframe,
-  open_price,
-  high_price,
-  low_price,
   close_price,
   volume,
   loading = false,
@@ -252,13 +249,11 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
     const atr = get.ATR();
     const cci = get.CCI();
     const mom = get.MOM();
-    const support = get.Support();
-    const resistance = get.Resistance();
 
     return [
       {
         key: "RSI",
-        title: "RSI (14)",
+        title: "RSI (14日)",
         value: typeof rsi === "number" ? formatNumber(rsi, 2) : "-",
         valueUnit: "",
         ...getRSITag(rsi),
@@ -505,7 +500,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       },
       {
         key: "ATR",
-        title: "ATR (平均真實波幅)",
+        title: "ATR 平均真實波幅",
         value: typeof atr === "number" ? formatNumber(atr, 2) : "-",
         valueUnit: "",
         tag: (() => {
@@ -536,7 +531,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       },
       {
         key: "CCI",
-        title: "CCI (順勢指標)",
+        title: "CCI 順勢指標",
         value: typeof cci === "number" ? formatNumber(cci, 2) : "-",
         valueUnit: "",
         tag: (() => {
@@ -567,7 +562,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       },
       {
         key: "MOM",
-        title: "MOM (動量指標)",
+        title: "MOM 動量指標",
         value: typeof mom === "number" ? formatNumber(mom, 2) : "-",
         valueUnit: "",
         tag: (() => {
@@ -759,12 +754,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="text-xs font-semibold uppercase text-gray-500 tracking-wider">
-                  {card.title}{" "}
-                  {timeframe === "1d"
-                    ? "(日線)"
-                    : timeframe === "1h"
-                    ? "(小時線)"
-                    : ""}
+                  {card.title}
                   <span
                     className={`ml-3 text-xs ${card.signalColor} font-bold`}
                   >
