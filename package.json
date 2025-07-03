@@ -16,9 +16,6 @@
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
     "@types/mssql": "^9.1.7",
-    "@types/node": "^20.11.30",
-    "@types/react": "19.1.6",
-    "@types/react-dom": "19.1.5",
     "antd": "^5.26.1",
     "chart.js": "^4.4.9",
     "chartjs-adapter-date-fns": "^3.0.0",
@@ -50,8 +47,8 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "@types/node": "^20.11.30",
-    "@types/react": "^18.2.62",
-    "@types/react-dom": "^18.2.19"
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5"
   },
   "description": "本專案是一個現代化的金融市場分析平台，提供股票、加密貨幣等市場的數據分析、技術指標、基本面分析與投資組合管理功能。",
   "main": "next.config.js",
