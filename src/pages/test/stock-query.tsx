@@ -89,16 +89,11 @@ const StockAnalysisPage: React.FC = () => {
   const renderPatternAndPanel = useCallback(
     () => (
       <>
-        {latest && (
-          <KLinePattern
-            candlestickData={candlestickData}
-            enableCache={true}
-            historicalDays={30}
-            onPatternDetected={(patterns) => {
-              console.log("檢測到型態:", patterns);
-            }}
-          />
-        )}
+        <KLinePattern
+          symbol={queryState.symbol}
+          timeframe={timeframe}
+          market={queryState.market}
+        />
         <TechnicalAnalysisPanel
           technicalData={technicalData}
           symbol={queryState.symbol}
@@ -120,6 +115,7 @@ const StockAnalysisPage: React.FC = () => {
       queryState.symbol,
       timeframe,
       loading,
+      queryState.market,
     ]
   );
 

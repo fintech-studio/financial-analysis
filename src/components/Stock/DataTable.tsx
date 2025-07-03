@@ -5,7 +5,6 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   FunnelIcon,
-  EyeIcon,
   DocumentArrowDownIcon,
 } from "@heroicons/react/24/outline";
 
@@ -36,7 +35,8 @@ interface ColumnConfig {
     | "price_low"
     | "price_close"
     | "volume"
-    | "indicator";
+    | "indicator"
+    | "pattern_signals";
   width?: string;
   format?: (value: any) => string;
 }
@@ -78,6 +78,12 @@ const COLUMNS: ColumnConfig[] = [
   { key: "cci", name: "CCI商品通道指標", type: "indicator", width: "w-20" },
   { key: "willr", name: "威廉指標", type: "indicator", width: "w-20" },
   { key: "mom", name: "動量指標", type: "indicator", width: "w-20" },
+  {
+    key: "pattern_signals",
+    name: "K線形態",
+    type: "pattern_signals",
+    width: "w-20",
+  },
 ];
 
 const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
@@ -126,23 +132,23 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
   };
   const formatDate = (dateString: string): string => {
     try {
-      // 創建 Date 對象
       let date = new Date(dateString);
-
       if (isNaN(date.getTime())) {
         return dateString;
       }
-
-      // 使用 UTC 方法手動格式化，避免瀏覽器的自動時區轉換
       const year = date.getUTCFullYear();
       const month = String(date.getUTCMonth() + 1).padStart(2, "0");
       const day = String(date.getUTCDate()).padStart(2, "0");
       const hour = String(date.getUTCHours()).padStart(2, "0");
       const minute = String(date.getUTCMinutes()).padStart(2, "0");
-
-      return timeframe === "1h"
-        ? `${year}/${month}/${day} ${hour}:${minute}`
-        : `${year}/${month}/${day}`;
+      const second = String(date.getUTCSeconds()).padStart(2, "0");
+      if (timeframe === "1h") {
+        // YYYY-MM-DD HH:MM:SS
+        return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+      } else {
+        // YYYY-MM-DD
+        return `${year}-${month}-${day}`;
+      }
     } catch {
       return dateString;
     }

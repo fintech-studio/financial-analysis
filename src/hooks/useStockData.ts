@@ -71,7 +71,7 @@ export const useStockData = (
         rsv, k_value, d_value, j_value,
         ma5, ma10, ma20, ma60, ema12, ema26,
         bb_upper, bb_middle, bb_lower,
-        atr, cci, willr, mom
+        atr, cci, willr, mom, pattern_signals
       FROM [${db}].[dbo].[${tableName}]
       WHERE symbol = @symbol
       ORDER BY datetime DESC
@@ -157,6 +157,7 @@ export const useStockData = (
       "cci",
       "willr",
       "mom",
+      "pattern_signals", // 新增形態信號
     ];
     indicators.forEach((indicator) => {
       // 過濾掉 null，只保留 number

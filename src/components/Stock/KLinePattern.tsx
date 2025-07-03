@@ -1,644 +1,300 @@
-import React, { useState, useMemo, useCallback, memo } from "react";
-import patterns, {
-  Pattern,
-  KLineData,
-  PatternType,
-  SignalStrength,
-} from "./patterns";
+import React, { useState, useEffect } from "react";
+import { useStockData } from "@/hooks/useStockData";
+import type { MarketType } from "./SearchBar";
 import {
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  EqualsIcon,
-} from "@heroicons/react/24/outline";
-
-// 型態類型顏色
-const getTypeColor = (type: PatternType) => {
-  switch (type) {
-    case PatternType.REVERSAL:
-      return "bg-red-100 text-red-800";
-    case PatternType.CONTINUATION:
-      return "bg-blue-100 text-blue-800";
-    case PatternType.INDECISION:
-      return "bg-gray-100 text-gray-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
-
-// 看漲看跌指示器
-const getBullishColor = (bullish: boolean | null) => {
-  if (bullish === true) return "text-green-600";
-  if (bullish === false) return "text-red-600";
-  return "text-gray-600";
-};
-const getBullishIcon = (bullish: boolean | null) => {
-  if (bullish === true)
-    return <ArrowTrendingUpIcon className="h-5 w-5 text-green-600" />;
-  if (bullish === false)
-    return <ArrowTrendingDownIcon className="h-5 w-5 text-red-600" />;
-  return <EqualsIcon className="h-5 w-5 text-gray-600" />;
-};
-
-// 信號強度色條
-const getStrengthBar = (strength: SignalStrength) => {
-  switch (strength) {
-    case SignalStrength.STRONG:
-      return (
-        <div className="h-1 w-16 bg-green-500 rounded-full" title="強"></div>
-      );
-    case SignalStrength.MODERATE:
-      return (
-        <div className="h-1 w-10 bg-yellow-400 rounded-full" title="中"></div>
-      );
-    case SignalStrength.WEAK:
-      return (
-        <div className="h-1 w-6 bg-gray-400 rounded-full" title="弱"></div>
-      );
-    default:
-      return null;
-  }
-};
-
-// 型態卡片元件 - 使用 memo 優化
-const PatternCard: React.FC<{
-  pattern: Pattern;
-  highlight?: boolean;
-  onClick?: () => void;
-}> = memo(({ pattern, highlight = false, onClick }) => (
-  <div
-    className={`p-4 rounded-lg border transition-all duration-200 cursor-pointer hover:scale-[1.02] ${
-      highlight
-        ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-lg"
-        : "bg-gray-50 border-gray-200 hover:shadow-md hover:border-gray-300"
-    }`}
-    onClick={onClick}
-    role="button"
-    tabIndex={0}
-    onKeyDown={(e) => e.key === "Enter" && onClick?.()}
-  >
-    <div className="flex items-center justify-between mb-2">
-      <div className="flex items-center gap-3">
-        <span className={`text-2xl ${getBullishColor(pattern.bullish)}`}>
-          {getBullishIcon(pattern.bullish)}
-        </span>
-        <div>
-          <h4 className="text-lg font-bold text-gray-800">{pattern.name}</h4>
-          <p className="text-sm text-gray-600">{pattern.enName}</p>
-        </div>
-      </div>
-      <div className="text-right">
-        <div
-          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(
-            pattern.type
-          )}`}
-        >
-          {pattern.type === PatternType.REVERSAL && "反轉"}
-          {pattern.type === PatternType.CONTINUATION && "延續"}
-          {pattern.type === PatternType.INDECISION && "猶豫"}
-        </div>
-        <div className="mt-1">{getStrengthBar(pattern.strength)}</div>
-      </div>
-    </div>
-    <p className="text-gray-700 mb-2">{pattern.description}</p>
-  </div>
-));
+  ViewfinderCircleIcon,
+  ChartBarIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/solid";
 
 interface KLinePatternProps {
-  candlestickData: KLineData[];
-  showAdvancedMetrics?: boolean;
-  maxPatternsToShow?: number;
-  customPatterns?: Pattern[];
-  onPatternDetected?: (patterns: Pattern[]) => void;
-  enableCache?: boolean;
-  historicalDays?: number;
+  symbol: string;
+  timeframe: "1d" | "1h";
+  market: MarketType;
 }
 
-const HISTORY_PAGE_SIZE = 10;
-
 const KLinePattern: React.FC<KLinePatternProps> = ({
-  candlestickData,
-  maxPatternsToShow = 5,
-  customPatterns = [],
-  enableCache = true,
-  historicalDays = 30,
-  onPatternDetected,
+  symbol,
+  timeframe,
+  market,
 }) => {
-  // 狀態管理
-  const [selectedPattern, setSelectedPattern] = useState<Pattern | null>(null);
-  const [filterType, setFilterType] = useState<PatternType | "all">("all");
-  const [sortBy, setSortBy] = useState<"strength" | "name">("strength");
+  const { data, loading, error } = useStockData(symbol, timeframe, market);
+  const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
 
-  // 取最新三根K線
-  const len = candlestickData?.length || 0;
-  const data = len > 0 ? candlestickData[len - 1] : undefined;
-  const prevData = len > 1 ? candlestickData[len - 2] : undefined;
-  const prev2Data = len > 2 ? candlestickData[len - 3] : undefined;
+  // 解析型態與 latest 必須在 hooks 之上
+  const latest = data && data.length > 0 ? data[0] : null;
+  const patterns = latest
+    ? (latest.pattern_signals || "")
+        .split(/[,，]/)
+        .map((p: string) => p.trim())
+        .filter(Boolean)
+    : [];
 
-  // 合併預設型態和自訂型態
-  const allPatterns = useMemo(
-    () => [...patterns, ...customPatterns],
-    [customPatterns]
-  );
-
-  // 找出所有匹配的型態
-  const matchedPatterns = useMemo(() => {
-    if (!data) return [];
-
-    return allPatterns.filter((pattern) =>
-      pattern.check(data, prevData, prev2Data, candlestickData)
-    );
-  }, [allPatterns, data, prevData, prev2Data, candlestickData]);
-
-  // 過濾和排序型態
-  const filteredAndSortedPatterns = useMemo(() => {
-    let filtered = matchedPatterns;
-
-    // 型態類型過濾
-    if (filterType !== "all") {
-      filtered = filtered.filter((pattern) => pattern.type === filterType);
+  // 預設選中第一個型態
+  useEffect(() => {
+    if (patterns.length > 0 && !selectedPattern) {
+      setSelectedPattern(patterns[0]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patterns]);
 
-    // 排序
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "strength":
-        default:
-          const strengthOrder: Record<SignalStrength, number> = {
-            [SignalStrength.VERY_STRONG]: 4,
-            [SignalStrength.STRONG]: 3,
-            [SignalStrength.MODERATE]: 2,
-            [SignalStrength.WEAK]: 1,
-          };
-          return strengthOrder[b.strength] - strengthOrder[a.strength];
-      }
-    });
-
-    return filtered.slice(0, maxPatternsToShow);
-  }, [matchedPatterns, filterType, sortBy, maxPatternsToShow]);
-
-  // 觸發回調
-  React.useEffect(() => {
-    if (onPatternDetected && matchedPatterns.length > 0) {
-      onPatternDetected(matchedPatterns);
+  // 輔助：格式化日期
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      const hour = String(date.getUTCHours()).padStart(2, "0");
+      const minute = String(date.getUTCMinutes()).padStart(2, "0");
+      const second = String(date.getUTCSeconds()).padStart(2, "0");
+      return timeframe === "1h"
+        ? `${year}-${month}-${day} ${hour}:${minute}:${second}`
+        : `${year}-${month}-${day}`;
+    } catch {
+      return dateString;
     }
-  }, [matchedPatterns, onPatternDetected]);
+  };
 
-  // 歷史型態偵測（使用可配置天數）
-  const historicalPatterns = useMemo(() => {
-    if (!candlestickData || candlestickData.length === 0) return [];
-    const now = new Date();
-    const DAYS_MS = 1000 * 60 * 60 * 24 * historicalDays;
-    const result: Array<{
-      date?: string;
-      index: number;
-      pattern: Pattern;
-    }> = [];
-
-    for (let i = 0; i < candlestickData.length; i++) {
-      const data = candlestickData[i];
-      if (!data.date) continue;
-
-      const dateObj = new Date(data.date);
-      if (
-        isNaN(dateObj.getTime()) ||
-        now.getTime() - dateObj.getTime() > DAYS_MS
-      )
-        continue;
-
-      const prevData = i > 0 ? candlestickData[i - 1] : undefined;
-      const prev2Data = i > 1 ? candlestickData[i - 2] : undefined;
-
-      allPatterns.forEach((pattern) => {
-        if (pattern.check(data, prevData, prev2Data, candlestickData)) {
-          result.push({
-            date: data.date,
-            index: i,
-            pattern,
-          });
-        }
-      });
-    }
-
-    return result.sort((a, b) => b.index - a.index);
-  }, [candlestickData, allPatterns, historicalDays]);
-
-  // 分頁狀態
-  const [historyPage, setHistoryPage] = useState(1);
-  const totalHistoryPages = Math.ceil(
-    historicalPatterns.length / HISTORY_PAGE_SIZE
-  );
-
-  const primaryPattern = filteredAndSortedPatterns[0];
-
-  const openHistoryInNewTab = useCallback(
-    (
-      historicalPatterns: Array<{
-        date?: string;
-        index: number;
-        pattern: Pattern;
-      }>,
-      HISTORY_PAGE_SIZE: number
-    ) => {
-      const html = `<!DOCTYPE html>
-    <html lang='zh-TW'>
-    <head>
-      <meta charset='UTF-8' />
-      <title>K線歷史型態分析</title>
-      <style>
-        body { 
-          font-family: system-ui, -apple-system, sans-serif; 
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          margin: 0; padding: 2rem; min-height: 100vh;
-        }
-        .container {
-          max-width: 1200px; margin: 0 auto; background: white;
-          border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-          overflow: hidden;
-        }
-        .header {
-          background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-          color: white; padding: 2rem; text-align: center;
-        }
-        .stats {
-          display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 1rem; padding: 1.5rem; background: #f8fafc;
-        }
-        .stat-card {
-          background: white; padding: 1rem; border-radius: 8px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center;
-        }
-        table { 
-          border-collapse: collapse; width: 100%; 
-          font-size: 0.9rem;
-        }
-        th, td { 
-          border-bottom: 1px solid #e5e7eb; 
-          padding: 0.75rem; text-align: left; 
-        }
-        th { 
-          background: #f9fafb; font-weight: 600;
-          position: sticky; top: 0; z-index: 10;
-        }
-        tr:hover { background: #f9fafb; }
-        .pagination { 
-          padding: 1.5rem; display: flex; justify-content: center; 
-          align-items: center; gap: 1rem; background: #f8fafc;
-        }
-        .btn { 
-          padding: 0.5rem 1rem; border-radius: 6px; border: none; 
-          background: #4f46e5; color: white; cursor: pointer;
-          font-size: 0.875rem; transition: all 0.2s;
-        }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; background: #9ca3af; }
-        .btn:hover:not(:disabled) { background: #4338ca; transform: translateY(-1px); }
-        .pattern-type { 
-          padding: 0.25rem 0.5rem; border-radius: 4px; 
-          font-size: 0.75rem; font-weight: 500;
-        }
-        .type-reversal { background: #fee2e2; color: #991b1b; }
-        .type-continuation { background: #dbeafe; color: #1e40af; }
-        .type-indecision { background: #f3f4f6; color: #374151; }
-      </style>
-    </head>
-    <body>
-      <div class='container'>
-        <div class='header'>
-          <h1>📊 K線歷史型態分析</h1>
-          <p>最近 ${historicalDays} 天的型態統計</p>
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-6 mt-4">
+        <div className="animate-pulse">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-6 w-6 bg-gray-300 rounded"></div>
+            <div className="h-6 w-32 bg-gray-300 rounded"></div>
+          </div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+          </div>
         </div>
-        
-        <div class='stats' id='stats-container'></div>
-        
-        <div id='table-container'></div>
-        
-        <div class='pagination' id='pagination-container'></div>
       </div>
-      
-      <script>
-        const patterns = ${JSON.stringify(historicalPatterns)};
-        const HISTORY_PAGE_SIZE = ${HISTORY_PAGE_SIZE};
-        let page = 1;
-        
-        // 統計數據
-        const stats = {
-          total: patterns.length,
-          reversal: patterns.filter(p => p.pattern.type === 'reversal').length,
-          continuation: patterns.filter(p => p.pattern.type === 'continuation').length,
-          indecision: patterns.filter(p => p.pattern.type === 'indecision').length,
-        };
-        
-        function renderStats() {
-          const container = document.getElementById('stats-container');
-          container.innerHTML = \`
-            <div class='stat-card'>
-              <div style='font-size: 2rem; color: #4f46e5; margin-bottom: 0.5rem;'>
-                \${stats.total}
-              </div>
-              <div style='color: #6b7280; font-size: 0.875rem;'>總型態數</div>
-            </div>
-            <div class='stat-card'>
-              <div style='font-size: 2rem; color: #dc2626; margin-bottom: 0.5rem;'>
-                \${stats.reversal}
-              </div>
-              <div style='color: #6b7280; font-size: 0.875rem;'>反轉型態</div>
-            </div>
-            <div class='stat-card'>
-              <div style='font-size: 2rem; color: #2563eb; margin-bottom: 0.5rem;'>
-                \${stats.continuation}
-              </div>
-              <div style='color: #6b7280; font-size: 0.875rem;'>延續型態</div>
-            </div>
-            <div class='stat-card'>
-              <div style='font-size: 2rem; color: #6b7280; margin-bottom: 0.5rem;'>
-                \${stats.indecision}
-              </div>
-              <div style='color: #6b7280; font-size: 0.875rem;'>猶豫型態</div>
-            </div>
-          \`;
-        }
-        
-        function getTypeText(type) {
-          return type === 'reversal' ? '反轉' : 
-                 type === 'continuation' ? '延續' : '猶豫';
-        }
-        
-        function getTypeClass(type) {
-          return type === 'reversal' ? 'type-reversal' : 
-                 type === 'continuation' ? 'type-continuation' : 'type-indecision';
-        }
-        
-        function getBullishIcon(bullish) {
-          return bullish === true ? "📈" : 
-                 bullish === false ? "📉" : "➖";
-        }
-        
-        function renderTable() {
-          const start = (page - 1) * HISTORY_PAGE_SIZE;
-          const paged = patterns.slice(start, start + HISTORY_PAGE_SIZE);
-          
-          let html = \`
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>日期</th>
-                  <th>型態名稱</th>
-                  <th>型態類型</th>
-                  <th>多空</th>
-                </tr>
-              </thead>
-              <tbody>
-          \`;
-          
-          if (paged.length === 0) {
-            html += \`<tr><td colspan='5' style='text-align: center; padding: 2rem; color: #6b7280;'>
-              無歷史型態紀錄</td></tr>\`;
-          } else {
-            paged.forEach((item, idx) => {
-              html += \`
-                <tr>
-                  <td>\${start + idx + 1}</td>
-                  <td>\${item.date || ('#' + (item.index + 1))}</td>
-                  <td><strong>\${item.pattern.name}</strong><br>
-                      <small style='color: #6b7280;'>\${item.pattern.enName}</small></td>
-                  <td><span class='pattern-type \${getTypeClass(item.pattern.type)}'>
-                      \${getTypeText(item.pattern.type)}</span></td>
-                  <td style='font-size: 1.25rem;'>\${getBullishIcon(item.pattern.bullish)}</td>
-                </tr>
-              \`;
-            });
-          }
-          
-          html += \`</tbody></table>\`;
-          document.getElementById('table-container').innerHTML = html;
-        }
-        
-        function renderPagination() {
-          const totalPages = Math.ceil(patterns.length / HISTORY_PAGE_SIZE);
-          const container = document.getElementById('pagination-container');
-          
-          let html = \`
-            <button class='btn' onclick='prevPage()' \${page === 1 ? 'disabled' : ''}>
-              ← 上一頁
-            </button>
-            <span style='color: #6b7280; font-size: 0.875rem;'>
-              第 \${page} / \${totalPages} 頁 (共 \${patterns.length} 筆)
-            </span>
-            <button class='btn' onclick='nextPage()' \${page === totalPages ? 'disabled' : ''}>
-              下一頁 →
-            </button>
-          \`;
-          
-          container.innerHTML = html;
-        }
-        
-        function prevPage() { 
-          if (page > 1) { 
-            page--; 
-            renderTable(); 
-            renderPagination(); 
-          } 
-        }
-        
-        function nextPage() { 
-          const totalPages = Math.ceil(patterns.length / HISTORY_PAGE_SIZE);
-          if (page < totalPages) { 
-            page++; 
-            renderTable(); 
-            renderPagination(); 
-          } 
-        }
-        
-        // 初始化
-        renderStats();
-        renderTable();
-        renderPagination();
-      </script>
-    </body>
-    </html>`;
+    );
+  }
 
-      const win = window.open("", "_blank");
-      if (win) {
-        win.document.write(html);
-        win.document.close();
-      }
-    },
-    [historicalDays]
-  );
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 mt-4">
+        <div className="flex items-center gap-2 text-red-600">
+          <ExclamationTriangleIcon className="h-6 w-6" />
+          <span className="font-medium">載入錯誤</span>
+        </div>
+        <p className="text-red-500 mt-2">{error}</p>
+      </div>
+    );
+  }
 
-  // 浮動說明視窗狀態
-  const [popup, setPopup] = useState<{
-    pattern: Pattern;
-    x: number;
-    y: number;
-  } | null>(null);
-
-  // 點擊卡片顯示浮窗
-  const handlePatternCardClick = useCallback(
-    (pattern: Pattern) => (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setPopup({
-        pattern,
-        x: e.clientX,
-        y: e.clientY,
-      });
-    },
-    []
-  );
-
-  // 點擊其他地方關閉浮窗
-  React.useEffect(() => {
-    if (!popup) return;
-    const close = () => setPopup(null);
-    window.addEventListener("mousedown", close);
-    window.addEventListener("scroll", close, true);
-    return () => {
-      window.removeEventListener("mousedown", close);
-      window.removeEventListener("scroll", close, true);
-    };
-  }, [popup]);
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mt-4">
+        <div className="text-center">
+          <ChartBarIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-600">查無 K 線形態資料</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 mt-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 mt-4 hover:shadow-xl transition-shadow duration-300">
+      {/* 標題區域 */}
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h3 className="text-xl font-semibold text-gray-800">K線型態分析</h3>
-          {enableCache && (
-            <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">
-              快取已啟用
+          <div className="bg-gray-500 p-2 rounded-lg">
+            <ViewfinderCircleIcon className="h-6 w-6 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-800 pt-2">K 線形態分析</h3>
+          {patterns.length !== 0 ? (
+            <span className="text-sm text-gray-500">
+              已辨識出的型態：{patterns.length} 種
             </span>
-          )}
+          ) : null}
         </div>
-        <div className="flex gap-2">
-          {/* 過濾器 */}
-          <select
-            value={filterType}
-            onChange={(e) =>
-              setFilterType(e.target.value as PatternType | "all")
-            }
-            className="text-sm px-2 py-1 border rounded"
-          >
-            <option value="all">所有型態</option>
-            <option value={PatternType.REVERSAL}>反轉型態</option>
-            <option value={PatternType.CONTINUATION}>延續型態</option>
-            <option value={PatternType.INDECISION}>猶豫型態</option>
-          </select>
-
-          {/* 排序 */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as "strength" | "name")}
-            className="text-sm px-2 py-1 border rounded"
-          >
-            <option value="strength">信號強度</option>
-            <option value="name">名稱</option>
-          </select>
-
-          <button
-            className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition"
-            onClick={() =>
-              openHistoryInNewTab(historicalPatterns, HISTORY_PAGE_SIZE)
-            }
-          >
-            查看最近 {historicalDays} 天的歷史型態 ({historicalPatterns.length})
-          </button>
+        <div className="text-right">
+          <div className="text-sm text-gray-500">型態辨識</div>
+          <div className="text-sm font-medium text-gray-700">
+            {symbol} · {timeframe === "1d" ? "日線" : "小時線"}
+          </div>
         </div>
       </div>
 
-      {/* 主要型態 */}
-      {!data ? (
+      {/* 主要內容區塊重新排版 */}
+      {patterns.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500">暫無K線數據</p>
-        </div>
-      ) : primaryPattern ? (
-        <div>
-          {/* 主要型態 */}
-          <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <span
-                  className={`text-2xl ${getBullishColor(
-                    primaryPattern.bullish
-                  )}`}
-                >
-                  {getBullishIcon(primaryPattern.bullish)}
-                </span>
-                <div>
-                  <h4 className="text-lg font-bold text-gray-800">
-                    {primaryPattern.name}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    {primaryPattern.enName}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div
-                  className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(
-                    primaryPattern.type
-                  )}`}
-                >
-                  {primaryPattern.type === PatternType.REVERSAL && "反轉"}
-                  {primaryPattern.type === PatternType.CONTINUATION && "延續"}
-                  {primaryPattern.type === PatternType.INDECISION && "猶豫"}
-                </div>
-                <div className="mt-1">
-                  {getStrengthBar(primaryPattern.strength)}
-                </div>
-              </div>
-            </div>
-            <p className="text-gray-700 mb-2">{primaryPattern.description}</p>
-          </div>
-
-          {/* 其他檢測到的型態 */}
-          {filteredAndSortedPatterns.length > 1 && (
-            <div className="mt-6">
-              <h4 className="text-md font-semibold text-gray-700 mb-3">
-                其他檢測型態 ({filteredAndSortedPatterns.length - 1} 個)
-              </h4>
-              <div className="grid gap-3 md:grid-cols-2">
-                {filteredAndSortedPatterns.slice(1).map((pattern, index) => (
-                  <PatternCard
-                    key={index}
-                    pattern={pattern}
-                    onClick={() => setSelectedPattern(pattern)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          <ViewfinderCircleIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 text-lg">目前未辨識到明顯的 K 線形態</p>
         </div>
       ) : (
-        <div className="text-center py-8">
-          <div className="text-4xl mb-2">🔍</div>
-          <p className="text-gray-500 mb-1">未發現明顯型態</p>
-          <p className="text-xs text-gray-400">
-            當前K線數據不符合任何已知的技術分析型態
-          </p>
+        <div className="flex flex-col gap-6">
+          {/* 上方型態橫向按鈕列 */}
+          <div className="flex flex-wrap gap-3 justify-center">
+            {patterns.map((pattern: string, idx: number) => (
+              <button
+                key={pattern + idx}
+                className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors duration-200 focus:outline-none ${
+                  selectedPattern === pattern
+                    ? "bg-gray-500 text-white border-gray-500 shadow"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                }`}
+                onClick={() => setSelectedPattern(pattern)}
+                type="button"
+              >
+                {pattern}
+              </button>
+            ))}
+          </div>
 
-          {/* 顯示當前數據摘要 */}
-          {data && (
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg max-w-md mx-auto">
-              <div className="text-xs text-gray-600 grid grid-cols-2 gap-2">
-                <div>開盤: {data.open.toFixed(2)}</div>
-                <div>收盤: {data.close.toFixed(2)}</div>
-                <div>最高: {data.high.toFixed(2)}</div>
-                <div>最低: {data.low.toFixed(2)}</div>
-              </div>
+          {/* 下方說明區塊 */}
+          <div className="bg-gray-50 rounded-lg p-6 min-h-[80px] text-center">
+            <h4 className="text-lg font-semibold text-gray-800 mb-2 flex items-center justify-center gap-2">
+              {selectedPattern}
+            </h4>
+            <div className="text-gray-700 leading-relaxed">
+              {selectedPattern
+                ? patternDescriptions[selectedPattern] || "此形態暫無詳細說明。"
+                : "請點選上方型態以查看說明"}
             </div>
-          )}
+          </div>
         </div>
       )}
-
-      {/* 移除浮動詳細說明視窗 */}
     </div>
   );
 };
 
-// 設置組件顯示名稱以便調試
-KLinePattern.displayName = "KLinePattern";
-PatternCard.displayName = "PatternCard";
+// 常見型態說明，可自行擴充
+const patternDescriptions: Record<string, string> = {
+  兩隻烏鴉:
+    "兩隻烏鴉是一種看跌反轉形態，通常出現在上升趨勢中。它由兩根連續的陰線組成，且第二根陰線的收盤價低於第一根陰線的收盤價。",
+  三芝烏鴉:
+    "三芝烏鴉是一種強烈的看跌反轉形態，由三根連續的陰線組成。每根陰線的收盤價都低於前一根，顯示出賣壓持續增加。",
+  南方三星:
+    "南方三星是一種看漲反轉形態，通常出現在下跌趨勢中。它由三根連續的陽線組成，且每根陽線的收盤價都高於前一根，顯示出買壓持續增加。",
+  三白兵:
+    "三白兵是一種看漲反轉形態，由三根連續的陽線組成。每根陽線的收盤價都高於前一根，顯示出買壓持續增加。",
+  大敵當前:
+    "大敵當前是一種看跌反轉形態，通常出現在上升趨勢中。它由一根長陰線和兩根較短的陽線組成，顯示出賣壓強勁。",
+  捉腰帶線:
+    "捉腰帶線是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根長陽線和一根較短的陰線組成，顯示出買壓強勁。",
+  脫離: "脫離是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根長陽線和一根較短的陰線組成，顯示出買壓強勁。",
+  藏嬰吞沒:
+    "藏嬰吞沒是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根較小的陰線被一根較大的陽線完全吞沒，顯示出買壓強勁。",
+  反擊線:
+    "反擊線是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根長陽線和一根較短的陰線組成，顯示出買壓強勁。",
+  烏雲蓋頂:
+    "烏雲蓋頂是一種看跌反轉形態，通常出現在上升趨勢中。它由一根長陰線和一根較短的陽線組成，顯示出賣壓強勁。",
+  十字: "十字是一種中性形態，通常出現在趨勢轉折點。它的開盤價和收盤價幾乎相同，顯示出市場猶豫不決。",
+  十字星:
+    "十字星是一種中性形態，通常出現在趨勢轉折點。它的開盤價和收盤價幾乎相同，顯示出市場猶豫不決。",
+  蜻蜓十字:
+    "蜻蜓十字是一種看漲反轉形態，通常出現在下跌趨勢中。它的開盤價和收盤價幾乎相同，且下影線較長，顯示出買壓強勁。",
+  十字暮星:
+    "十字暮星是一種看跌反轉形態，通常出現在上升趨勢中。它的開盤價和收盤價幾乎相同，顯示出賣壓強勁。",
+  暮星: "暮星是一種看跌反轉形態，通常出現在上升趨勢中。它的開盤價和收盤價幾乎相同，顯示出賣壓強勁。",
+  缺口上漲:
+    "缺口上漲是一種看漲形態，通常出現在上升趨勢中。它由一根長陽線和一根較短的陰線組成，顯示出買壓強勁。",
+  墓碑十字:
+    "墓碑十字是一種看跌反轉形態，通常出現在上升趨勢中。它的開盤價和收盤價幾乎相同，顯示出賣壓強勁。",
+  錘頭: "錘頭是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  上吊線:
+    "上吊線是一種看跌反轉形態，通常出現在上升趨勢中。它的下影線較長，顯示出賣壓強勁。",
+  孕線: "孕線是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根較小的陰線被一根較大的陽線完全包圍，顯示出買壓強勁。",
+  十字孕線:
+    "十字孕線是一種看漲反轉形態，通常出現在下跌趨勢中。它的開盤價和收盤價幾乎相同，顯示出市場猶豫不決。",
+  風高浪大線:
+    "風高浪大線是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  "Hikkake 陷阱":
+    "Hikkake 陷阱是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  "Hikkake Modified":
+    "Hikkake Modified 是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  家鴿: "家鴿是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  三胞胎烏鴉:
+    "三胞胎烏鴉是一種看跌反轉形態，通常出現在上升趨勢中。它由三根連續的陰線組成，顯示出賣壓持續增加。",
+  頸內線:
+    "頸內線是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  倒錘頭:
+    "倒錘頭是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  反沖形態:
+    "反沖形態是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  "反沖-長短判斷":
+    "反沖-長短判斷是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  梯形底部:
+    "梯形底部是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  長腿十字:
+    "長腿十字是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  長蠟燭:
+    "長蠟燭是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  匹配低點:
+    "匹配低點是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  鋪墊: "鋪墊是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  十字晨星:
+    "十字晨星是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根十字線和兩根陽線組成，顯示出買壓強勁。",
+  晨星: "晨星是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根陰線、一根小實體的十字線和一根陽線組成，顯示出買壓強勁。",
+  頸上線:
+    "頸上線是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  刺穿形態:
+    "刺穿形態是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  黃包車夫:
+    "黃包車夫是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  分離線:
+    "分離線是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  射擊星:
+    "射擊星是一種看跌反轉形態，通常出現在上升趨勢中。它的上影線較長，顯示出賣壓強勁。",
+  短蠟燭:
+    "短蠟燭是一種中性形態，通常出現在趨勢轉折點。它的實體較小，顯示出市場猶豫不決。",
+  紡錘線:
+    "紡錘線是一種中性形態，通常出現在趨勢轉折點。它的上影線和下影線較長，顯示出市場猶豫不決。",
+  停滯形態:
+    "停滯形態是一種中性形態，通常出現在趨勢轉折點。它的實體較小，顯示出市場猶豫不決。",
+  三明治:
+    "三明治是一種中性形態，通常出現在趨勢轉折點。它由一根長實體的陽線、一根小實體的陰線和一根長實體的陽線組成，顯示出市場猶豫不決。",
+  探水竿:
+    "探水竿是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  跳空並列月缺:
+    "跳空並列月缺是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  向上突破:
+    "向上突破是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  三星: "三星是一種看漲反轉形態，通常出現在下跌趨勢中。它由三根連續的陽線組成，顯示出買壓持續增加。",
+  奇特三河床:
+    "奇特三河床是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根長陽線和兩根較短的陰線組成，顯示出買壓強勁。",
+  向上跳空兩隻烏鴉:
+    "向上跳空兩隻烏鴉是一種看跌反轉形態，通常出現在上升趨勢中。它由兩根連續的陰線組成，且第二根陰線的收盤價高於第一根陰線的開盤價。",
+  光頭: "光頭是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  光腳: "光腳是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  上漲光頭光腳:
+    "上漲光頭光腳是一種看漲反轉形態，通常出現在下跌趨勢中。它的下影線較長，顯示出買壓強勁。",
+  下跌光頭光腳:
+    "下跌光頭光腳是一種看跌反轉形態，通常出現在上升趨勢中。它的上影線較長，顯示出賣壓強勁。",
+  三內部上漲:
+    "三內部上漲是一種看漲反轉形態，通常出現在下跌趨勢中。它由三根連續的陽線組成，顯示出買壓持續增加。",
+  三內部下跌:
+    "三內部下跌是一種看跌反轉形態，通常出現在上升趨勢中。它由三根連續的陰線組成，顯示出賣壓持續增加。",
+  三線打擊上漲:
+    "三線打擊上漲是一種看漲反轉形態，通常出現在下跌趨勢中。它由三根連續的陽線組成，顯示出買壓持續增加。",
+  三線打擊下跌:
+    "三線打擊下跌是一種看跌反轉形態，通常出現在上升趨勢中。它由三根連續的陰線組成，顯示出賣壓持續增加。",
+  三外部上漲:
+    "三外部上漲是一種看漲反轉形態，通常出現在下跌趨勢中。它由三根連續的陽線組成，顯示出買壓持續增加。",
+  三外部下跌:
+    "三外部下跌是一種看跌反轉形態，通常出現在上升趨勢中。它由三根連續的陰線組成，顯示出賣壓持續增加。",
+  棄嬰上漲:
+    "棄嬰上漲是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根長陽線和兩根較短的陰線組成，顯示出買壓強勁。",
+  棄嬰下跌:
+    "棄嬰下跌是一種看跌反轉形態，通常出現在上升趨勢中。它由一根長陰線和兩根較短的陽線組成，顯示出賣壓強勁。",
+  上升三法:
+    "上升三法是一種看漲形態，通常出現在上升趨勢中。它由三根連續的陽線組成，顯示出買壓持續增加。",
+  下降三法:
+    "下降三法是一種看跌形態，通常出現在下降趨勢中。它由三根連續的陰線組成，顯示出賣壓持續增加。",
+  上升跳空三法:
+    "上升跳空三法是一種看漲形態，通常出現在上升趨勢中。它由三根連續的陽線組成，顯示出買壓持續增加。",
+  下降跳空三法:
+    "下降跳空三法是一種看跌形態，通常出現在下降趨勢中。它由三根連續的陰線組成，顯示出賣壓持續增加。",
+  多頭吞沒:
+    "多頭吞沒是一種看漲反轉形態，通常出現在下跌趨勢中。它由一根較小的陰線被一根較大的陽線完全吞沒，顯示出買壓強勁。",
+  空頭吞沒:
+    "空頭吞沒是一種看跌反轉形態，通常出現在上升趨勢中。它由一根較小的陽線被一根較大的陰線完全吞沒，顯示出賣壓強勁。",
+};
 
-export default memo(KLinePattern);
+export default KLinePattern;
