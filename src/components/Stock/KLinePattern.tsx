@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import { useStockData } from "@/hooks/useStockData";
 import type { MarketType } from "./SearchBar";
 import {
@@ -13,6 +13,77 @@ interface KLinePatternProps {
   market: MarketType;
 }
 
+// 單一型態卡片，memo 避免不必要重渲染
+const PatternCard = memo(
+  ({
+    pattern,
+    description,
+    englishName,
+    imageUrl,
+    zoomPattern,
+    setZoomPattern,
+  }: {
+    pattern: string;
+    description: string;
+    englishName?: string;
+    imageUrl: string;
+    zoomPattern: string | null;
+    setZoomPattern: (p: string | null) => void;
+  }) => {
+    const [imgError, setImgError] = useState(false);
+    return (
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 flex flex-row items-center transition-shadow duration-300 hover:shadow-xl min-h-[140px]">
+        {/* 文字區塊 */}
+        <div className="flex-1 flex flex-col justify-center pr-4">
+          <span className="text-xl font-bold text-gray-800 mb-1">
+            {pattern}
+          </span>
+          {englishName && (
+            <span className="text-xs text-gray-500 mb-2">{englishName}</span>
+          )}
+          <div className="text-gray-700 text-sm leading-relaxed min-h-[48px]">
+            {description || "此形態暫無詳細說明。"}
+          </div>
+        </div>
+        {/* 圖片區塊 */}
+        <div className="flex-shrink-0 flex items-center justify-center w-28 h-28 relative">
+          {!imgError ? (
+            <img
+              src={imageUrl}
+              alt={pattern + " 圖例"}
+              className="max-h-24 max-w-24 object-contain rounded-lg shadow border border-gray-200 bg-white cursor-zoom-in"
+              style={{ display: "block" }}
+              onClick={() => setZoomPattern(pattern)}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <ViewfinderCircleIcon className="h-16 w-16 text-gray-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          )}
+          {/* 放大圖浮層 */}
+          {zoomPattern === pattern && (
+            <div
+              className="pattern-zoom-popover absolute z-40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-xl shadow-2xl border-4 border-white flex items-center justify-center cursor-zoom-out"
+              style={{
+                minWidth: "200px",
+                minHeight: "200px",
+                maxWidth: "320px",
+                maxHeight: "320px",
+              }}
+              onClick={() => setZoomPattern(null)}
+            >
+              <img
+                src={imageUrl}
+                alt={pattern + " 放大圖例"}
+                className="max-h-72 max-w-72 object-contain"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+);
+
 const KLinePattern: React.FC<KLinePatternProps> = ({
   symbol,
   timeframe,
@@ -20,19 +91,24 @@ const KLinePattern: React.FC<KLinePatternProps> = ({
 }) => {
   const { data, loading, error } = useStockData(symbol, timeframe, market);
   const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
-  // 放大圖狀態：pattern 名稱
   const [zoomPattern, setZoomPattern] = useState<string | null>(null);
 
-  // 解析型態與 latest 必須在 hooks 之上
-  const latest = data && data.length > 0 ? data[0] : null;
-  const patterns = latest
-    ? (latest.pattern_signals || "")
-        .split(/[,，]/)
-        .map((p: string) => p.trim())
-        .filter(Boolean)
-    : [];
+  // 用 useMemo 優化資料計算
+  const latest = useMemo(
+    () => (data && data.length > 0 ? data[0] : null),
+    [data]
+  );
+  const patterns = useMemo(
+    () =>
+      latest
+        ? (latest.pattern_signals || "")
+            .split(/[,，]/)
+            .map((p: string) => p.trim())
+            .filter(Boolean)
+        : [],
+    [latest]
+  );
 
-  // 預設選中第一個型態
   useEffect(() => {
     if (patterns.length > 0 && !selectedPattern) {
       setSelectedPattern(patterns[0]);
@@ -40,28 +116,8 @@ const KLinePattern: React.FC<KLinePatternProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patterns]);
 
-  // 輔助：格式化日期
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-      const year = date.getUTCFullYear();
-      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-      const day = String(date.getUTCDate()).padStart(2, "0");
-      const hour = String(date.getUTCHours()).padStart(2, "0");
-      const minute = String(date.getUTCMinutes()).padStart(2, "0");
-      const second = String(date.getUTCSeconds()).padStart(2, "0");
-      return timeframe === "1h"
-        ? `${year}-${month}-${day} ${hour}:${minute}:${second}`
-        : `${year}-${month}-${day}`;
-    } catch {
-      return dateString;
-    }
-  };
-
   // 取得型態對應圖片路徑
   const getPatternImageUrl = (pattern: string) => {
-    // 將型態名稱中的空白移除，避免檔名問題
     const fileName = pattern.replace(/\s+/g, "");
     return `/kline-patterns/${fileName}.png`;
   };
@@ -129,8 +185,7 @@ const KLinePattern: React.FC<KLinePatternProps> = ({
           </div>
         </div>
       </div>
-
-      {/* 主要內容區塊卡片式排版（圖片右側，文字左側） */}
+      {/* 主要內容區塊卡片式排版 */}
       {patterns.length === 0 ? (
         <div className="text-center py-8">
           <ViewfinderCircleIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -139,65 +194,15 @@ const KLinePattern: React.FC<KLinePatternProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {patterns.map((pattern: string, idx: number) => (
-            <div
+            <PatternCard
               key={pattern + idx}
-              className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 flex flex-row items-center transition-shadow duration-300 hover:shadow-xl min-h-[140px]"
-            >
-              {/* 文字區塊 */}
-              <div className="flex-1 flex flex-col justify-center pr-4">
-                <span className="text-xl font-bold text-gray-800 mb-1">
-                  {pattern}
-                </span>
-                {patternEnglishNames[pattern] && (
-                  <span className="text-xs text-gray-500 mb-2">
-                    {patternEnglishNames[pattern]}
-                  </span>
-                )}
-                <div className="text-gray-700 text-sm leading-relaxed min-h-[48px]">
-                  {patternDescriptions[pattern] || "此形態暫無詳細說明。"}
-                </div>
-              </div>
-              {/* 圖片區塊 */}
-              <div className="flex-shrink-0 flex items-center justify-center w-28 h-28 relative">
-                <img
-                  src={getPatternImageUrl(pattern)}
-                  alt={pattern + " 圖例"}
-                  className="max-h-24 max-w-24 object-contain rounded-lg shadow border border-gray-200 bg-white cursor-zoom-in"
-                  style={{ display: "block" }}
-                  onClick={() => setZoomPattern(pattern)}
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    const icon = e.currentTarget.parentElement?.querySelector(
-                      ".pattern-fallback-icon"
-                    ) as HTMLElement;
-                    if (icon) icon.style.display = "block";
-                  }}
-                />
-                <ViewfinderCircleIcon
-                  className="pattern-fallback-icon h-16 w-16 text-gray-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                  style={{ display: "none" }}
-                />
-                {/* 放大圖浮層 */}
-                {zoomPattern === pattern && (
-                  <div
-                    className="pattern-zoom-popover absolute z-40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-xl shadow-2xl border-4 border-white flex items-center justify-center cursor-zoom-out"
-                    style={{
-                      minWidth: "200px",
-                      minHeight: "200px",
-                      maxWidth: "320px",
-                      maxHeight: "320px",
-                    }}
-                    onClick={() => setZoomPattern(null)}
-                  >
-                    <img
-                      src={getPatternImageUrl(pattern)}
-                      alt={pattern + " 放大圖例"}
-                      className="max-h-72 max-w-72 object-contain"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
+              pattern={pattern}
+              description={patternDescriptions[pattern] || ""}
+              englishName={patternEnglishNames[pattern]}
+              imageUrl={getPatternImageUrl(pattern)}
+              zoomPattern={zoomPattern}
+              setZoomPattern={setZoomPattern}
+            />
           ))}
         </div>
       )}
