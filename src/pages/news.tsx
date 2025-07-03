@@ -5,6 +5,8 @@ import Head from "next/head";
 type NewsItem = {
   title: string;
   link: string;
+  source: string;
+  pubDate: string;
 };
 
 export default function NewsPage() {
@@ -25,7 +27,7 @@ export default function NewsPage() {
   };
   
   useEffect(() => {
-    fetchNews("金融");
+    fetchNews(query);
     setQuery(" ");
   }, []);
 
@@ -33,6 +35,7 @@ export default function NewsPage() {
     e.preventDefault();
     fetchNews(query);
   };
+
 
   // 新增重整按鈕的事件
   const handleReset = () => {
@@ -67,7 +70,7 @@ export default function NewsPage() {
           </button>
         </form>
       </div>
-      <div className="grid-responsive" id="newsList">
+      <div className="grid gap-4" id="newsList">
         {loading ? (
           <p className="text-center text-gray-500">載入中...</p>
         ) : news.length === 0 ? (
@@ -76,18 +79,19 @@ export default function NewsPage() {
           </div>
         ) : (
           news.map((article, idx) => (
-            <div className="card-responsive card animate-fadeIn" key={idx}>
-              <div className="card-body">
-                <h5 className="card-title mb-2">
-                  <a
-                    href={article.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {article.title}
-                  </a>
-                </h5>
-                <p className="card-text text-sm text-gray-500">來自 Google News</p>
+            <div className="flex items-start gap-2 p-4 bg-white rounded shadow" key={idx}>
+              <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-blue-500" />
+              <div>
+                <div className="text-sm font-semibold text-gray-700">{article.source}</div>
+                <a
+                  href={article.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-base font-medium text-blue-700 hover:underline"
+                >
+                  {article.title}
+                </a>
+                <div className="text-xs text-gray-400">{article.pubDate}</div>
               </div>
             </div>
           ))

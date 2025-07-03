@@ -9,11 +9,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const response = await axios.get(url);
     const $ = cheerio.load(response.data, { xmlMode: true });
     const items = $("item").slice(0, 12);
-    const news: { title: string; link: string }[] = [];
+    const news: { title: string; link: string; source: string; pubDate: string }[] = [];
     items.each((i, el) => {
       news.push({
         title: $(el).find("title").text(),
         link: $(el).find("link").text(),
+        source: $(el).find("source").text() || "未知媒體",
+        pubDate: $(el).find("pubDate").text() || "",
       });
     });
     res.status(200).json(news);
