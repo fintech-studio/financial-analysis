@@ -11,7 +11,6 @@ if (!rootElement) {
 
 const root = ReactDOM.createRoot(rootElement);
 
-// 修復無限更新問題後重新啟用 StrictMode
 root.render(
   <React.StrictMode>
     <BrowserRouter>

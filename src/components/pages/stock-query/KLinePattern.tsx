@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, memo } from "react";
-import { useStockData } from "@/hooks/useStockData";
 import type { MarketType } from "./SearchBar";
 import {
   ViewfinderCircleIcon,
@@ -8,6 +7,9 @@ import {
 } from "@heroicons/react/24/solid";
 
 interface KLinePatternProps {
+  data: any[];
+  loading: boolean;
+  error: string | null;
   symbol: string;
   timeframe: "1d" | "1h";
   market: MarketType;
@@ -85,11 +87,13 @@ const PatternCard = memo(
 );
 
 const KLinePattern: React.FC<KLinePatternProps> = ({
+  data,
+  loading,
+  error,
   symbol,
   timeframe,
   market,
 }) => {
-  const { data, loading, error } = useStockData(symbol, timeframe, market);
   const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
   const [zoomPattern, setZoomPattern] = useState<string | null>(null);
 
