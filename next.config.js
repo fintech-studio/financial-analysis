@@ -1,22 +1,19 @@
 /** @type {import('next').NextConfig} */
+const isStaticExport = process.env.STATIC_EXPORT === "true";
+
 const nextConfig = {
-  // 根據環境變數控制靜態輸出
-  ...(process.env.STATIC_EXPORT === "true"
+  // 只有靜態輸出時才設定 basePath 和 assetPrefix
+  ...(isStaticExport
     ? {
         output: "export",
         trailingSlash: true,
+        basePath: "/financial-analysis",
+        assetPrefix: "/financial-analysis",
       }
     : {}),
   images: {
     unoptimized: true,
   },
-  // 只在生產環境中使用 basePath 和 assetPrefix
-  ...(process.env.NODE_ENV === "production"
-    ? {
-        basePath: "/financial-analysis",
-        assetPrefix: "/financial-analysis",
-      }
-    : {}),
 };
 
 module.exports = nextConfig;
