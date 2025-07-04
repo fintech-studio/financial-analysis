@@ -1,10 +1,453 @@
 /* ===== 字體匯入 ===== */
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap")
+layer(base);
 
 /* ===== Tailwind CSS 核心 ===== */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  button,
+  [role="button"],
+  .btn {
+    cursor: pointer;
+  }
+}
+
+@utility animate-fadeIn {
+  /* ===== 動畫類別 ===== */
+  animation: fadeIn 0.6s ease-out;
+}
+@utility animate-slideIn {
+  animation: slideIn 0.8s ease-out;
+}
+@utility animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+@utility animate-float-delay {
+  animation: float-delay 8s ease-in-out infinite;
+}
+@utility animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+@utility animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0.5) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  background-size: 200px 100%;
+  animation: shimmer 2s infinite;
+}
+@utility animate-bounce-in {
+  animation: bounce-in 0.6s ease-out;
+}
+@utility btn {
+  /* ===== 按鈕組件 ===== */
+  @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium 
+           rounded-lg transition-all duration-200 focus:outline-hidden 
+           focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+}
+@utility btn-primary {
+  @apply btn bg-linear-to-r from-blue-600 to-indigo-600 text-white border border-transparent 
+           hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-500 shadow-lg hover:shadow-xl;
+}
+@utility btn-secondary {
+  @apply btn bg-linear-to-r from-gray-600 to-gray-700 text-white border border-transparent 
+           hover:from-gray-700 hover:to-gray-800 focus:ring-gray-500 shadow-lg hover:shadow-xl;
+}
+@utility btn-success {
+  @apply btn bg-linear-to-r from-green-600 to-emerald-600 text-white border border-transparent 
+           hover:from-green-700 hover:to-emerald-700 focus:ring-green-500 shadow-lg hover:shadow-xl;
+}
+@utility btn-danger {
+  @apply btn bg-linear-to-r from-red-600 to-red-700 text-white border border-transparent 
+           hover:from-red-700 hover:to-red-800 focus:ring-red-500 shadow-lg hover:shadow-xl;
+}
+@utility btn-outline {
+  @apply btn bg-white text-gray-700 border border-gray-300 
+           hover:bg-gray-50 hover:border-gray-400 focus:ring-blue-500 shadow-md hover:shadow-lg;
+}
+@utility btn-ghost {
+  @apply btn bg-transparent text-gray-700 border border-transparent 
+           hover:bg-gray-100 focus:ring-gray-500 hover:shadow-md;
+}
+@utility btn-sm {
+  @apply px-3 py-1.5 text-xs;
+}
+@utility btn-lg {
+  @apply px-6 py-3 text-base;
+}
+@utility input-field {
+  /* ===== 輸入框組件 ===== */
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg 
+           bg-white text-gray-900 placeholder-gray-500
+           focus:outline-hidden focus:ring-blue-500 focus:border-transparent
+           disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
+           transition-all duration-200 hover:border-gray-400;
+}
+@utility input-error {
+  @apply border-red-300 focus:ring-red-500 bg-red-50;
+}
+@utility input-success {
+  @apply border-green-300 focus:ring-green-500 bg-green-50;
+}
+@utility card {
+  /* ===== 卡片組件 ===== */
+  @apply bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 
+           overflow-hidden transition-all duration-300;
+}
+@utility card-hover {
+  @apply card hover:shadow-2xl cursor-pointer transition-all duration-300;
+}
+@utility card-header {
+  @apply px-6 py-4 border-b border-gray-200 bg-linear-to-r from-gray-50 to-gray-100;
+}
+@utility card-body {
+  @apply px-6 py-4;
+}
+@utility card-footer {
+  @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
+}
+@utility gradient-bg-primary {
+  /* ===== 漸變背景 ===== */
+  @apply bg-linear-to-br from-blue-50 via-indigo-50 to-purple-100;
+}
+@utility gradient-bg-secondary {
+  @apply bg-linear-to-br from-gray-50 via-blue-50 to-indigo-100;
+}
+@utility gradient-text-primary {
+  @apply bg-linear-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent;
+}
+@utility glassmorphism {
+  /* ===== 玻璃態效果 ===== */
+  @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl;
+}
+@utility glassmorphism-dark {
+  @apply bg-black/10 backdrop-blur-xl border border-black/20 shadow-xl;
+}
+@utility container-responsive {
+  /* ===== 響應式佈局 ===== */
+  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+
+  /* 響應式容器 */
+  @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
+  max-width: 1280px;
+}
+@utility grid-auto {
+  @apply grid gap-6;
+}
+@utility grid-2 {
+  @apply grid-cols-1 md:grid-cols-2;
+}
+@utility grid-3 {
+  @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3;
+}
+@utility grid-4 {
+  @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+}
+@utility flex-layout {
+  @apply flex flex-col md:flex-row gap-6;
+}
+@utility main-content {
+  @apply pt-0 min-h-screen;
+}
+@utility nav-responsive {
+  /* ===== 導航組件 ===== */
+  @apply fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md 
+           shadow-xs transition-all duration-300;
+}
+@utility modal-overlay {
+  /* ===== 模態框組件 ===== */
+  @apply fixed inset-0 bg-black opacity-50 z-50 
+           flex items-center justify-center p-4 backdrop-blur-xs;
+}
+@utility modal-content {
+  @apply bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-md w-full 
+           transform transition-all duration-300 border border-white/20;
+}
+@utility tooltip {
+  /* ===== 提示框組件 ===== */
+  @apply absolute z-10 px-2 py-1 text-xs text-white 
+           bg-gray-900 rounded-sm shadow-lg backdrop-blur-xs;
+}
+@utility loading-skeleton {
+  /* ===== 載入動畫 ===== */
+  @apply bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 
+           animate-shimmer rounded-sm;
+}
+@utility loading-pulse {
+  @apply animate-pulse bg-gray-200 rounded-sm;
+}
+@utility portfolio-card {
+  /* ===== 投資組合專用樣式 ===== */
+  @apply card-hover relative overflow-hidden;
+
+  &::before {
+    @apply absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent
+           transform -skew-x-12 -translate-x-full transition-transform duration-700;
+    content: "";
+  }
+
+  &:hover::before {
+    @apply translate-x-full;
+  }
+}
+@utility metric-card {
+  @apply bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 
+           p-6 transition-all duration-300 relative overflow-hidden;
+}
+@utility metric-value {
+  @apply text-3xl font-bold mb-2;
+}
+@utility metric-label {
+  @apply text-sm text-gray-500 mb-3;
+}
+@utility metric-change {
+  @apply text-sm font-medium px-2 py-1 rounded-full;
+
+  &.positive {
+    @apply text-emerald-700 bg-emerald-100;
+  }
+
+  &.negative {
+    @apply text-red-700 bg-red-100;
+  }
+}
+@utility positive {
+  &.metric-change {
+    @apply text-emerald-700 bg-emerald-100;
+  }
+}
+@utility negative {
+  &.metric-change {
+    @apply text-red-700 bg-red-100;
+  }
+}
+@utility table-modern {
+  /* ===== 表格樣式 ===== */
+  @apply min-w-full divide-y divide-gray-200 bg-white rounded-2xl overflow-hidden shadow-xl;
+}
+@utility table-header {
+  @apply bg-linear-to-r from-gray-50 to-gray-100;
+
+  & th {
+    @apply px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider
+           cursor-pointer hover:bg-gray-100 transition-colors duration-200;
+  }
+}
+@utility table-row {
+  @apply transition-all duration-200 cursor-pointer hover:bg-gray-50;
+
+  &.selected {
+    @apply bg-linear-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500;
+  }
+}
+@utility selected {
+  &.table-row {
+    @apply bg-linear-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500;
+  }
+}
+@utility chart-container {
+  /* ===== 圖表容器 ===== */
+  @apply relative bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 
+           p-6 overflow-hidden;
+
+  &::before {
+    @apply absolute top-0 right-0 w-64 h-64 bg-linear-to-br from-blue-100/30 to-purple-100/30 
+           rounded-full blur-3xl -translate-y-32 translate-x-32;
+    content: "";
+  }
+}
+@utility scrollbar-thin {
+  /* ===== 滾动條組件 ===== */
+  &::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+
+  &::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors duration-200;
+  }
+}
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+@utility hide-horizontal-scrollbar {
+  /* 隱藏水平滾動條 */
+  overflow-x: hidden;
+}
+@utility hide-horizontal-scrollbar-but-allow-scroll {
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+@utility animate-fade-in {
+  /* 動畫類別 */
+  animation: fadeIn 0.3s ease-out forwards;
+}
+@utility animate-slide-in {
+  animation: slideIn 0.4s ease-out forwards;
+}
+@utility animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+@utility animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+@utility animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+@utility animate-pulse-custom {
+  animation: pulse 2s ease-in-out infinite;
+}
+@utility animate-blink {
+  animation: blink 1s infinite;
+}
+@utility animate-bounce-custom {
+  animation: bounce 2s infinite;
+}
+@utility animation-delay-100 {
+  /* 延遲動畫 */
+  animation-delay: 0.1s;
+}
+@utility animation-delay-200 {
+  animation-delay: 0.2s;
+}
+@utility animation-delay-300 {
+  animation-delay: 0.3s;
+}
+@utility animation-delay-500 {
+  animation-delay: 0.5s;
+}
+@utility grid-responsive {
+  /* 響應式網格 */
+  @apply grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 
+           lg:grid-cols-3 lg:gap-8 xl:grid-cols-4;
+}
+@utility spacing-responsive {
+  /* 響應式間距 */
+  @apply p-4 sm:p-6 lg:p-8;
+}
+@utility text-responsive {
+  /* 響應式文字 */
+  @apply text-base sm:text-lg lg:text-xl;
+}
+@utility card-responsive {
+  /* 響應式卡片 */
+  @apply rounded-lg shadow-xs hover:shadow-md transition-all duration-200;
+}
+@utility shadow-responsive {
+  /* 響應式陰影 */
+  @apply shadow-xs hover:shadow-md transition-shadow duration-200;
+}
+@utility transition-responsive {
+  /* 通用轉場 */
+  @apply transition-all duration-200 ease-in-out;
+}
+@utility center-absolute {
+  /* 居中對齊 */
+  @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+}
+@utility center-flex {
+  @apply flex items-center justify-center;
+}
+@utility full-screen {
+  /* 全寬高 */
+  @apply w-screen h-screen;
+}
+@utility gradient-primary {
+  /* 漸層背景 */
+  @apply bg-linear-to-r from-blue-600 to-indigo-600;
+}
+@utility gradient-secondary {
+  @apply bg-linear-to-r from-gray-600 to-gray-700;
+}
+@utility gradient-success {
+  @apply bg-linear-to-r from-green-600 to-emerald-600;
+}
+@utility gradient-warning {
+  @apply bg-linear-to-r from-yellow-500 to-orange-500;
+}
+@utility gradient-danger {
+  @apply bg-linear-to-r from-red-600 to-pink-600;
+}
+@utility backdrop-blur-glass {
+  /* 毛玻璃效果 */
+  @apply backdrop-blur-md bg-white/80;
+}
+@utility backdrop-blur-dark {
+  @apply backdrop-blur-md bg-black/20;
+}
+@utility hide-horizontal-scroll {
+  /* ===== 滾动條控制工具類別 ===== */
+  /* 完全隱藏水平滾動條 */
+  overflow-x: hidden;
+}
+@utility hide-horizontal-scrollbar-only {
+  /* 隱藏水平滾動條但保持滾動功能 */
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar:horizontal {
+    height: 0;
+    display: none;
+  }
+}
+@utility no-horizontal-scrollbar {
+  /* 全域隱藏所有水平滾動條但保持功能 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar:horizontal {
+    height: 0;
+    display: none;
+  }
+}
+@utility vertical-scroll-only {
+  /* 僅在需要時顯示垂直滾動條 */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+@utility hide-all-scrollbars {
+  /* 隱藏所有滾動條但保持滾動功能 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 /* ===== 基礎樣式 ===== */
 @layer base {
@@ -77,732 +520,254 @@
   }
 }
 
-/* ===== 投資組合專用動畫 ===== */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-@keyframes blob {
-  0% {
-    transform: translate(0px, 0px) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-  100% {
-    transform: translate(0px, 0px) scale(1);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* 動畫延遲類別 */
-.animation-delay-200 {
-  animation-delay: 200ms;
-}
-
-.animation-delay-400 {
-  animation-delay: 400ms;
-}
-
-.animation-delay-1000 {
-  animation-delay: 1000ms;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2000ms;
-}
-
-.animation-delay-3000 {
-  animation-delay: 3000ms;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4000ms;
-}
-
-/* 動畫應用類別 */
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite;
-}
-
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out;
-}
-
-.animate-slideIn {
-  animation: slideIn 0.6s ease-out;
-}
-
-.animate-fadeInUp {
-  animation: fadeInUp 0.8s ease-out;
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
-
-/* 新增彈跳效果 */
-@keyframes gentle-bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-/* ===== 組件樣式 ===== */
-@layer components {
-  /* ===== 動畫類別 ===== */
-  .animate-fadeIn {
-    animation: fadeIn 0.6s ease-out;
+@layer utilities {
+  /* ===== 投資組合專用動畫 ===== */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  .animate-slideIn {
-    animation: slideIn 0.8s ease-out;
+  @keyframes slideIn {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  .animate-float-delay {
-    animation: float-delay 8s ease-in-out infinite;
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
   }
 
-  .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 動畫延遲類別 */
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-1000 {
+    animation-delay: 1000ms;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2000ms;
+  }
+
+  .animation-delay-3000 {
+    animation-delay: 3000ms;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4000ms;
+  }
+
+  /* 動畫應用類別 */
+  .animate-blob {
+    animation: blob 7s infinite;
   }
 
   .animate-shimmer {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.2) 20%,
-      rgba(255, 255, 255, 0.5) 60%,
-      rgba(255, 255, 255, 0)
-    );
-    background-size: 200px 100%;
     animation: shimmer 2s infinite;
   }
 
-  .animate-bounce-in {
-    animation: bounce-in 0.6s ease-out;
+  .animate-spin-slow {
+    animation: spin-slow 3s linear infinite;
   }
 
-  /* ===== 按鈕組件 ===== */
-  .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium 
-           rounded-lg transition-all duration-200 focus:outline-none 
-           focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-out;
   }
 
-  .btn-primary {
-    @apply btn bg-gradient-to-r from-blue-600 to-indigo-600 text-white border border-transparent 
-           hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-500 shadow-lg hover:shadow-xl;
+  .animate-slideIn {
+    animation: slideIn 0.6s ease-out;
   }
 
-  .btn-secondary {
-    @apply btn bg-gradient-to-r from-gray-600 to-gray-700 text-white border border-transparent 
-           hover:from-gray-700 hover:to-gray-800 focus:ring-gray-500 shadow-lg hover:shadow-xl;
+  .animate-fadeInUp {
+    animation: fadeInUp 0.8s ease-out;
   }
 
-  .btn-success {
-    @apply btn bg-gradient-to-r from-green-600 to-emerald-600 text-white border border-transparent 
-           hover:from-green-700 hover:to-emerald-700 focus:ring-green-500 shadow-lg hover:shadow-xl;
+  .animate-float {
+    animation: float 2s ease-in-out infinite;
   }
 
-  .btn-danger {
-    @apply btn bg-gradient-to-r from-red-600 to-red-700 text-white border border-transparent 
-           hover:from-red-700 hover:to-red-800 focus:ring-red-500 shadow-lg hover:shadow-xl;
+  /* 新增彈跳效果 */
+  @keyframes gentle-bounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
   }
 
-  .btn-outline {
-    @apply btn bg-white text-gray-700 border border-gray-300 
-           hover:bg-gray-50 hover:border-gray-400 focus:ring-blue-500 shadow-md hover:shadow-lg;
-  }
-
-  .btn-ghost {
-    @apply btn bg-transparent text-gray-700 border border-transparent 
-           hover:bg-gray-100 focus:ring-gray-500 hover:shadow-md;
-  }
-
-  .btn-sm {
-    @apply px-3 py-1.5 text-xs;
-  }
-
-  .btn-lg {
-    @apply px-6 py-3 text-base;
-  }
-
-  /* ===== 輸入框組件 ===== */
-  .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg 
-           bg-white text-gray-900 placeholder-gray-500
-           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-           disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-           transition-all duration-200 hover:border-gray-400;
-  }
-
-  .input-error {
-    @apply border-red-300 focus:ring-red-500 bg-red-50;
-  }
-
-  .input-success {
-    @apply border-green-300 focus:ring-green-500 bg-green-50;
-  }
-
-  /* ===== 卡片組件 ===== */
-  .card {
-    @apply bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 
-           overflow-hidden transition-all duration-300;
-  }
-
-  .card-hover {
-    @apply card hover:shadow-2xl cursor-pointer transition-all duration-300;
-  }
-
-  .card-header {
-    @apply px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100;
-  }
-
-  .card-body {
-    @apply px-6 py-4;
-  }
-
-  .card-footer {
-    @apply px-6 py-4 border-t border-gray-200 bg-gray-50;
-  }
-
-  /* ===== 漸變背景 ===== */
-  .gradient-bg-primary {
-    @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100;
-  }
-
-  .gradient-bg-secondary {
-    @apply bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100;
-  }
-
-  .gradient-text-primary {
-    @apply bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent;
-  }
-
-  /* ===== 玻璃態效果 ===== */
-  .glassmorphism {
-    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl;
-  }
-
-  .glassmorphism-dark {
-    @apply bg-black/10 backdrop-blur-xl border border-black/20 shadow-xl;
-  }
-
-  /* ===== 響應式佈局 ===== */
-  .container-responsive {
-    @apply container mx-auto px-4 sm:px-6 lg:px-8;
-  }
-
-  .grid-auto {
-    @apply grid gap-6;
-  }
-
-  .grid-2 {
-    @apply grid-cols-1 md:grid-cols-2;
-  }
-  .grid-3 {
-    @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3;
-  }
-  .grid-4 {
-    @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
-  }
-
-  .flex-layout {
-    @apply flex flex-col md:flex-row gap-6;
-  }
-
-  .main-content {
-    @apply pt-0 min-h-screen;
-  }
-
-  /* ===== 導航組件 ===== */
-  .nav-responsive {
-    @apply fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md 
-           shadow-sm transition-all duration-300;
-  }
-
-  /* ===== 模態框組件 ===== */
-  .modal-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-50 z-50 
-           flex items-center justify-center p-4 backdrop-blur-sm;
-  }
-
-  .modal-content {
-    @apply bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-md w-full 
-           transform transition-all duration-300 border border-white/20;
-  }
-
-  /* ===== 提示框組件 ===== */
-  .tooltip {
-    @apply absolute z-10 px-2 py-1 text-xs text-white 
-           bg-gray-900 rounded shadow-lg backdrop-blur-sm;
-  }
-
-  /* ===== 載入動畫 ===== */
-  .loading-skeleton {
-    @apply bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 
-           animate-shimmer rounded;
-  }
-
-  .loading-pulse {
-    @apply animate-pulse bg-gray-200 rounded;
-  }
-
-  /* ===== 投資組合專用樣式 ===== */
-  .portfolio-card {
-    @apply card-hover relative overflow-hidden;
-  }
-
-  .portfolio-card::before {
-    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent
-           transform -skew-x-12 -translate-x-full transition-transform duration-700;
-    content: "";
-  }
-
-  .portfolio-card:hover::before {
-    @apply translate-x-full;
-  }
-
-  .metric-card {
-    @apply bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 
-           p-6 transition-all duration-300 relative overflow-hidden;
-  }
-
-  .metric-value {
-    @apply text-3xl font-bold mb-2;
-  }
-
-  .metric-label {
-    @apply text-sm text-gray-500 mb-3;
-  }
-
-  .metric-change {
-    @apply text-sm font-medium px-2 py-1 rounded-full;
-  }
-
-  .metric-change.positive {
-    @apply text-emerald-700 bg-emerald-100;
-  }
-
-  .metric-change.negative {
-    @apply text-red-700 bg-red-100;
-  }
-
-  /* ===== 表格樣式 ===== */
-  .table-modern {
-    @apply min-w-full divide-y divide-gray-200 bg-white rounded-2xl overflow-hidden shadow-xl;
-  }
-
-  .table-header {
-    @apply bg-gradient-to-r from-gray-50 to-gray-100;
-  }
-
-  .table-header th {
-    @apply px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider
-           cursor-pointer hover:bg-gray-100 transition-colors duration-200;
-  }
-
-  .table-row {
-    @apply transition-all duration-200 cursor-pointer hover:bg-gray-50;
-  }
-
-  .table-row.selected {
-    @apply bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500;
-  }
-
-  /* ===== 圖表容器 ===== */
-  .chart-container {
-    @apply relative bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 
-           p-6 overflow-hidden;
-  }
-
-  .chart-container::before {
-    @apply absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-purple-100/30 
-           rounded-full blur-3xl -translate-y-32 translate-x-32;
-    content: "";
-  }
-
-  /* ===== 滾动條組件 ===== */
-  .scrollbar-thin::-webkit-scrollbar {
-    @apply w-1.5 h-1.5;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors duration-200;
-  }
-
-  .scrollbar-none {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .scrollbar-none::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* 隱藏水平滾動條 */
-  .hide-horizontal-scrollbar {
-    overflow-x: hidden;
-  }
-
-  .hide-horizontal-scrollbar-but-allow-scroll {
-    overflow-x: auto;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .hide-horizontal-scrollbar-but-allow-scroll::-webkit-scrollbar {
-    display: none;
-  }
+  /* ===== 組件樣式 ===== */
 }
 
-/* ===== 全域滾動條樣式 ===== */
-::-webkit-scrollbar {
-  @apply w-2 h-2;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-gray-100;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 rounded-full hover:bg-gray-500;
-}
-
-::-webkit-scrollbar-corner {
-  @apply bg-gray-100;
-}
-
-/* ===== 動畫定義 ===== */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-@keyframes bounce {
-  0%,
-  20%,
-  53%,
-  80%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  40%,
-  43% {
-    transform: translate3d(0, -30px, 0);
-  }
-  70% {
-    transform: translate3d(0, -15px, 0);
-  }
-  90% {
-    transform: translate3d(0, -4px, 0);
-  }
-}
-
-/* ===== 工具類別 ===== */
 @layer utilities {
-  /* 動畫類別 */
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out forwards;
-  }
-  .animate-slide-in {
-    animation: slideIn 0.4s ease-out forwards;
-  }
-  .animate-slide-up {
-    animation: slideUp 0.3s ease-out forwards;
-  }
-  .animate-scale-in {
-    animation: scaleIn 0.2s ease-out forwards;
-  }
-  .animate-fade-in-up {
-    animation: fadeInUp 0.6s ease-out forwards;
-  }
-  .animate-pulse-custom {
-    animation: pulse 2s ease-in-out infinite;
-  }
-  .animate-blink {
-    animation: blink 1s infinite;
-  }
-  .animate-bounce-custom {
-    animation: bounce 2s infinite;
+  /* ===== 全域滾動條樣式 ===== */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
   }
 
-  /* 延遲動畫 */
-  .animation-delay-100 {
-    animation-delay: 0.1s;
-  }
-  .animation-delay-200 {
-    animation-delay: 0.2s;
-  }
-  .animation-delay-300 {
-    animation-delay: 0.3s;
-  }
-  .animation-delay-500 {
-    animation-delay: 0.5s;
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
   }
 
-  /* 響應式容器 */
-  .container-responsive {
-    @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
-    max-width: 1280px;
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 rounded-full hover:bg-gray-500;
   }
 
-  /* 響應式網格 */
-  .grid-responsive {
-    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 
-           lg:grid-cols-3 lg:gap-8 xl:grid-cols-4;
+  ::-webkit-scrollbar-corner {
+    @apply bg-gray-100;
   }
 
-  /* 響應式間距 */
-  .spacing-responsive {
-    @apply p-4 sm:p-6 lg:p-8;
+  /* ===== 動畫定義 ===== */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  /* 響應式文字 */
-  .text-responsive {
-    @apply text-base sm:text-lg lg:text-xl;
+  @keyframes slideIn {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
 
-  /* 響應式卡片 */
-  .card-responsive {
-    @apply rounded-lg shadow-sm hover:shadow-md transition-all duration-200;
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
 
-  /* 響應式陰影 */
-  .shadow-responsive {
-    @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.9);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 
-  /* 通用轉場 */
-  .transition-responsive {
-    @apply transition-all duration-200 ease-in-out;
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
   }
 
-  /* 居中對齊 */
-  .center-absolute {
-    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
   }
 
-  .center-flex {
-    @apply flex items-center justify-center;
+  @keyframes bounce {
+    0%,
+    20%,
+    53%,
+    80%,
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+    40%,
+    43% {
+      transform: translate3d(0, -30px, 0);
+    }
+    70% {
+      transform: translate3d(0, -15px, 0);
+    }
+    90% {
+      transform: translate3d(0, -4px, 0);
+    }
   }
 
-  /* 全寬高 */
-  .full-screen {
-    @apply w-screen h-screen;
-  }
-
-  /* 漸層背景 */
-  .gradient-primary {
-    @apply bg-gradient-to-r from-blue-600 to-indigo-600;
-  }
-
-  .gradient-secondary {
-    @apply bg-gradient-to-r from-gray-600 to-gray-700;
-  }
-
-  .gradient-success {
-    @apply bg-gradient-to-r from-green-600 to-emerald-600;
-  }
-
-  .gradient-warning {
-    @apply bg-gradient-to-r from-yellow-500 to-orange-500;
-  }
-
-  .gradient-danger {
-    @apply bg-gradient-to-r from-red-600 to-pink-600;
-  }
-
-  /* 毛玻璃效果 */
-  .backdrop-blur-glass {
-    @apply backdrop-blur-md bg-white/80;
-  }
-
-  .backdrop-blur-dark {
-    @apply backdrop-blur-md bg-black/20;
-  }
-
-  /* ===== 滾动條控制工具類別 ===== */
-  /* 完全隱藏水平滾動條 */
-  .hide-horizontal-scroll {
-    overflow-x: hidden;
-  }
-
-  /* 隱藏水平滾動條但保持滾動功能 */
-  .hide-horizontal-scrollbar-only {
-    overflow-x: auto;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .hide-horizontal-scrollbar-only::-webkit-scrollbar:horizontal {
-    height: 0;
-    display: none;
-  }
-
-  /* 全域隱藏所有水平滾動條但保持功能 */
-  .no-horizontal-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .no-horizontal-scrollbar::-webkit-scrollbar:horizontal {
-    height: 0;
-    display: none;
-  }
-
-  /* 僅在需要時顯示垂直滾動條 */
-  .vertical-scroll-only {
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-
-  /* 隱藏所有滾動條但保持滾動功能 */
-  .hide-all-scrollbars {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .hide-all-scrollbars::-webkit-scrollbar {
-    display: none;
-  }
+  /* ===== 工具類別 ===== */
 }
 
 /* ===== 響應式動畫 ===== */
@@ -855,14 +820,6 @@ input[type="password"]::-webkit-strong-password-auto-fill-button {
   display: none !important;
 }
 
-/* 修復 iOS Safari 按鈕樣式 */
-input[type="button"],
-input[type="submit"],
-button {
-  -webkit-appearance: none;
-  border-radius: 0;
-}
-
 /* 修復 Firefox 輸入框內邊距 */
 input[type="text"],
 input[type="email"],
@@ -874,12 +831,12 @@ textarea {
 /* ===== 無障礙支援 ===== */
 /* 聚焦指示器 */
 .focus-visible:focus {
-  @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+  @apply outline-hidden ring-2 ring-blue-500 ring-offset-2;
 }
 
 /* 跳過連結 */
 .skip-link {
-  @apply absolute -top-10 left-0 bg-blue-600 text-white p-2 rounded
+  @apply absolute -top-10 left-0 bg-blue-600 text-white p-2 rounded-sm
          focus:top-0 z-50 transition-all;
 }
 

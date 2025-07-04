@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { MarketType } from "@/components/pages/stock-query/SearchBar";
 
 // 型別集中管理
@@ -54,8 +54,7 @@ export const useStockData = (
     latestSymbolRef.current = symbol;
   }, [symbol]);
 
-  const databaseConfig = useMemo(() => ({ database: market }), [market]);
-
+  // 將 databaseConfig 放進 fetchData 內部，減少 useCallback 依賴
   const fetchData = useCallback(async () => {
     if (!symbol.trim()) return;
     setLoading(true);
@@ -81,7 +80,7 @@ export const useStockData = (
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          config: databaseConfig,
+          config: { database: market },
           query: query.trim(),
           params: { symbol: symbol.toUpperCase() },
         }),
@@ -103,7 +102,15 @@ export const useStockData = (
     } finally {
       if (latestSymbolRef.current === currentSymbol) setLoading(false);
     }
-  }, [symbol, timeframe, market, databaseConfig]);
+  }, [symbol, timeframe, market]);
+
+  // 合併 useEffect，僅在 symbol、timeframe、market 變動時觸發
+  useEffect(() => {
+    setData([]);
+    setError(null);
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, timeframe, market]);
 
   const candlestickData = useMemo((): CandlestickData[] => {
     if (!data.length) return [];
@@ -204,14 +211,6 @@ export const useStockData = (
   const clearError = useCallback(() => {
     setError(null);
   }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-  useEffect(() => {
-    setData([]);
-    setError(null);
-  }, [symbol, timeframe]);
 
   return {
     data,

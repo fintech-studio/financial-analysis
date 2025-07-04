@@ -270,7 +270,7 @@ const Navigation: React.FC = () => {
                   <span className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
                     FinTech
                   </span>
-                  <span className="text-xs text-gray-500 font-medium">
+                  <span className="text-xs text-gray-500 font-medium whitespace-nowrap">
                     智慧金融分析平台
                   </span>
                 </div>
@@ -278,7 +278,7 @@ const Navigation: React.FC = () => {
             </div>
 
             {/* 中間 - 導覽連結區域 (桌面版) */}
-            <div className="hidden lg:flex items-center space-x-2">
+            <div className="hidden lg:flex items-center space-x-1 px-2">
               {navigationItems.map((item) => (
                 <div
                   key={item.name}
@@ -295,7 +295,9 @@ const Navigation: React.FC = () => {
                     }`}
                   >
                     <item.icon className="h-5 w-5 transition-transform group-hover:scale-110 duration-200" />
-                    <span className="font-medium text-sm">{item.name}</span>
+                    <span className="font-medium text-sm whitespace-nowrap">
+                      {item.name}
+                    </span>
                     {item.hasDropdown && (
                       <ChevronDownIcon
                         className={`h-4 w-4 transition-transform duration-200 ${
@@ -371,11 +373,11 @@ const Navigation: React.FC = () => {
                       placeholder="搜尋市場、股票..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-64 pl-10 pr-4 py-2.5 rounded-xl border bg-white border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                      className="w-64 pl-10 pr-4 py-2.5 rounded-xl border bg-white border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                     <button
                       type="submit"
-                      className="absolute inset-y-0 left-0 pl-3 flex items-center"
+                      className="absolute inset-y-0 left-0 pl-3 flex items-center focus:outline-none"
                     >
                       <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
                     </button>
@@ -458,7 +460,7 @@ const Navigation: React.FC = () => {
                   className="flex items-center space-x-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                 >
                   <UserCircleIcon className="h-6 w-6" />
-                  <span className="text-sm font-medium hidden md:block">
+                  <span className="text-sm font-medium hidden md:block whitespace-nowrap">
                     使用者
                   </span>
                   <ChevronDownIcon

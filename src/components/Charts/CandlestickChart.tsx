@@ -7,12 +7,15 @@ import React, {
 } from "react";
 import {
   createChart,
+  LineSeries,
   IChartApi,
   ISeriesApi,
   CandlestickData as LightweightCandlestickData,
   HistogramData,
   LineData,
   ColorType,
+  CandlestickSeries,
+  HistogramSeries,
 } from "lightweight-charts";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -534,7 +537,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       chartRef.current = chart;
 
       // 添加K線圖
-      const candlestickSeries = chart.addCandlestickSeries({
+      const candlestickSeries = chart.addSeries(CandlestickSeries, {
         upColor: "#ef4444", // 上漲紅色
         downColor: "#10b981", // 下跌綠色
         borderUpColor: "#dc2626", // 上漲紅色
@@ -550,7 +553,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
       // 添加成交量
       if (showVolume && chartData.volumeData.length > 0) {
-        const volumeSeries = chart.addHistogramSeries({
+        const volumeSeries = chart.addSeries(HistogramSeries, {
           color: "#26a69a",
           priceFormat: { type: "volume" },
           priceScaleId: "volume",
@@ -579,7 +582,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
               `Creating overlay series for ${indicator.name} with ${data.length} data points`
             );
 
-            const lineSeries = chart.addLineSeries({
+            const lineSeries = chart.addSeries(LineSeries, {
               color: indicator.color,
               lineWidth: (indicator.lineWidth || 2) as any,
               title: indicator.name,
@@ -623,7 +626,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
             // 為獨立指標創建單獨的價格刻度
             const priceScaleId = `indicator_${key}`;
 
-            const lineSeries = chart.addLineSeries({
+            const lineSeries = chart.addSeries(LineSeries, {
               color: indicator.color,
               lineWidth: (indicator.lineWidth || 2) as any,
               title: indicator.name,

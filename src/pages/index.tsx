@@ -237,7 +237,7 @@ export default function Home() {
               <div className="space-y-6 lg:space-y-8">
                 <div className="animate-fade-in-up ">
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
-                    <span className="block text-white mb-2">未來金融</span>
+                    <span className="block text-white">未來金融</span>
                     <div className="relative">
                       <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 animate-gradient">
                         智慧投資決策

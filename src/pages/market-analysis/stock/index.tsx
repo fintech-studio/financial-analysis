@@ -17,15 +17,12 @@ import Footer from "@/components/Layout/Footer";
 import { marketData, analysisModules } from "@/data/marketData";
 
 // MVC 架構引入
-import { StockController } from "../../../controllers/StockController";
-import { MarketController } from "../../../controllers/MarketController";
-import { UserController } from "../../../controllers/UserController";
-import {
-  useMvcController,
-  useDataLoader,
-} from "../../../hooks/useMvcController";
-import { Stock, StockDetail, MarketOverview } from "../../../models/StockModel";
-import { User } from "../../../models/UserModel";
+import { StockController } from "@/controllers/StockController";
+import { MarketController } from "@/controllers/MarketController";
+import { UserController } from "@/controllers/UserController";
+import { useMvcController, useDataLoader } from "@/hooks/useMvcController";
+import { StockDetail } from "@/models/StockModel";
+import { User } from "@/models/UserModel";
 
 // 引入組件
 import Overview from "@/components/pages/StockMarket/Overview";
@@ -135,12 +132,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
   const marketController = MarketController.getInstance();
   const userController = UserController.getInstance();
 
-  const {
-    data: user,
-    loading: userLoading,
-    error: userError,
-    execute: executeUser,
-  } = useMvcController<User>();
+  const { data: user, execute: executeUser } = useMvcController<User>();
 
   const {
     data: marketOverview,
@@ -180,11 +172,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
     execute: executeSectorRefresh,
   } = useMvcController<any>();
 
-  const {
-    data: screenerResults,
-    loading: screenerLoading,
-    execute: executeScreenerRefresh,
-  } = useMvcController<any>();
+  useMvcController<any>();
 
   // 使用 useCallback 避免函數重新創建導致的無限載入
   const loadStockData = useCallback(async () => {
@@ -470,7 +458,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between">
             {/* 標題 */}
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+              <div className="p-2 bg-white/20 rounded-lg">
                 <ChartBarIcon className="h-8 w-8 text-white" />
               </div>
               <div>
@@ -488,7 +476,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 <input
                   type="text"
                   placeholder="搜尋股票代號或名稱..."
-                  className="w-full pl-10 pr-4 py-2 border border-white border-opacity-30 bg-white bg-opacity-20 rounded-full focus:ring-2 focus:ring-white focus:bg-white focus:bg-opacity-90 text-white focus:text-gray-900 placeholder-white placeholder-opacity-70"
+                  className="w-full pl-10 pr-4 py-2 border border-white/30 bg-white/20 rounded-full focus:ring-2 focus:ring-white text-white placeholder-white/70"
                   value={searchQuery}
                   onChange={handleSearchChange}
                 />
@@ -498,7 +486,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
               {/* 刷新按鈕 */}
               <button
                 onClick={handleRefreshData}
-                className="p-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors"
+                className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
                 title="刷新數據"
                 disabled={stocksLoading || technicalLoading || sectorLoading}
               >
@@ -525,12 +513,12 @@ const StockMarket: React.FC<StockMarketProps> = () => {
 
           {/* 導航標籤 */}
           <div className="mt-6">
-            <nav className="flex space-x-6 overflow-x-auto pb-2 scrollbar-hide">
+            <nav className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
               <button
                 className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "overview"
                     ? "bg-white text-indigo-700"
-                    : "text-white hover:bg-white hover:bg-opacity-10"
+                    : "text-white hover:bg-white/10"
                 }`}
                 onClick={() => setActiveTab("overview")}
               >
@@ -540,7 +528,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "stocks"
                     ? "bg-white text-indigo-700"
-                    : "text-white hover:bg-white hover:bg-opacity-10"
+                    : "text-white hover:bg-white/10"
                 }`}
                 onClick={() => setActiveTab("stocks")}
               >
@@ -550,7 +538,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "sectors"
                     ? "bg-white text-indigo-700"
-                    : "text-white hover:bg-white hover:bg-opacity-10"
+                    : "text-white hover:bg-white/10"
                 }`}
                 onClick={() => setActiveTab("sectors")}
               >
@@ -560,7 +548,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "technical"
                     ? "bg-white text-indigo-700"
-                    : "text-white hover:bg-white hover:bg-opacity-10"
+                    : "text-white hover:bg-white/10"
                 }`}
                 onClick={() => setActiveTab("technical")}
               >
@@ -570,7 +558,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
                 className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap ${
                   activeTab === "screener"
                     ? "bg-white text-indigo-700"
-                    : "text-white hover:bg-white hover:bg-opacity-10"
+                    : "text-white hover:bg-white/10"
                 }`}
                 onClick={() => setActiveTab("screener")}
               >

@@ -93,6 +93,9 @@ const StockAnalysisPage: React.FC = () => {
     () => (
       <>
         <KLinePattern
+          data={data}
+          loading={loading}
+          error={error}
           symbol={queryState.symbol}
           timeframe={timeframe}
           market={queryState.market}
@@ -119,6 +122,8 @@ const StockAnalysisPage: React.FC = () => {
       timeframe,
       loading,
       queryState.market,
+      data,
+      error,
     ]
   );
 

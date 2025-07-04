@@ -1242,7 +1242,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
       {/* 簡約交易詳情模態框 */}
       {showDetails && selectedTransaction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, memo } from "react";
-import { useStockData } from "@/hooks/useStockData";
 import type { MarketType } from "./SearchBar";
 import {
   ViewfinderCircleIcon,
@@ -8,6 +7,9 @@ import {
 } from "@heroicons/react/24/solid";
 
 interface KLinePatternProps {
+  data: any[];
+  loading: boolean;
+  error: string | null;
   symbol: string;
   timeframe: "1d" | "1h";
   market: MarketType;
@@ -62,7 +64,7 @@ const PatternCard = memo(
           {/* 放大圖浮層 */}
           {zoomPattern === pattern && (
             <div
-              className="pattern-zoom-popover absolute z-40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-xl shadow-2xl border-4 border-white flex items-center justify-center cursor-zoom-out"
+              className="pattern-zoom-popover absolute z-40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/95 rounded-xl shadow-2xl border-4 border-white flex items-center justify-center cursor-zoom-out"
               style={{
                 minWidth: "200px",
                 minHeight: "200px",
@@ -74,7 +76,7 @@ const PatternCard = memo(
               <img
                 src={imageUrl}
                 alt={pattern + " 放大圖例"}
-                className="max-h-72 max-w-72 object-contain"
+                className="max-h-72 max-w-72 object-contain rounded-xl"
               />
             </div>
           )}
@@ -85,11 +87,13 @@ const PatternCard = memo(
 );
 
 const KLinePattern: React.FC<KLinePatternProps> = ({
+  data,
+  loading,
+  error,
   symbol,
   timeframe,
   market,
 }) => {
-  const { data, loading, error } = useStockData(symbol, timeframe, market);
   const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
   const [zoomPattern, setZoomPattern] = useState<string | null>(null);
 
