@@ -9,9 +9,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { SparklesIcon as SparklesIconSolid } from "@heroicons/react/24/solid";
 import Footer from "@/components/Layout/Footer";
-import EnhancedAIPredictionDashboard from "@/components/AIPrediction/EnhancedAIPredictionDashboard";
-import SmartStockRecommendations from "@/components/AIPrediction/SmartStockRecommendations";
-import TechnicalAnalysisAI from "@/components/AIPrediction/TechnicalAnalysisAI";
+import EnhancedAIPredictionDashboard from "@/components/pages/AIPrediction/EnhancedAIPredictionDashboard";
+import SmartStockRecommendations from "@/components/pages/AIPrediction/SmartStockRecommendations";
+import TechnicalAnalysisAI from "@/components/pages/AIPrediction/TechnicalAnalysisAI";
 
 const AIPredictionPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");

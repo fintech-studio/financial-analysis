@@ -5,12 +5,9 @@ import {
   ClockIcon,
   CogIcon,
   ArrowTrendingUpIcon,
-  EyeIcon,
   CalendarDaysIcon,
   CurrencyDollarIcon,
-  BookmarkIcon,
   TrophyIcon,
-  FireIcon,
   AcademicCapIcon,
   MapPinIcon,
 } from "@heroicons/react/24/outline";
@@ -22,7 +19,6 @@ import { UserController } from "../controllers/UserController";
 import { PortfolioController } from "../controllers/PortfolioController";
 import { StockController } from "../controllers/StockController";
 import { User } from "../models/UserModel";
-import { Portfolio } from "../models/PortfolioModel";
 
 // 優化後的Hook引入
 import {

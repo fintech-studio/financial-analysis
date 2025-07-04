@@ -1,6 +1,6 @@
 import React from "react";
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
-import Footer from "../components/Layout/Footer";
+import Footer from "../../components/Layout/Footer";
 
 const CommunityPage: React.FC = () => {
   return (
@@ -34,9 +34,7 @@ const CommunityPage: React.FC = () => {
               包含討論區、投資心得分享、專家問答等豐富內容。
             </p>
             <div className="mt-8 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray-500">
-                預計完成時間：即將推出
-              </p>
+              <p className="text-sm text-gray-500">預計完成時間：即將推出</p>
             </div>
           </div>
         </div>

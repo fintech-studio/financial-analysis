@@ -390,42 +390,6 @@ export const marketData = {
     },
   ],
 
-  // 教育資源
-  educationResources: [
-    {
-      id: "1",
-      title: "初學者必知的投資指標解析：本益比、殖利率與淨值比",
-      type: "article",
-      description:
-        "了解評估股票價值的三大基本指標，幫助你做出更明智的投資決策。",
-      url: "/education/articles/1",
-      author: "李財經",
-      duration: "8分鐘",
-      level: "beginner",
-      rating: 4.8,
-    },
-    {
-      id: "2",
-      title: "技術分析入門：5種常用技術指標詳解",
-      type: "video",
-      url: "/education/videos/2",
-      author: "張分析師",
-      duration: "18分鐘",
-      level: "intermediate",
-      rating: 4.7,
-    },
-    {
-      id: "3",
-      title: "如何建立多元化投資組合：資產配置實務指南",
-      type: "course",
-      url: "/education/courses/3",
-      author: "王教授",
-      duration: "3小時",
-      level: "beginner",
-      rating: 4.9,
-    },
-  ],
-
   // 舊js檔案
   stock: {
     index: "17,935",

@@ -1,15 +1,9 @@
-import React, { JSX } from "react";
+import React from "react";
 import {
   ChartBarIcon,
   FireIcon,
   HeartIcon,
-  CurrencyDollarIcon,
   GlobeAsiaAustraliaIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  DocumentChartBarIcon,
-  UserGroupIcon,
-  BuildingOfficeIcon,
   GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { SparklesIcon } from "@heroicons/react/24/solid";

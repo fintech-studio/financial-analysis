@@ -28,12 +28,12 @@ import { Stock, StockDetail, MarketOverview } from "../../../models/StockModel";
 import { User } from "../../../models/UserModel";
 
 // 引入組件
-import Overview from "@/components/features/StockMarket/Overview";
-import StockList from "@/components/features/StockMarket/StockList";
-import StockComparison from "@/components/features/StockMarket/StockComparison";
-import StockDetails from "@/components/features/StockMarket/StockDetails";
-import TechnicalPatterns from "@/components/features/StockMarket/TechnicalPatterns";
-import Screener from "@/components/features/StockMarket/Screener";
+import Overview from "@/components/pages/StockMarket/Overview";
+import StockList from "@/components/pages/StockMarket/StockList";
+import StockComparison from "@/components/pages/StockMarket/StockComparison";
+import StockDetails from "@/components/pages/StockMarket/StockDetails";
+import TechnicalPatterns from "@/components/pages/StockMarket/TechnicalPatterns";
+import Screener from "@/components/pages/StockMarket/Screener";
 
 // TypeScript 型別定義
 interface StockMarketProps {}
