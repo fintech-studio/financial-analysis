@@ -225,7 +225,7 @@ const Overview: React.FC<OverviewProps> = ({ marketData, analysisModules }) => {
               </div>
             </div>
             <div className="space-y-4">
-              <div className="bg-white bg-opacity-60 p-4 rounded-lg">
+              <div className="bg-white/60 p-4 rounded-lg">
                 <p className="text-gray-700 leading-relaxed">
                   本週市場呈現震盪格局，科技股表現較強，金融股表現平淡。通膨數據好於預期，
                   可能支持央行降息預期，適合加碼布局成長股與科技龍頭。加密貨幣市場出現回升跡象，
@@ -233,7 +233,7 @@ const Overview: React.FC<OverviewProps> = ({ marketData, analysisModules }) => {
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white bg-opacity-60 p-4 rounded-lg">
+                <div className="bg-white/60 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-800 mb-2">關注焦點</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• 台積電海外擴產進度</li>
@@ -241,7 +241,7 @@ const Overview: React.FC<OverviewProps> = ({ marketData, analysisModules }) => {
                     <li>• 歐洲央行利率決議</li>
                   </ul>
                 </div>
-                <div className="bg-white bg-opacity-60 p-4 rounded-lg">
+                <div className="bg-white/60 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-800 mb-2">投資機會</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• AI相關應用產業</li>
@@ -249,7 +249,7 @@ const Overview: React.FC<OverviewProps> = ({ marketData, analysisModules }) => {
                     <li>• 長線布局能源轉型</li>
                   </ul>
                 </div>
-                <div className="bg-white bg-opacity-60 p-4 rounded-lg">
+                <div className="bg-white/60 p-4 rounded-lg">
                   <h4 className="font-medium text-gray-800 mb-2">風險提示</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• 地緣政治緊張加劇</li>

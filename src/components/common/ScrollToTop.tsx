@@ -57,19 +57,14 @@ const ScrollToTop: React.FC<ScrollToTopProps> = ({
     <div
       data-fixed-element
       className={`
-        fixed bottom-5 right-5 z-[10000] transition-all duration-500 ease-in-out
-        ${
-          isVisible
-            ? "opacity-100 translate-y-0 scale-100"
-            : "opacity-0 translate-y-4 scale-75 pointer-events-none"
-        }
+        fixed bottom-5 right-5 z-[10000] transition-opacity duration-500 ease-in-out
+        ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none"}
       `}
       style={{
         position: "fixed" as any,
         bottom: "20px",
         right: "20px",
         zIndex: 10000,
-        transform: isVisible ? "none" : undefined,
         backfaceVisibility: "initial",
         perspective: "none",
       }}
@@ -82,7 +77,7 @@ const ScrollToTop: React.FC<ScrollToTopProps> = ({
           shadow-lg hover:shadow-xl transition-all duration-300 
           hover:scale-110 flex items-center justify-center
           active:scale-95 focus:outline-none focus:ring-4 focus:ring-blue-300
-          ${isVisible ? "animate-bounce-in" : ""}
+          ${isVisible ? "" : ""}
         `}
         title="回到頂部"
         aria-label="回到頂部"

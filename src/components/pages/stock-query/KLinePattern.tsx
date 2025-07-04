@@ -62,7 +62,7 @@ const PatternCard = memo(
           {/* 放大圖浮層 */}
           {zoomPattern === pattern && (
             <div
-              className="pattern-zoom-popover absolute z-40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white bg-opacity-95 rounded-xl shadow-2xl border-4 border-white flex items-center justify-center cursor-zoom-out"
+              className="pattern-zoom-popover absolute z-40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white/95 rounded-xl shadow-2xl border-4 border-white flex items-center justify-center cursor-zoom-out"
               style={{
                 minWidth: "200px",
                 minHeight: "200px",
@@ -74,7 +74,7 @@ const PatternCard = memo(
               <img
                 src={imageUrl}
                 alt={pattern + " 放大圖例"}
-                className="max-h-72 max-w-72 object-contain"
+                className="max-h-72 max-w-72 object-contain rounded-xl"
               />
             </div>
           )}

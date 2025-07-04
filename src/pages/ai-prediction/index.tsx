@@ -80,13 +80,13 @@ const AIPredictionPage: React.FC = () => {
             <div className="flex items-center space-x-4">
               <button
                 onClick={handleRefreshData}
-                className="p-2 bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl border border-indigo-400 border-opacity-30 text-blue-200 hover:text-white transition-colors"
+                className="p-2 bg-indigo-800/50 backdrop-blur-sm rounded-xl border border-indigo-400/30 text-blue-200 hover:text-white transition-colors"
                 title="刷新AI預測數據"
               >
                 <ArrowPathIcon className="h-5 w-5" />
               </button>
 
-              <div className="bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400 border-opacity-30 flex items-center space-x-3">
+              <div className="bg-indigo-800/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 flex items-center space-x-3">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <div>
                   <div className="text-xs text-blue-200">AI模型狀態</div>
@@ -94,7 +94,7 @@ const AIPredictionPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400 border-opacity-30 flex items-center space-x-3">
+              <div className="bg-indigo-800/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 flex items-center space-x-3">
                 <ArrowPathIcon className="h-4 w-4 text-blue-200" />
                 <div>
                   <div className="text-xs text-blue-200">最後更新</div>

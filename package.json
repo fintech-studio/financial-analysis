@@ -46,7 +46,7 @@
     "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
     "postcss": "^8.5.4",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3"
   },
   "description": "本專案是一個現代化的金融市場分析平台，提供股票、加密貨幣等市場的數據分析、技術指標、基本面分析與投資組合管理功能。",

@@ -411,7 +411,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 placeholder="輸入金融代號 (例: 2330, AAPL, 0050, CL=F)"
-                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-colors"
+                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-1 focus:ring-gray-900 focus:outline-none"
                 disabled={loading}
                 aria-autocomplete="list"
                 aria-controls="stock-suggestions"

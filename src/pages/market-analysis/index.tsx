@@ -398,7 +398,7 @@ const MarketAnalysis: React.FC = () => {
           {/* 頂部區域 */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <div className="flex items-center">
-              <div className="p-3 bg-white bg-opacity-15 backdrop-blur-sm rounded-2xl shadow-lg mr-4">
+              <div className="p-3 bg-white/15 backdrop-blur-sm rounded-2xl shadow-lg mr-4">
                 <ChartBarIcon className="h-9 w-9 text-white" />
               </div>
               <div>
@@ -414,14 +414,13 @@ const MarketAnalysis: React.FC = () => {
             <div className="flex items-center mt-4 md:mt-0 space-x-3">
               <button
                 onClick={handleRefreshData}
-                className="p-2 bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl border border-indigo-400 border-opacity-30 text-blue-200 hover:text-white transition-colors"
+                className="p-2 bg-indigo-800/50 backdrop-blur-sm rounded-xl border border-indigo-400/30 text-blue-200 hover:text-white transition-colors"
                 title="刷新數據"
               >
                 <ArrowPathIcon className="h-5 w-5" />
               </button>
 
-              <div className="bg-indigo-800 bg-opacity-50 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400 border-opacity-30 flex items-center space-x-3">
-                <ArrowPathIcon className="h-4 w-4 text-blue-200" />
+              <div className="bg-indigo-800/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 flex items-center space-x-3">
                 <div>
                   <div className="text-xs text-blue-200">最後更新</div>
                   <div className="text-sm font-medium text-white">
@@ -434,10 +433,10 @@ const MarketAnalysis: React.FC = () => {
 
           {/* 關鍵指標摘要 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-3 border border-white border-opacity-20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs text-blue-100">台股加權</span>
-                <div className="bg-green-500 bg-opacity-20 rounded-full px-2 py-0.5">
+                <div className="bg-green-500/20 rounded-full px-2 py-0.5">
                   <span className="text-xs text-green-300">
                     {marketData.stock.changePercent}
                   </span>
@@ -448,20 +447,20 @@ const MarketAnalysis: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-3 border border-white border-opacity-20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs text-blue-100">美元/台幣</span>
-                <div className="bg-red-500 bg-opacity-20 rounded-full px-2 py-0.5">
+                <div className="bg-red-500/20 rounded-full px-2 py-0.5">
                   <span className="text-xs text-red-300">-0.25%</span>
                 </div>
               </div>
               <div className="text-lg font-bold text-white">31.56</div>
             </div>
 
-            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-3 border border-white border-opacity-20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs text-blue-100">比特幣</span>
-                <div className="bg-green-500 bg-opacity-20 rounded-full px-2 py-0.5">
+                <div className="bg-green-500/20 rounded-full px-2 py-0.5">
                   <span className="text-xs text-green-300">
                     {marketData.crypto.changePercent}
                   </span>
@@ -472,10 +471,10 @@ const MarketAnalysis: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-3 border border-white border-opacity-20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs text-blue-100">市場情緒</span>
-                <div className="bg-blue-500 bg-opacity-20 rounded-full px-2 py-0.5">
+                <div className="bg-blue-500/20 rounded-full px-2 py-0.5">
                   <span className="text-xs text-blue-300">
                     {marketData.sentiment.status}
                   </span>
@@ -488,14 +487,14 @@ const MarketAnalysis: React.FC = () => {
           </div>
 
           {/* 導航標籤 */}
-          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-1 inline-flex border border-white border-opacity-20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-1 inline-flex border border-white/20 space-x-1">
             {["overview", "news", "alerts"].map((tab) => (
               <button
                 key={tab}
                 className={`${
                   activeTab === tab
                     ? "bg-white text-indigo-700 shadow-md"
-                    : "text-white hover:bg-white hover:bg-opacity-10"
+                    : "text-white hover:bg-white/10"
                 } px-5 py-2 rounded-lg font-medium text-sm transition-all duration-200`}
                 onClick={() => setActiveTab(tab)}
               >
@@ -664,7 +663,7 @@ const MarketAnalysis: React.FC = () => {
                     className="group block bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
                   >
                     <div
-                      className={`w-full h-1 ${module.bgColor} group-hover:bg-opacity-100 bg-opacity-70`}
+                      className={`w-full h-1 ${module.bgColor} group-hover:opacity-100 opacity-70 transition-opacity duration-300`}
                     ></div>
                     <div className="p-6">
                       <div className="flex items-center space-x-4">
@@ -732,7 +731,7 @@ const MarketAnalysis: React.FC = () => {
                 <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center">
-                      <div className="h-10 w-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3">
+                      <div className="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
                         <SparklesIcon className="h-6 w-6 text-white" />
                       </div>
                       <div>
@@ -748,11 +747,11 @@ const MarketAnalysis: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={handleRefreshData}
-                        className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-colors"
+                        className="bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
                       >
                         <ArrowPathIcon className="h-4 w-4 text-white" />
                       </button>
-                      <button className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-colors">
+                      <button className="bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors">
                         <ArrowTopRightOnSquareIcon className="h-4 w-4 text-white" />
                       </button>
                     </div>
