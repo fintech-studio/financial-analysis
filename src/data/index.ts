@@ -1,5 +1,4 @@
 // 集中導出所有資料
-export * from "./market/marketData";
 export * from "./stocks/stockData";
 export * from "./news/newsData";
 

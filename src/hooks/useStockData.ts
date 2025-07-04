@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import type { MarketType } from "@/components/Stock/SearchBar";
+import type { MarketType } from "@/components/pages/stock-query/SearchBar";
 
 // 型別集中管理
 export interface StockData {

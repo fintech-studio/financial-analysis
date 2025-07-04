@@ -1,16 +1,19 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import SearchBar from "@/components/Stock/SearchBar";
-import TradingCard from "@/components/Stock/TradingCard";
-import ChartContainer from "@/components/Stock/ChartContainer";
-import DataTable from "@/components/Stock/DataTable";
-import LoadingSpinner from "@/components/Stock/LoadingSpinner";
-import { EmptyState, ErrorState } from "@/components/Stock/StateComponents";
+import SearchBar from "@/components/pages/stock-query/SearchBar";
+import TradingCard from "@/components/pages/stock-query/TradingCard";
+import ChartContainer from "@/components/pages/stock-query/ChartContainer";
+import DataTable from "@/components/pages/stock-query/DataTable";
+import LoadingSpinner from "@/components/pages/stock-query/LoadingSpinner";
+import {
+  EmptyState,
+  ErrorState,
+} from "@/components/pages/stock-query/StateComponents";
 import { useStockData } from "@/hooks/useStockData";
 import { ChartBarIcon, TableCellsIcon } from "@heroicons/react/24/outline";
-import TechnicalAnalysisPanel from "@/components/Stock/TechnicalAnalysisPanel";
-import KLinePattern from "@/components/Stock/KLinePattern";
-import type { MarketType } from "@/components/Stock/SearchBar";
+import TechnicalAnalysisPanel from "@/components/pages/stock-query/TechnicalAnalysisPanel";
+import KLinePattern from "@/components/pages/stock-query/KLinePattern";
+import type { MarketType } from "@/components/pages/stock-query/SearchBar";
 
 // 型別與預設值集中
 const VIEW_OPTIONS = [
