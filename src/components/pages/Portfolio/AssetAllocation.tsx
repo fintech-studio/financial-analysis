@@ -164,14 +164,14 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
   } = useMvcController<AssetAllocationType[]>();
 
   // 載入最新的資產配置數據
-  const loadAssetAllocation = async () => {
+  const loadAssetAllocation = useCallback(async () => {
     const userId = "user_001"; // 應該從認證上下文獲取
     await executeAllocation(async () => {
       const data = await portfolioController.getAssetAllocation(userId);
       console.log("資產配置載入成功:", data);
       return data;
     });
-  };
+  }, [executeAllocation, portfolioController]);
 
   // 初始化時載入數據
   useEffect(() => {
@@ -180,7 +180,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
         console.error("載入資產配置失敗:", error);
       });
     }
-  }, []);
+  }, [data, loadAssetAllocation]);
 
   // 處理重新平衡建議 - 通過控制器
   const handleRebalanceAnalysis = async () => {

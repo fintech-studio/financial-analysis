@@ -717,6 +717,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
     isFullscreen,
     timeframe,
     technicalIndicators,
+    data,
   ]);
 
   // 修正全螢幕時自動滾到最上方

@@ -87,11 +87,7 @@ const MarketAnalysis: React.FC = () => {
   const userController = UserController.getInstance();
 
   // 載入初始數據
-  useEffect(() => {
-    loadMarketData();
-  }, []);
-
-  const loadMarketData = async () => {
+  const loadMarketData = React.useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -172,7 +168,11 @@ const MarketAnalysis: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userController, marketController]);
+
+  useEffect(() => {
+    loadMarketData();
+  }, [loadMarketData]);
 
   const handleRefreshData = async () => {
     try {

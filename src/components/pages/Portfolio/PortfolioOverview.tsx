@@ -202,30 +202,33 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
   };
 
   // 最近30天走勢迷你圖數據 - 增強版本
-  const monthlyTrendData: ChartData = {
-    labels: Array.from({ length: 30 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
-      return date.toLocaleDateString("zh-TW", {
-        month: "short",
-        day: "numeric",
-      });
+  const monthlyTrendData: ChartData = useMemo(
+    () => ({
+      labels: Array.from({ length: 30 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (29 - i));
+        return date.toLocaleDateString("zh-TW", {
+          month: "short",
+          day: "numeric",
+        });
+      }),
+      datasets: [
+        {
+          data: [
+            2350000, 2355000, 2360000, 2365000, 2370000, 2375000, 2380000,
+            2375000, 2370000, 2375000, 2380000, 2385000, 2390000, 2395000,
+            2400000, 2405000, 2410000, 2415000, 2420000, 2425000, 2430000,
+            2435000, 2440000, 2445000, 2450000, 2445000, 2440000, 2445000,
+            2450000, 2450600,
+          ],
+          borderColor: "rgb(59, 130, 246)",
+          backgroundColor: "rgba(59, 130, 246, 0.15)",
+          fill: true,
+        },
+      ],
     }),
-    datasets: [
-      {
-        data: [
-          2350000, 2355000, 2360000, 2365000, 2370000, 2375000, 2380000,
-          2375000, 2370000, 2375000, 2380000, 2385000, 2390000, 2395000,
-          2400000, 2405000, 2410000, 2415000, 2420000, 2425000, 2430000,
-          2435000, 2440000, 2445000, 2450000, 2445000, 2440000, 2445000,
-          2450000, 2450600,
-        ],
-        borderColor: "rgb(59, 130, 246)",
-        backgroundColor: "rgba(59, 130, 246, 0.15)",
-        fill: true,
-      },
-    ],
-  };
+    []
+  );
 
   // 計算趨勢統計
   const trendStats = useMemo(() => {

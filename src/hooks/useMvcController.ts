@@ -128,7 +128,7 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
       hasExecutedRef.current = true;
       reload();
     }
-  }, []); // 空依賴陣列，只執行一次
+  }, [reload]);
 
   const hasErrors = Object.keys(errors).length > 0;
   const pageLoading = Object.values(loading).some(Boolean);
@@ -313,7 +313,7 @@ export function useControllerWithRetry<T>(
       hasExecutedRef.current = true;
       execute();
     }
-  }, [enabled]); // 移除 execute 依賴，避免無限循環
+  }, [enabled, baseOptions.autoStart, execute]);
 
   return { data, loading, error, retryCount, execute, retry };
 }
@@ -481,27 +481,28 @@ export function useSmartSearch<T>(
 
   const { debounceMs = 300, minQueryLength = 2 } = options;
 
-  const debouncedSearch = useCallback(
-    debounce(async (searchQuery: string) => {
-      if (searchQuery.length < minQueryLength) {
-        setResults([]);
-        return;
-      }
+  const debouncedSearch = useMemo(
+    () =>
+      debounce(async (searchQuery: string) => {
+        if (searchQuery.length < minQueryLength) {
+          setResults([]);
+          return;
+        }
 
-      setLoading(true);
-      setError(null);
+        setLoading(true);
+        setError(null);
 
-      try {
-        const searchResults = await searchFn(searchQuery);
-        setResults(searchResults);
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error("搜索失敗");
-        setError(error);
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    }, debounceMs),
+        try {
+          const searchResults = await searchFn(searchQuery);
+          setResults(searchResults);
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error("搜索失敗");
+          setError(error);
+          setResults([]);
+        } finally {
+          setLoading(false);
+        }
+      }, debounceMs),
     [searchFn, minQueryLength, debounceMs]
   );
 
