@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from "react";
+import React, { useState, useCallback, memo, useMemo } from "react";
 import { DatabaseController } from "@/controllers/DatabaseController";
 import { useMvcController } from "@/hooks/useMvcController";
 import { DatabaseConfig } from "@/services/DatabaseService";
@@ -36,6 +36,7 @@ const InputField = memo(
     </div>
   )
 );
+InputField.displayName = "InputField";
 
 const PasswordField = memo(
   ({
@@ -78,6 +79,7 @@ const PasswordField = memo(
     </div>
   )
 );
+PasswordField.displayName = "PasswordField";
 
 const DatabaseList = memo(
   ({
@@ -109,6 +111,7 @@ const DatabaseList = memo(
     </div>
   )
 );
+DatabaseList.displayName = "DatabaseList";
 
 const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
   onLoginSuccess,
@@ -132,7 +135,7 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
   const [databaseList, setDatabaseList] = useState<string[]>([]);
 
   // MVC 控制器
-  const databaseController = new DatabaseController();
+  const databaseController = useMemo(() => new DatabaseController(), []);
 
   // 使用 MVC Hook 管理連接測試
   const { loading: connectionLoading, execute: executeConnectionTest } =
@@ -156,6 +159,23 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
     });
   }, []);
 
+  // 驗證配置
+  const validateConfig = useCallback(
+    (cfg: DatabaseConfig = config): boolean => {
+      if (!cfg.server) {
+        alert("請填寫伺服器地址");
+        return false;
+      }
+      if (!cfg.user || !cfg.password) {
+        alert("請填寫使用者名稱和密碼");
+        return false;
+      }
+      // database 可為空，因為預設會用 master
+      return true;
+    },
+    [config]
+  );
+
   // 測試並登入資料庫
   const handleLogin = useCallback(async () => {
     // 若未輸入資料庫名稱，預設為 master
@@ -175,7 +195,13 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
       }
       return result;
     });
-  }, [config, executeConnectionTest, onLoginSuccess]);
+  }, [
+    config,
+    executeConnectionTest,
+    onLoginSuccess,
+    databaseController,
+    validateConfig,
+  ]);
 
   // 獲取資料庫列表
   const handleGetDatabaseList = useCallback(async () => {
@@ -197,24 +223,7 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
         throw error;
       }
     });
-  }, [config, executeGetDatabaseList]);
-
-  // 驗證配置
-  const validateConfig = useCallback(
-    (cfg: DatabaseConfig = config): boolean => {
-      if (!cfg.server) {
-        alert("請填寫伺服器地址");
-        return false;
-      }
-      if (!cfg.user || !cfg.password) {
-        alert("請填寫使用者名稱和密碼");
-        return false;
-      }
-      // database 可為空，因為預設會用 master
-      return true;
-    },
-    [config]
-  );
+  }, [config, executeGetDatabaseList, databaseController]);
 
   // 從資料庫列表選擇資料庫
   const handleSelectDatabase = useCallback((dbName: string) => {

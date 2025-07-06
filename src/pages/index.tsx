@@ -157,7 +157,7 @@ export default function Home() {
         stopMarket();
       }
     };
-  }, [appReady]); // 只依賴 appReady
+  }, [appReady, marketActive, startMarket, stopMarket]);
 
   // 處理搜尋
   const handleSearch = useCallback(
@@ -197,8 +197,6 @@ export default function Home() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [appReady, startMarket, stopMarket]);
-
-  // 取得最新的市場數據
 
   // 如果應用程式還沒準備好，顯示載入畫面
   if (!appReady) {

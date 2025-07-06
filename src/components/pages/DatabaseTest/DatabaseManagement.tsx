@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from "react";
+import React, { useState, useCallback, memo, useMemo } from "react";
 import { DatabaseController } from "@/controllers/DatabaseController";
 import { useMvcController } from "@/hooks/useMvcController";
 import { DatabaseConfig } from "@/services/DatabaseService";
@@ -179,6 +179,7 @@ const QueryTemplates = memo(
     </div>
   )
 );
+QueryTemplates.displayName = "QueryTemplates";
 
 const TableList = memo(
   ({
@@ -205,6 +206,7 @@ const TableList = memo(
     </div>
   )
 );
+TableList.displayName = "TableList";
 
 const ResultTable = memo(({ data }: { data: any[] }) => {
   if (!data || data.length === 0) {
@@ -261,6 +263,7 @@ const ResultTable = memo(({ data }: { data: any[] }) => {
     </div>
   );
 });
+ResultTable.displayName = "ResultTable";
 
 // ===================== 主元件 =====================
 const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
@@ -286,7 +289,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
 
   const authService = AuthService.getInstance();
   const currentUser = authService.getCurrentUser();
-  const databaseController = new DatabaseController();
+  const databaseController = useMemo(() => new DatabaseController(), []);
 
   // 查詢操作
   const {
@@ -309,7 +312,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
       setTableList(result.data || []);
       return result.data || [];
     });
-  }, [currentConfig]);
+  }, [currentConfig, executeGetTableList, databaseController]);
 
   // 查詢時自動回到首頁
   const handleExecuteQuery = useCallback(async () => {
@@ -321,7 +324,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
     await executeQuery(() =>
       databaseController.executeQuery(currentConfig, query.trim())
     );
-  }, [query, currentConfig, executeQuery]);
+  }, [query, currentConfig, executeQuery, databaseController]);
 
   // 載入資料表
   const handleGetTableList = useCallback(async () => {
@@ -330,7 +333,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
       setTableList(result.data || []);
       return result.data || [];
     });
-  }, [currentConfig, executeGetTableList]);
+  }, [currentConfig, executeGetTableList, databaseController]);
 
   // 選擇資料表
   const handleSelectTable = useCallback((tableName: string) => {
@@ -379,7 +382,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
     } catch {
       alert("獲取資料庫列表失敗");
     }
-  }, [currentConfig]);
+  }, [currentConfig, databaseController]);
 
   // 切換資料庫
   const handleSwitchDatabase = useCallback((dbName: string) => {

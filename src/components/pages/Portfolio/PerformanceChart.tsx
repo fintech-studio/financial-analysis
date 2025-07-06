@@ -121,60 +121,66 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     { label: "全部", value: "ALL" },
   ];
 
-  const benchmarkOptions: BenchmarkOption[] = [
-    { id: "benchmark", name: "大盤指數", color: "rgb(255, 99, 132)" },
-    { id: "sp500", name: "S&P 500", color: "rgb(54, 162, 235)" },
-    { id: "nasdaq", name: "納斯達克", color: "rgb(255, 206, 86)" },
-    { id: "peers", name: "同類型投資者", color: "rgb(75, 192, 192)" },
-  ];
+  const benchmarkOptions: BenchmarkOption[] = useMemo<BenchmarkOption[]>(
+    () => [
+      { id: "benchmark", name: "大盤指數", color: "rgb(255, 99, 132)" },
+      { id: "sp500", name: "S&P 500", color: "rgb(54, 162, 235)" },
+      { id: "nasdaq", name: "納斯達克", color: "rgb(255, 206, 86)" },
+      { id: "peers", name: "同類型投資者", color: "rgb(75, 192, 192)" },
+    ],
+    []
+  );
 
   // 模擬不同時間範圍的績效數據
-  const performanceData = {
-    "1W": {
-      labels: ["6/10", "6/11", "6/12", "6/13", "6/14", "6/15", "6/16"],
-      portfolio: [
-        2450600, 2456800, 2463200, 2458900, 2465400, 2471800, 2475300,
-      ],
-      benchmark: [18500, 18520, 18545, 18532, 18558, 18575, 18583],
-      return: "+1.01%",
-      isPositive: true,
-    },
-    "1M": {
-      labels: ["5/17", "5/24", "5/31", "6/7", "6/14", "6/16"],
-      portfolio: [2385000, 2398500, 2415600, 2435800, 2455200, 2475300],
-      benchmark: [18200, 18280, 18350, 18420, 18520, 18583],
-      return: "+3.79%",
-      isPositive: true,
-    },
-    "3M": {
-      labels: ["4月", "5月", "6月"],
-      portfolio: [2280000, 2385000, 2475300],
-      benchmark: [17800, 18200, 18583],
-      return: "+8.56%",
-      isPositive: true,
-    },
-    "6M": {
-      labels: ["1月", "2月", "3月", "4月", "5月", "6月"],
-      portfolio: [2150000, 2195000, 2245000, 2280000, 2385000, 2475300],
-      benchmark: [17200, 17350, 17500, 17800, 18200, 18583],
-      return: "+15.13%",
-      isPositive: true,
-    },
-    "1Y": {
-      labels: ["2023/6", "2023/9", "2023/12", "2024/3", "2024/6"],
-      portfolio: [2000000, 2088000, 2156000, 2245000, 2475300],
-      benchmark: [16500, 16800, 17100, 17500, 18583],
-      return: "+23.77%",
-      isPositive: true,
-    },
-    ALL: {
-      labels: ["2022", "2023", "2024"],
-      portfolio: [1800000, 2156000, 2475300],
-      benchmark: [15800, 17100, 18583],
-      return: "+37.52%",
-      isPositive: true,
-    },
-  };
+  const performanceData = useMemo(
+    () => ({
+      "1W": {
+        labels: ["6/10", "6/11", "6/12", "6/13", "6/14", "6/15", "6/16"],
+        portfolio: [
+          2450600, 2456800, 2463200, 2458900, 2465400, 2471800, 2475300,
+        ],
+        benchmark: [18500, 18520, 18545, 18532, 18558, 18575, 18583],
+        return: "+1.01%",
+        isPositive: true,
+      },
+      "1M": {
+        labels: ["5/17", "5/24", "5/31", "6/7", "6/14", "6/16"],
+        portfolio: [2385000, 2398500, 2415600, 2435800, 2455200, 2475300],
+        benchmark: [18200, 18280, 18350, 18420, 18520, 18583],
+        return: "+3.79%",
+        isPositive: true,
+      },
+      "3M": {
+        labels: ["4月", "5月", "6月"],
+        portfolio: [2280000, 2385000, 2475300],
+        benchmark: [17800, 18200, 18583],
+        return: "+8.56%",
+        isPositive: true,
+      },
+      "6M": {
+        labels: ["1月", "2月", "3月", "4月", "5月", "6月"],
+        portfolio: [2150000, 2195000, 2245000, 2280000, 2385000, 2475300],
+        benchmark: [17200, 17350, 17500, 17800, 18200, 18583],
+        return: "+15.13%",
+        isPositive: true,
+      },
+      "1Y": {
+        labels: ["2023/6", "2023/9", "2023/12", "2024/3", "2024/6"],
+        portfolio: [2000000, 2088000, 2156000, 2245000, 2475300],
+        benchmark: [16500, 16800, 17100, 17500, 18583],
+        return: "+23.77%",
+        isPositive: true,
+      },
+      ALL: {
+        labels: ["2022", "2023", "2024"],
+        portfolio: [1800000, 2156000, 2475300],
+        benchmark: [15800, 17100, 18583],
+        return: "+37.52%",
+        isPositive: true,
+      },
+    }),
+    []
+  );
 
   // 根據時間範圍篩選數據
   const filteredData = useMemo((): PerformanceData => {
@@ -227,7 +233,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
       default:
         return data?.monthly || { labels: [], portfolio: [] };
     }
-  }, [data, selectedTimeRange]);
+  }, [data, selectedTimeRange, performanceData]);
 
   // 績效指標數據
   const performanceMetrics = useMemo(() => {
@@ -266,7 +272,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
         icon: ChartBarIcon,
       },
     ];
-  }, [selectedTimeRange]);
+  }, [selectedTimeRange, performanceData]);
 
   // 計算績效指標
   const calculateMetrics = useMemo((): Metrics => {

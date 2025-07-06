@@ -110,44 +110,28 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
   loading = false,
   candlestickData,
 }) => {
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg p-4 shadow text-gray-500 text-center mt-2 animate-pulse">
-        技術指標載入中...
-      </div>
-    );
-  }
-
-  if (!technicalData || Object.keys(technicalData).length === 0) {
-    return (
-      <div className="bg-white rounded-lg p-4 shadow text-gray-500 text-center mt-2">
-        無技術指標資料
-      </div>
-    );
-  }
-
   // getter 只建立一次
   const get = useMemo(
     () => ({
-      RSI: () => last(technicalData["rsi_14"]),
-      MACD: () => last(technicalData["macd"]),
-      DIF: () => last(technicalData["dif"]),
+      RSI: () => last(technicalData?.["rsi_14"]),
+      MACD: () => last(technicalData?.["macd"]),
+      DIF: () => last(technicalData?.["dif"]),
       DEA: () => {
-        const dif = last(technicalData["dif"]);
-        const hist = last(technicalData["macd_histogram"]);
+        const dif = last(technicalData?.["dif"]);
+        const hist = last(technicalData?.["macd_histogram"]);
         return dif !== undefined && hist !== undefined ? dif - hist : undefined;
       },
-      MACDHist: () => last(technicalData["macd_histogram"]),
-      K: () => last(technicalData["k_value"]),
-      D: () => last(technicalData["d_value"]),
-      J: () => last(technicalData["j_value"]),
-      MA5: () => last(technicalData["ma5"]),
-      MA10: () => last(technicalData["ma10"]),
-      MA20: () => last(technicalData["ma20"]),
-      MA60: () => last(technicalData["ma60"]),
-      BollUpper: () => last(technicalData["bb_upper"]),
-      BollMiddle: () => last(technicalData["bb_middle"]),
-      BollLower: () => last(technicalData["bb_lower"]),
+      MACDHist: () => last(technicalData?.["macd_histogram"]),
+      K: () => last(technicalData?.["k_value"]),
+      D: () => last(technicalData?.["d_value"]),
+      J: () => last(technicalData?.["j_value"]),
+      MA5: () => last(technicalData?.["ma5"]),
+      MA10: () => last(technicalData?.["ma10"]),
+      MA20: () => last(technicalData?.["ma20"]),
+      MA60: () => last(technicalData?.["ma60"]),
+      BollUpper: () => last(technicalData?.["bb_upper"]),
+      BollMiddle: () => last(technicalData?.["bb_middle"]),
+      BollLower: () => last(technicalData?.["bb_lower"]),
       Close: () => (typeof close_price === "number" ? close_price : undefined),
       Volume: () => (typeof volume === "number" ? volume : undefined),
       AvgVol: () => {
@@ -177,10 +161,10 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         }
         return undefined;
       },
-      WILLR: () => last(technicalData["willr"]),
-      ATR: () => last(technicalData["atr"]),
-      CCI: () => last(technicalData["cci"]),
-      MOM: () => last(technicalData["mom"]),
+      WILLR: () => last(technicalData?.["willr"]),
+      ATR: () => last(technicalData?.["atr"]),
+      CCI: () => last(technicalData?.["cci"]),
+      MOM: () => last(technicalData?.["mom"]),
       Support: () => {
         if (Array.isArray(candlestickData) && candlestickData.length > 0) {
           const lows = candlestickData
@@ -191,7 +175,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         const possibleKeys = ["low", "lows", "low_price", "Low", "lowPrices"];
         let lows: number[] | undefined;
         for (const key of possibleKeys) {
-          if (Array.isArray(technicalData[key])) {
+          if (Array.isArray(technicalData?.[key])) {
             lows = technicalData[key];
             break;
           }
@@ -215,7 +199,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         ];
         let highs: number[] | undefined;
         for (const key of possibleKeys) {
-          if (Array.isArray(technicalData[key])) {
+          if (Array.isArray(technicalData?.[key])) {
             highs = technicalData[key];
             break;
           }
@@ -224,10 +208,9 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         return Math.max(...highs.slice(-20));
       },
     }),
-    [technicalData, close_price, candlestickData]
+    [technicalData, close_price, candlestickData, volume]
   );
 
-  // 卡片資料
   const cards = useMemo(() => {
     const rsi = get.RSI();
     const macd = get.MACD();
@@ -595,13 +578,13 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         key: "EMA26",
         title: "EMA (26日)",
         value: (() => {
-          const arr = technicalData["ema26"];
+          const arr = technicalData?.["ema26"];
           const v = last(arr);
           return typeof v === "number" ? formatNumber(v, 2) : "-";
         })(),
         valueUnit: "",
         tag: (() => {
-          const ema26 = last(technicalData["ema26"]);
+          const ema26 = last(technicalData?.["ema26"]);
           const close = get.Close();
           if (typeof ema26 !== "number" || typeof close !== "number")
             return "-";
@@ -610,7 +593,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           return "持平";
         })(),
         tagColor: (() => {
-          const ema26 = last(technicalData["ema26"]);
+          const ema26 = last(technicalData?.["ema26"]);
           const close = get.Close();
           if (typeof ema26 !== "number" || typeof close !== "number")
             return "bg-gray-100 text-gray-400";
@@ -619,7 +602,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           return "bg-gray-100 text-gray-400";
         })(),
         signal: (() => {
-          const ema26 = last(technicalData["ema26"]);
+          const ema26 = last(technicalData?.["ema26"]);
           const close = get.Close();
           if (typeof ema26 !== "number" || typeof close !== "number")
             return "-";
@@ -628,7 +611,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           return "中性";
         })(),
         signalColor: (() => {
-          const ema26 = last(technicalData["ema26"]);
+          const ema26 = last(technicalData?.["ema26"]);
           const close = get.Close();
           if (typeof ema26 !== "number" || typeof close !== "number")
             return "text-gray-400";
@@ -713,7 +696,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
         })(),
       },
     ];
-  }, [get]);
+  }, [get, technicalData]);
 
   // 動態分組卡片：前面每組3張，最後一組最多4張
   const cardGroups: Array<typeof cards> = [];
@@ -726,6 +709,22 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
       cardGroups.push(cards.slice(i, i + 3));
       i += 3;
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg p-4 shadow text-gray-500 text-center mt-2 animate-pulse">
+        技術指標載入中...
+      </div>
+    );
+  }
+
+  if (!technicalData || Object.keys(technicalData).length === 0) {
+    return (
+      <div className="bg-white rounded-lg p-4 shadow text-gray-500 text-center mt-2">
+        無技術指標資料
+      </div>
+    );
   }
 
   return (

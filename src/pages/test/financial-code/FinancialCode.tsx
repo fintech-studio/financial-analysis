@@ -149,7 +149,7 @@ const FinancialCodeTabs: React.FC = () => {
         setError("查詢失敗，請稍後再試。");
         setLoading(false);
       });
-  }, [activeTab]);
+  }, [activeTab, currentTab.api]);
 
   // 合併 setPage(1) 的 useEffect
   useEffect(() => {

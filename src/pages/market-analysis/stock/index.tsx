@@ -31,6 +31,7 @@ import StockComparison from "@/components/pages/StockMarket/StockComparison";
 import StockDetails from "@/components/pages/StockMarket/StockDetails";
 import TechnicalPatterns from "@/components/pages/StockMarket/TechnicalPatterns";
 import Screener from "@/components/pages/StockMarket/Screener";
+import { load } from "cheerio";
 
 // TypeScript 型別定義
 interface StockMarketProps {}
@@ -248,7 +249,7 @@ const StockMarket: React.FC<StockMarketProps> = () => {
   // 載入初始數據
   useEffect(() => {
     loadInitialData();
-  }, []); // 移除依賴，只在組件掛載時執行一次
+  }, [loadInitialData]);
 
   // 當搜尋條件變化時重新載入股票數據 - 使用防抖
   useEffect(() => {

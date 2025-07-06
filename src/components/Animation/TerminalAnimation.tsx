@@ -196,9 +196,6 @@ const TerminalAnimation = () => {
     const executeCommand = async () => {
       if (!isMounted) return;
 
-      // 檢查是否正在執行命令
-      if (isTyping || isLoading || isResponding) return;
-
       // 檢查是否需要重置
       if (commandIndex >= commands.length) {
         commandTimeout = setTimeout(async () => {
@@ -268,7 +265,7 @@ const TerminalAnimation = () => {
         clearTimeout(commandTimeout);
       }
     };
-  }, [commandIndex]); // 只依賴 commandIndex
+  }, [commandIndex]);
 
   // 打字效果實現
   const typeCommand = async (text: string) => {

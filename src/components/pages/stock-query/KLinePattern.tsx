@@ -5,6 +5,7 @@ import {
   ChartBarIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/solid";
+import Image from "next/image";
 
 interface KLinePatternProps {
   data: any[];
@@ -50,9 +51,11 @@ const PatternCard = memo(
         {/* 圖片區塊 */}
         <div className="flex-shrink-0 flex items-center justify-center w-28 h-28 relative">
           {!imgError ? (
-            <img
+            <Image
               src={imageUrl}
               alt={pattern + " 圖例"}
+              width={96}
+              height={96}
               className="max-h-24 max-w-24 object-contain rounded-lg shadow border border-gray-200 bg-white cursor-zoom-in"
               style={{ display: "block" }}
               onClick={() => setZoomPattern(pattern)}
@@ -73,9 +76,11 @@ const PatternCard = memo(
               }}
               onClick={() => setZoomPattern(null)}
             >
-              <img
+              <Image
                 src={imageUrl}
                 alt={pattern + " 放大圖例"}
+                width={288}
+                height={288}
                 className="max-h-72 max-w-72 object-contain rounded-xl"
               />
             </div>
@@ -85,6 +90,7 @@ const PatternCard = memo(
     );
   }
 );
+PatternCard.displayName = "PatternCard";
 
 const KLinePattern: React.FC<KLinePatternProps> = ({
   data,
