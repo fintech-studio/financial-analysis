@@ -288,7 +288,7 @@ export class MarketService {
     }
   }
 
-  async getMarketTrends(period: string = "1M"): Promise<MarketTrend[]> {
+  async getMarketTrends(): Promise<MarketTrend[]> {
     try {
       // 模擬 API 調用
       await new Promise((resolve) => setTimeout(resolve, 350));
@@ -421,7 +421,7 @@ export class MarketService {
       ];
 
       // 根據排序條件排序
-      let sortedStocks = [...mockHotStocks];
+      const sortedStocks = [...mockHotStocks];
       if (sortBy === "volume") {
         sortedStocks.sort(
           (a, b) => parseFloat(b.volume || "0") - parseFloat(a.volume || "0")

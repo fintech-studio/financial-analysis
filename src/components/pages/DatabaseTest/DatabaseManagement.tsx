@@ -279,7 +279,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
   const [query, setQuery] = useState("SELECT TOP 10 * FROM sys.tables");
   const [tableList, setTableList] = useState<string[]>([]);
   const [selectedTable, setSelectedTable] = useState("");
-  const [showDbSwitcher, setShowDbSwitcher] = useState(false);
+  const [, setShowDbSwitcher] = useState(false);
   const [databaseList, setDatabaseList] = useState<string[]>([]);
   const [currentConfig, setCurrentConfig] =
     useState<DatabaseConfig>(initialConfig);
@@ -357,7 +357,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
       const selectRegex = /(SELECT[\s\S]*?)(WHERE|ORDER BY|GROUP BY|$)/i;
       const match = prevQuery.match(selectRegex);
       if (match) {
-        const [all, selectPart, rest] = match;
+        const [selectPart] = match;
         return prevQuery.replace(
           selectPart,
           `${selectPart} FROM [${tableName}] `

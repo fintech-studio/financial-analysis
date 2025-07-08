@@ -110,18 +110,12 @@ const StockMarket: React.FC<StockMarketProps> = () => {
   // 基本狀態管理
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedStrategy, setSelectedStrategy] =
-    useState<StrategyType>("value");
-  const [selectedSector, setSelectedSector] = useState<SectorType>("all");
+  const [selectedStrategy] = useState<StrategyType>("value");
+  const [selectedSector] = useState<SectorType>("all");
   const [favoriteStocks, setFavoriteStocks] = useState<string[]>(["2330"]);
   const [stockCompare, setStockCompare] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState<boolean>(false);
-  const [selectedTimeRange, setSelectedTimeRange] =
-    useState<TimeRangeType>("1M");
-  const [customIndicatorOpen, setCustomIndicatorOpen] =
-    useState<boolean>(false);
   const [selectedPattern, setSelectedPattern] = useState<string>("頭肩頂");
-  const [newsFilter, setNewsFilter] = useState<NewsFilterType>("latest");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   // 新增載入狀態追蹤

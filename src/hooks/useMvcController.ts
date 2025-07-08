@@ -59,7 +59,7 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
     const currentOptions = optionsRef.current;
     const currentLoaders = loadersRef.current;
 
-    setLoading((prev) => {
+    setLoading(() => {
       const newLoading = {} as Record<keyof T, boolean>;
       Object.keys(currentLoaders).forEach((key) => {
         newLoading[key as keyof T] = true;
@@ -131,7 +131,6 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
   }, [reload]);
 
   const hasErrors = Object.keys(errors).length > 0;
-  const pageLoading = Object.values(loading).some(Boolean);
 
   return {
     data,

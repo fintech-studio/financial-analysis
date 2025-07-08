@@ -98,7 +98,6 @@ const KLinePattern: React.FC<KLinePatternProps> = ({
   error,
   symbol,
   timeframe,
-  market,
 }) => {
   const [selectedPattern, setSelectedPattern] = useState<string | null>(null);
   const [zoomPattern, setZoomPattern] = useState<string | null>(null);

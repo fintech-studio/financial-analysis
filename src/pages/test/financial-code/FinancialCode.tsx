@@ -290,7 +290,7 @@ const FinancialCodeTabs: React.FC = () => {
   // 日期格式化函式
   function formatDate(dateStr?: string) {
     if (!dateStr) return "-";
-    let d = dateStr.trim();
+    const d = dateStr.trim();
     if (/^\d{8}$/.test(d)) {
       return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
     }

@@ -28,31 +28,6 @@ import {
 } from "../hooks/useMvcController";
 import { useAppInitialization } from "../utils/appInitializer";
 
-interface UserInfo {
-  name: string;
-  email: string;
-  phone: string;
-  joinDate: string;
-  bio: string;
-  avatar: string;
-  location: string;
-  riskLevel: string;
-  level: string;
-}
-
-interface InvestmentStats {
-  totalValue: number;
-  totalReturn: number;
-  returnRate: number;
-  portfolioCount: number;
-  watchlistCount: number;
-  articlesRead: number;
-  coursesCompleted: number;
-  monthlyReturn: number;
-  bestStock: string;
-  winRate: number;
-}
-
 interface Achievement {
   id: number;
   name: string;
@@ -99,7 +74,6 @@ interface Tab {
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [savedPosts, setSavedPosts] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>(null);
 
   // 模擬數據定義
@@ -204,11 +178,7 @@ const ProfilePage: React.FC = () => {
   ];
 
   // 應用程式初始化
-  const {
-    isLoading: appLoading,
-    isInitialized,
-    error: appError,
-  } = useAppInitialization({
+  const { isLoading: isInitialized, error: appError } = useAppInitialization({
     enableCache: true,
     enableMockData: true,
   });
@@ -229,10 +199,10 @@ const ProfilePage: React.FC = () => {
   } = usePreloadData(
     {
       user: () => userController.getUserProfile("user_001"),
-      investmentStats: () => userController.getInvestmentStats("user_001"),
-      achievements: () => userController.getAchievements("user_001"),
-      activities: () => userController.getRecentActivities("user_001"),
-      watchlist: () => stockController.getWatchlist("user_001"),
+      investmentStats: () => userController.getInvestmentStats(),
+      achievements: () => userController.getAchievements(),
+      activities: () => userController.getRecentActivities(),
+      watchlist: () => stockController.getWatchlist(),
       allocation: () => portfolioController.getAllocation("user_001"),
       portfolios: () => portfolioController.getUserPortfolios("user_001"),
     },
@@ -256,11 +226,8 @@ const ProfilePage: React.FC = () => {
   // 個人資料表單Hook
   const {
     values: profileValues,
-    errors: profileErrors,
     setValue: setProfileValue,
     handleSubmit: handleProfileSubmit,
-    submitting: profileSubmitting,
-    reset: resetProfile,
   } = useFormController(
     {
       name: pageData.user?.name || "",
@@ -297,24 +264,16 @@ const ProfilePage: React.FC = () => {
   );
 
   // 實時數據更新
-  const {
-    data: realtimeStats,
-    loading: statsLoading,
-    error: statsError,
-    retry: retryStats,
-  } = useControllerWithRetry(
-    () => userController.getInvestmentStats("user_001"),
-    {
-      maxRetries: 3,
-      retryDelay: 2000,
-      retryCondition: (error) => error.message.includes("網路"),
-      onRetry: (attempt, error) => {
-        console.log(`重試獲取投資統計第 ${attempt} 次，錯誤:`, error.message);
-      },
-      cacheKey: "user_investment_stats",
-      cacheTTL: 60000, // 1分鐘緩存
-    }
-  );
+  const {} = useControllerWithRetry(() => userController.getInvestmentStats(), {
+    maxRetries: 3,
+    retryDelay: 2000,
+    retryCondition: (error) => error.message.includes("網路"),
+    onRetry: (attempt, error) => {
+      console.log(`重試獲取投資統計第 ${attempt} 次，錯誤:`, error.message);
+    },
+    cacheKey: "user_investment_stats",
+    cacheTTL: 60000, // 1分鐘緩存
+  });
 
   // 模擬成就數據
   const defaultAchievements: Achievement[] = [
@@ -353,15 +312,8 @@ const ProfilePage: React.FC = () => {
   ];
 
   // 從預加載數據中提取，並提供默認值
-  const {
-    user: preloadUser,
-    investmentStats,
-    achievements = defaultAchievements,
-    activities,
-    watchlist,
-    allocation,
-    portfolios,
-  } = pageData;
+  const { user: investmentStats, achievements = defaultAchievements } =
+    pageData;
 
   // 當用戶數據載入後，更新表單值和本地用戶狀態
   useEffect(() => {
@@ -381,26 +333,6 @@ const ProfilePage: React.FC = () => {
       await handleProfileSubmit();
     } catch (error) {
       console.error("保存個人資料失敗:", error);
-    }
-  };
-
-  const handleAddToWatchlist = async (symbol: string) => {
-    try {
-      if (!user) return;
-      await stockController.addToWatchlist(user.id, symbol);
-      await reloadPageData(); // 重新載入數據
-    } catch (error) {
-      console.error("新增關注股票失敗:", error);
-    }
-  };
-
-  const handleRemoveFromWatchlist = async (symbol: string) => {
-    try {
-      if (!user) return;
-      await stockController.removeFromWatchlist(user.id, symbol);
-      await reloadPageData(); // 重新載入數據
-    } catch (error) {
-      console.error("移除關注股票失敗:", error);
     }
   };
 
@@ -497,7 +429,6 @@ const ProfilePage: React.FC = () => {
   }
 
   // 使用實時數據或預載數據
-  const currentStats = realtimeStats || investmentStats;
   const currentUser = user || pageData.user;
 
   return (

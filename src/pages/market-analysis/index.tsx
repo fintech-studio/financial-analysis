@@ -64,17 +64,15 @@ const MarketAnalysis: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("overview");
 
   // MVC 架構相關狀態
-  const [user, setUser] = useState<User | null>(null);
+  const [, setUser] = useState<User | null>(null);
   const [marketOverview, setMarketOverview] = useState<MarketOverview | null>(
     null
   );
   const [marketSentiment, setMarketSentiment] =
     useState<MarketSentiment | null>(null);
   const [marketNews, setMarketNews] = useState<MarketNews[]>([]);
-  const [hotStocks, setHotStocks] = useState<HotStock[]>([]);
-  const [sectorPerformance, setSectorPerformance] = useState<
-    SectorPerformance[]
-  >([]);
+  const [, setHotStocks] = useState<HotStock[]>([]);
+  const [, setSectorPerformance] = useState<SectorPerformance[]>([]);
   const [marketAnalytics, setMarketAnalytics] =
     useState<MarketAnalytics | null>(null);
   const [marketTrend, setMarketTrend] = useState<MarketTrend | null>(null);

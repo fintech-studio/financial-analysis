@@ -132,7 +132,7 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
   };
   const formatDate = (dateString: string): string => {
     try {
-      let date = new Date(dateString);
+      const date = new Date(dateString);
       if (isNaN(date.getTime())) {
         return dateString;
       }

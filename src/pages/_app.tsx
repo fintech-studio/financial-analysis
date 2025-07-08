@@ -21,8 +21,6 @@ type AppPropsWithLayout = AppProps & {
 
 // 創建應用程式包裝器組件
 function AppWrapper({ Component, pageProps }: AppPropsWithLayout) {
-  const router = useRouter();
-
   // 應用程式初始化
   const { isLoading, isInitialized, error, config } = useAppInitialization({
     enableCache: true,

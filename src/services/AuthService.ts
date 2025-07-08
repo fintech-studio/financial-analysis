@@ -211,7 +211,7 @@ export class AuthService {
     }
   }
 
-  async verifyEmail(token: string): Promise<void> {
+  async verifyEmail(): Promise<void> {
     try {
       // 模擬 API 調用
       await new Promise((resolve) => setTimeout(resolve, 500));

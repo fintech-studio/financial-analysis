@@ -126,7 +126,7 @@ export class PortfolioService extends BaseService {
         await new Promise((resolve) => setTimeout(resolve, 200));
 
         const holdings = await this.getPortfolioHoldings(portfolioId);
-        const transactions = await this.getPortfolioTransactions(portfolioId);
+        const transactions = await this.getPortfolioTransactions();
 
         const mockPortfolio: Portfolio = {
           id: portfolioId,
@@ -202,7 +202,7 @@ export class PortfolioService extends BaseService {
     }
   }
 
-  async getPortfolioTransactions(portfolioId: string): Promise<Transaction[]> {
+  async getPortfolioTransactions(): Promise<Transaction[]> {
     try {
       // 模擬 API 調用
       await new Promise((resolve) => setTimeout(resolve, 250));
@@ -396,7 +396,7 @@ export class PortfolioService extends BaseService {
     }
   }
 
-  async getAssetAllocation(portfolioId: string): Promise<AssetAllocation[]> {
+  async getAssetAllocation(): Promise<AssetAllocation[]> {
     try {
       // 模擬 API 調用
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -504,9 +504,7 @@ export class PortfolioService extends BaseService {
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       // 這裡應該根據搜索參數過濾交易記錄
-      const allTransactions = await this.getPortfolioTransactions(
-        "portfolio_1"
-      );
+      const allTransactions = await this.getPortfolioTransactions();
 
       let filteredTransactions = allTransactions;
 

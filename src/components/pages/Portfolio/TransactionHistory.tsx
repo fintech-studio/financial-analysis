@@ -1,29 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  ArrowUpIcon,
-  ArrowDownIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  ArrowPathIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  DocumentArrowDownIcon,
-  CalendarIcon,
-  InformationCircleIcon,
-  ChartBarIcon,
-  CurrencyDollarIcon,
-  TagIcon,
-  AdjustmentsVerticalIcon,
-  EyeIcon,
-  SparklesIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  DocumentChartBarIcon,
-} from "@heroicons/react/24/outline";
-import { SparklesIcon as SparklesSolidIcon } from "@heroicons/react/24/solid";
-import { Bar, Line, Pie } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -47,9 +23,7 @@ import type {
   SortDirection,
   FilterType,
   PeriodType,
-  TransactionDetailsModalProps,
   TransactionHistoryProps,
-  SortIconProps,
   ChartData,
 } from "@/types/portfolio";
 
@@ -68,336 +42,6 @@ ChartJS.register(
 );
 
 // 交易詳情模態框 - 重新設計
-const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
-  transaction,
-  onClose,
-}) => {
-  if (!transaction) return null;
-
-  const isPositive = transaction.type === "買入";
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-5xl w-full border border-white/20 overflow-hidden">
-        {/* 模態框標題 */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6 border-b border-white/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div
-                className={`p-3 rounded-2xl ${
-                  isPositive ? "bg-green-500/20" : "bg-red-500/20"
-                }`}
-              >
-                <CurrencyDollarIcon
-                  className={`h-7 w-7 ${
-                    isPositive ? "text-green-100" : "text-red-100"
-                  }`}
-                />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-white">
-                  {transaction.type === "買入"
-                    ? "買入交易詳情"
-                    : "賣出交易詳情"}
-                </h3>
-                <p className="text-blue-100 text-sm">
-                  {transaction.symbol} • {transaction.date}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-xl transition-all duration-200"
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* 左欄：交易基本信息 */}
-            <div className="space-y-6">
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <InformationCircleIcon className="h-5 w-5 text-blue-600 mr-2" />
-                  交易資訊
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        交易日期
-                      </div>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {transaction.date}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        交易類型
-                      </div>
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          transaction.type === "買入"
-                            ? "bg-green-100 text-green-800 border border-green-200"
-                            : "bg-red-100 text-red-800 border border-red-200"
-                        }`}
-                      >
-                        {transaction.type}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        證券代號
-                      </div>
-                      <div className="text-sm font-semibold text-blue-600">
-                        {transaction.symbol}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        證券名稱
-                      </div>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {transaction.name}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        交易所
-                      </div>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {transaction.exchange || "台灣證券交易所"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <ChartBarIcon className="h-5 w-5 text-blue-600 mr-2" />
-                  交易細節
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      數量
-                    </div>
-                    <div className="text-lg font-bold text-gray-900">
-                      {transaction.quantity.toLocaleString()}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      價格
-                    </div>
-                    <div className="text-lg font-bold text-gray-900">
-                      {transaction.price}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      總額
-                    </div>
-                    <div className="text-xl font-bold text-blue-600">
-                      {transaction.total}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      手續費
-                    </div>
-                    <div className="text-lg font-bold text-orange-600">
-                      NT${" "}
-                      {(
-                        parseFloat(
-                          transaction.total.replace(/[^0-9.-]+/g, "")
-                        ) * 0.001425
-                      ).toFixed(0)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 交易備註 */}
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
-                <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                  <TagIcon className="h-5 w-5 text-amber-600 mr-2" />
-                  交易備註
-                </h4>
-                <p className="text-gray-700">
-                  {transaction.note || "無交易備註"}
-                </p>
-              </div>
-            </div>
-
-            {/* 右欄：市場數據與分析 */}
-            <div className="space-y-6">
-              {/* 市場數據 */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <ArrowTrendingUpIcon className="h-5 w-5 text-green-600 mr-2" />
-                  當日市場數據
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      開盤價
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      NT${" "}
-                      {(
-                        parseFloat(
-                          transaction.price.replace(/[^0-9.-]+/g, "")
-                        ) *
-                        (1 - Math.random() * 0.01)
-                      ).toFixed(2)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      收盤價
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      NT${" "}
-                      {(
-                        parseFloat(
-                          transaction.price.replace(/[^0-9.-]+/g, "")
-                        ) *
-                        (1 + Math.random() * 0.01)
-                      ).toFixed(2)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      最高價
-                    </div>
-                    <div className="text-sm font-semibold text-green-600">
-                      NT${" "}
-                      {(
-                        parseFloat(
-                          transaction.price.replace(/[^0-9.-]+/g, "")
-                        ) *
-                        (1 + Math.random() * 0.02)
-                      ).toFixed(2)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      最低價
-                    </div>
-                    <div className="text-sm font-semibold text-red-600">
-                      NT${" "}
-                      {(
-                        parseFloat(
-                          transaction.price.replace(/[^0-9.-]+/g, "")
-                        ) *
-                        (1 - Math.random() * 0.02)
-                      ).toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 成本分析圖表 */}
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/50 shadow-lg">
-                <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <ChartBarIcon className="h-5 w-5 text-purple-600 mr-2" />
-                  {transaction.type === "買入"
-                    ? "買入成本分析"
-                    : "賣出收益分析"}
-                </h5>
-                <div className="h-48">
-                  <Pie
-                    data={{
-                      labels:
-                        transaction.type === "買入"
-                          ? ["證券價值", "手續費"]
-                          : ["賣出收益", "手續費"],
-                      datasets: [
-                        {
-                          data: [
-                            parseFloat(
-                              transaction.total.replace(/[^0-9.-]+/g, "")
-                            ),
-                            parseFloat(
-                              transaction.total.replace(/[^0-9.-]+/g, "")
-                            ) * 0.001425,
-                          ],
-                          backgroundColor: [
-                            transaction.type === "買入"
-                              ? "rgba(59, 130, 246, 0.8)"
-                              : "rgba(34, 197, 94, 0.8)",
-                            "rgba(239, 68, 68, 0.8)",
-                          ],
-                          borderWidth: 0,
-                        },
-                      ],
-                    }}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          position: "bottom",
-                          labels: { font: { size: 12 }, boxWidth: 12 },
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* AI 投資建議 */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
-                <div className="flex items-center mb-4">
-                  <SparklesSolidIcon className="h-6 w-6 text-purple-600 mr-2" />
-                  <h5 className="text-lg font-semibold text-purple-900">
-                    AI 投資建議
-                  </h5>
-                </div>
-                <p className="text-sm text-purple-800 leading-relaxed">
-                  {transaction.type === "買入"
-                    ? "建議設置適當的停損停利點，可考慮以10%的停損幅度和20%的停利目標來管理該投資風險。持續關注公司基本面變化。"
-                    : "賣出後請檢視整體組合配置，並考慮將資金重新分配至目前被低估的資產類別。建議保持適當的現金比例以應對市場波動。"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* 底部操作按鈕 */}
-          <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end space-x-4">
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-all duration-200"
-            >
-              關閉
-            </button>
-            <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl">
-              相關分析
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   transactions: initialTransactions,
@@ -653,16 +297,12 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   );
 
   // 使用 MVC Hook 管理交易數據
-  const {
-    data: transactions,
-    loading: transactionsLoading,
-    error: transactionsError,
-    execute: executePortfolioAction,
-  } = useMvcController<Transaction[]>();
+  const { data: transactions, execute: executePortfolioAction } =
+    useMvcController<Transaction[]>();
 
   // 狀態管理
-  const [sortField, setSortField] = useState<SortField>("date");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [sortField] = useState<SortField>("date");
+  const [sortDirection] = useState<SortDirection>("desc");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterType, setFilterType] = useState<FilterType>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -718,36 +358,6 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   // 實際使用的交易數據 - 優先使用從controller載入的數據，否則使用模擬數據
   const actualTransactions = transactions || mockTransactions;
 
-  // 處理數據匯出 - 通過控制器
-  const handleExportData = async () => {
-    try {
-      const userId = "user_001";
-      const result = await portfolioController.exportPortfolioReport(
-        userId,
-        "excel"
-      );
-
-      // 創建下載連結
-      const link = document.createElement("a");
-      link.href = result.downloadUrl;
-      link.download = result.fileName;
-      link.click();
-
-      console.log("交易數據匯出成功");
-    } catch (error) {
-      console.error("匯出失敗:", error);
-    }
-  };
-
-  const handleSort = (field: SortField): void => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("desc");
-    }
-  };
-
   // 日期範圍過濾
   const getDateRangeFilter = (
     period: PeriodType
@@ -787,7 +397,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
     const dateRangeFilter = getDateRangeFilter(selectedPeriod);
 
-    let filtered = [...dataToFilter].filter((transaction) => {
+    const filtered = [...dataToFilter].filter((transaction) => {
       // 搜尋條件過濾
       const matchesSearch =
         searchTerm === "" ||
@@ -946,8 +556,8 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   // 準備圖表資料
   const chartData = useMemo((): ChartDataConfig => {
     const monthlyLabels = transactionStats.monthly.map(([month]) => month);
-    const buyData = transactionStats.monthly.map(([_, data]) => data.買入);
-    const sellData = transactionStats.monthly.map(([_, data]) => data.賣出);
+    const buyData = transactionStats.monthly.map(([, data]) => data.買入);
+    const sellData = transactionStats.monthly.map(([, data]) => data.賣出);
 
     // 月度交易金額圖表
     const monthlyChart: ChartData = {
@@ -994,19 +604,6 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
     return { monthlyChart, symbolChart };
   }, [transactionStats]);
-
-  const SortIcon: React.FC<SortIconProps> = ({ field }) => {
-    if (sortField !== field) return null;
-    return sortDirection === "asc" ? (
-      <ArrowUpIcon className="h-4 w-4 ml-1 inline" />
-    ) : (
-      <ArrowDownIcon className="h-4 w-4 ml-1 inline" />
-    );
-  };
-
-  const handleExport = (): void => {
-    // alert("匯出交易歷史功能將在此實作");
-  };
 
   const handleViewTransaction = (transaction: Transaction): void => {
     setSelectedTransaction(transaction);
@@ -1160,7 +757,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {currentTransactions.map((transaction, index) => (
+              {currentTransactions.map((transaction) => (
                 <tr key={transaction.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-900">
                     {transaction.date}

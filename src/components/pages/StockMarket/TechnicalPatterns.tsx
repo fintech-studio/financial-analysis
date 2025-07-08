@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  ChevronRightIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
 } from "@heroicons/react/24/outline";
@@ -54,11 +53,6 @@ const TechnicalPatterns: React.FC<TechnicalPatternsProps> = ({
     旗形: "短暫的矩形整理區間，通常是強勁趨勢中的暫停，突破後將繼續原趨勢。",
     缺口: "價格在連續交易日之間形成的斷層，常伴隨重要的市場訊號。",
     島狀反轉: "由兩個缺口形成的模式，中間交易形成「島」，指示價格可能反轉。",
-  };
-
-  // 示例圖表
-  const getPatternChartUrl = (pattern: string): string => {
-    return `/images/patterns/${pattern.replace(/\s+/g, "-").toLowerCase()}.svg`;
   };
 
   // 默認多頭股票數據

@@ -175,15 +175,18 @@ export class PortfolioController extends BaseController {
 
       // 優先從服務層獲取數據，回退到模型層
       try {
-        const portfolios = await this.portfolioService.getUserPortfolios(userId);
-        const servicePortfolio = portfolios.find((p) => p.isDefault) || portfolios[0];
+        const portfolios = await this.portfolioService.getUserPortfolios(
+          userId
+        );
+        const servicePortfolio =
+          portfolios.find((p) => p.isDefault) || portfolios[0];
         if (servicePortfolio) {
           return this.convertServicePortfolioToModel(servicePortfolio);
         }
       } catch (serviceError) {
         console.warn("服務層獲取失敗，使用模型層:", serviceError);
       }
-      
+
       const portfolio = await this.portfolioModel.getPortfolio(userId);
       if (!portfolio) {
         throw new Error("投資組合不存在");
@@ -195,8 +198,12 @@ export class PortfolioController extends BaseController {
   async getUserPortfolios(userId: string): Promise<Portfolio[]> {
     return this.executeWithErrorHandling(async () => {
       this.validateRequired(userId, "用戶ID");
-      const servicePortfolios = await this.portfolioService.getUserPortfolios(userId);
-      return servicePortfolios.map(p => this.convertServicePortfolioToModel(p));
+      const servicePortfolios = await this.portfolioService.getUserPortfolios(
+        userId
+      );
+      return servicePortfolios.map((p) =>
+        this.convertServicePortfolioToModel(p)
+      );
     }, "獲取用戶投資組合列表");
   }
 
@@ -222,7 +229,9 @@ export class PortfolioController extends BaseController {
         notes: request.notes,
       };
 
-      const serviceTransaction = await this.portfolioService.addTransaction(transactionData);
+      const serviceTransaction = await this.portfolioService.addTransaction(
+        transactionData
+      );
       return this.convertServiceTransactionToModel(serviceTransaction);
     }, "新增交易記錄");
   }
@@ -235,10 +244,11 @@ export class PortfolioController extends BaseController {
       this.validateRequired(userId, "用戶ID");
 
       const portfolio = await this.getPortfolio(userId);
-      const servicePerformance = await this.portfolioService.getPortfolioPerformance(
-        portfolio.id,
-        timeRange.toLowerCase()
-      );
+      const servicePerformance =
+        await this.portfolioService.getPortfolioPerformance(
+          portfolio.id,
+          timeRange.toLowerCase()
+        );
       return this.convertServicePerformanceToModel(servicePerformance);
     }, "獲取投資組合績效");
   }
@@ -247,9 +257,11 @@ export class PortfolioController extends BaseController {
     return this.executeWithErrorHandling(async () => {
       this.validateRequired(userId, "用戶ID");
 
-      const portfolio = await this.getPortfolio(userId);
-      const serviceAllocations = await this.portfolioService.getAssetAllocation(portfolio.id);
-      return serviceAllocations.map(a => this.convertServiceAllocationToModel(a));
+      const serviceAllocations =
+        await this.portfolioService.getAssetAllocation();
+      return serviceAllocations.map((a) =>
+        this.convertServiceAllocationToModel(a)
+      );
     }, "獲取資產配置");
   }
 
@@ -260,12 +272,12 @@ export class PortfolioController extends BaseController {
     return this.executeWithErrorHandling(async () => {
       this.validateRequired(userId, "用戶ID");
 
-      const portfolio = await this.getPortfolio(userId);
-      const serviceTransactions = await this.portfolioService.getPortfolioTransactions(
-        portfolio.id
-      );
+      const serviceTransactions =
+        await this.portfolioService.getPortfolioTransactions();
 
-      const modelTransactions = serviceTransactions.map(t => this.convertServiceTransactionToModel(t));
+      const modelTransactions = serviceTransactions.map((t) =>
+        this.convertServiceTransactionToModel(t)
+      );
       return limit ? modelTransactions.slice(0, limit) : modelTransactions;
     }, "獲取交易歷史");
   }
@@ -427,13 +439,6 @@ export class PortfolioController extends BaseController {
   }> {
     // 這是 exportPortfolioReport 的別名，為了保持一致性
     return this.exportPortfolioReport(userId, format);
-  }
-
-  private calculateTransactionFee(amount: number): number {
-    // 簡單的手續費計算邏輯
-    const feeRate = 0.001425; // 0.1425%
-    const minFee = 20;
-    return Math.max(amount * feeRate, minFee);
   }
 
   private generateRiskRecommendations(riskLevel: string): string[] {

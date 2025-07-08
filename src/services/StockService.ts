@@ -1,4 +1,4 @@
-import { Stock, StockData, ChartData } from "@/models/StockModel";
+import { Stock, ChartData } from "@/models/StockModel";
 import { TimeRange } from "@/types/market";
 
 export interface StockSearchParams {
@@ -267,7 +267,7 @@ export class StockService {
     }
   }
 
-  async getTechnicalIndicators(symbol: string): Promise<TechnicalIndicators> {
+  async getTechnicalIndicators(): Promise<TechnicalIndicators> {
     try {
       // 模擬 API 調用
       await new Promise((resolve) => setTimeout(resolve, 250));
@@ -296,7 +296,7 @@ export class StockService {
     }
   }
 
-  async getWatchlist(userId: string): Promise<Stock[]> {
+  async getWatchlist(): Promise<Stock[]> {
     try {
       // 模擬 API 調用
       await new Promise((resolve) => setTimeout(resolve, 200));

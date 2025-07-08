@@ -61,7 +61,7 @@ const ScrollToTop: React.FC<ScrollToTopProps> = ({
         ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none"}
       `}
       style={{
-        position: "fixed" as any,
+        position: "fixed" as const,
         bottom: "20px",
         right: "20px",
         zIndex: 10000,

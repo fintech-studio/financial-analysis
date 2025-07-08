@@ -1,7 +1,6 @@
 import {
   StockModel,
   Stock,
-  StockData,
   StockDetail,
   MarketData,
 } from "../models/StockModel";
@@ -203,7 +202,7 @@ export class StockController {
     }
   }
 
-  async removeFromWatchlist(userId: string, symbol: string): Promise<boolean> {
+  async removeFromWatchlist(): Promise<boolean> {
     try {
       // 模擬從觀察清單移除的邏輯
       return true;
@@ -216,7 +215,7 @@ export class StockController {
     }
   }
 
-  async getWatchlist(userId: string): Promise<Stock[]> {
+  async getWatchlist(): Promise<Stock[]> {
     try {
       // 模擬用戶關注列表
       const watchlistSymbols = ["2330", "2454", "2317", "3008", "2882"];

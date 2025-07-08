@@ -5,7 +5,6 @@ import {
   ChartBarIcon,
   ArrowUpIcon,
   ArrowDownIcon,
-  FunnelIcon,
 } from "@heroicons/react/24/outline";
 
 // 類型定義
@@ -622,7 +621,7 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
       const isPositiveTrend = totalReturnValue >= 0;
 
       // 根據不同的資產類型和收益率生成不同的趨勢模式
-      let history: number[] = [];
+      const history: number[] = [];
       let baseValue = 100;
 
       // 為每個資產生成一個基於其代號的種子，確保相同資產每次都生成相同的圖表
@@ -717,7 +716,7 @@ const HoldingsTable: React.FC<HoldingsTableProps> = ({
 
   const sortedHoldings = useMemo(() => {
     // 先過濾類型
-    let filtered = [...holdingsWithWeight].filter((holding) => {
+    const filtered = [...holdingsWithWeight].filter((holding) => {
       // 搜尋條件
       const matchesSearch =
         holding.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -328,7 +328,6 @@ const ForgotPasswordPage = () => {
   const userController = UserController.getInstance();
 
   const {
-    data: resetResult,
     loading: isLoading,
     error: controllerError,
     execute: executeResetPassword,

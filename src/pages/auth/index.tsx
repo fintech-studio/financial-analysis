@@ -339,7 +339,6 @@ const AuthPage = () => {
   const userController = UserController.getInstance();
 
   const {
-    data: user,
     loading: isLoading,
     error: controllerError,
     execute: executeUserAction,
@@ -460,7 +459,6 @@ const AuthPage = () => {
           });
 
           console.log("登入成功:", authResult);
-          const user = authResult.user;
 
           // 處理記住我功能
           if (loginData.remember) {
@@ -499,7 +497,6 @@ const AuthPage = () => {
           });
 
           console.log("註冊成功:", authResult);
-          const user = authResult.user;
 
           // 保存註冊的 email 並顯示成功訊息
           setRegisteredEmail(registerData.email);

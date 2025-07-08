@@ -10,7 +10,6 @@ import {
   Tooltip,
   Legend,
   Filler,
-  ChartOptions,
   TooltipItem,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
@@ -82,23 +81,6 @@ interface PerformanceChartProps {
 
 type ChartType = "line" | "area" | "bar";
 
-interface ChartDataset {
-  label: string;
-  data: number[] | (number | null)[];
-  borderColor: string;
-  backgroundColor: string;
-  tension?: number;
-  fill?: boolean;
-  borderWidth: number;
-  borderDash?: number[];
-  pointRadius?: number;
-}
-
-interface FormattedChartData {
-  labels: string[];
-  datasets: ChartDataset[];
-}
-
 const PerformanceChart: React.FC<PerformanceChartProps> = ({
   data,
   timeRange,
@@ -108,7 +90,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
   const [chartType, setChartType] = useState<ChartType>("line");
   const [compareIndices, setCompareIndices] = useState<string[]>(["benchmark"]);
   const [highlightPeriods, setHighlightPeriods] = useState<boolean>(false);
-  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
+  const [isFullScreen] = useState<boolean>(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>(timeRange);
 
   // 時間範圍選項
@@ -338,138 +320,6 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
     };
   }, [filteredData]);
 
-  // 格式化圖表數據
-  const formatChartData = useMemo((): FormattedChartData => {
-    const baseDatasets: ChartDataset[] = [
-      {
-        label: "投資組合價值",
-        data: filteredData.portfolio,
-        borderColor: "rgb(59, 130, 246)",
-        backgroundColor:
-          chartType === "area" ? "rgba(59, 130, 246, 0.1)" : "transparent",
-        tension: 0.4,
-        fill: chartType === "area",
-        borderWidth: 2,
-        pointRadius: chartType === "line" ? 0 : 3,
-      },
-    ];
-
-    // 添加基準指標
-    if (showBenchmark && filteredData.benchmark) {
-      compareIndices.forEach((benchmarkId, index) => {
-        const option = benchmarkOptions.find((opt) => opt.id === benchmarkId);
-        if (option && filteredData.benchmark) {
-          baseDatasets.push({
-            label: option.name,
-            data: filteredData.benchmark,
-            borderColor: option.color,
-            backgroundColor: "transparent",
-            tension: 0.4,
-            fill: false,
-            borderWidth: 1.5,
-            borderDash: [5, 5],
-            pointRadius: 0,
-          });
-        }
-      });
-    }
-
-    return {
-      labels: filteredData.labels,
-      datasets: baseDatasets,
-    };
-  }, [
-    filteredData,
-    chartType,
-    showBenchmark,
-    compareIndices,
-    benchmarkOptions,
-  ]);
-
-  // 圖表配置
-  const chartOptions: ChartOptions<"line" | "bar"> = useMemo(() => {
-    const baseOptions: any = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "top" as const,
-          labels: {
-            usePointStyle: true,
-            pointStyle: "line",
-          },
-        },
-        tooltip: {
-          mode: "index" as const,
-          intersect: false,
-          callbacks: {
-            label: function (context: TooltipItem<"line" | "bar">) {
-              let label = context.dataset.label || "";
-              if (label) {
-                label += ": ";
-              }
-              const value = context.parsed.y;
-              if (context.dataset.label?.includes("投資組合")) {
-                label += `NT$${value.toLocaleString()}`;
-              } else {
-                label += value.toLocaleString();
-              }
-              return label;
-            },
-          },
-        },
-      },
-      scales: {
-        x: {
-          grid: {
-            display: false,
-          },
-          title: {
-            display: true,
-            text: "時間",
-          },
-        },
-        y: {
-          grid: {
-            color: "rgba(0, 0, 0, 0.1)",
-          },
-          title: {
-            display: true,
-            text: "投資組合價值 (NT$)",
-          },
-          ticks: {
-            callback: function (value: any) {
-              return `NT$${(value / 1000000).toFixed(1)}M`;
-            },
-          },
-        },
-      },
-      interaction: {
-        mode: "nearest" as const,
-        axis: "x" as const,
-        intersect: false,
-      },
-    };
-
-    // 如果顯示基準，添加右側 Y 軸
-    if (showBenchmark && filteredData.benchmark) {
-      baseOptions.scales.y1 = {
-        type: "linear" as const,
-        display: true,
-        position: "right" as const,
-        title: {
-          display: true,
-          text: "基準指數",
-        },
-        grid: {
-          drawOnChartArea: false,
-        },
-      };
-    }
-
-    return baseOptions;
-  }, [showBenchmark, filteredData.benchmark]);
-
   // 更多績效詳情內容
   const renderPerformanceDetails = () => (
     <div className="mt-6 border-t border-gray-200 pt-6 relative z-10">
@@ -635,7 +485,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
         mode: "index" as const,
         intersect: false,
         callbacks: {
-          label: function (context: any) {
+          label: function (context: TooltipItem<"line" | "bar">) {
             let label = context.dataset.label || "";
             if (label) {
               label += ": ";
@@ -667,8 +517,8 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
           text: "投資組合價值 (NT$)",
         },
         ticks: {
-          callback: function (value: any) {
-            return "NT$" + (value / 1000000).toFixed(1) + "M";
+          callback: function (value: number | string) {
+            return "NT$" + (Number(value) / 1000000).toFixed(1) + "M";
           },
         },
       },

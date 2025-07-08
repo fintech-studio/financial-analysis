@@ -138,7 +138,7 @@ export class UserController {
 
   async getUserActivities(userId: string): Promise<UserActivity[]> {
     try {
-      return await this.userModel.getUserActivities(userId);
+      return await this.userModel.getUserActivities();
     } catch (error) {
       throw new Error("獲取用戶活動記錄失敗");
     }
@@ -163,12 +163,12 @@ export class UserController {
     });
   }
 
-  async logout(userId: string): Promise<boolean> {
+  async logout(): Promise<boolean> {
     // 模擬登出邏輯（清除 session、token 等）
     return true;
   }
 
-  async getInvestmentStats(userId: string): Promise<any> {
+  async getInvestmentStats(): Promise<any> {
     try {
       // 模擬投資統計數據
       const mockStats = {
@@ -190,7 +190,7 @@ export class UserController {
     }
   }
 
-  async getAchievements(userId: string): Promise<any[]> {
+  async getAchievements(): Promise<any[]> {
     try {
       // 模擬成就數據
       const mockAchievements = [
@@ -226,7 +226,7 @@ export class UserController {
     }
   }
 
-  async getRecentActivities(userId: string): Promise<any[]> {
+  async getRecentActivities(): Promise<any[]> {
     try {
       // 模擬最近活動數據
       const mockActivities = [

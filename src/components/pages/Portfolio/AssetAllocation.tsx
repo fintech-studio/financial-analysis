@@ -17,7 +17,6 @@ import {
   GlobeAsiaAustraliaIcon,
   ArrowPathIcon,
   AdjustmentsHorizontalIcon,
-  ArrowTrendingUpIcon,
   PresentationChartLineIcon,
   ScaleIcon,
   SparklesIcon,
@@ -156,12 +155,8 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
   const portfolioController = PortfolioController.getInstance();
 
   // 使用 MVC Hook 管理資產配置數據
-  const {
-    data: assetAllocationData,
-    loading: allocationLoading,
-    error: allocationError,
-    execute: executeAllocation,
-  } = useMvcController<AssetAllocationType[]>();
+  const { data: assetAllocationData, execute: executeAllocation } =
+    useMvcController<AssetAllocationType[]>();
 
   // 載入最新的資產配置數據
   const loadAssetAllocation = useCallback(async () => {
@@ -176,8 +171,12 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
   // 初始化時載入數據
   useEffect(() => {
     if (!data || !data.byAssetClass || data.byAssetClass.length === 0) {
-      loadAssetAllocation().catch((error: any) => {
-        console.error("載入資產配置失敗:", error);
+      loadAssetAllocation().catch((error: unknown) => {
+        if (error instanceof Error) {
+          console.error("載入資產配置失敗:", error.message);
+        } else {
+          console.error("載入資產配置失敗:", error);
+        }
       });
     }
   }, [data, loadAssetAllocation]);

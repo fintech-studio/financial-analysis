@@ -8,7 +8,6 @@ import {
   ChartBarIcon,
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
-import { SparklesIcon } from "@heroicons/react/24/solid";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -172,7 +171,7 @@ const RiskAndRecommendations: React.FC<RiskAndRecommendationsProps> = ({
           text: "回撤百分比 (%)",
         },
         ticks: {
-          callback: function (value: any): string {
+          callback: function (value: number): string {
             return value + "%";
           },
         },

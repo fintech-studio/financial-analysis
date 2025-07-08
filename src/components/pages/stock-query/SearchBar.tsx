@@ -221,7 +221,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onMarketChange,
   onSymbolAndMarketChange,
 }) => {
-  const [isFocused, setIsFocused] = useState(false);
+  const [, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [inputValue, setInputValue] = useState(symbol);

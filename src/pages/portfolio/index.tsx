@@ -37,28 +37,13 @@ interface Tab {
   description: string;
 }
 
-interface Holding {
-  symbol: string;
-  name: string;
-  quantity: number;
-  averagePrice: string;
-  currentPrice: string;
-  marketValue: number;
-  gainLoss: number;
-  gainLossPercent: number;
-}
-
 const PortfolioPage: React.FC = () => {
   const [selectedHolding, setSelectedHolding] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
 
   // 應用程式初始化
-  const {
-    isLoading: appLoading,
-    isInitialized,
-    error: appError,
-  } = useAppInitialization({
+  const { isLoading: isInitialized, error: appError } = useAppInitialization({
     enableCache: true,
     enableMockData: true,
   });
@@ -75,7 +60,6 @@ const PortfolioPage: React.FC = () => {
     data: preloadedData,
     loading: preloadLoading,
     errors: preloadErrors,
-    progress,
     isComplete,
     reload: reloadPreloadData,
   } = usePreloadData(

@@ -158,7 +158,7 @@ export default async function handler(
   } catch (error: any) {
     console.error("API 錯誤:", error);
     let statusCode = 500;
-    let errorMessage = error.message || "伺服器內部錯誤";
+    const errorMessage = error.message || "伺服器內部錯誤";
     if (
       error.message?.includes("連接失敗") ||
       error.message?.includes("登入失敗") ||

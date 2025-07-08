@@ -259,43 +259,6 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
     progress: (2450600 / 5000000) * 100,
   };
 
-  // 區域分布數據
-  const regionData: ChartData = {
-    labels: ["台灣", "美國", "歐洲", "亞洲其他", "其他"],
-    datasets: [
-      {
-        data: [45, 30, 12, 8, 5],
-        backgroundColor: [
-          "rgba(75, 192, 192, 0.6)",
-          "rgba(54, 162, 235, 0.6)",
-          "rgba(153, 102, 255, 0.6)",
-          "rgba(255, 206, 86, 0.6)",
-          "rgba(255, 99, 132, 0.6)",
-        ],
-      },
-    ],
-  };
-
-  // 產業分布數據
-  const sectorData: ChartData = {
-    labels: ["科技", "金融", "醫療", "能源", "消費", "其他"],
-    datasets: [
-      {
-        label: "產業佔比",
-        data: [35, 20, 15, 10, 10, 10],
-        backgroundColor: [
-          "rgba(54, 162, 235, 0.8)",
-          "rgba(75, 192, 192, 0.8)",
-          "rgba(153, 102, 255, 0.8)",
-          "rgba(255, 206, 86, 0.8)",
-          "rgba(255, 99, 132, 0.8)",
-          "rgba(255, 159, 64, 0.8)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
   // 績效走勢數據
   const performanceData = {
     "1W": {

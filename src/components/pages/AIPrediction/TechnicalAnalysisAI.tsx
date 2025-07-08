@@ -9,7 +9,7 @@ interface TechnicalIndicator {
 }
 
 const TechnicalAnalysisAI: React.FC = () => {
-  const [indicators, setIndicators] = useState<TechnicalIndicator[]>([
+  const [indicators] = useState<TechnicalIndicator[]>([
     {
       name: "RSI",
       value: 67.8,
@@ -85,9 +85,6 @@ const TechnicalAnalysisAI: React.FC = () => {
   const calculateOverallScore = () => {
     const bullishCount = indicators.filter(
       (i) => i.status === "bullish"
-    ).length;
-    const bearishCount = indicators.filter(
-      (i) => i.status === "bearish"
     ).length;
     const neutralCount = indicators.filter(
       (i) => i.status === "neutral"

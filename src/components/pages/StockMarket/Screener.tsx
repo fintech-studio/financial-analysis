@@ -13,7 +13,6 @@ import {
   ShareIcon,
   TableCellsIcon,
   DocumentTextIcon,
-  XMarkIcon,
   StarIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
@@ -108,7 +107,7 @@ const Screener: React.FC<ScreenerProps> = ({
     : [];
 
   // 主要狀態管理
-  const [activeTab, setActiveTab] = useState<ActiveTab>("preset");
+  const [, setActiveTab] = useState<ActiveTab>("preset");
   const [savedScreens, setSavedScreens] = useState<SavedScreen[]>([]);
   const [screenName, setScreenName] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);

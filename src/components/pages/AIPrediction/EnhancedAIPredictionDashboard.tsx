@@ -25,7 +25,6 @@ import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   SparklesIcon,
-  ClockIcon,
   LightBulbIcon,
   MinusIcon,
 } from "@heroicons/react/24/outline";
@@ -373,21 +372,6 @@ const EnhancedAIPredictionDashboard: React.FC = () => {
               const volumeInBillion = (value || 0) / 100000000;
               const dataIndex = context.dataIndex;
 
-              // 使用chartData中的實際歷史長度來判斷
-              const historicalVolumes =
-                chartData.datasets
-                  .find((d) => d.label === "成交量")
-                  ?.data.slice(
-                    0,
-                    timeRange === "1D"
-                      ? 7
-                      : timeRange === "1W"
-                      ? 7
-                      : timeRange === "1M"
-                      ? 30
-                      : 90
-                  ) || [];
-
               // 動態計算歷史數據的實際長度
               const actualHistoricalLength =
                 timeRange === "1D"
@@ -595,7 +579,11 @@ const EnhancedAIPredictionDashboard: React.FC = () => {
                 {["1D", "1W", "1M", "3M", "6M", "1Y"].map((range) => (
                   <button
                     key={range}
-                    onClick={() => setTimeRange(range as any)}
+                    onClick={() =>
+                      setTimeRange(
+                        range as "1D" | "1W" | "1M" | "3M" | "6M" | "1Y"
+                      )
+                    }
                     className={`px-3 py-2 text-sm font-medium transition-all duration-200 first:rounded-l-lg last:rounded-r-lg ${
                       timeRange === range
                         ? "bg-blue-500 text-white shadow-sm"
