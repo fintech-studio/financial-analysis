@@ -3,7 +3,7 @@ import { UserModel, PortfolioModel } from "../models";
 
 // 統一錯誤處理類
 export class ErrorHandler {
-  static handleControllerError(error: any, context: string): never {
+  static handleControllerError(error: unknown, context: string): never {
     const errorMessage = error instanceof Error ? error.message : "未知錯誤";
     console.error(`[${context}] ${errorMessage}`, error);
 
@@ -43,7 +43,7 @@ export enum ApiStatus {
 }
 
 // 統一API響應格式
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   status: ApiStatus;
   data?: T;
   message?: string;
@@ -62,7 +62,7 @@ export class ResponseHelper {
     };
   }
 
-  static error(error: string, data?: any): ApiResponse {
+  static error(error: string, data?: unknown): ApiResponse {
     return {
       status: ApiStatus.ERROR,
       error,
@@ -85,34 +85,34 @@ export abstract class BaseController {
   /**
    * 記錄信息日誌
    */
-  protected logInfo(message: string, data?: any): void {
+  protected logInfo(message: string, data?: unknown): void {
     console.log(`[INFO] ${message}`, data || "");
   }
 
   /**
    * 記錄錯誤日誌
    */
-  protected logError(message: string, error?: any): void {
+  protected logError(message: string, error?: unknown): void {
     console.error(`[ERROR] ${message}`, error || "");
   }
 
   /**
    * 記錄警告日誌
    */
-  protected logWarning(message: string, data?: any): void {
+  protected logWarning(message: string, data?: unknown): void {
     console.warn(`[WARNING] ${message}`, data || "");
   }
 
   /**
    * 改進錯誤處理 - 添加更詳細的錯誤信息和恢復機制
    */
-  protected handleError(error: any, context: string): never {
+  protected handleError(error: unknown, context: string): never {
     const errorMessage = error instanceof Error ? error.message : "未知錯誤";
 
     // 記錄詳細錯誤信息
     console.error(`[${context}] Error Details:`, {
       message: errorMessage,
-      stack: error?.stack,
+      stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString(),
       context,
     });
@@ -130,7 +130,7 @@ export abstract class BaseController {
     if (
       errorMessage.includes("網路") ||
       errorMessage.includes("network") ||
-      error.code === "ECONNREFUSED"
+      (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "ECONNREFUSED")
     ) {
       throw new Error(`${context}: 網路連線異常，請檢查網路設定並稍後重試`);
     }
@@ -167,7 +167,7 @@ export abstract class BaseController {
     }
   }
 
-  protected validateRequired(value: any, fieldName: string): void {
+  protected validateRequired(value: unknown, fieldName: string): void {
     if (value === null || value === undefined || value === "") {
       throw new Error(`${fieldName} 是必填欄位`);
     }
@@ -190,8 +190,8 @@ export abstract class BaseController {
 // 依賴注入容器
 export class DIContainer {
   private static instance: DIContainer;
-  private services: Map<string, any> = new Map();
-  private factories: Map<string, () => any> = new Map();
+  private services: Map<string, unknown> = new Map();
+  private factories: Map<string, () => unknown> = new Map();
 
   static getInstance(): DIContainer {
     if (!DIContainer.instance) {
@@ -213,14 +213,14 @@ export class DIContainer {
   // 獲取服務
   get<T>(key: string): T {
     if (this.services.has(key)) {
-      return this.services.get(key);
+      return this.services.get(key) as T;
     }
 
     if (this.factories.has(key)) {
       const factory = this.factories.get(key)!;
       const instance = factory();
       this.services.set(key, instance);
-      return instance;
+      return instance as T;
     }
 
     throw new Error(`Service ${key} not found`);

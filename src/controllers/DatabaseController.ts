@@ -49,11 +49,11 @@ export class DatabaseController extends BaseController {
       const result = await this.databaseService.testConnection(config);
       this.logInfo("資料庫連接測試完成", { success: result.success });
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("資料庫連接測試失敗", error);
       return {
         success: false,
-        message: error.message || "資料庫連接測試失敗，請檢查連接設定",
+        message: error instanceof Error ? error.message : "資料庫連接測試失敗，請檢查連接設定",
       };
     }
   }
@@ -64,7 +64,7 @@ export class DatabaseController extends BaseController {
   async executeQuery(
     config: DatabaseConfig,
     query: string,
-    params?: any
+    params?: Record<string, unknown>
   ): Promise<QueryResult> {
     try {
       this.logInfo("開始執行 SQL 查詢", {
@@ -85,9 +85,9 @@ export class DatabaseController extends BaseController {
         recordCount: result.count || 0,
       });
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("SQL 查詢執行失敗", error);
-      return this.failResult(error.message || "SQL 查詢執行失敗");
+      return this.failResult(error instanceof Error ? error.message : "SQL 查詢執行失敗");
     }
   }
 
@@ -103,9 +103,9 @@ export class DatabaseController extends BaseController {
       const tables = await this.databaseService.getTableList(config);
       this.logInfo("獲取表列表完成", { tableCount: tables.length });
       return { success: true, data: tables, count: tables.length };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("獲取表列表失敗", error);
-      return this.failResult(error.message || "獲取表列表失敗");
+      return this.failResult(error instanceof Error ? error.message : "獲取表列表失敗");
     }
   }
 
@@ -131,9 +131,9 @@ export class DatabaseController extends BaseController {
       );
       this.logInfo("獲取表結構完成", { columnCount: schema.length });
       return { success: true, data: schema, count: schema.length };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("獲取表結構失敗", error);
-      return this.failResult(error.message || "獲取表結構失敗");
+      return this.failResult(error instanceof Error ? error.message : "獲取表結構失敗");
     }
   }
 
@@ -149,9 +149,9 @@ export class DatabaseController extends BaseController {
       const databases = await this.databaseService.getDatabaseList(config);
       this.logInfo("獲取資料庫列表完成", { databaseCount: databases.length });
       return { success: true, data: databases, count: databases.length };
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("獲取資料庫列表失敗", error);
-      return this.failResult(error.message || "獲取資料庫列表失敗");
+      return this.failResult(error instanceof Error ? error.message : "獲取資料庫列表失敗");
     }
   }
 }

@@ -61,7 +61,7 @@ const TradingCard: React.FC<TradingCardProps> = ({
         const minute = String(date.getUTCMinutes()).padStart(2, "0");
         return `${year}/${month}/${day} ${hour}:${minute}`;
       }
-    } catch (error) {
+    } catch {
       return datetime;
     }
   };

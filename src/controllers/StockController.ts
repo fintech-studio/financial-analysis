@@ -234,7 +234,7 @@ export class StockController {
     }
   }
 
-  async getStocks(filters?: any): Promise<StockDetail[]> {
+  async getStocks(filters?: Record<string, unknown>): Promise<StockDetail[]> {
     try {
       // 獲取股票列表，支援篩選
       const stocks = await this.stockModel.getStocks();
@@ -246,13 +246,15 @@ export class StockController {
       // 按板塊篩選
       if (filters.sector && filters.sector !== "all") {
         filteredStocks = filteredStocks.filter((stock) =>
-          stock.industry?.toLowerCase().includes(filters.sector.toLowerCase())
+          stock.industry
+            ?.toLowerCase()
+            .includes(String(filters.sector).toLowerCase())
         );
       }
 
       // 按搜尋關鍵字篩選
       if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
+        const searchTerm = String(filters.search).toLowerCase();
         filteredStocks = filteredStocks.filter(
           (stock) =>
             stock.name.toLowerCase().includes(searchTerm) ||
@@ -261,12 +263,12 @@ export class StockController {
       }
 
       return filteredStocks;
-    } catch (error) {
+    } catch {
       throw new Error("獲取股票列表失敗");
     }
   }
 
-  async getTechnicalAnalysis(): Promise<any> {
+  async getTechnicalAnalysis(): Promise<Record<string, unknown>> {
     try {
       // 模擬技術分析數據
       return {
@@ -294,7 +296,7 @@ export class StockController {
           },
         ],
       };
-    } catch (error) {
+    } catch {
       throw new Error("獲取技術分析失敗");
     }
   }
@@ -303,7 +305,7 @@ export class StockController {
     try {
       // 模擬添加收藏股票
       console.log(`User ${userId} added ${symbol} to favorites`);
-    } catch (error) {
+    } catch {
       throw new Error("添加收藏股票失敗");
     }
   }
@@ -312,7 +314,7 @@ export class StockController {
     try {
       // 模擬移除收藏股票
       console.log(`User ${userId} removed ${symbol} from favorites`);
-    } catch (error) {
+    } catch {
       throw new Error("移除收藏股票失敗");
     }
   }

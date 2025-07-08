@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useCallback, memo, useMemo } from "react";
 import { DatabaseController } from "@/controllers/DatabaseController";
 import { useMvcController } from "@/hooks/useMvcController";
@@ -218,8 +219,12 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
         const result = await databaseController.getDatabaseList(config);
         setDatabaseList(result.data || []);
         return result.data || [];
-      } catch (error: any) {
-        alert(`獲取資料庫列表失敗: ${error.message}`);
+      } catch (error: unknown) {
+        let message = "獲取資料庫列表失敗";
+        if (error && typeof error === "object" && "message" in error) {
+          message = `獲取資料庫列表失敗: ${(error as { message?: string }).message}`;
+        }
+        alert(message);
         throw error;
       }
     });

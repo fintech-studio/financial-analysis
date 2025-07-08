@@ -77,7 +77,7 @@ export class UserController {
       const token = `jwt_token_${Date.now()}`;
 
       return { user: mockUser, token };
-    } catch (error) {
+    } catch {
       throw new Error("登入失敗：用戶名或密碼錯誤");
     }
   }
@@ -112,7 +112,7 @@ export class UserController {
 
       const token = `jwt_token_${Date.now()}`;
       return { user: newUser, token };
-    } catch (error) {
+    } catch {
       throw new Error("註冊失敗：請檢查輸入資料");
     }
   }
@@ -131,15 +131,15 @@ export class UserController {
   ): Promise<User> {
     try {
       return await this.userModel.updateUser(userId, updates);
-    } catch (error) {
+    } catch {
       throw new Error("更新用戶資料失敗");
     }
   }
 
-  async getUserActivities(userId: string): Promise<UserActivity[]> {
+  async getUserActivities(): Promise<UserActivity[]> {
     try {
       return await this.userModel.getUserActivities();
-    } catch (error) {
+    } catch {
       throw new Error("獲取用戶活動記錄失敗");
     }
   }
@@ -168,7 +168,7 @@ export class UserController {
     return true;
   }
 
-  async getInvestmentStats(): Promise<any> {
+  async getInvestmentStats(): Promise<Record<string, unknown>> {
     try {
       // 模擬投資統計數據
       const mockStats = {
@@ -185,12 +185,12 @@ export class UserController {
       };
 
       return mockStats;
-    } catch (error) {
+    } catch {
       throw new Error("獲取投資統計失敗");
     }
   }
 
-  async getAchievements(): Promise<any[]> {
+  async getAchievements(): Promise<Array<Record<string, unknown>>> {
     try {
       // 模擬成就數據
       const mockAchievements = [
@@ -221,12 +221,12 @@ export class UserController {
       ];
 
       return mockAchievements;
-    } catch (error) {
+    } catch {
       throw new Error("獲取成就失敗");
     }
   }
 
-  async getRecentActivities(): Promise<any[]> {
+  async getRecentActivities(): Promise<Array<Record<string, unknown>>> {
     try {
       // 模擬最近活動數據
       const mockActivities = [
@@ -264,14 +264,14 @@ export class UserController {
       ];
 
       return mockActivities;
-    } catch (error) {
+    } catch {
       throw new Error("獲取活動記錄失敗");
     }
   }
 
   async updateNotificationSettings(
     userId: string,
-    settings: any
+    settings: Record<string, unknown>
   ): Promise<void> {
     try {
       // 模擬更新通知設定
@@ -279,7 +279,7 @@ export class UserController {
         `Updated notification settings for user ${userId}:`,
         settings
       );
-    } catch (error) {
+    } catch {
       throw new Error("更新通知設定失敗");
     }
   }
@@ -295,7 +295,7 @@ export class UserController {
       return {
         message: `密碼重設郵件已發送至 ${email}`,
       };
-    } catch (error) {
+    } catch {
       throw new Error("發送密碼重設郵件失敗");
     }
   }

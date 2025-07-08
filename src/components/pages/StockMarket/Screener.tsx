@@ -31,7 +31,7 @@ interface Stock {
   marketCap: string;
   recommendation: string;
   trend: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface FilterState {

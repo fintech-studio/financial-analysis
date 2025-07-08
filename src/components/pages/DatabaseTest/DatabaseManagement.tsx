@@ -7,7 +7,7 @@ import { AuthService } from "@/services/AuthService";
 // ===================== 型別定義 =====================
 interface DatabaseQueryResult {
   success: boolean;
-  data?: any[];
+  data?: Record<string, unknown>[];
   count?: number;
   recordCount?: number;
   executionTime?: number;
@@ -208,7 +208,7 @@ const TableList = memo(
 );
 TableList.displayName = "TableList";
 
-const ResultTable = memo(({ data }: { data: any[] }) => {
+const ResultTable = memo(({ data }: { data: Record<string, unknown>[] }) => {
   if (!data || data.length === 0) {
     return <div className="text-center py-8 text-gray-500">暫無數據</div>;
   }

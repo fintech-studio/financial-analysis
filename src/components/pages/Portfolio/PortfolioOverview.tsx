@@ -169,7 +169,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
         displayColors: false,
         callbacks: {
           title: () => "",
-          label: function (context: any) {
+          label: function (context: import("chart.js").TooltipItem<"line">) {
             return `NT$${context.parsed.y.toLocaleString()}`;
           },
         },
@@ -322,7 +322,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
         mode: "index" as const,
         intersect: false,
         callbacks: {
-          label: function (context: any) {
+          label: function (context: import("chart.js").TooltipItem<"line">) {
             let label = context.dataset.label || "";
             if (label) {
               label += ": ";
@@ -354,8 +354,8 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
           text: "投資組合價值 (NT$)",
         },
         ticks: {
-          callback: function (value: any) {
-            return "NT$" + (value / 1000000).toFixed(1) + "M";
+          callback: function (value: string | number) {
+            return "NT$" + (Number(value) / 1000000).toFixed(1) + "M";
           },
         },
       },

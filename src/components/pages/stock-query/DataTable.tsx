@@ -16,7 +16,7 @@ interface StockData {
   low_price?: number;
   close_price: number;
   volume?: number;
-  [key: string]: any;
+  [key: string]: string | number | undefined;
 }
 
 interface DataTableProps {
@@ -38,7 +38,7 @@ interface ColumnConfig {
     | "indicator"
     | "pattern_signals";
   width?: string;
-  format?: (value: any) => string;
+  format?: (value: string | number | undefined) => string;
 }
 
 const COLUMNS: ColumnConfig[] = [
@@ -107,7 +107,10 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
   ]);
 
   // 格式化函數
-  const formatValue = (value: any, column: ColumnConfig): string => {
+  const formatValue = (
+    value: string | number | undefined,
+    column: ColumnConfig
+  ): string => {
     if (value === null || value === undefined || value === "") return "—";
 
     switch (column.type) {
@@ -154,7 +157,7 @@ const DataTable: React.FC<DataTableProps> = ({ data, timeframe, symbol }) => {
     }
   };
 
-  const formatVolume = (volume: any): string => {
+  const formatVolume = (volume: string | number | undefined): string => {
     const num = Number(volume);
     if (isNaN(num)) return "—";
     if (num >= 1e9) return `${(num / 1e9).toFixed(1)}B`;

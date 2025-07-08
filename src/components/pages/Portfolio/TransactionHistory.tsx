@@ -332,7 +332,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           price: `NT$ ${t.price.toLocaleString()}`, // 將price也轉換為字符串格式
           type: t.type === "buy" ? "買入" : ("賣出" as "買入" | "賣出"), // 修復類型轉換
         }));
-      } catch (error) {
+      } catch {
         console.log("使用模擬交易數據");
         return mockTransactions;
       }
@@ -683,8 +683,8 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                 y: {
                   grid: { color: "rgba(0, 0, 0, 0.05)" },
                   ticks: {
-                    callback: function (value: any): string {
-                      return `${(Number(value) / 1000).toFixed(0)}K`;
+                    callback: function (value: string | number): string {
+                      return Number(value).toLocaleString();
                     },
                   },
                 },

@@ -31,6 +31,7 @@ import type {
   ActiveRecommendationTab,
   Recommendation,
 } from "@/types/portfolio";
+import type { TooltipItem } from "chart.js";
 
 // 註冊 Chart.js 組件
 ChartJS.register(
@@ -151,7 +152,7 @@ const RiskAndRecommendations: React.FC<RiskAndRecommendationsProps> = ({
       },
       tooltip: {
         callbacks: {
-          label: function (context: any): string {
+          label: function (context: TooltipItem<'bar'>): string {
             let label = context.dataset.label || "";
             if (label) {
               label += ": ";

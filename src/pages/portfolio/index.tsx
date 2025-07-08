@@ -43,7 +43,7 @@ const PortfolioPage: React.FC = () => {
   const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
 
   // 應用程式初始化
-  const { isLoading: isInitialized, error: appError } = useAppInitialization({
+  const { isLoading, isInitialized, error: appError } = useAppInitialization({
     enableCache: true,
     enableMockData: true,
   });
@@ -204,7 +204,7 @@ const PortfolioPage: React.FC = () => {
   }, [preloadedData, realtimeData]);
 
   // 如果應用程式未初始化，顯示載入畫面
-  if (!isInitialized) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">

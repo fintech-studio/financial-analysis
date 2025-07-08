@@ -1,3 +1,5 @@
+import React from "react";
+
 interface WaveProps {
   color?: string;
   className?: string;

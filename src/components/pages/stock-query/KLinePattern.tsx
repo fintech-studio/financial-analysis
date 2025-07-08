@@ -7,8 +7,14 @@ import {
 } from "@heroicons/react/24/solid";
 import Image from "next/image";
 
+interface KLinePatternData {
+  pattern_signals?: string;
+  // 你可以根據實際資料結構擴充更多欄位
+  [key: string]: unknown;
+}
+
 interface KLinePatternProps {
-  data: any[];
+  data: KLinePatternData[];
   loading: boolean;
   error: string | null;
   symbol: string;
@@ -122,7 +128,6 @@ const KLinePattern: React.FC<KLinePatternProps> = ({
     if (patterns.length > 0 && !selectedPattern) {
       setSelectedPattern(patterns[0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patterns]);
 
   // 取得型態對應圖片路徑
