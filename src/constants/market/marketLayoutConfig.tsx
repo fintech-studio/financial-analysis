@@ -1,3 +1,4 @@
+import React from "react";
 import { ChartBarIcon, CurrencyDollarIcon } from "@heroicons/react/24/outline";
 
 export const MARKET_CARDS_CONFIG = [

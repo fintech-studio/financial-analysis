@@ -149,9 +149,9 @@ const TerminalAnimation = () => {
 
   // 控制狀態
   const [commandIndex, setCommandIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
+  const [, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isResponding, setIsResponding] = useState(false);
+  const [, setIsResponding] = useState(false);
 
   // 參考
   const containerRef = useRef<HTMLDivElement>(null);
@@ -413,7 +413,7 @@ const TerminalAnimation = () => {
   return (
     <div
       ref={containerRef}
-      className="terminal-content h-full overflow-y-auto"
+      className="terminal-content h-full overflow-y-auto scrollbar-hide"
       style={{
         msOverflowStyle: "none",
         scrollbarWidth: "none",
@@ -421,11 +421,6 @@ const TerminalAnimation = () => {
         pointerEvents: "none",
       }}
     >
-      <style jsx>{`
-        .terminal-content::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
       {lines.map((line, index) => renderLine(line, index))}
     </div>
   );

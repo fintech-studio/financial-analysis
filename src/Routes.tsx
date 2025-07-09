@@ -8,7 +8,6 @@ import GlobalMarket from "./pages/market-analysis/global";
 import Education from "./pages/education";
 import Community from "./pages/community";
 import NewsPage from "./pages/news";
-import Profile from "./pages/profile";
 import AIPredictionPage from "./pages/ai-prediction";
 
 const AppRoutes = (): React.JSX.Element => {
@@ -25,7 +24,6 @@ const AppRoutes = (): React.JSX.Element => {
       <Route path="/education" element={<Education />} />
       <Route path="/community" element={<Community />} />
       <Route path="/news" element={<NewsPage />} />
-      <Route path="/profile" element={<Profile />} />
     </Routes>
   );
 };

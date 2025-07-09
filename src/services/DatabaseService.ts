@@ -16,7 +16,7 @@ export interface DatabaseConfig {
 // 查詢結果介面
 export interface QueryResult {
   success: boolean;
-  data?: any[];
+  data?: unknown[];
   error?: string;
   message?: string;
   count?: number;
@@ -46,10 +46,10 @@ export class DatabaseService extends BaseService {
     super();
   }
 
-  private logInfo(message: string, data?: any): void {
+  private logInfo(message: string, data?: unknown): void {
     if (this.enableLog) console.log(`[DatabaseService] ${message}`, data || "");
   }
-  private logError(message: string, error?: any): void {
+  private logError(message: string, error?: unknown): void {
     if (this.enableLog)
       console.error(`[DatabaseService] ${message}`, error || "");
   }
@@ -99,11 +99,13 @@ export class DatabaseService extends BaseService {
         this.logError("數據庫連接測試失敗", result.message);
         return result;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("數據庫連接測試發生錯誤", error);
       return {
         success: false,
-        message: `連接失敗：${error.message || "網路錯誤"}`,
+        message: `連接失敗：${
+          error instanceof Error ? error.message : "網路錯誤"
+        }`,
       };
     }
   }
@@ -114,7 +116,7 @@ export class DatabaseService extends BaseService {
   async executeQuery(
     config: DatabaseConfig,
     query: string,
-    params?: any
+    params?: Record<string, unknown>
   ): Promise<QueryResult> {
     try {
       this.logInfo("開始執行 SQL 查詢", {
@@ -144,11 +146,13 @@ export class DatabaseService extends BaseService {
         this.logError("SQL 查詢執行失敗", this.extractError(result));
         return { success: false, error: this.extractError(result) };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("SQL 查詢執行發生錯誤", error);
       return {
         success: false,
-        error: `查詢失敗：${error.message || "網路錯誤"}`,
+        error: `查詢失敗：${
+          error instanceof Error ? error.message : "網路錯誤"
+        }`,
       };
     }
   }
@@ -162,20 +166,25 @@ export class DatabaseService extends BaseService {
       const query = `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME`;
       const result = await this.executeQuery(config, query);
       if (result.success && result.data) {
-        const tables = result.data.map((row: any) => row.TABLE_NAME);
+        const tables = result.data.map(
+          (row) => (row as Record<string, unknown>)["TABLE_NAME"] as string
+        );
         this.logInfo("成功獲取表列表", { tableCount: tables.length });
         return tables;
       } else {
         // 針對登入失敗訊息給予更友善的說明
         const errMsg = this.extractError(result);
         if (errMsg.includes("登入失敗")) {
-          this.logError("登入失敗：請檢查使用者名稱、密碼，或確認帳號是否有存取該資料庫的權限。如有疑問請聯絡資料庫管理員。", errMsg);
+          this.logError(
+            "登入失敗：請檢查使用者名稱、密碼，或確認帳號是否有存取該資料庫的權限。如有疑問請聯絡資料庫管理員。",
+            errMsg
+          );
           return [];
         }
         this.logError("獲取表列表失敗", errMsg);
         return [];
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("獲取表列表失敗", error);
       return [];
     }
@@ -187,20 +196,22 @@ export class DatabaseService extends BaseService {
   async getTableSchema(
     config: DatabaseConfig,
     tableName: string
-  ): Promise<any[]> {
+  ): Promise<Record<string, unknown>[]> {
     try {
       this.logInfo("開始獲取表結構", { tableName });
       const query = `SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @tableName ORDER BY ORDINAL_POSITION`;
       const result = await this.executeQuery(config, query, { tableName });
       if (result.success && result.data) {
         this.logInfo("成功獲取表結構", { columnCount: result.data.length });
-        return result.data;
+        return result.data as Record<string, unknown>[];
       } else {
         throw new Error(this.extractError(result));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("獲取表結構失敗", error);
-      throw new Error(error.message || "獲取表結構失敗");
+      throw new Error(
+        error instanceof Error ? error.message : "獲取表結構失敗"
+      );
     }
   }
 
@@ -214,15 +225,19 @@ export class DatabaseService extends BaseService {
       const query = `SELECT name FROM sys.databases WHERE database_id > 4 ORDER BY name`;
       const result = await this.executeQuery(masterConfig, query);
       if (result.success && result.data) {
-        const databases = result.data.map((row: any) => row.name);
+        const databases = result.data.map(
+          (row) => (row as Record<string, unknown>)["name"] as string
+        );
         this.logInfo("成功獲取資料庫列表", { databaseCount: databases.length });
         return databases;
       } else {
         throw new Error(this.extractError(result));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.logError("獲取資料庫列表失敗", error);
-      throw new Error(error.message || "獲取資料庫列表失敗");
+      throw new Error(
+        error instanceof Error ? error.message : "獲取資料庫列表失敗"
+      );
     }
   }
 }

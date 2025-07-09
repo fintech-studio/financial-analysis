@@ -11,7 +11,7 @@ interface DatabaseApiRequest {
   config: DatabaseConfig;
   query?: string;
   tableName?: string;
-  params?: any;
+  params?: Record<string, unknown>;
 }
 
 export default async function handler(
@@ -76,7 +76,7 @@ export default async function handler(
   const dbService = DatabaseService.getInstance();
 
   try {
-    let result: any;
+    let result: unknown;
 
     switch (action) {
       case "testConnection":
@@ -95,7 +95,7 @@ export default async function handler(
         result = await dbService.executeQuery(config, query, params);
         break;
 
-      case "getTableList":
+      case "getTableList": {
         const tables = await dbService.getTableList(config);
         result = {
           success: true,
@@ -103,8 +103,9 @@ export default async function handler(
           count: tables.length,
         };
         break;
+      }
 
-      case "getTableSchema":
+      case "getTableSchema": {
         if (!tableName) {
           return res.status(400).json({
             success: false,
@@ -120,8 +121,9 @@ export default async function handler(
           count: schema.length,
         };
         break;
+      }
 
-      case "getDatabaseList":
+      case "getDatabaseList": {
         const databases = await dbService.getDatabaseList(config);
         result = {
           success: true,
@@ -129,6 +131,7 @@ export default async function handler(
           count: databases.length,
         };
         break;
+      }
 
       default:
         return res.status(400).json({
@@ -141,11 +144,12 @@ export default async function handler(
 
     // 統一回傳格式
     if (typeof result === "object" && result !== null) {
-      return res.status(result.success ? 200 : 400).json({
-        ...result,
-        data: result.data || [],
-        count: result.count || 0,
-        message: result.message || (result.success ? "操作成功" : "操作失敗"),
+      const resultObj = result as Record<string, unknown>;
+      return res.status(resultObj.success ? 200 : 400).json({
+        ...resultObj,
+        data: resultObj.data || [],
+        count: resultObj.count || 0,
+        message: resultObj.message || (resultObj.success ? "操作成功" : "操作失敗"),
       });
     } else {
       return res.status(200).json({
@@ -155,25 +159,26 @@ export default async function handler(
         message: "操作成功",
       });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("API 錯誤:", error);
     let statusCode = 500;
-    let errorMessage = error.message || "伺服器內部錯誤";
+    const errorObj = error as { message?: string };
+    const errorMessage = errorObj.message || "伺服器內部錯誤";
     if (
-      error.message?.includes("連接失敗") ||
-      error.message?.includes("登入失敗") ||
-      error.message?.includes("驗證失敗")
+      errorObj.message?.includes("連接失敗") ||
+      errorObj.message?.includes("登入失敗") ||
+      errorObj.message?.includes("驗證失敗")
     ) {
       statusCode = 401;
     } else if (
-      error.message?.includes("找不到") ||
-      error.message?.includes("無效")
+      errorObj.message?.includes("找不到") ||
+      errorObj.message?.includes("無效")
     ) {
       statusCode = 404;
     } else if (
-      error.message?.includes("語法錯誤") ||
-      error.message?.includes("權限") ||
-      error.message?.includes("不能為空")
+      errorObj.message?.includes("語法錯誤") ||
+      errorObj.message?.includes("權限") ||
+      errorObj.message?.includes("不能為空")
     ) {
       statusCode = 400;
     }

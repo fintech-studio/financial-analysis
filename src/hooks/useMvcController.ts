@@ -5,7 +5,7 @@ export interface ControllerHookOptions {
   autoStart?: boolean;
   cacheKey?: string;
   cacheTTL?: number;
-  onSuccess?: (data: any) => void;
+  onSuccess?: (data: unknown) => void;
   onError?: (error: Error) => void;
 }
 
@@ -28,12 +28,12 @@ export interface PreloadOptions {
 }
 
 // 預加載數據 Hook
-export function usePreloadData<T extends Record<string, () => Promise<any>>>(
+export function usePreloadData<T extends Record<string, () => Promise<unknown>>>(
   loaders: T,
   options: PreloadOptions = {}
 ) {
-  const [data, setData] = useState<Record<keyof T, any>>(
-    {} as Record<keyof T, any>
+  const [data, setData] = useState<Record<keyof T, unknown>>(
+    {} as Record<keyof T, unknown>
   );
   const [loading, setLoading] = useState<Record<keyof T, boolean>>(
     {} as Record<keyof T, boolean>
@@ -59,7 +59,7 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
     const currentOptions = optionsRef.current;
     const currentLoaders = loadersRef.current;
 
-    setLoading((prev) => {
+    setLoading(() => {
       const newLoading = {} as Record<keyof T, boolean>;
       Object.keys(currentLoaders).forEach((key) => {
         newLoading[key as keyof T] = true;
@@ -90,7 +90,7 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
     );
 
     // 處理結果
-    const newData = {} as Record<keyof T, any>;
+    const newData = {} as Record<keyof T, unknown>;
     const newErrors = {} as Record<keyof T, string>;
     const newLoading = {} as Record<keyof T, boolean>;
 
@@ -131,7 +131,6 @@ export function usePreloadData<T extends Record<string, () => Promise<any>>>(
   }, [reload]);
 
   const hasErrors = Object.keys(errors).length > 0;
-  const pageLoading = Object.values(loading).some(Boolean);
 
   return {
     data,
@@ -240,7 +239,7 @@ export function useControllerWithRetry<T>(
     if (cacheKey) {
       const cachedData = globalCacheManager.get(cacheKey);
       if (cachedData) {
-        setData(cachedData);
+        setData(cachedData as T);
         return;
       }
     }
@@ -390,7 +389,7 @@ export function useRealTimeData<T>(
 }
 
 // 表單控制器 Hook
-export function useFormController<T extends Record<string, any>>(
+export function useFormController<T extends Record<string, unknown>>(
   initialValues: T,
   onSubmit: (values: T) => Promise<void>,
   validator?: (values: T) => Partial<Record<keyof T, string | null>>
@@ -402,7 +401,7 @@ export function useFormController<T extends Record<string, any>>(
   const [submitting, setSubmitting] = useState(false);
 
   const setValue = useCallback(
-    (key: keyof T, value: any) => {
+    (key: keyof T, value: unknown) => {
       setValues((prev) => ({ ...prev, [key]: value }));
       // 清除該欄位的錯誤
       if (errors[key]) {
@@ -483,25 +482,28 @@ export function useSmartSearch<T>(
 
   const debouncedSearch = useMemo(
     () =>
-      debounce(async (searchQuery: string) => {
-        if (searchQuery.length < minQueryLength) {
-          setResults([]);
-          return;
-        }
+      debounce((...args: unknown[]) => {
+        const searchQuery = args[0] as string;
+        (async (query: string) => {
+          if (query.length < minQueryLength) {
+            setResults([]);
+            return;
+          }
 
-        setLoading(true);
-        setError(null);
+          setLoading(true);
+          setError(null);
 
-        try {
-          const searchResults = await searchFn(searchQuery);
-          setResults(searchResults);
-        } catch (err) {
-          const error = err instanceof Error ? err : new Error("搜索失敗");
-          setError(error);
-          setResults([]);
-        } finally {
-          setLoading(false);
-        }
+          try {
+            const searchResults = await searchFn(query);
+            setResults(searchResults);
+          } catch (err) {
+            const error = err instanceof Error ? err : new Error("搜索失敗");
+            setError(error);
+            setResults([]);
+          } finally {
+            setLoading(false);
+          }
+        })(searchQuery);
       }, debounceMs),
     [searchFn, minQueryLength, debounceMs]
   );
@@ -532,12 +534,12 @@ export function useSmartSearch<T>(
 }
 
 // 防抖函數
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
+function debounce(
+  func: (...args: unknown[]) => unknown,
   wait: number
-): (...args: Parameters<T>) => void {
+): (...args: unknown[]) => void {
   let timeout: NodeJS.Timeout;
-  return function (this: any, ...args: Parameters<T>) {
+  return function (this: unknown, ...args: unknown[]) {
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(this, args), wait);
   };
@@ -545,10 +547,10 @@ function debounce<T extends (...args: any[]) => any>(
 
 // 緩存管理器
 export class CacheManager {
-  private cache: Map<string, { data: any; timestamp: number; ttl: number }> =
+  private cache: Map<string, { data: unknown; timestamp: number; ttl: number }> =
     new Map();
 
-  set(key: string, data: any, ttl: number = 300000): void {
+  set(key: string, data: unknown, ttl: number = 300000): void {
     // 預設5分鐘
     this.cache.set(key, {
       data,
@@ -557,7 +559,7 @@ export class CacheManager {
     });
   }
 
-  get(key: string): any | null {
+  get(key: string): unknown | null {
     const item = this.cache.get(key);
     if (!item) return null;
 

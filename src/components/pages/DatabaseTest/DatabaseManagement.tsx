@@ -7,7 +7,7 @@ import { AuthService } from "@/services/AuthService";
 // ===================== 型別定義 =====================
 interface DatabaseQueryResult {
   success: boolean;
-  data?: any[];
+  data?: Record<string, unknown>[];
   count?: number;
   recordCount?: number;
   executionTime?: number;
@@ -208,7 +208,7 @@ const TableList = memo(
 );
 TableList.displayName = "TableList";
 
-const ResultTable = memo(({ data }: { data: any[] }) => {
+const ResultTable = memo(({ data }: { data: Record<string, unknown>[] }) => {
   if (!data || data.length === 0) {
     return <div className="text-center py-8 text-gray-500">暫無數據</div>;
   }
@@ -279,7 +279,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
   const [query, setQuery] = useState("SELECT TOP 10 * FROM sys.tables");
   const [tableList, setTableList] = useState<string[]>([]);
   const [selectedTable, setSelectedTable] = useState("");
-  const [showDbSwitcher, setShowDbSwitcher] = useState(false);
+  const [, setShowDbSwitcher] = useState(false);
   const [databaseList, setDatabaseList] = useState<string[]>([]);
   const [currentConfig, setCurrentConfig] =
     useState<DatabaseConfig>(initialConfig);
@@ -305,15 +305,6 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
     error: tableListError,
   } = useMvcController<string[]>();
 
-  // 自動載入資料表
-  React.useEffect(() => {
-    executeGetTableList(async () => {
-      const result = await databaseController.getTableList(currentConfig);
-      setTableList(result.data || []);
-      return result.data || [];
-    });
-  }, [currentConfig, executeGetTableList, databaseController]);
-
   // 查詢時自動回到首頁
   const handleExecuteQuery = useCallback(async () => {
     if (!query.trim()) {
@@ -321,17 +312,31 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
       return;
     }
     setPage(1);
-    await executeQuery(() =>
-      databaseController.executeQuery(currentConfig, query.trim())
-    );
+    await executeQuery(async () => {
+      const result = await databaseController.executeQuery(currentConfig, query.trim());
+      // 型別轉換：將 unknown[] 轉為 Record<string, unknown>[]
+      return {
+        ...result,
+        data: Array.isArray(result.data) ? (result.data as Record<string, unknown>[]) : [],
+      };
+    });
   }, [query, currentConfig, executeQuery, databaseController]);
+
+  // 自動載入資料表
+  React.useEffect(() => {
+    executeGetTableList(async () => {
+      const result = await databaseController.getTableList(currentConfig);
+      setTableList(Array.isArray(result.data) ? (result.data as string[]) : []);
+      return Array.isArray(result.data) ? (result.data as string[]) : [];
+    });
+  }, [currentConfig, executeGetTableList, databaseController]);
 
   // 載入資料表
   const handleGetTableList = useCallback(async () => {
     await executeGetTableList(async () => {
       const result = await databaseController.getTableList(currentConfig);
-      setTableList(result.data || []);
-      return result.data || [];
+      setTableList(Array.isArray(result.data) ? (result.data as string[]) : []);
+      return Array.isArray(result.data) ? (result.data as string[]) : [];
     });
   }, [currentConfig, executeGetTableList, databaseController]);
 
@@ -357,7 +362,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
       const selectRegex = /(SELECT[\s\S]*?)(WHERE|ORDER BY|GROUP BY|$)/i;
       const match = prevQuery.match(selectRegex);
       if (match) {
-        const [all, selectPart, rest] = match;
+        const [selectPart] = match;
         return prevQuery.replace(
           selectPart,
           `${selectPart} FROM [${tableName}] `
@@ -377,7 +382,7 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
   const handleGetDatabaseList = useCallback(async () => {
     try {
       const result = await databaseController.getDatabaseList(currentConfig);
-      setDatabaseList(result.data || []);
+      setDatabaseList(Array.isArray(result.data) ? (result.data as string[]) : []);
       setShowDbSwitcher(true);
     } catch {
       alert("獲取資料庫列表失敗");

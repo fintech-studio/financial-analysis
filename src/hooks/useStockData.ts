@@ -10,7 +10,7 @@ export interface StockData {
   low_price?: number;
   close_price: number;
   volume?: number;
-  [key: string]: any;
+  [key: string]: string | number | undefined;
 }
 export interface CandlestickData {
   date: string;
@@ -109,8 +109,7 @@ export const useStockData = (
     setData([]);
     setError(null);
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, timeframe, market]);
+  }, [symbol, timeframe, market, fetchData]);
 
   const candlestickData = useMemo((): CandlestickData[] => {
     if (!data.length) return [];

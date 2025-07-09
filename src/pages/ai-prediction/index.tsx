@@ -242,7 +242,7 @@ const AIPredictionPage: React.FC = () => {
       <Footer />
 
       {/* 動畫樣式 */}
-      <style jsx global>{`
+      <style>{`
         @keyframes fadeIn {
           from {
             opacity: 0;

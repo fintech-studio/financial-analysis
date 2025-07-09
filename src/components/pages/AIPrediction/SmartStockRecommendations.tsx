@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { AIPredictionController } from "@/controllers/AIPredictionController";
+import React, { useState } from "react";
 
 interface StockRecommendation {
   symbol: string;
@@ -57,7 +56,7 @@ const SmartStockRecommendations: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   // AI推薦的熱門股票
-  const [hotStocks, setHotStocks] = useState<StockRecommendation[]>([
+  const [hotStocks] = useState<StockRecommendation[]>([
     {
       symbol: "NVDA",
       name: "輝達",
@@ -141,7 +140,7 @@ const SmartStockRecommendations: React.FC = () => {
   };
 
   // 行業輪動預測
-  const [sectorRotation, setSectorRotation] = useState<SectorRotation[]>([
+  const [sectorRotation] = useState<SectorRotation[]>([
     {
       sector: "科技股",
       trend: "上升",
@@ -173,9 +172,7 @@ const SmartStockRecommendations: React.FC = () => {
   ]);
 
   // 投資策略建議
-  const [investmentStrategies, setInvestmentStrategies] = useState<
-    InvestmentStrategy[]
-  >([
+  const [investmentStrategies] = useState<InvestmentStrategy[]>([
     {
       type: "價值投資",
       description: "尋找被低估的優質公司，注重基本面分析和長期價值",
@@ -203,8 +200,6 @@ const SmartStockRecommendations: React.FC = () => {
       },
     },
   ]);
-
-  const controller = AIPredictionController.getInstance();
 
   const getActionColor = (action: string) => {
     switch (action) {
@@ -329,7 +324,7 @@ const SmartStockRecommendations: React.FC = () => {
         ).map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as typeof activeTab)}
             className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
               activeTab === tab.id
                 ? "bg-white text-blue-600 shadow-sm"
@@ -375,7 +370,7 @@ const SmartStockRecommendations: React.FC = () => {
                   onChange={(e) =>
                     setUserRiskProfile({
                       ...userRiskProfile,
-                      type: e.target.value as any,
+                      type: e.target.value as "保守" | "穩健" | "積極" | "激進",
                     })
                   }
                   className="w-full border border-blue-300 rounded px-2 py-1 text-sm"
@@ -395,7 +390,10 @@ const SmartStockRecommendations: React.FC = () => {
                   onChange={(e) =>
                     setUserRiskProfile({
                       ...userRiskProfile,
-                      investmentHorizon: e.target.value as any,
+                      investmentHorizon: e.target.value as
+                        | "短期"
+                        | "中期"
+                        | "長期",
                     })
                   }
                   className="w-full border border-blue-300 rounded px-2 py-1 text-sm"

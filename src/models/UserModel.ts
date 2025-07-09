@@ -139,7 +139,7 @@ export class UserModel {
     return user;
   }
 
-  async getUserActivities(userId: string): Promise<UserActivity[]> {
+  async getUserActivities(): Promise<UserActivity[]> {
     // 模擬數據，實際應從資料庫獲取
     return [
       {

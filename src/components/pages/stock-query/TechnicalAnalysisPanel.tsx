@@ -442,8 +442,8 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           )
             return "-";
           const width = bollUpper - bollLower;
-          let widthDesc = width >= 0 ? formatNumber(width, 2) : "-";
-          let status = width < 2 ? "收斂" : width > 10 ? "擴張" : "正常";
+          const widthDesc = width >= 0 ? formatNumber(width, 2) : "-";
+          const status = width < 2 ? "收斂" : width > 10 ? "擴張" : "正常";
           return `中軌: ${formatNumber(bollMiddle, 2)} | 下軌: ${formatNumber(
             bollLower,
             2

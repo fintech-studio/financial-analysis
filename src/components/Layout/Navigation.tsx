@@ -222,19 +222,6 @@ const Navigation: React.FC = () => {
     [isUserMenuOpen]
   );
 
-  // 處理下拉選單點擊
-  const handleDropdownClick = useCallback(
-    (itemName: string) => {
-      return (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setOpenDropdown(openDropdown === itemName ? null : itemName);
-        setIsUserMenuOpen(false);
-        setIsNotificationsOpen(false);
-      };
-    },
-    [openDropdown]
-  );
-
   // 手機版子選單展開/收合
   const handleMobileDropdown = (itemName: string) => {
     setOpenMobileDropdown(openMobileDropdown === itemName ? null : itemName);
@@ -388,12 +375,12 @@ const Navigation: React.FC = () => {
               {/* 通知按鈕 */}
               <div className="relative" onClick={handleMenuClick}>
                 <button
-                  onClick={() => {
+                  onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
                     if (window.innerWidth < 1024) {
                       router.push("/notifications");
                       setIsNotificationsOpen(false);
                     } else {
-                      handleNotificationClick(event as any);
+                      handleNotificationClick(event);
                     }
                   }}
                   className="flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 text-gray-600 hover:text-blue-600 hover:bg-blue-50"
@@ -610,7 +597,7 @@ const Navigation: React.FC = () => {
       </nav>
 
       {/* 動畫樣式 */}
-      <style jsx global>{`
+      <style>{`
         @keyframes fadeInDown {
           from {
             opacity: 0;

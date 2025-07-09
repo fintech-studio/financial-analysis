@@ -29,8 +29,6 @@ export default function NewsPage() {
 
   useEffect(() => {
     fetchNews(query);
-    // 只在初始時查詢一次
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = (e: FormEvent) => {

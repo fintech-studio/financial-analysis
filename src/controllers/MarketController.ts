@@ -172,10 +172,12 @@ export class MarketController {
         includeSentiment = false,
       } = request;
 
-      const result: any = {};
+      const result: Record<string, unknown> = {};
 
       // 並行獲取數據
-      const promises: Promise<any>[] = [this.marketModel.getMarketOverview()];
+      const promises: Promise<unknown>[] = [
+        this.marketModel.getMarketOverview(),
+      ];
 
       if (includeSentiment) {
         promises.push(this.marketModel.getMarketSentiment());
@@ -193,7 +195,9 @@ export class MarketController {
 
       // 處理市場概覽
       if (results[index].status === "fulfilled") {
-        result.overview = (results[index] as PromiseFulfilledResult<any>).value;
+        result.overview = (
+          results[index] as PromiseFulfilledResult<unknown>
+        ).value;
       }
       index++;
 
@@ -201,7 +205,7 @@ export class MarketController {
       if (includeSentiment) {
         if (results[index].status === "fulfilled") {
           result.sentiment = (
-            results[index] as PromiseFulfilledResult<any>
+            results[index] as PromiseFulfilledResult<unknown>
           ).value;
         }
         index++;
@@ -210,7 +214,9 @@ export class MarketController {
       // 處理新聞
       if (includeNews) {
         if (results[index].status === "fulfilled") {
-          result.news = (results[index] as PromiseFulfilledResult<any>).value;
+          result.news = (
+            results[index] as PromiseFulfilledResult<unknown>
+          ).value;
         }
         index++;
       }
@@ -218,7 +224,7 @@ export class MarketController {
       // 處理圖表數據
       if (results[index].status === "fulfilled") {
         result.chartData = (
-          results[index] as PromiseFulfilledResult<any>
+          results[index] as PromiseFulfilledResult<unknown>
         ).value;
       }
 
@@ -299,7 +305,7 @@ export class MarketController {
     }
   }
 
-  async getCryptoMarketOverview(): Promise<any> {
+  async getCryptoMarketOverview(): Promise<Record<string, unknown>> {
     try {
       // 獲取加密貨幣市場概覽
       const overview = await this.marketModel.getMarketOverview();
@@ -314,7 +320,7 @@ export class MarketController {
     }
   }
 
-  async getGlobalMarketOverview(): Promise<any> {
+  async getGlobalMarketOverview(): Promise<Record<string, unknown>> {
     try {
       // 獲取全球市場概覽
       const overview = await this.marketModel.getMarketOverview();
@@ -329,7 +335,7 @@ export class MarketController {
     }
   }
 
-  async refreshCryptoPrices(): Promise<any> {
+  async refreshCryptoPrices(): Promise<Record<string, unknown>> {
     try {
       // 刷新加密貨幣價格
       console.log("Refreshing crypto prices...");
@@ -340,7 +346,7 @@ export class MarketController {
     }
   }
 
-  async getEconomicIndicators(): Promise<any> {
+  async getEconomicIndicators(): Promise<Record<string, unknown>> {
     try {
       // 獲取經濟指標
       return {
@@ -355,7 +361,7 @@ export class MarketController {
     }
   }
 
-  async getCommodityPrices(): Promise<any> {
+  async getCommodityPrices(): Promise<Record<string, unknown>> {
     try {
       // 獲取商品價格
       return {

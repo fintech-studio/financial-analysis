@@ -44,8 +44,12 @@ const FinancialCodeTestPage = () => {
       setResults(data.results || []);
       setCurrentPage(1); // 查詢時重設分頁
       setJumpPage("");
-    } catch (err: any) {
-      setError(err.message || "發生未知錯誤");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("發生未知錯誤");
+      }
     } finally {
       setLoading(false);
     }

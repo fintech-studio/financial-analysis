@@ -2,7 +2,6 @@ import React from "react";
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 
 interface StockStats {
@@ -41,34 +40,6 @@ const TradingCard: React.FC<TradingCardProps> = ({
       ? price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
       : "--";
   };
-  const formatDateTime = (datetime?: string): string => {
-    if (!datetime) return "--";
-    try {
-      // 創建 Date 對象
-      let date = new Date(datetime);
-
-      if (isNaN(date.getTime())) {
-        // 嘗試標準化格式
-        const normalizedDatetime = datetime.replace("T", " ").replace("Z", "");
-        date = new Date(normalizedDatetime);
-      }
-
-      if (isNaN(date.getTime())) {
-        return datetime;
-      }
-
-      // 使用 UTC 方法手動格式化，避免時區自動轉換
-      const year = date.getUTCFullYear();
-      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-      const day = String(date.getUTCDate()).padStart(2, "0");
-      const hour = String(date.getUTCHours()).padStart(2, "0");
-      const minute = String(date.getUTCMinutes()).padStart(2, "0");
-
-      return `${year}/${month}/${day} ${hour}:${minute}`;
-    } catch (error) {
-      return datetime;
-    }
-  };
 
   // 新增：根據 timeframe 顯示不同格式
   const formatDateByTimeframe = (datetime?: string) => {
@@ -90,7 +61,7 @@ const TradingCard: React.FC<TradingCardProps> = ({
         const minute = String(date.getUTCMinutes()).padStart(2, "0");
         return `${year}/${month}/${day} ${hour}:${minute}`;
       }
-    } catch (error) {
+    } catch {
       return datetime;
     }
   };

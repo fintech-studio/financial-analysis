@@ -294,7 +294,7 @@ export class AIPredictionModel {
     );
   }
 
-  async getPortfolioItems(userId: string): Promise<PortfolioItem[]> {
+  async getPortfolioItems(): Promise<PortfolioItem[]> {
     // 模擬投資組合項目
     return [
       {

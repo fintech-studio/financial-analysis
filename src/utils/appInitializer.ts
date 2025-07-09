@@ -21,7 +21,9 @@ export interface AppConfig {
 const defaultConfig: AppConfig = {
   apiBaseUrl:
     process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api",
-  environment: (process.env.NODE_ENV as any) || "development",
+  environment:
+    (process.env.NODE_ENV as "development" | "production" | "test") ||
+    "development",
   enableCache: true,
   cacheDefaultTTL: 300000, // 5分鐘
   retryAttempts: 3,

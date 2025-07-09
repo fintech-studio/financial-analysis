@@ -5,7 +5,6 @@ import {
   TechnicalIndicator,
   AIPrediction,
   StockAnalysis,
-  PredictionRequest,
   MarketTrendPrediction,
   PricePredictionChart,
   AccuracyMetrics,
@@ -176,9 +175,9 @@ export class AIPredictionController {
     }
   }
 
-  async getPortfolioItems(userId: string): Promise<PortfolioItem[]> {
+  async getPortfolioItems(): Promise<PortfolioItem[]> {
     try {
-      return await this.predictionModel.getPortfolioItems(userId);
+      return await this.predictionModel.getPortfolioItems();
     } catch (error) {
       throw new Error(
         `獲取投資組合項目失敗: ${
@@ -224,7 +223,7 @@ export class AIPredictionController {
       }
 
       // 返回更新後的投資組合
-      return await this.predictionModel.getPortfolioItems(request.userId);
+      return await this.predictionModel.getPortfolioItems();
     } catch (error) {
       throw new Error(
         `投資組合管理失敗: ${

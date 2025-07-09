@@ -9,6 +9,70 @@ import {
   ShieldCheckIcon,
   BriefcaseIcon,
 } from "@heroicons/react/24/outline";
+// 型別定義與守衛（放在檔案頂部）
+import type { RiskData, AIData, ChartData } from "../../types/portfolio";
+
+// 重新定義 AssetAllocationData 與 PortfolioOverviewData 型別（保留原本結構，或考慮搬移到 types/portfolio.ts）
+interface AssetItem {
+  name: string;
+  percentage: number;
+}
+interface Recommendation {
+  text: string;
+  type: "positive" | "neutral" | "negative";
+}
+interface AssetAllocationData {
+  byAssetClass: AssetItem[];
+  bySector: AssetItem[];
+  byRegion: AssetItem[];
+  recommendations: Recommendation[];
+}
+interface PortfolioOverviewData {
+  totalValue: string | number;
+  totalReturn: { value: string | number; percentage: string | number };
+  lastUpdate: string;
+  monthlyChange: string;
+}
+
+interface PortfolioData {
+  overview: PortfolioOverviewData;
+  allocation: AssetAllocationData;
+  performance: unknown;
+  transactions: unknown;
+  risk?: RiskData;
+  holdings?: unknown;
+  aiRecommendations?: AIData;
+}
+function isPortfolioData(obj: unknown): obj is PortfolioData {
+  return (
+    !!obj &&
+    typeof obj === "object" &&
+    "overview" in obj &&
+    "allocation" in obj &&
+    "performance" in obj &&
+    "transactions" in obj
+  );
+}
+function isAssetAllocationData(obj: unknown): obj is AssetAllocationData {
+  return (
+    !!obj &&
+    typeof obj === "object" &&
+    Array.isArray((obj as AssetAllocationData).byAssetClass) &&
+    Array.isArray((obj as AssetAllocationData).bySector) &&
+    Array.isArray((obj as AssetAllocationData).byRegion) &&
+    Array.isArray((obj as AssetAllocationData).recommendations)
+  );
+}
+function isChartData(obj: unknown): obj is ChartData {
+  return (
+    !!obj &&
+    typeof obj === "object" &&
+    "daily" in obj &&
+    "weekly" in obj &&
+    "monthly" in obj &&
+    "returns" in obj
+  );
+}
 
 // 組件引入
 import PortfolioOverview from "../../components/pages/Portfolio/PortfolioOverview";
@@ -16,7 +80,6 @@ import AssetAllocation from "../../components/pages/Portfolio/AssetAllocation";
 import HoldingsTable from "../../components/pages/Portfolio/HoldingsTable";
 import PerformanceChart from "../../components/pages/Portfolio/PerformanceChart";
 import TransactionHistory from "../../components/pages/Portfolio/TransactionHistory";
-import RiskAndRecommendations from "../../components/pages/Portfolio/RiskAndRecommendations";
 import Footer from "../../components/Layout/Footer";
 
 // 優化後的 MVC 架構引入
@@ -37,17 +100,6 @@ interface Tab {
   description: string;
 }
 
-interface Holding {
-  symbol: string;
-  name: string;
-  quantity: number;
-  averagePrice: string;
-  currentPrice: string;
-  marketValue: number;
-  gainLoss: number;
-  gainLossPercent: number;
-}
-
 const PortfolioPage: React.FC = () => {
   const [selectedHolding, setSelectedHolding] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("overview");
@@ -55,7 +107,7 @@ const PortfolioPage: React.FC = () => {
 
   // 應用程式初始化
   const {
-    isLoading: appLoading,
+    isLoading,
     isInitialized,
     error: appError,
   } = useAppInitialization({
@@ -75,7 +127,6 @@ const PortfolioPage: React.FC = () => {
     data: preloadedData,
     loading: preloadLoading,
     errors: preloadErrors,
-    progress,
     isComplete,
     reload: reloadPreloadData,
   } = usePreloadData(
@@ -209,18 +260,23 @@ const PortfolioPage: React.FC = () => {
   const processedData = useMemo(() => {
     const { user, portfolio, allocation, performance, transactions } =
       preloadedData;
-
     return {
       user,
       portfolio: realtimeData || portfolio, // 優先使用實時數據
       allocation,
-      performance,
+      performance: performance as ChartData,
       transactions,
+    } as {
+      user: unknown;
+      portfolio: unknown;
+      allocation: unknown;
+      performance: ChartData;
+      transactions: unknown;
     };
   }, [preloadedData, realtimeData]);
 
   // 如果應用程式未初始化，顯示載入畫面
-  if (!isInitialized) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -323,7 +379,12 @@ const PortfolioPage: React.FC = () => {
                   <p className="text-blue-100 mt-2">
                     歡迎回來，
                     <span className="font-semibold text-white ml-1">
-                      {preloadedData.user?.name || "投資者"}
+                      {typeof preloadedData.user === "object" &&
+                      preloadedData.user &&
+                      "name" in preloadedData.user &&
+                      typeof preloadedData.user.name === "string"
+                        ? preloadedData.user.name
+                        : "投資者"}
                     </span>
                   </p>
                 </div>
@@ -398,8 +459,8 @@ const PortfolioPage: React.FC = () => {
           {/* 投資組合概覽 */}
           {activeTab === "overview" && (
             <div className="space-y-8 animate-fadeIn">
-              {processedData.portfolio ? (
-                <PortfolioOverview data={processedData.portfolio} />
+              {isPortfolioData(processedData.portfolio) ? (
+                <PortfolioOverview data={processedData.portfolio.overview} />
               ) : (
                 <div className="bg-white rounded-xl shadow-lg p-8 text-center">
                   <div className="animate-pulse">
@@ -415,7 +476,7 @@ const PortfolioPage: React.FC = () => {
           {/* 資產配置 */}
           {activeTab === "allocation" && (
             <div className="animate-fadeIn">
-              {processedData.allocation ? (
+              {isAssetAllocationData(processedData.allocation) ? (
                 <AssetAllocation data={processedData.allocation} />
               ) : (
                 <div className="bg-white rounded-xl shadow-lg p-8 text-center">
@@ -432,7 +493,12 @@ const PortfolioPage: React.FC = () => {
           {activeTab === "holdings" && (
             <div className="animate-fadeIn">
               <HoldingsTable
-                holdings={processedData.portfolio?.holdings || []}
+                holdings={
+                  isPortfolioData(processedData.portfolio) &&
+                  Array.isArray(processedData.portfolio.holdings)
+                    ? processedData.portfolio.holdings
+                    : []
+                }
                 onSelectHolding={setSelectedHolding}
                 selectedHolding={selectedHolding || undefined}
               />
@@ -442,21 +508,23 @@ const PortfolioPage: React.FC = () => {
           {/* 績效分析 */}
           {activeTab === "performance" && (
             <div className="animate-fadeIn space-y-8">
-              {processedData.performance ? (
-                <PerformanceChart
-                  data={processedData.performance}
-                  timeRange="1M"
-                  showDetails={true}
-                  showBenchmark={true}
-                />
-              ) : (
-                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                  <div className="animate-pulse">
-                    <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
-                  </div>
-                </div>
-              )}
+              <PerformanceChart
+                data={
+                  isPortfolioData(processedData.portfolio) &&
+                  processedData.performance &&
+                  isChartData(processedData.performance)
+                    ? (processedData.performance as ChartData)
+                    : ({
+                        daily: { labels: [], portfolio: [] },
+                        weekly: { labels: [], portfolio: [] },
+                        monthly: { labels: [], portfolio: [] },
+                        returns: {},
+                      } as ChartData)
+                }
+                timeRange={"1M"}
+                showDetails={true}
+                showBenchmark={true}
+              />
             </div>
           )}
 
@@ -464,60 +532,18 @@ const PortfolioPage: React.FC = () => {
           {activeTab === "transactions" && (
             <div className="animate-fadeIn">
               <TransactionHistory
-                transactions={processedData.transactions || []}
+                transactions={
+                  processedData.transactions &&
+                  Array.isArray(processedData.transactions)
+                    ? processedData.transactions
+                    : []
+                }
               />
             </div>
           )}
 
           {/* 風險與建議 */}
-          {activeTab === "risk" && (
-            <div className="animate-fadeIn">
-              <RiskAndRecommendations
-                riskData={{
-                  metrics: processedData.portfolio?.riskData?.metrics || {
-                    volatility: 0,
-                    volatilityVsMarket: 0,
-                    sharpeRatio: 0,
-                    maxDrawdown: 0,
-                    maxDrawdownDate: "",
-                  },
-                  volatility: processedData.portfolio?.riskData?.volatility || {
-                    labels: [],
-                    portfolio: [],
-                    market: [],
-                  },
-                  riskFactors: processedData.portfolio?.riskData
-                    ?.riskFactors || {
-                    labels: [],
-                    values: [],
-                  },
-                  drawdown: processedData.portfolio?.riskData?.drawdown || {
-                    labels: [],
-                    values: [],
-                  },
-                  otherMetrics:
-                    processedData.portfolio?.riskData?.otherMetrics || [],
-                }}
-                aiData={{
-                  summary:
-                    processedData.portfolio?.aiRecommendations?.summary ||
-                    "正在分析中...",
-                  healthScore:
-                    processedData.portfolio?.aiRecommendations?.healthScore ||
-                    0,
-                  optimizationPotential:
-                    processedData.portfolio?.aiRecommendations
-                      ?.optimizationPotential || 0,
-                  recommendationLevel:
-                    processedData.portfolio?.aiRecommendations
-                      ?.recommendationLevel || 0,
-                  recommendations:
-                    processedData.portfolio?.aiRecommendations
-                      ?.recommendations || [],
-                }}
-              />
-            </div>
-          )}
+          {activeTab === "risk" && <div className="animate-fadeIn"></div>}
         </div>
       </div>
 

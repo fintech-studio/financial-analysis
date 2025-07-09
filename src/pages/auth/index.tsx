@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -339,7 +340,6 @@ const AuthPage = () => {
   const userController = UserController.getInstance();
 
   const {
-    data: user,
     loading: isLoading,
     error: controllerError,
     execute: executeUserAction,
@@ -460,7 +460,6 @@ const AuthPage = () => {
           });
 
           console.log("登入成功:", authResult);
-          const user = authResult.user;
 
           // 處理記住我功能
           if (loginData.remember) {
@@ -474,7 +473,7 @@ const AuthPage = () => {
 
           return authResult;
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("登入失敗:", error);
         setErrors({ email: "電子郵件或密碼錯誤" });
       }
@@ -499,7 +498,6 @@ const AuthPage = () => {
           });
 
           console.log("註冊成功:", authResult);
-          const user = authResult.user;
 
           // 保存註冊的 email 並顯示成功訊息
           setRegisteredEmail(registerData.email);
@@ -508,7 +506,7 @@ const AuthPage = () => {
 
           return authResult;
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("註冊失敗:", error);
         setErrors({ email: "註冊失敗，該電子郵件可能已被使用" });
       }

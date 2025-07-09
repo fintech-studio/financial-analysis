@@ -366,33 +366,64 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
     if (!data?.length) return null;
 
     try {
-      const candleData: LightweightCandlestickData[] = data
-        .map((item) => ({
-          time: Math.floor(new Date(item.date).getTime() / 1000) as any,
-          open: Number(item.open) || 0,
-          high: Number(item.high) || 0,
-          low: Number(item.low) || 0,
-          close: Number(item.close) || 0,
-        }))
-        .filter(
-          (item) =>
-            item.open > 0 && item.high > 0 && item.low > 0 && item.close > 0
-        );
+      if (timeframe === "1d") {
+        // 日線：time 用 yyyy-mm-dd
+        const candleData: LightweightCandlestickData[] = data
+          .map((item) => ({
+            time: item.date.split("T")[0],
+            open: Number(item.open) || 0,
+            high: Number(item.high) || 0,
+            low: Number(item.low) || 0,
+            close: Number(item.close) || 0,
+          }))
+          .filter(
+            (item) =>
+              item.open > 0 && item.high > 0 && item.low > 0 && item.close > 0
+          )
+          .sort((a, b) => (a.time > b.time ? 1 : a.time < b.time ? -1 : 0));
 
-      const volumeData: HistogramData[] = data
-        .filter((item) => item.volume && Number(item.volume) > 0)
-        .map((item) => ({
-          time: Math.floor(new Date(item.date).getTime() / 1000) as any,
-          value: Number(item.volume),
-          color: item.close >= item.open ? "#ef444460" : "#10b98160", // 上漲紅色，下跌綠色
-        }));
+        const volumeData: HistogramData[] = data
+          .filter((item) => item.volume && Number(item.volume) > 0)
+          .map((item) => ({
+            time: item.date.split("T")[0],
+            value: Number(item.volume),
+            color: item.close >= item.open ? "#ef444460" : "#10b98160",
+          }))
+          .sort((a, b) => (a.time > b.time ? 1 : a.time < b.time ? -1 : 0));
 
-      return { candleData, volumeData };
+        return { candleData, volumeData };
+      } else {
+        // 小時線：time 用 unix timestamp (number)
+        const candleData: LightweightCandlestickData<number>[] = data
+          .map((item) => ({
+            time: Math.floor(new Date(item.date).getTime() / 1000),
+            open: Number(item.open) || 0,
+            high: Number(item.high) || 0,
+            low: Number(item.low) || 0,
+            close: Number(item.close) || 0,
+          }))
+          .filter(
+            (item) =>
+              item.open > 0 && item.high > 0 && item.low > 0 && item.close > 0
+          )
+          .sort((a, b) => a.time - b.time);
+
+        const volumeData: HistogramData<number>[] = data
+          .filter((item) => item.volume && Number(item.volume) > 0)
+          .map((item) => ({
+            time: Math.floor(new Date(item.date).getTime() / 1000),
+            value: Number(item.volume),
+            color: item.close >= item.open ? "#ef444460" : "#10b98160",
+          }))
+          .sort((a, b) => a.time - b.time);
+
+        return { candleData, volumeData };
+      }
     } catch (error) {
       console.error("Chart data conversion error:", error);
       return null;
     }
-  }, [data]);
+  }, [data, timeframe]);
   // 優化的技術指標數據處理 - 修復時間對齊問題
   const technicalChartData = useMemo(() => {
     if (!technicalData || !data?.length) {
@@ -424,11 +455,12 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
           dateItem &&
           dateItem.date
         ) {
-          const timeValue = Math.floor(
-            new Date(dateItem.date).getTime() / 1000
-          ) as any;
+          const timeValue =
+            timeframe === "1d"
+              ? dateItem.date.split("T")[0]
+              : Math.floor(new Date(dateItem.date).getTime() / 1000);
           lineData.push({
-            time: timeValue,
+            time: timeValue as import("lightweight-charts").Time,
             value: Number(value),
           });
         }
@@ -454,31 +486,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
     });
 
     return { overlay: overlayData, separate: separateData };
-  }, [technicalData, data, technicalIndicators]);
-
-  // 優化的統計數據計算
-  const stats = useMemo(() => {
-    if (!data?.length) return null;
-
-    try {
-      const latest = data[data.length - 1];
-      const previous = data.length > 1 ? data[data.length - 2] : latest;
-      const change = Number(latest.close) - Number(previous.close);
-      const changePercent = (change / Number(previous.close)) * 100;
-
-      return {
-        latest,
-        change,
-        changePercent,
-        isRising: change >= 0,
-        high: Math.max(...data.map((d) => Number(d.high))),
-        low: Math.min(...data.map((d) => Number(d.low))),
-      };
-    } catch (error) {
-      console.error("Stats calculation error:", error);
-      return null;
-    }
-  }, [data]);
+  }, [technicalData, data, technicalIndicators, timeframe]);
 
   // 優化的圖表初始化
   useEffect(() => {
@@ -549,7 +557,19 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       });
 
       candlestickSeriesRef.current = candlestickSeries;
-      candlestickSeries.setData(chartData.candleData);
+      if (timeframe === "1d") {
+        candlestickSeries.setData(
+          chartData.candleData as import("lightweight-charts").CandlestickData<
+            import("lightweight-charts").Time
+          >[]
+        );
+      } else {
+        candlestickSeries.setData(
+          chartData.candleData as import("lightweight-charts").CandlestickData<
+            import("lightweight-charts").Time
+          >[]
+        );
+      }
 
       // 添加成交量
       if (showVolume && chartData.volumeData.length > 0) {
@@ -565,7 +585,11 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         });
 
         volumeSeriesRef.current = volumeSeries;
-        volumeSeries.setData(chartData.volumeData);
+        volumeSeries.setData(
+          chartData.volumeData as import("lightweight-charts").HistogramData<
+            import("lightweight-charts").Time
+          >[]
+        );
       }
 
       // 添加主圖疊加的技術指標線
@@ -584,7 +608,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
             const lineSeries = chart.addSeries(LineSeries, {
               color: indicator.color,
-              lineWidth: (indicator.lineWidth || 2) as any,
+              lineWidth: (indicator.lineWidth ??
+                2) as unknown as import("lightweight-charts").DeepPartial<
+                import("lightweight-charts").LineWidth
+              >,
               title: indicator.name,
               priceLineVisible: false,
               lastValueVisible: true,
@@ -628,7 +655,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
             const lineSeries = chart.addSeries(LineSeries, {
               color: indicator.color,
-              lineWidth: (indicator.lineWidth || 2) as any,
+              lineWidth: (indicator.lineWidth ??
+                2) as unknown as import("lightweight-charts").DeepPartial<
+                import("lightweight-charts").LineWidth
+              >,
               title: indicator.name,
               priceLineVisible: false,
               lastValueVisible: true,
@@ -793,9 +823,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
   }, []);
 
   // 新增：數據期間格式化（含時間）
-  const formatDateRange = (dataArr: any[]) => {
+  const formatDateRange = (dataArr: { date: string; datetime?: string }[]) => {
     if (!dataArr || dataArr.length === 0) return "--";
-    const format = (d: any) => {
+    const format = (d: { date: string; datetime?: string }) => {
       if (!d) return "--";
       const date = new Date(d.datetime || d.date);
       if (isNaN(date.getTime())) return "--";

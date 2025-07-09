@@ -1,19 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import sql from "mssql";
 
-// 資料庫配置介面
-interface DatabaseConfig {
-  user: string;
-  password: string;
-  server: string;
-  database?: string;
-  port?: number;
-  options?: {
-    encrypt?: boolean;
-    trustServerCertificate?: boolean;
-  };
-}
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -99,16 +86,17 @@ export default async function handler(
         data: [],
         count: 0,
       });
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       console.error("[API] 資料庫連接錯誤", dbError);
+      const dbErrorObj = dbError as { code?: string; message?: string; originalError?: { message?: string } };
       console.log("[API] 錯誤詳細資訊:", {
-        code: dbError.code,
-        message: dbError.message,
-        originalError: dbError.originalError?.message,
+        code: dbErrorObj.code,
+        message: dbErrorObj.message,
+        originalError: dbErrorObj.originalError?.message,
         database: database,
       });
       let errorMessage = "資料庫連接失敗";
-      if (dbError.code === "ELOGIN") {
+      if (dbErrorObj.code === "ELOGIN") {
         if (database && database !== "master") {
           try {
             console.log("[API] 驗證帳號密碼（連接master資料庫）");
@@ -123,32 +111,32 @@ export default async function handler(
             console.log("[API] 帳號密碼正確，判定為權限問題");
             errorMessage =
               "權限不足：使用者沒有存取此資料庫的權限，請聯繫資料庫管理員";
-          } catch (masterError: any) {
+          } catch {
             console.log("[API] 無法連接master，判定為帳號密碼問題");
             errorMessage = "登入失敗：請檢查使用者名稱和密碼";
           }
         } else {
           errorMessage = "登入失敗：請檢查使用者名稱和密碼";
         }
-      } else if (dbError.code === "ESOCKET") {
+      } else if (dbErrorObj.code === "ESOCKET") {
         errorMessage = "網路連接失敗：請檢查伺服器地址和端口";
-      } else if (dbError.code === "ETIMEOUT") {
+      } else if (dbErrorObj.code === "ETIMEOUT") {
         errorMessage = "連接超時：請檢查網路連接和伺服器狀態";
       } else if (
-        dbError.message &&
-        dbError.message.includes("Cannot open database")
+        dbErrorObj.message &&
+        dbErrorObj.message.includes("Cannot open database")
       ) {
         errorMessage = "資料庫名稱錯誤：找不到指定的資料庫，請檢查資料庫名稱";
       } else if (
-        dbError.message &&
-        dbError.message.includes("database") &&
-        dbError.message.includes("does not exist")
+        dbErrorObj.message &&
+        dbErrorObj.message.includes("database") &&
+        dbErrorObj.message.includes("does not exist")
       ) {
         errorMessage = "資料庫不存在：請檢查資料庫名稱是否正確";
-      } else if (dbError.message && dbError.message.includes("permission")) {
+      } else if (dbErrorObj.message && dbErrorObj.message.includes("permission")) {
         errorMessage = "權限不足：使用者沒有存取此資料庫的權限";
-      } else if (dbError.message) {
-        errorMessage = `連接錯誤：${dbError.message}`;
+      } else if (dbErrorObj.message) {
+        errorMessage = `連接錯誤：${dbErrorObj.message}`;
       }
       res.status(400).json({
         success: false,
@@ -165,11 +153,12 @@ export default async function handler(
         }
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[API] 連接測試發生錯誤", error);
+    const errorObj = error as { message?: string };
     res.status(500).json({
       success: false,
-      message: `伺服器錯誤: ${error.message || "未知錯誤"}`,
+      message: `伺服器錯誤: ${errorObj.message || "未知錯誤"}`,
       data: [],
       count: 0,
     });

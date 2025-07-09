@@ -22,7 +22,7 @@ interface Stock {
   volume?: string;
   high52w?: string;
   low52w?: string;
-  [key: string]: any; // 允許額外的屬性
+  [key: string]: unknown;
 }
 
 interface PriceHistoryPoint {
@@ -385,7 +385,10 @@ const StockComparison: React.FC<StockComparisonProps> = ({
                           className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                         >
                           {metric.prefix || ""}
-                          {stock[metric.key] || "N/A"}
+                          {stock[metric.key] !== undefined &&
+                          stock[metric.key] !== null
+                            ? String(stock[metric.key])
+                            : "N/A"}
                           {metric.suffix || ""}
                         </td>
                       ))}

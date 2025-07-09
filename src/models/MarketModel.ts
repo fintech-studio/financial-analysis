@@ -318,7 +318,7 @@ export class MarketModel {
         break;
       case "1m":
       case "3m":
-      case "6m":
+      case "6m": {
         const days = timeRange === "1m" ? 30 : timeRange === "3m" ? 90 : 180;
         for (let i = 0; i < days; i++) {
           const date = new Date(
@@ -329,6 +329,7 @@ export class MarketModel {
           );
         }
         break;
+      }
       default:
         labels.push(now.toLocaleDateString());
     }

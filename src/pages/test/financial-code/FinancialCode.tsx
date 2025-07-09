@@ -10,6 +10,11 @@ interface StockRow {
   industry_type?: string;
 }
 
+interface USStockRow extends StockRow {
+  sector_type?: string;
+  country?: string;
+}
+
 const tabConfigs = [
   {
     key: "tw-stock",
@@ -194,7 +199,7 @@ const FinancialCodeTabs: React.FC = () => {
       Array.from(
         new Set(
           data
-            .map((row: any) => row.sector_type)
+            .map((row: USStockRow) => row.sector_type)
             .filter((v): v is string => Boolean(v))
         )
       ),
@@ -205,7 +210,7 @@ const FinancialCodeTabs: React.FC = () => {
       Array.from(
         new Set(
           data
-            .map((row: any) => row.country)
+            .map((row: USStockRow) => row.country)
             .filter((v): v is string => Boolean(v))
         )
       ),
@@ -215,16 +220,16 @@ const FinancialCodeTabs: React.FC = () => {
   // 搜尋、篩選與排序
   const filteredData = useMemo(
     () =>
-      data.filter((row: any) => {
+      data.filter((row: StockRow | USStockRow) => {
         if (marketTypeFilter && row.market_type !== marketTypeFilter)
           return false;
         if (industryTypeFilter && row.industry_type !== industryTypeFilter)
           return false;
         // 美股專屬篩選
         if (activeTab === "us-stock") {
-          if (sectorTypeFilter && row.sector_type !== sectorTypeFilter)
+          if (sectorTypeFilter && (row as USStockRow).sector_type !== sectorTypeFilter)
             return false;
-          if (countryFilter && row.country !== countryFilter) return false;
+          if (countryFilter && (row as USStockRow).country !== countryFilter) return false;
           // if (ipoYearFilter && String(row.ipo_year) !== ipoYearFilter)
           //   return false;
         }
@@ -235,7 +240,7 @@ const FinancialCodeTabs: React.FC = () => {
         }
         if (!search.trim()) return true;
         return currentTab.columns.some((col) => {
-          const value = (row as any)[col.key];
+          const value = row[col.key as keyof typeof row];
           return (
             value &&
             value.toString().toLowerCase().includes(search.toLowerCase())
@@ -261,8 +266,8 @@ const FinancialCodeTabs: React.FC = () => {
     () =>
       sortKey
         ? [...filteredData].sort((a, b) => {
-            const aValue = (a as any)[sortKey] || "";
-            const bValue = (b as any)[sortKey] || "";
+            const aValue = a[sortKey as keyof typeof a] || "";
+            const bValue = b[sortKey as keyof typeof b] || "";
             if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
             if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
             return 0;
@@ -290,11 +295,11 @@ const FinancialCodeTabs: React.FC = () => {
   // 日期格式化函式
   function formatDate(dateStr?: string) {
     if (!dateStr) return "-";
-    let d = dateStr.trim();
+    const d = dateStr.trim();
     if (/^\d{8}$/.test(d)) {
       return `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
     }
-    if (/^\d{4}[-\/]\d{2}[-\/]\d{2}$/.test(d)) {
+    if (/^\d{4}[-/]\d{2}[-/]\d{2}$/.test(d)) {
       return d.replace(/\//g, "-");
     }
     const dateObj = new Date(d);
@@ -530,9 +535,9 @@ const FinancialCodeTabs: React.FC = () => {
                       className={idx % 2 === 0 ? "bg-white" : "bg-blue-50"}
                     >
                       {currentTab.columns.map((col) => {
-                        let value = (row as any)[col.key];
+                        let value = row[col.key as keyof typeof row];
                         if (col.key === "date" && value) {
-                          value = formatDate(value);
+                          value = formatDate(value as string);
                         }
                         return (
                           <td

@@ -16,7 +16,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
-  res.flushHeaders && res.flushHeaders();
+  if (res.flushHeaders) res.flushHeaders();
 
   const scriptPath = path.resolve(
     process.cwd(),
@@ -37,21 +37,21 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   py.stdout.on("data", (data) => {
     (data.toString().split(/\r?\n/) as string[]).forEach((line: string) => {
       if (line) res.write(`data: ${line}\n\n`);
-      // @ts-ignore
-      res.flush && res.flush();
+      // @ts-expect-error: res.flush 不是標準型別，但部分 Node.js/Express 環境支援
+      if (res.flush) res.flush();
     });
   });
   py.stderr.on("data", (data) => {
     (data.toString().split(/\r?\n/) as string[]).forEach((line: string) => {
       if (line) res.write(`data: [stderr] ${line}\n\n`);
-      // @ts-ignore
-      res.flush && res.flush();
+      // @ts-expect-error: res.flush 不是標準型別，但部分 Node.js/Express 環境支援
+      if (res.flush) res.flush();
     });
   });
   py.on("close", (code) => {
     res.write(`event: end\ndata: 程式結束 (code=${code})\n\n`);
-    // @ts-ignore
-    res.flush && res.flush();
+    // @ts-expect-error: res.flush 不是標準型別，但部分 Node.js/Express 環境支援
+    if (res.flush) res.flush();
     res.end();
   });
   req.on("close", () => {
