@@ -42,10 +42,34 @@ export interface Holding {
   lastUpdated?: string;
 }
 
+export interface AIData {
+  summary: string;
+  healthScore: number;
+  optimizationPotential: number;
+  recommendationLevel: number;
+  recommendations: Recommendation[];
+}
+
+// PerformanceChart 專用型別（搬移自 PerformanceChart.tsx）
 export interface PerformanceData {
   labels: string[];
-  values: number[];
-  benchmarkValues?: number[];
+  portfolio: number[];
+  benchmark?: number[];
+  [key: string]: string[] | number[] | undefined;
+}
+
+export interface KeyPeriod {
+  name: string;
+  range: [number, number];
+  color?: string;
+}
+
+export interface ChartData {
+  daily: PerformanceData;
+  weekly: PerformanceData;
+  monthly: PerformanceData;
+  returns: Record<string, number>;
+  keyPeriods?: KeyPeriod[];
 }
 
 export interface AssetAllocation {
@@ -103,74 +127,6 @@ export interface Recommendation {
   description: string;
   actions?: string[];
   impact?: string;
-}
-
-export interface AIData {
-  summary: string;
-  healthScore: number;
-  optimizationPotential: number;
-  recommendationLevel: number;
-  recommendations: Recommendation[];
-}
-
-export interface ChartDataset {
-  label?: string;
-  data: number[];
-  borderColor?: string | string[];
-  backgroundColor?: string | string[];
-  tension?: number;
-  borderDash?: number[];
-  borderWidth?: number;
-}
-
-export interface ChartData {
-  labels: string[];
-  datasets: ChartDataset[];
-}
-
-export interface ChartOptions {
-  responsive: boolean;
-  maintainAspectRatio: boolean;
-  plugins?: {
-    legend?: {
-      position: "top" | "bottom" | "left" | "right";
-    };
-    title?: {
-      display: boolean;
-      text: string;
-    };
-    tooltip?: {
-      callbacks?: {
-        label?: (context: any) => string;
-      };
-    };
-  };
-  scales?: {
-    y?: {
-      beginAtZero?: boolean;
-      title?: {
-        display: boolean;
-        text: string;
-      };
-      ticks?: {
-        callback?: (value: any) => string;
-      };
-    };
-    r?: {
-      min: number;
-      max: number;
-      ticks: {
-        stepSize: number;
-      };
-    };
-  };
-}
-
-export interface CardStyle {
-  bg: string;
-  iconBg: string;
-  iconColor: string;
-  icon: React.ComponentType<{ className?: string }>;
 }
 
 export type ActiveSection = "analysis" | "recommendations";

@@ -29,18 +29,12 @@ import Overview from "@/components/pages/StockMarket/Overview";
 import StockList from "@/components/pages/StockMarket/StockList";
 import StockComparison from "@/components/pages/StockMarket/StockComparison";
 import StockDetails from "@/components/pages/StockMarket/StockDetails";
-import TechnicalPatterns from "@/components/pages/StockMarket/TechnicalPatterns";
 import Screener from "@/components/pages/StockMarket/Screener";
-import { load } from "cheerio";
-
-// TypeScript 型別定義
-interface StockMarketProps {}
+import { ChartData } from "chart.js";
 
 type TabType = "overview" | "stocks" | "sectors" | "technical" | "screener";
 type StrategyType = "value" | "growth" | "momentum" | "quality";
 type SectorType = "all" | "tech" | "finance" | "healthcare" | "energy";
-type TimeRangeType = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y";
-type NewsFilterType = "latest" | "relevant" | "analysis";
 
 // 組件期望的股票介面
 interface StockDetailForList {
@@ -67,7 +61,7 @@ interface StockForComparison {
   volume?: string;
   high52w?: string;
   low52w?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface StockForDetails {
@@ -84,12 +78,12 @@ interface StockForDetails {
   pb: string;
   dividend?: string;
   dividendYield?: string;
-  chartData?: any;
+  chartData?: ChartData<"line", number[], string>;
   priceHistory?: number[];
-  technicalSignals?: any;
-  institutionalTrades?: any;
-  ratings?: any[];
-  news?: any[];
+  technicalSignals?: unknown;
+  institutionalTrades?: unknown;
+  ratings?: unknown[];
+  news?: unknown[];
 }
 
 // 註冊 Chart.js 組件
@@ -106,7 +100,7 @@ ChartJS.register(
   Filler
 );
 
-const StockMarket: React.FC<StockMarketProps> = () => {
+const StockMarket: React.FC = () => {
   // 基本狀態管理
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -115,7 +109,6 @@ const StockMarket: React.FC<StockMarketProps> = () => {
   const [favoriteStocks, setFavoriteStocks] = useState<string[]>(["2330"]);
   const [stockCompare, setStockCompare] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState<boolean>(false);
-  const [selectedPattern, setSelectedPattern] = useState<string>("頭肩頂");
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   // 新增載入狀態追蹤
@@ -158,16 +151,16 @@ const StockMarket: React.FC<StockMarketProps> = () => {
     loading: technicalLoading,
     error: technicalError,
     execute: executeTechnicalRefresh,
-  } = useMvcController<any>();
+  } = useMvcController<unknown>();
 
   const {
     data: sectorData,
     loading: sectorLoading,
     error: sectorError,
     execute: executeSectorRefresh,
-  } = useMvcController<any>();
+  } = useMvcController<unknown>();
 
-  useMvcController<any>();
+  useMvcController<unknown>();
 
   // 使用 useCallback 避免函數重新創建導致的無限載入
   const loadStockData = useCallback(async () => {
@@ -179,9 +172,18 @@ const StockMarket: React.FC<StockMarketProps> = () => {
       };
 
       await executeStocksRefresh(() => stockController.getStocks(filters));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("載入股票數據失敗:", error);
-      setLoadingError(error?.message || "載入股票數據失敗");
+      let message = "載入股票數據失敗";
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof (error as { message?: unknown }).message === "string"
+      ) {
+        message = (error as { message: string }).message;
+      }
+      setLoadingError(message);
     }
   }, [
     selectedSector,
@@ -196,18 +198,36 @@ const StockMarket: React.FC<StockMarketProps> = () => {
       await executeTechnicalRefresh(() =>
         stockController.getTechnicalAnalysis()
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("載入技術分析失敗:", error);
-      setLoadingError(error?.message || "載入技術分析失敗");
+      let message = "載入技術分析失敗";
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof (error as { message?: unknown }).message === "string"
+      ) {
+        message = (error as { message: string }).message;
+      }
+      setLoadingError(message);
     }
   }, [executeTechnicalRefresh, stockController]);
 
   const loadSectorData = useCallback(async () => {
     try {
       await executeSectorRefresh(() => marketController.getSectorPerformance());
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("載入板塊數據失敗:", error);
-      setLoadingError(error?.message || "載入板塊數據失敗");
+      let message = "載入板塊數據失敗";
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof (error as { message?: unknown }).message === "string"
+      ) {
+        message = (error as { message: string }).message;
+      }
+      setLoadingError(message);
     }
   }, [executeSectorRefresh, marketController]);
 
@@ -390,6 +410,11 @@ const StockMarket: React.FC<StockMarketProps> = () => {
       dividend: stock.dividendYield?.toString(),
       dividendYield: stock.dividendYield?.toString(),
       priceHistory: stock.priceHistory,
+      chartData: undefined, // StockDetail 沒有 chartData，設為 undefined
+      technicalSignals: undefined,
+      institutionalTrades: undefined,
+      ratings: undefined,
+      news: undefined,
     };
   };
 
@@ -607,19 +632,28 @@ const StockMarket: React.FC<StockMarketProps> = () => {
             {/* 個股詳細信息 */}
             {transformedStockForDetails && (
               <StockDetails
-                stock={transformedStockForDetails}
+                stock={{
+                  ...transformedStockForDetails,
+                  chartData: transformedStockForDetails.chartData
+                    ? {
+                        ...transformedStockForDetails.chartData,
+                        labels: Array.isArray(
+                          transformedStockForDetails.chartData.labels
+                        )
+                          ? (transformedStockForDetails.chartData
+                              .labels as string[])
+                          : [],
+                      }
+                    : undefined,
+                  technicalSignals: undefined, // 明確設為 undefined 以符合型別
+                  institutionalTrades: undefined,
+                  ratings: undefined,
+                  news: undefined,
+                }}
                 favoriteStocks={favoriteStocks}
                 toggleFavoriteStock={toggleFavoriteStock}
               />
             )}
-
-            {/* 技術形態掃描 */}
-            <TechnicalPatterns
-              bullishStocks={technicalAnalysis?.bullish || []}
-              bearishStocks={technicalAnalysis?.bearish || []}
-              selectedPattern={selectedPattern}
-              setSelectedPattern={setSelectedPattern}
-            />
           </div>
         )}
 

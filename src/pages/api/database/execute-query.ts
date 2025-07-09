@@ -91,7 +91,7 @@ export default async function handler(
         count: result.recordset?.length || 0,
         message: `查詢成功執行，返回 ${result.recordset?.length || 0} 筆記錄`,
       });
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       console.error("[API] 資料庫查詢錯誤", dbError);
       let errorMessage = "資料庫查詢失敗";
       const permissionKeywords = [
@@ -101,22 +101,23 @@ export default async function handler(
         "權限",
         "denied",
       ];
+      const dbErrorObj = dbError as { message?: string; code?: string };
       if (
-        dbError.message &&
+        dbErrorObj.message &&
         permissionKeywords.some((kw) =>
-          dbError.message.toLowerCase().includes(kw)
+          dbErrorObj.message!.toLowerCase().includes(kw)
         )
       ) {
         errorMessage = "權限不足：您沒有存取此資料的權限，請聯絡資料庫管理員。";
-      } else if (dbError.code === "ELOGIN") {
+      } else if (dbErrorObj.code === "ELOGIN") {
         errorMessage =
           "登入失敗：請檢查使用者名稱和密碼，或確認帳號是否有存取該資料庫的權限。";
-      } else if (dbError.code === "ESOCKET") {
+      } else if (dbErrorObj.code === "ESOCKET") {
         errorMessage = "網路連接失敗：請檢查伺服器地址和端口";
-      } else if (dbError.code === "ETIMEOUT") {
+      } else if (dbErrorObj.code === "ETIMEOUT") {
         errorMessage = "查詢超時：請檢查查詢語句或網路連接";
-      } else if (dbError.message) {
-        errorMessage = `查詢錯誤：${dbError.message}`;
+      } else if (dbErrorObj.message) {
+        errorMessage = `查詢錯誤：${dbErrorObj.message}`;
       }
       res.status(400).json({
         success: false,
@@ -133,11 +134,12 @@ export default async function handler(
         }
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[API] 查詢執行發生錯誤", error);
+    const errorObj = error as { message?: string };
     res.status(500).json({
       success: false,
-      message: `伺服器錯誤: ${error.message || "未知錯誤"}`,
+      message: `伺服器錯誤: ${errorObj.message || "未知錯誤"}`,
       data: [],
       count: 0,
     });

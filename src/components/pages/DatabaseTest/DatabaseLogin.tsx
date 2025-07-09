@@ -217,12 +217,16 @@ const DatabaseLoginPage: React.FC<DatabaseLoginPageProps> = ({
     await executeGetDatabaseList(async () => {
       try {
         const result = await databaseController.getDatabaseList(config);
-        setDatabaseList(result.data || []);
-        return result.data || [];
+        setDatabaseList(
+          Array.isArray(result.data) ? (result.data as string[]) : []
+        );
+        return Array.isArray(result.data) ? (result.data as string[]) : [];
       } catch (error: unknown) {
         let message = "獲取資料庫列表失敗";
         if (error && typeof error === "object" && "message" in error) {
-          message = `獲取資料庫列表失敗: ${(error as { message?: string }).message}`;
+          message = `獲取資料庫列表失敗: ${
+            (error as { message?: string }).message
+          }`;
         }
         alert(message);
         throw error;

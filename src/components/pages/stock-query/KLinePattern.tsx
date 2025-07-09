@@ -128,7 +128,7 @@ const KLinePattern: React.FC<KLinePatternProps> = ({
     if (patterns.length > 0 && !selectedPattern) {
       setSelectedPattern(patterns[0]);
     }
-  }, [patterns]);
+  }, [patterns, selectedPattern]);
 
   // 取得型態對應圖片路徑
   const getPatternImageUrl = (pattern: string) => {

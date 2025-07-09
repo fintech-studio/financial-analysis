@@ -1,12 +1,12 @@
 // 服務層基類
 export abstract class BaseService {
-  protected handleServiceError(error: any, context: string): never {
+  protected handleServiceError(error: unknown, context: string): never {
     const errorMessage = error instanceof Error ? error.message : "服務錯誤";
     console.error(`[${context}] Service Error:`, error);
     throw new Error(`${context}: ${errorMessage}`);
   }
 
-  protected validateServiceInput(value: any, fieldName: string): void {
+  protected validateServiceInput(value: unknown, fieldName: string): void {
     if (value === null || value === undefined) {
       throw new Error(`${fieldName} 不能為空`);
     }
@@ -32,7 +32,7 @@ export abstract class BaseService {
 // 服務工廠
 export class ServiceFactory {
   private static instance: ServiceFactory;
-  private services: Map<string, any> = new Map();
+  private services: Map<string, unknown> = new Map();
 
   static getInstance(): ServiceFactory {
     if (!ServiceFactory.instance) {
@@ -46,7 +46,7 @@ export class ServiceFactory {
     if (!this.services.has(className)) {
       this.services.set(className, new serviceClass());
     }
-    return this.services.get(className);
+    return this.services.get(className) as T;
   }
 
   clearServices(): void {

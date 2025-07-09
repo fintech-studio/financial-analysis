@@ -45,13 +45,16 @@ export class ApiService {
 
   async get<T>(
     endpoint: string,
-    params?: Record<string, any>
+    params?: Record<string, string | number | boolean | undefined>
   ): Promise<ApiResponse<T>> {
     try {
       const url = new URL(endpoint, this.config.baseURL);
       if (params) {
         Object.keys(params).forEach((key) =>
-          url.searchParams.append(key, params[key])
+          url.searchParams.append(
+            key,
+            params[key] !== undefined ? String(params[key]) : ""
+          )
         );
       }
 
@@ -67,7 +70,7 @@ export class ApiService {
     }
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.config.baseURL}${endpoint}`, {
         method: "POST",
@@ -82,7 +85,7 @@ export class ApiService {
     }
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async put<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.config.baseURL}${endpoint}`, {
         method: "PUT",
@@ -127,7 +130,7 @@ export class ApiService {
             data.error || `HTTP ${response.status}: ${response.statusText}`,
         };
       }
-    } catch (error) {
+    } catch {
       return {
         success: false,
         error: "回應解析失敗",
@@ -138,16 +141,21 @@ export class ApiService {
   /**
    * 改進的錯誤處理機制
    */
-  private handleError<T>(error: any): ApiResponse<T> {
+  private handleError<T>(error: unknown): ApiResponse<T> {
+    // 型別守衛
+    let errObj: Record<string, unknown> = {};
+    if (typeof error === "object" && error !== null) {
+      errObj = error as Record<string, unknown>;
+    }
     // 記錄詳細錯誤信息
     console.error("API Service Error:", {
-      message: error.message,
-      code: error.code,
-      status: error.status,
+      message: errObj.message,
+      code: errObj.code,
+      status: errObj.status,
       timestamp: new Date().toISOString(),
     });
 
-    if (error.name === "AbortError") {
+    if (errObj.name === "AbortError") {
       return {
         success: false,
         error: "請求已取消",
@@ -156,7 +164,7 @@ export class ApiService {
     }
 
     // 網路連接錯誤
-    if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND") {
+    if (errObj.code === "ECONNREFUSED" || errObj.code === "ENOTFOUND") {
       return {
         success: false,
         error: "無法連接到伺服器，請檢查網路連接",
@@ -165,7 +173,7 @@ export class ApiService {
     }
 
     // HTTP 狀態錯誤
-    if (error.status) {
+    if (typeof errObj.status === "number") {
       const statusMessages: Record<number, string> = {
         400: "請求參數錯誤",
         401: "身份驗證失敗，請重新登入",
@@ -181,14 +189,17 @@ export class ApiService {
 
       return {
         success: false,
-        error: statusMessages[error.status] || `HTTP 錯誤 ${error.status}`,
+        error: statusMessages[errObj.status] || `HTTP 錯誤 ${errObj.status}`,
         timestamp: new Date().toISOString(),
       };
     }
 
     return {
       success: false,
-      error: error.message || "發生未知錯誤，請稍後重試",
+      error:
+        typeof errObj.message === "string"
+          ? errObj.message
+          : "發生未知錯誤，請稍後重試",
       timestamp: new Date().toISOString(),
     };
   }

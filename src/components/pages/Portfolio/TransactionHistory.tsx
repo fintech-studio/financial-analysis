@@ -18,13 +18,11 @@ import { useMvcController } from "../../../hooks/useMvcController";
 import type {
   Transaction,
   TransactionStats,
-  ChartDataConfig,
   SortField,
   SortDirection,
   FilterType,
   PeriodType,
   TransactionHistoryProps,
-  ChartData,
 } from "@/types/portfolio";
 
 // 註冊 Chart.js 組件
@@ -40,6 +38,24 @@ ChartJS.register(
   Legend,
   Filler
 );
+
+// Chart.js 專用型別
+interface ChartJsData {
+  labels: string[];
+  datasets: Array<{
+    label: string;
+    data: number[];
+    backgroundColor?: string | string[];
+    borderColor?: string | string[];
+    borderWidth?: number;
+  }>;
+}
+
+// 修正 ChartDataConfig 型別
+interface ChartDataConfig {
+  monthlyChart: ChartJsData;
+  symbolChart: ChartJsData;
+}
 
 // 交易詳情模態框 - 重新設計
 
@@ -560,7 +576,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     const sellData = transactionStats.monthly.map(([, data]) => data.賣出);
 
     // 月度交易金額圖表
-    const monthlyChart: ChartData = {
+    const monthlyChart: ChartJsData = {
       labels: monthlyLabels,
       datasets: [
         {
@@ -581,7 +597,7 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     };
 
     // 交易分布圓餅圖
-    const symbolChart: ChartData = {
+    const symbolChart: ChartJsData = {
       labels: transactionStats.symbols.slice(0, 5).map((item) => item.symbol),
       datasets: [
         {

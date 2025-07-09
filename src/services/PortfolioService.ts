@@ -386,7 +386,7 @@ export class PortfolioService extends BaseService {
           values.push(Math.round(currentValue));
         }
 
-        return { labels, values };
+        return { labels, portfolio: values };
       };
 
       return generatePerformanceData(timeRange);

@@ -144,8 +144,16 @@ export class PortfolioController extends BaseController {
 
     return {
       labels: servicePerformance.labels,
-      portfolioValue: servicePerformance.values,
-      benchmarkValue: servicePerformance.benchmarkValues || [],
+      portfolioValue: Array.isArray(servicePerformance.values)
+        ? servicePerformance.values.map((v) =>
+            typeof v === "string" ? parseFloat(v) : v
+          )
+        : [],
+      benchmarkValue: servicePerformance.benchmarkValues
+        ? servicePerformance.benchmarkValues.map((v) =>
+            typeof v === "string" ? parseFloat(v) : v
+          )
+        : [],
       timeRange: "1M",
     };
   }

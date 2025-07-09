@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -472,7 +473,7 @@ const AuthPage = () => {
 
           return authResult;
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("登入失敗:", error);
         setErrors({ email: "電子郵件或密碼錯誤" });
       }
@@ -505,7 +506,7 @@ const AuthPage = () => {
 
           return authResult;
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("註冊失敗:", error);
         setErrors({ email: "註冊失敗，該電子郵件可能已被使用" });
       }

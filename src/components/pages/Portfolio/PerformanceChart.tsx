@@ -20,6 +20,8 @@ import {
   AdjustmentsHorizontalIcon,
   DocumentChartBarIcon,
 } from "@heroicons/react/24/outline";
+// 型別統一 import
+import type { ChartData, PerformanceData } from "../../../types/portfolio";
 
 // 註冊 Chart.js 組件
 ChartJS.register(
@@ -33,28 +35,6 @@ ChartJS.register(
   Legend,
   Filler
 );
-
-// 型別定義
-interface PerformanceData {
-  labels: string[];
-  portfolio: number[];
-  benchmark?: number[];
-  [key: string]: string[] | number[] | undefined;
-}
-
-interface ChartData {
-  daily: PerformanceData;
-  weekly: PerformanceData;
-  monthly: PerformanceData;
-  returns: Record<string, number>;
-  keyPeriods?: KeyPeriod[];
-}
-
-interface KeyPeriod {
-  name: string;
-  range: [number, number];
-  color?: string;
-}
 
 interface BenchmarkOption {
   id: string;

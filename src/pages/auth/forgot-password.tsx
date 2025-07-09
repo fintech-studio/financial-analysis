@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+/* eslint-disable react/no-unknown-property */
 import React, { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -387,9 +389,17 @@ const ForgotPasswordPage = () => {
         return result;
       });
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("發送密碼重設郵件失敗:", error);
-      const message = error?.message || "發送失敗，請稍後再試";
+      let message = "發送失敗，請稍後再試";
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error &&
+        typeof (error as { message?: unknown }).message === "string"
+      ) {
+        message = (error as { message: string }).message;
+      }
       setErrors({ general: message });
       return false;
     }

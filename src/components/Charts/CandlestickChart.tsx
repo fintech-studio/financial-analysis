@@ -486,7 +486,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
     });
 
     return { overlay: overlayData, separate: separateData };
-  }, [technicalData, data, technicalIndicators]);
+  }, [technicalData, data, technicalIndicators, timeframe]);
 
   // 優化的圖表初始化
   useEffect(() => {
@@ -608,7 +608,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
             const lineSeries = chart.addSeries(LineSeries, {
               color: indicator.color,
-              lineWidth: (indicator.lineWidth ?? 2) as unknown as import("lightweight-charts").DeepPartial<import("lightweight-charts").LineWidth>,
+              lineWidth: (indicator.lineWidth ??
+                2) as unknown as import("lightweight-charts").DeepPartial<
+                import("lightweight-charts").LineWidth
+              >,
               title: indicator.name,
               priceLineVisible: false,
               lastValueVisible: true,
@@ -652,7 +655,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
             const lineSeries = chart.addSeries(LineSeries, {
               color: indicator.color,
-              lineWidth: (indicator.lineWidth ?? 2) as unknown as import("lightweight-charts").DeepPartial<import("lightweight-charts").LineWidth>,
+              lineWidth: (indicator.lineWidth ??
+                2) as unknown as import("lightweight-charts").DeepPartial<
+                import("lightweight-charts").LineWidth
+              >,
               title: indicator.name,
               priceLineVisible: false,
               lastValueVisible: true,

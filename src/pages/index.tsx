@@ -108,10 +108,10 @@ export default function Home() {
     30000, // 30秒更新
     {
       autoStart: false, // 改為手動啟動，等應用程式準備好
-      onSuccess: useCallback((data: any) => {
+      onSuccess: useCallback((data: unknown) => {
         console.log("市場數據更新:", data);
       }, []),
-      onError: useCallback((error: any) => {
+      onError: useCallback((error: unknown) => {
         console.warn("市場數據更新失敗:", error);
       }, []),
     }
@@ -534,7 +534,7 @@ export default function Home() {
       <Footer />
 
       {/* 根據需要添加全域樣式 */}
-      <style jsx global>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

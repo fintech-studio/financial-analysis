@@ -58,7 +58,7 @@ export default async function handler(
         );
       return res.status(200).json({ results: result.recordset });
     }
-    let results: any[] = [];
+    let results: Record<string, unknown>[] = [];
     for (const table of TABLES) {
       const request = pool.request();
       request.input("symbol", mssql.NVarChar, `%${symbol}%`);
@@ -103,7 +103,7 @@ export default async function handler(
       if (result.recordset?.length) {
         if (table.name === "us_stock") {
           results = results.concat(
-            result.recordset.map((row: any) => ({
+            result.recordset.map((row: Record<string, unknown>) => ({
               symbol: row.symbol,
               name: row.name,
               chinese_name: row.chinese_name || "",
@@ -121,7 +121,7 @@ export default async function handler(
           table.name === "etn"
         ) {
           results = results.concat(
-            result.recordset.map((row: any) => ({
+            result.recordset.map((row: Record<string, unknown>) => ({
               market_category: row.market_category || "",
               symbol: row.symbol,
               name: row.name,
@@ -133,7 +133,7 @@ export default async function handler(
           );
         } else if (table.name === "tw_index") {
           results = results.concat(
-            result.recordset.map((row: any) => ({
+            result.recordset.map((row: Record<string, unknown>) => ({
               symbol: row.symbol,
               name: row.name,
               isin_code: row.isin_code || "",
@@ -144,17 +144,18 @@ export default async function handler(
       }
     }
     res.status(200).json({ results });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || "查詢失敗，請稍後再試。" });
+  } catch (err: unknown) {
+    const errorObj = err as { message?: string };
+    res.status(500).json({ error: errorObj.message || "查詢失敗，請稍後再試。" });
   } finally {
     if (pool) await pool.close();
   }
 }
 
 // 日期格式化工具
-function formatDate(dateValue: any): string {
+function formatDate(dateValue: unknown): string {
   if (!dateValue) return "";
-  const d = new Date(dateValue);
+  const d = new Date(dateValue as string);
   if (isNaN(d.getTime())) return String(dateValue); // 若無法轉換則原樣回傳
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
