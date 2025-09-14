@@ -50,7 +50,7 @@ def read_ohlcv_from_mssql(
             count_query = f"SELECT COUNT(*) FROM {table}"
             cursor = conn.cursor()
             row_count = cursor.execute(count_query).fetchval()
-            print(f"資料表 {table} 共有 {row_count:,} 筆資料")
+            print(f"資料表 {table} 共有 {row_count:,} 筆資料", flush=True)
 
             # 如果資料量不大，直接讀取全部
             if row_count <= chunk_size:
@@ -59,10 +59,10 @@ def read_ohlcv_from_mssql(
                 ORDER BY datetime
                 """
                 df = pd.read_sql(query, conn)
-                print(f"已一次讀取全部 {len(df):,} 筆資料")
+                print(f"已一次讀取全部 {len(df):,} 筆資料", flush=True)
             else:
                 # 使用分塊讀取大型資料集
-                print("資料量較大，使用分塊讀取...")
+                print("資料量較大，使用分塊讀取...", flush=True)
 
                 # 獲取日期範圍
                 date_range_query = f"""
@@ -94,13 +94,13 @@ def read_ohlcv_from_mssql(
                     chunks.append(chunk)
                     print(
                         f"已讀取 {current_date} 至 {next_date} 期間的 "
-                        f"{len(chunk):,} 筆資料"
+                        f"{len(chunk):,} 筆資料", flush=True
                     )
                     current_date = next_date
 
                 # 合併所有分塊
                 df = pd.concat(chunks, ignore_index=True)
-                print(f"共讀取 {len(df):,} 筆資料")
+                print(f"共讀取 {len(df):,} 筆資料", flush=True)
 
         # 確保 datetime 欄位為 datetime 型態
         if 'datetime' in df.columns:
@@ -112,7 +112,7 @@ def read_ohlcv_from_mssql(
         return df
 
     except Exception as e:
-        print(f"讀取資料時發生錯誤: {str(e)}")
+        print(f"讀取資料時發生錯誤: {str(e)}", flush=True)
         return pd.DataFrame()
 
 # 均線突破訊號（ma5/ma20）
@@ -476,7 +476,9 @@ def save_signals_to_mssql(df, server, database,
                     cursor.execute(delete_query)
 
                 conn.commit()
-                print(f"已更新 {symbols} 在 {min_date} 到 {max_date} 期間的資料")
+                print(
+                    f"已更新 {symbols} 在 {min_date} 到 {max_date} 期間的資料",
+                    flush=True)
 
         # 2. 使用快速插入方法
         # 設定每批次處理的資料量
@@ -536,16 +538,16 @@ def save_signals_to_mssql(df, server, database,
             progress = min(i + batch_size, total_rows)
             print(
                 f"已處理 {progress}/{total_rows} 筆資料 "
-                f"({progress/total_rows*100:.1f}%)")
+                f"({progress/total_rows*100:.1f}%)", flush=True)
 
         # 記錄執行時間
         elapsed_time = time.time() - start_time
         print(f"成功將 {total_rows} 筆資料儲存至 {table_name} 資料表，"
-              f"耗時 {elapsed_time:.2f} 秒")
+              f"耗時 {elapsed_time:.2f} 秒", flush=True)
 
     except Exception as e:
         conn.rollback()
-        print(f"儲存資料至MSSQL時發生錯誤: {str(e)}")
+        print(f"儲存資料至MSSQL時發生錯誤: {str(e)}", flush=True)
     finally:
         cursor.close()
         conn.close()  # 主流程
@@ -557,14 +559,14 @@ def analyze_signals_from_db(
     import time
     total_start_time = time.time()
 
-    print("開始從資料庫讀取資料...")
+    print("開始從資料庫讀取資料...", flush=True)
     read_start = time.time()
     df = read_ohlcv_from_mssql(server, database, table, user, password)
     read_time = time.time() - read_start
-    print(f"讀取完成，共 {len(df)} 筆資料，耗時 {read_time:.2f} 秒")
+    print(f"讀取完成，共 {len(df)} 筆資料，耗時 {read_time:.2f} 秒", flush=True)
 
     # 應用所有技術指標計算（加入計時）
-    print("開始計算技術指標...")
+    print("開始計算技術指標...", flush=True)
     calc_start = time.time()
 
     # 優化：避免重複計算，增加資料預處理
@@ -588,58 +590,67 @@ def analyze_signals_from_db(
     df = momentum_signal(df)
 
     calc_time = time.time() - calc_start
-    print(f"指標計算完成，耗時 {calc_time:.2f} 秒")
+    print(f"指標計算完成，耗時 {calc_time:.2f} 秒", flush=True)
 
     # 產生買賣訊號
     signal_start = time.time()
     df = generate_trade_signals(df)
     signal_time = time.time() - signal_start
-    print(f"訊號生成完成，耗時 {signal_time:.2f} 秒")
+    print(f"訊號生成完成，耗時 {signal_time:.2f} 秒", flush=True)
 
     # 儲存至MSSQL
-    print("開始儲存結果到資料庫...")
+    print("開始儲存結果到資料庫...", flush=True)
     save_start = time.time()
     save_signals_to_mssql(df, server, database, user, password)
     save_time = time.time() - save_start
-    print(f"資料庫儲存完成，耗時 {save_time:.2f} 秒")
+    print(f"資料庫儲存完成，耗時 {save_time:.2f} 秒", flush=True)
 
     # 如果有提供輸出路徑，也同時儲存為CSV
     if output_path:
         csv_start = time.time()
         df.to_csv(output_path, index=False, encoding='utf-8-sig')
         csv_time = time.time() - csv_start
-        print(f"CSV檔案儲存完成，耗時 {csv_time:.2f} 秒，路徑: {output_path}")
+        print(f"CSV檔案儲存完成，耗時 {csv_time:.2f} 秒，路徑: {output_path}", flush=True)
 
     # 計算總執行時間
     total_time = time.time() - total_start_time
-    print(f"\n總執行時間: {total_time:.2f} 秒")
-    print(f"- 資料讀取: {read_time:.2f}秒 ({read_time/total_time*100:.1f}%)")
-    print(f"- 指標計算: {calc_time:.2f}秒 ({calc_time/total_time*100:.1f}%)")
-    print(f"- 訊號生成: {signal_time:.2f}秒 ({signal_time/total_time*100:.1f}%)")
-    print(f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)")
+    print(f"\n總執行時間: {total_time:.2f} 秒", flush=True)
+    print(
+        f"- 資料讀取: {read_time:.2f}秒 ({read_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 指標計算: {calc_time:.2f}秒 ({calc_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 訊號生成: {signal_time:.2f}秒 ({signal_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)",
+        flush=True)
 
     print_analysis_summary(df)
 
 
 def print_analysis_summary(df):
     """顯示詳細的分析統計資訊"""
-    print("\n=== 交易訊號分析報告 ===")
+    print("\n=== 交易訊號分析報告 ===", flush=True)
 
     # 總體統計
     total_records = len(df)
     signal_records = len(df[df['Trade_Signal'] != ''])
 
-    print(f"總資料筆數: {total_records:,}")
+    print(f"總資料筆數: {total_records:,}", flush=True)
     print(
-        f"有訊號筆數: {signal_records:,} ({signal_records/total_records*100:.1f}%)")
+        f"有訊號筆數: {signal_records:,} ({signal_records/total_records*100:.1f}%)",
+        flush=True)
 
     # 交易訊號統計
     trade_counts = df['Trade_Signal'].value_counts()
-    print("\n交易訊號統計：")
+    print("\n交易訊號統計：", flush=True)
     for signal, count in trade_counts.items():
         if signal != '':
             percentage = count/total_records*100
-            print(f"  {signal}: {count:,} 次 ({percentage:.2f}%)")
+            print(f"  {signal}: {count:,} 次 ({percentage:.2f}%)", flush=True)
 
     # 訊號強度分布
     buy_signals = df[df['Trade_Signal'].isin(['買入', '強烈買入'])]
@@ -650,7 +661,7 @@ def print_analysis_summary(df):
         max_buy_strength = buy_signals['Buy_Signals'].max()
         print(
             f"\n多頭訊號強度: 平均 {avg_buy_strength:.1f}分, "
-            f"最高 {max_buy_strength:.1f}分"
+            f"最高 {max_buy_strength:.1f}分", flush=True
         )
 
     if len(sell_signals) > 0:
@@ -658,17 +669,17 @@ def print_analysis_summary(df):
         max_sell_strength = sell_signals['Sell_Signals'].max()
         print(
             f"空頭訊號強度: 平均 {avg_sell_strength:.1f}分, "
-            f"最高 {max_sell_strength:.1f}分"
+            f"最高 {max_sell_strength:.1f}分", flush=True
         )
 
     # 最新訊號
     latest_signals = df[df['Trade_Signal'] != ''].tail(3)
     if len(latest_signals) > 0:
-        print("\n最近3個交易訊號:")
+        print("\n最近3個交易訊號:", flush=True)
         for _, row in latest_signals.iterrows():
             print(
                 f"  {row['datetime'].strftime('%Y-%m-%d')}: "
-                f"{row['Trade_Signal']} ({row['Signal_Strength']})"
+                f"{row['Trade_Signal']} ({row['Signal_Strength']})", flush=True
             )
 
 
@@ -679,7 +690,7 @@ def analyze_signals_from_db_with_symbol(
     import time
     total_start_time = time.time()
 
-    print(f"開始分析 symbol={symbol}" if symbol else "開始分析全部資料")
+    print(f"開始分析 symbol={symbol}" if symbol else "開始分析全部資料", flush=True)
 
     # 優化：在SQL查詢時就過濾symbol
     if symbol and symbol != 'Unknown':
@@ -695,15 +706,15 @@ def analyze_signals_from_db_with_symbol(
             count = cursor.execute(check_query, symbol).fetchval()
 
             if count == 0:
-                print(f"找不到 symbol={symbol} 的資料，程式結束。")
+                print(f"找不到 symbol={symbol} 的資料，程式結束。", flush=True)
                 return
 
-            print(f"找到 {count} 筆 {symbol} 的資料，開始讀取...")
+            print(f"找到 {count} 筆 {symbol} 的資料，開始讀取...", flush=True)
             query = f"SELECT * FROM {table} WHERE symbol = ? ORDER BY datetime"
             read_start = time.time()
             df = pd.read_sql(query, conn, params=[symbol])
             read_time = time.time() - read_start
-            print(f"讀取完成，耗時 {read_time:.2f} 秒")
+            print(f"讀取完成，耗時 {read_time:.2f} 秒", flush=True)
     else:
         # 讀取全部資料
         read_start = time.time()
@@ -711,11 +722,11 @@ def analyze_signals_from_db_with_symbol(
         read_time = time.time() - read_start
 
     if df.empty:
-        print("沒有資料可分析，程式結束。")
+        print("沒有資料可分析，程式結束。", flush=True)
         return
 
     # 應用各種技術指標計算
-    print("開始計算技術指標...")
+    print("開始計算技術指標...", flush=True)
     calc_start = time.time()
 
     # 對性能影響較大的指標進行批次計算
@@ -765,13 +776,13 @@ def analyze_signals_from_db_with_symbol(
     signals.append("動量指標")
 
     calc_time = time.time() - calc_start
-    print(f"指標計算完成，耗時 {calc_time:.2f} 秒，共計算 {len(signals)} 個指標")
+    print(f"指標計算完成，耗時 {calc_time:.2f} 秒，共計算 {len(signals)} 個指標", flush=True)
 
     # 生成買賣訊號
     signal_start = time.time()
     df = generate_trade_signals(df)
     signal_time = time.time() - signal_start
-    print(f"訊號生成完成，耗時 {signal_time:.2f} 秒")
+    print(f"訊號生成完成，耗時 {signal_time:.2f} 秒", flush=True)
 
     # 儲存至MSSQL
     save_start = time.time()
@@ -781,15 +792,23 @@ def analyze_signals_from_db_with_symbol(
     # 如果有提供輸出路徑，也同時儲存為CSV
     if output_path:
         df.to_csv(output_path, index=False, encoding='utf-8-sig')
-        print(f'分析結果已儲存至 {output_path}')
+        print(f'分析結果已儲存至 {output_path}', flush=True)
 
     # 計算總執行時間
     total_time = time.time() - total_start_time
-    print(f"\n總執行時間: {total_time:.2f} 秒")
-    print(f"- 資料讀取: {read_time:.2f}秒 ({read_time/total_time*100:.1f}%)")
-    print(f"- 指標計算: {calc_time:.2f}秒 ({calc_time/total_time*100:.1f}%)")
-    print(f"- 訊號生成: {signal_time:.2f}秒 ({signal_time/total_time*100:.1f}%)")
-    print(f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)")
+    print(f"\n總執行時間: {total_time:.2f} 秒", flush=True)
+    print(
+        f"- 資料讀取: {read_time:.2f}秒 ({read_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 指標計算: {calc_time:.2f}秒 ({calc_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 訊號生成: {signal_time:.2f}秒 ({signal_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)",
+        flush=True)
 
     print_analysis_summary(df)
 
@@ -815,10 +834,10 @@ if __name__ == '__main__':
     # 若有命令列參數則用該 symbol，否則用預設值
     if len(sys.argv) > 1:
         symbol = sys.argv[1]
-        print(f"使用命令列參數 symbol: {symbol}")
+        print(f"使用命令列參數 symbol: {symbol}", flush=True)
     else:
         symbol = default_symbol
-        print(f"未指定 symbol，使用預設值: {symbol}")
+        print(f"未指定 symbol，使用預設值: {symbol}", flush=True)
 
     analyze_signals_from_db_with_symbol(
         server, database, table, user, password, output_csv, symbol)
