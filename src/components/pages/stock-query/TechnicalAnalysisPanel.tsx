@@ -1,5 +1,6 @@
-import { ChartBarIcon } from "@heroicons/react/24/outline";
+import { ChartBarIcon, RocketLaunchIcon } from "@heroicons/react/24/outline";
 import React, { useMemo } from "react";
+import { useRouter } from "next/router";
 import { Sparklines, SparklinesLine } from "react-sparklines";
 
 interface TechnicalAnalysisPanelProps {
@@ -110,6 +111,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
   loading = false,
   candlestickData,
 }) => {
+  const router = useRouter();
   // getter 只建立一次
   const get = useMemo(
     () => ({
@@ -729,13 +731,25 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
 
   return (
     <div className="flex flex-col gap-4 mt-4">
-      <div className="flex items-center text-xl font-semibold text-gray-800 mt-2 mb-2">
-        <ChartBarIcon className="inline-block w-6 h-6 mr-1 text-gray-500" />
-        {symbol} 技術分析 -{" "}
-        {timeframe === "1d" ? "日線" : timeframe === "1h" ? "小時線" : ""}
-        <span className="text-gray-400 text-sm font-normal ml-2">
-          - Sparkline only shows last 20 data points.
-        </span>
+      <div className="flex items-center text-xl font-semibold text-gray-800 mt-2 mb-2 justify-between">
+        <div className="flex items-center">
+          <ChartBarIcon className="inline-block w-6 h-6 mr-1 text-gray-500" />
+          {symbol} 技術分析 -{" "}
+          {timeframe === "1d" ? "日線" : timeframe === "1h" ? "小時線" : ""}
+          <span className="text-gray-400 text-sm font-normal ml-2">
+            - Sparkline only shows last 20 data points.
+          </span>
+        </div>
+        <button
+          type="button"
+          className="ml-4 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow transition-colors duration-150 flex items-center gap-1"
+          onClick={() => {
+            router.push("/test/trade-signals");
+          }}
+        >
+          <RocketLaunchIcon className="w-5 h-6 mr-1" />
+          進階交易訊號分析
+        </button>
       </div>
       {cardGroups.map((group, idx) => (
         <div
