@@ -632,7 +632,7 @@ def analyze_signals_from_db(
 
 
 def print_analysis_summary(df):
-    """顯示詳細的分析統計資訊"""
+    """顯示詳細的分析統計資訊（結構化輸出）"""
     print("\n=== 交易訊號分析報告 ===", flush=True)
 
     # 總體統計
@@ -679,8 +679,22 @@ def print_analysis_summary(df):
         for _, row in latest_signals.iterrows():
             print(
                 f"  {row['datetime'].strftime('%Y-%m-%d')}: "
-                f"{row['Trade_Signal']} ({row['Signal_Strength']})", flush=True
+                f"{row['Trade_Signal']} ({row['Signal_Strength']}) "
+                f"價格: {row['close_price']:.2f}", flush=True
             )
+
+    # 輸出最新資料狀態
+    if len(df) > 0:
+        latest_row = df.iloc[-1]
+        print("\n最新資料狀態:", flush=True)
+        print(f"日期: {latest_row['datetime'].strftime('%Y-%m-%d')}", flush=True)
+        print(f"收盤價: {latest_row['close_price']:.2f}", flush=True)
+        print(f"當前訊號: {latest_row['Trade_Signal'] or '無訊號'}", flush=True)
+        print(f"訊號強度: {latest_row['Signal_Strength'] or 'N/A'}", flush=True)
+        print(f"多頭分數: {latest_row['Buy_Signals']:.1f}", flush=True)
+        print(f"空頭分數: {latest_row['Sell_Signals']:.1f}", flush=True)
+
+# ...existing code...
 
 
 def analyze_signals_from_db_with_symbol(
@@ -699,22 +713,67 @@ def analyze_signals_from_db_with_symbol(
             f"DRIVER={{ODBC Driver 17 for SQL Server}};"
             f"SERVER={server};DATABASE={database};UID={user};PWD={password}"
         )
-        with pyodbc.connect(conn_str) as conn:
-            # 先檢查symbol是否存在
-            check_query = f"SELECT COUNT(*) FROM {table} WHERE symbol = ?"
-            cursor = conn.cursor()
-            count = cursor.execute(check_query, symbol).fetchval()
+        try:
+            with pyodbc.connect(conn_str) as conn:
+                # 先檢查symbol是否存在
+                check_query = f"SELECT COUNT(*) FROM {table} WHERE symbol = ?"
+                cursor = conn.cursor()
+                count = cursor.execute(check_query, symbol).fetchval()
 
-            if count == 0:
-                print(f"找不到 symbol={symbol} 的資料，程式結束。", flush=True)
-                return
+                if count == 0:
+                    # 統一錯誤輸出格式
+                    print(f"錯誤: 找不到股票代號 {symbol} 的資料", flush=True)
+                    print("資料庫中沒有該股票的歷史記錄", flush=True)
+                    print("建議檢查項目：", flush=True)
+                    print("1. 股票代號是否正確（如：2330、0050）", flush=True)
+                    print("2. 該股票是否已上市交易", flush=True)
+                    print("3. 資料庫資料是否為最新", flush=True)
+                    # 結束程式但不報錯，讓前端處理
+                    return
 
-            print(f"找到 {count} 筆 {symbol} 的資料，開始讀取...", flush=True)
-            query = f"SELECT * FROM {table} WHERE symbol = ? ORDER BY datetime"
-            read_start = time.time()
-            df = pd.read_sql(query, conn, params=[symbol])
-            read_time = time.time() - read_start
-            print(f"讀取完成，耗時 {read_time:.2f} 秒", flush=True)
+                print(f"找到 {count:,} 筆 {symbol} 的資料，開始讀取...", flush=True)
+                query = (
+                    f"SELECT * FROM {table} "
+                    f"WHERE symbol = ? ORDER BY datetime")
+                read_start = time.time()
+                df = pd.read_sql(query, conn, params=[symbol])
+                read_time = time.time() - read_start
+                print(f"讀取完成，耗時 {read_time:.2f} 秒", flush=True)
+
+                # 額外檢查讀取的資料
+                if df.empty:
+                    print("錯誤: 資料庫查詢結果為空", flush=True)
+                    print("雖然統計顯示有資料，但實際讀取時沒有內容", flush=True)
+                    return
+
+                # 檢查必要欄位
+                required_columns = ['datetime', 'close_price', 'volume']
+                missing_columns = [
+                    col for col in required_columns if col not in df.columns]
+                if missing_columns:
+                    print("錯誤: 資料結構不完整，缺少必要欄位", flush=True)
+                    print(f"缺少欄位: {', '.join(missing_columns)}", flush=True)
+                    return
+
+                # 檢查資料品質
+                null_count = df['close_price'].isnull().sum()
+                if null_count > len(df) * 0.5:  # 如果超過50%的價格資料為空
+                    print(f"錯誤: {symbol} 的價格資料品質不佳", flush=True)
+                    print(f"空值比例過高 ({null_count}/{len(df)}，超過50%)", flush=True)
+                    return
+
+        except pyodbc.Error as e:
+            print("錯誤: 資料庫連線失敗", flush=True)
+            print(f"詳細錯誤: {str(e)}", flush=True)
+            print("可能原因：", flush=True)
+            print("1. 資料庫伺服器無法連接", flush=True)
+            print("2. 登入憑證錯誤", flush=True)
+            print("3. 網路連線問題", flush=True)
+            return
+        except Exception as e:
+            print("錯誤: 資料讀取時發生未預期錯誤", flush=True)
+            print(f"錯誤詳情: {str(e)}", flush=True)
+            return
     else:
         # 讀取全部資料
         read_start = time.time()
@@ -722,77 +781,103 @@ def analyze_signals_from_db_with_symbol(
         read_time = time.time() - read_start
 
     if df.empty:
-        print("沒有資料可分析，程式結束。", flush=True)
+        print("錯誤: 沒有資料可分析", flush=True)
+        print("請確認資料庫中是否有相關資料", flush=True)
         return
+
+    # 資料基本統計
+    print(f"資料範圍: {df['datetime'].min()} 至 {df['datetime'].max()}", flush=True)
+    print(
+        f"價格範圍: {df['close_price'].min():.2f} 至 {df['close_price'].max():.2f}",
+        flush=True)
 
     # 應用各種技術指標計算
     print("開始計算技術指標...", flush=True)
     calc_start = time.time()
 
-    # 對性能影響較大的指標進行批次計算
-    signals = []
+    try:
+        # 對性能影響較大的指標進行批次計算
+        signals = []
 
-    # 計算各類指標訊號
-    df = ma_cross_signal(df)
-    signals.append("MA交叉")
+        # 計算各類指標訊號
+        df = ma_cross_signal(df)
+        signals.append("MA交叉")
 
-    df = bollinger_signal(df)
-    signals.append("布林通道")
+        df = bollinger_signal(df)
+        signals.append("布林通道")
 
-    df = macd_signal(df)
-    signals.append("MACD交叉")
+        df = macd_signal(df)
+        signals.append("MACD交叉")
 
-    df = trend_signal(df)
-    signals.append("趨勢判斷")
+        df = trend_signal(df)
+        signals.append("趨勢判斷")
 
-    df = macd_divergence(df)
-    signals.append("MACD背離")
+        df = macd_divergence(df)
+        signals.append("MACD背離")
 
-    df = anomaly_detection(df)
-    signals.append("異常偵測")
+        df = anomaly_detection(df)
+        signals.append("異常偵測")
 
-    df = rsi_signal(df)
-    signals.append("RSI訊號")
+        df = rsi_signal(df)
+        signals.append("RSI訊號")
 
-    df = kd_signal(df)
-    signals.append("KD訊號")
+        df = kd_signal(df)
+        signals.append("KD訊號")
 
-    df = support_resistance_signal(df)
-    signals.append("壓力支撐位")
+        df = support_resistance_signal(df)
+        signals.append("壓力支撐位")
 
-    df = volume_anomaly_signal(df)
-    signals.append("成交量異常")
+        df = volume_anomaly_signal(df)
+        signals.append("成交量異常")
 
-    df = ema_cross_signal(df)
-    signals.append("EMA交叉")
+        df = ema_cross_signal(df)
+        signals.append("EMA交叉")
 
-    df = cci_signal(df)
-    signals.append("CCI訊號")
+        df = cci_signal(df)
+        signals.append("CCI訊號")
 
-    df = willr_signal(df)
-    signals.append("威廉指標")
+        df = willr_signal(df)
+        signals.append("威廉指標")
 
-    df = momentum_signal(df)
-    signals.append("動量指標")
+        df = momentum_signal(df)
+        signals.append("動量指標")
 
-    calc_time = time.time() - calc_start
-    print(f"指標計算完成，耗時 {calc_time:.2f} 秒，共計算 {len(signals)} 個指標", flush=True)
+        calc_time = time.time() - calc_start
+        print(
+            f"指標計算完成，耗時 {calc_time:.2f} 秒，共計算 {len(signals)} 個指標", flush=True)
+
+    except Exception as e:
+        print("錯誤: 技術指標計算失敗", flush=True)
+        print(f"計算過程發生錯誤: {str(e)}", flush=True)
+        return
 
     # 生成買賣訊號
     signal_start = time.time()
-    df = generate_trade_signals(df)
-    signal_time = time.time() - signal_start
-    print(f"訊號生成完成，耗時 {signal_time:.2f} 秒", flush=True)
+    try:
+        df = generate_trade_signals(df)
+        signal_time = time.time() - signal_start
+        print(f"訊號生成完成，耗時 {signal_time:.2f} 秒", flush=True)
+    except Exception as e:
+        print("錯誤: 買賣訊號生成失敗", flush=True)
+        print(f"訊號計算錯誤: {str(e)}", flush=True)
+        return
 
     # 儲存至MSSQL
     save_start = time.time()
-    save_signals_to_mssql(df, server, database, user, password)
-    save_time = time.time() - save_start
+    try:
+        save_signals_to_mssql(df, server, database, user, password)
+        save_time = time.time() - save_start
+    except Exception as e:
+        print(f"警告: 儲存至資料庫失敗: {str(e)}", flush=True)
+        save_time = 0
 
     # 如果有提供輸出路徑，也同時儲存為CSV
     if output_path:
-        df.to_csv(output_path, index=False, encoding='utf-8-sig')
-        print(f'分析結果已儲存至 {output_path}', flush=True)
+        try:
+            df.to_csv(output_path, index=False, encoding='utf-8-sig')
+            print(f'分析結果已儲存至 {output_path}', flush=True)
+        except Exception as e:
+            print(f'警告: CSV儲存失敗: {str(e)}', flush=True)
 
     # 計算總執行時間
     total_time = time.time() - total_start_time
@@ -806,9 +891,10 @@ def analyze_signals_from_db_with_symbol(
     print(
         f"- 訊號生成: {signal_time:.2f}秒 ({signal_time/total_time*100:.1f}%)",
         flush=True)
-    print(
-        f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)",
-        flush=True)
+    if save_time > 0:
+        print(
+            f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)",
+            flush=True)
 
     print_analysis_summary(df)
 
