@@ -1,37 +1,110 @@
 import React, { useState, useRef, useEffect } from "react";
 
+interface TradeSignalData {
+  summary: {
+    totalRecords: number;
+    signalRecords: number;
+    signalPercentage: number;
+  };
+  signals: {
+    [key: string]: {
+      count: number;
+      percentage: number;
+    };
+  };
+  strength: {
+    buyAverage?: number;
+    buyMax?: number;
+    sellAverage?: number;
+    sellMax?: number;
+  };
+  recentSignals: Array<{
+    date: string;
+    signal: string;
+    strength: string;
+    price: number;
+  }>;
+  latestData: {
+    date: string;
+    price: number;
+    signal: string;
+    strength: string;
+    buySignals: number;
+    sellSignals: number;
+  } | null;
+}
+
 const TradeSignalsPage: React.FC = () => {
   const [symbol, setSymbol] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<string>("");
-  const eventSourceRef = useRef<EventSource | null>(null);
   const [error, setError] = useState<string>("");
+  const [analysisData, setAnalysisData] = useState<TradeSignalData | null>(
+    null
+  );
   const resultRef = useRef<HTMLPreElement | null>(null);
-  const [showOutput, setShowOutput] = useState(true); // 控制命令輸出框顯示
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     setLoading(true);
-    setResult("");
     setError("");
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
+    setAnalysisData(null);
+
+    try {
+      const response = await fetch(
+        `/api/test/trade-signals?symbol=${encodeURIComponent(symbol)}`
+      );
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setAnalysisData(result.data);
+      } else {
+        // 根據HTTP狀態碼處理不同錯誤
+        let errorMessage = result.error || "分析失敗";
+
+        if (response.status === 404) {
+          // 資料不存在的情況
+          errorMessage = `找不到股票代號 "${symbol}" 的資料\n\n${
+            result.details || ""
+          }\n\n建議：\n• 確認股票代號格式是否正確\n• 嘗試其他股票代號\n• 聯繫管理員確認資料庫狀態`;
+        } else if (response.status === 400) {
+          // 請求參數錯誤
+          errorMessage = `請求參數錯誤：${errorMessage}`;
+        } else if (response.status === 500) {
+          // 伺服器內部錯誤
+          errorMessage = `伺服器內部錯誤：${errorMessage}\n\n請稍後再試，或聯繫技術支援`;
+        } else {
+          // 其他錯誤
+          if (
+            errorMessage.includes("找不到") ||
+            errorMessage.includes("沒有資料")
+          ) {
+            errorMessage = `找不到股票代號 "${symbol}" 的資料，請確認：\n• 股票代號是否正確\n• 該股票是否已上市\n• 資料庫是否包含此股票的歷史資料`;
+          } else if (errorMessage.includes("無法解析")) {
+            errorMessage = "分析結果解析失敗，可能是資料格式問題";
+          } else if (errorMessage.includes("連線")) {
+            errorMessage = "資料庫連線失敗，請稍後再試";
+          }
+        }
+
+        setError(errorMessage);
+      }
+    } catch (err) {
+      let errorMessage = "網路連線失敗";
+
+      if (err instanceof Error) {
+        if (err.message.includes("fetch")) {
+          errorMessage = "無法連接到伺服器，請檢查網路連線";
+        } else if (err.message.includes("timeout")) {
+          errorMessage = "請求逾時，請稍後再試";
+        } else {
+          errorMessage = `網路錯誤：${err.message}`;
+        }
+      }
+
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-    const es = new EventSource(
-      `/api/test/trade-signals?symbol=${encodeURIComponent(symbol)}`
-    );
-    eventSourceRef.current = es;
-    es.onmessage = (e) => {
-      setResult((prev) => prev + (prev ? "\n" : "") + e.data);
-    };
-    es.addEventListener("end", () => {
-      setLoading(false);
-      es.close();
-    });
-    es.onerror = () => {
-      setError("串流連線失敗或中斷");
-      setLoading(false);
-      es.close();
-    };
   };
 
   // 自動捲動到最底
@@ -39,10 +112,22 @@ const TradeSignalsPage: React.FC = () => {
     if (resultRef.current) {
       resultRef.current.scrollTop = resultRef.current.scrollHeight;
     }
-  }, [result]);
+  }, [analysisData]);
+
+  const getSignalColor = (signal: string) => {
+    if (signal.includes("買入")) return "text-green-600 bg-green-50";
+    if (signal.includes("賣出")) return "text-red-600 bg-red-50";
+    return "text-gray-600 bg-gray-50";
+  };
+
+  const getSignalIcon = (signal: string) => {
+    if (signal.includes("買入")) return "📈";
+    if (signal.includes("賣出")) return "📉";
+    return "📊";
+  };
 
   return (
-    <div className="max-w-4xl mx-auto py-10 px-4">
+    <div className="max-w-6xl mx-auto py-10 px-4">
       <button
         type="button"
         className="mb-6 px-4 py-2 bg-white hover:bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg text-base font-semibold shadow-sm flex items-center gap-2 transition-all duration-200"
@@ -64,12 +149,14 @@ const TradeSignalsPage: React.FC = () => {
         </svg>
         返回上一頁
       </button>
+
       <h1 className="text-4xl font-bold mb-6 text-center flex items-center justify-center gap-2">
         進階交易訊號分析
       </h1>
       <p className="text-center text-gray-500 mb-6">只先做台股而已💤</p>
+
       <form
-        className="flex flex-col sm:flex-row gap-2 mb-4 items-center justify-center"
+        className="flex flex-col sm:flex-row gap-2 mb-8 items-center justify-center"
         onSubmit={(e) => {
           e.preventDefault();
           if (!loading && symbol) handleAnalyze();
@@ -92,77 +179,274 @@ const TradeSignalsPage: React.FC = () => {
           className="w-32 px-5 py-2 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white rounded-lg text-lg font-semibold disabled:opacity-60 text-center shadow-md transition-all duration-200"
           disabled={!symbol || loading}
         >
-          {loading ? (
-            <span className="flex items-center gap-2 justify-center">
-              分析中...
-            </span>
-          ) : (
-            "分析"
-          )}
+          {loading ? "分析中..." : "分析"}
         </button>
       </form>
-      <div className="flex justify-center">
-        <button
-          type="button"
-          className={`mb-2 px-4 py-1 rounded text-sm font-medium transition-all duration-200 border flex items-center gap-1 ${
-            showOutput
-              ? "bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
-              : "bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-indigo-200"
-          }`}
-          onClick={() => setShowOutput((prev) => !prev)}
-          aria-expanded={showOutput}
-        >
-          <svg
-            className={`w-4 h-4 transition-transform duration-300 ${
-              showOutput ? "rotate-90" : "rotate-0"
-            }`}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-          {showOutput ? "隱藏命令輸出" : "顯示命令輸出"}
-        </button>
-      </div>
-      {error && <div className="text-red-500 mb-2">{error}</div>}
-      <div
-        className={`transition-all duration-500 overflow-hidden mt-4 rounded-lg shadow-inner border border-gray-200 bg-gray-50 ${
-          showOutput ? "" : "ring-0"
-        }`}
-        style={{
-          maxHeight: showOutput ? 520 : 0,
-          opacity: showOutput ? 1 : 0,
-        }}
-      >
-        <pre
-          ref={resultRef}
-          className="bg-gray-900 text-green-200 rounded-lg p-4 whitespace-pre-wrap text-sm max-h-[500px] overflow-auto font-mono border border-gray-700 w-full min-w-[320px]"
-          style={{ minHeight: 120 }}
-        >
-          {result || (loading ? "分析即將開始..." : "請輸入股票代號並點擊分析")}
-        </pre>
-      </div>
-      {/* 進階交易訊號分析面板 */}
-      <div className="mt-10 p-6 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg border border-indigo-100">
-        <h2 className="text-xl font-bold mb-4 text-indigo-700 flex items-center gap-2">
-          <span role="img" aria-label="advanced">
-            🧠
-          </span>
-          進階交易訊號分析面板
-        </h2>
-        <div className="text-gray-600">
-          {/* 這裡可以放進階分析內容、圖表或其他元件 */}
-          <p className="italic text-indigo-400">
-            （預留：未來可在此顯示更詳細的交易訊號分析結果、圖表或互動元件）
-          </p>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="text-red-700 font-medium mb-2">
+            {error.includes("找不到") ? "📋 查無資料" : "❌ 分析失敗"}
+          </div>
+          <div className="text-red-600 text-sm whitespace-pre-line">
+            {error}
+          </div>
+
+          {error.includes("找不到") && (
+            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+              <div className="text-yellow-700 font-medium mb-1">
+                💡 常見股票代號範例
+              </div>
+              <div className="text-yellow-600 space-y-1">
+                <div>• 台積電：2330</div>
+                <div>• 聯發科：2454</div>
+                <div>• 鴻海：2317</div>
+                <div>• 台達電：2308</div>
+                <div>• 元大台灣50：0050</div>
+              </div>
+            </div>
+          )}
+
+          {error.includes("伺服器內部錯誤") && (
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+              <div className="text-blue-700 font-medium mb-1">🔧 故障排除</div>
+              <div className="text-blue-600">
+                • 稍等幾分鐘後重新嘗試
+                <br />
+                • 如問題持續，請聯繫技術支援
+                <br />• 錯誤時間：{new Date().toLocaleString()}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
+
+      {loading && (
+        <div className="mb-6 p-8 bg-indigo-50 border border-indigo-200 rounded-lg text-center">
+          <div className="inline-flex items-center gap-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+            <span className="text-indigo-700 font-medium">
+              正在分析交易訊號...
+            </span>
+          </div>
+        </div>
+      )}
+
+      {analysisData && (
+        <div className="space-y-6">
+          {/* 總體統計 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="text-blue-700 font-medium">總資料筆數</div>
+              <div className="text-2xl font-bold text-blue-800">
+                {analysisData.summary.totalRecords.toLocaleString()}
+              </div>
+              <div className="text-xs text-blue-600 mt-1">
+                來自資料庫的股票K線資料總筆數
+              </div>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="text-green-700 font-medium">有訊號筆數</div>
+              <div className="text-2xl font-bold text-green-800">
+                {analysisData.summary.signalRecords.toLocaleString()}
+              </div>
+              <div className="text-xs text-green-600 mt-1">
+                觸發買賣訊號的資料筆數
+              </div>
+            </div>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="text-purple-700 font-medium">訊號覆蓋率</div>
+              <div className="text-2xl font-bold text-purple-800">
+                {analysisData.summary.signalPercentage.toFixed(1)}%
+              </div>
+              <div className="text-xs text-purple-600 mt-1">
+                有訊號筆數 ÷ 總資料筆數 × 100
+              </div>
+            </div>
+          </div>
+
+          {/* 最新資料狀態 */}
+          {analysisData.latestData && (
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-6">
+              <h3 className="text-xl font-bold mb-4 text-indigo-800">
+                🔄 最新資料狀態
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-sm text-gray-600 mb-1">最新日期</div>
+                  <div className="text-lg font-bold text-gray-800">
+                    {analysisData.latestData.date}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600 mb-1">收盤價</div>
+                  <div className="text-lg font-bold text-gray-800">
+                    NT$ {analysisData.latestData.price.toFixed(2)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600 mb-1">當前訊號</div>
+                  <div
+                    className={`text-lg font-bold ${
+                      getSignalColor(analysisData.latestData.signal).split(
+                        " "
+                      )[0]
+                    }`}
+                  >
+                    {analysisData.latestData.signal || "無訊號"}
+                  </div>
+                </div>
+              </div>
+              {analysisData.latestData.signal && (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-1">訊號強度</div>
+                    <div className="text-base font-medium text-gray-700">
+                      {analysisData.latestData.strength}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-1">多頭分數</div>
+                    <div className="text-base font-bold text-green-600">
+                      {analysisData.latestData.buySignals.toFixed(1)}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-1">空頭分數</div>
+                    <div className="text-base font-bold text-red-600">
+                      {analysisData.latestData.sellSignals.toFixed(1)}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 交易訊號統計 */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xl font-bold mb-4 text-gray-800">
+              📊 交易訊號統計
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              {Object.entries(analysisData.signals).map(([signal, data]) => (
+                <div
+                  key={signal}
+                  className={`p-3 rounded-lg border ${getSignalColor(signal)}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span>{getSignalIcon(signal)}</span>
+                    <span className="font-medium text-sm">{signal}</span>
+                  </div>
+                  <div className="text-lg font-bold">{data.count}次</div>
+                  <div className="text-xs opacity-75">
+                    {data.percentage.toFixed(2)}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 訊號強度 */}
+          {(analysisData.strength.buyAverage ||
+            analysisData.strength.sellAverage) && (
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">
+                💪 訊號強度分析
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {analysisData.strength.buyAverage && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="text-green-700 font-medium mb-2">
+                      🟢 多頭訊號強度
+                    </div>
+                    <div className="space-y-1">
+                      <div>
+                        平均:{" "}
+                        <span className="font-bold">
+                          {analysisData.strength.buyAverage.toFixed(1)}分
+                        </span>
+                      </div>
+                      <div>
+                        最高:{" "}
+                        <span className="font-bold">
+                          {analysisData.strength.buyMax?.toFixed(1)}分
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {analysisData.strength.sellAverage && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="text-red-700 font-medium mb-2">
+                      🔴 空頭訊號強度
+                    </div>
+                    <div className="space-y-1">
+                      <div>
+                        平均:{" "}
+                        <span className="font-bold">
+                          {analysisData.strength.sellAverage.toFixed(1)}分
+                        </span>
+                      </div>
+                      <div>
+                        最高:{" "}
+                        <span className="font-bold">
+                          {analysisData.strength.sellMax?.toFixed(1)}分
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 最近訊號 */}
+          {analysisData.recentSignals.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h3 className="text-xl font-bold mb-4 text-gray-800">
+                ⏰ 最近交易訊號
+              </h3>
+              <div className="space-y-3">
+                {analysisData.recentSignals.map((signal, index) => (
+                  <div
+                    key={index}
+                    className={`p-3 rounded-lg border ${getSignalColor(
+                      signal.signal
+                    )}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span>{getSignalIcon(signal.signal)}</span>
+                        <div>
+                          <div className="font-medium">{signal.signal}</div>
+                          <div className="text-sm opacity-75">
+                            {signal.strength}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium">{signal.date}</div>
+                        {signal.price > 0 && (
+                          <div className="text-sm opacity-75">
+                            NT$ {signal.price}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {!loading && !analysisData && !error && (
+        <div className="text-center py-12 text-gray-500">
+          <div className="text-6xl mb-4">📈</div>
+          <div className="text-lg">請輸入股票代號並點擊分析開始</div>
+        </div>
+      )}
     </div>
   );
 };
