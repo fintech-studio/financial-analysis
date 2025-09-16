@@ -139,3 +139,5 @@ dist
 
 # python-app specific ignores
 public/python-app/**/__pycache__/
+
+!public/python-app/Trade-Signals/.env
