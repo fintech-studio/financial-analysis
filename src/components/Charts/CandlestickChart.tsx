@@ -102,6 +102,11 @@ const cleanAndValidateData = (
 
   console.log(`🔍 開始清理數據: ${rawData.length} 筆原始數據 (${timeframe})`);
 
+  // 統計變量，用於控制台輸出
+  let ohlcCorrectionCount = 0;
+  let highCorrectionCount = 0;
+  let lowCorrectionCount = 0;
+
   try {
     // Step 1: 基本數據轉換和驗證
     const processedItems = rawData
@@ -124,12 +129,22 @@ const cleanAndValidateData = (
             return null;
           }
 
-          // 修正 OHLC 邏輯錯誤
+          // 靜默修正 OHLC 邏輯錯誤（不產生警告）
+          const originalHigh = high;
+          const originalLow = low;
           const correctedHigh = Math.max(open, high, low, close);
           const correctedLow = Math.min(open, high, low, close);
 
+          // 只記錄統計信息，不產生用戶警告
           if (high !== correctedHigh || low !== correctedLow) {
-            warnings.push(`索引 ${index}: 自動修正 OHLC 數據邏輯`);
+            ohlcCorrectionCount++;
+            if (high !== correctedHigh) highCorrectionCount++;
+            if (low !== correctedLow) lowCorrectionCount++;
+            
+            // 只在開發模式下詳細記錄到控制台
+            if (process.env.NODE_ENV === 'development') {
+              console.log(`靜默修正 索引 ${index}: H: ${high}→${correctedHigh}, L: ${low}→${correctedLow}`);
+            }
           }
 
           // 處理時間戳
@@ -162,6 +177,16 @@ const cleanAndValidateData = (
             warnings.push(`索引 ${index}: 無效的成交量 ${item.volume}`);
           }
 
+          // 額外的數據質量檢查（僅記錄嚴重異常）
+          const priceRange = correctedHigh - correctedLow;
+          const avgPrice = (open + correctedHigh + correctedLow + close) / 4;
+          const rangePercentage = (priceRange / avgPrice) * 100;
+          
+          // 只對極端異常波動（超過50%）發出警告
+          if (rangePercentage > 50) {
+            warnings.push(`索引 ${index}: 極端價格波動 ${rangePercentage.toFixed(2)}%`);
+          }
+
           return {
             originalIndex: index,
             timeValue,
@@ -171,7 +196,12 @@ const cleanAndValidateData = (
             low: correctedLow,
             close,
             volume: volume && volume > 0 ? volume : undefined,
-            originalDate: item.date
+            originalDate: item.date,
+            // 記錄修正信息用於統計
+            wasHighCorrected: high !== correctedHigh,
+            wasLowCorrected: low !== correctedLow,
+            originalHigh,
+            originalLow
           };
 
         } catch (error) {
@@ -187,6 +217,11 @@ const cleanAndValidateData = (
     }
 
     console.log(`✅ 基本處理完成: ${processedItems.length}/${rawData.length} 筆有效數據`);
+    
+    // 在控制台輸出OHLC修正統計（不影響UI警告）
+    if (ohlcCorrectionCount > 0) {
+      console.log(`🔧 OHLC自動修正統計: 總共 ${ohlcCorrectionCount} 筆 (高價修正: ${highCorrectionCount}, 低價修正: ${lowCorrectionCount})`);
+    }
 
     // Step 2: 按時間排序
     processedItems.sort((a, b) => a!.sortKey - b!.sortKey);
@@ -229,7 +264,7 @@ const cleanAndValidateData = (
 
     // Step 5: 生成最終圖表數據
     const candleData: LightweightCandlestickData[] = uniqueItems.map(item => ({
-      time: item!.timeValue as any,
+      time: (timeframe === "1d" ? item!.timeValue as string : item!.timeValue as number) as LightweightCandlestickData['time'],
       open: item!.open,
       high: item!.high,
       low: item!.low,
@@ -239,7 +274,7 @@ const cleanAndValidateData = (
     const volumeData: HistogramData[] = uniqueItems
       .filter(item => item!.volume !== undefined)
       .map(item => ({
-        time: item!.timeValue as any,
+        time: (timeframe === "1d" ? item!.timeValue as string : item!.timeValue as number) as HistogramData['time'],
         value: item!.volume!,
         color: item!.close >= item!.open ? "#ef444460" : "#10b98160",
       }));
@@ -247,7 +282,7 @@ const cleanAndValidateData = (
     console.log(`🎯 數據清理完成:`);
     console.log(`   - K線數據: ${candleData.length} 筆`);
     console.log(`   - 成交量數據: ${volumeData.length} 筆`);
-    console.log(`   - 警告: ${warnings.length} 個`);
+    console.log(`   - 用戶警告: ${warnings.length} 個 (OHLC修正已靜默處理)`);
 
     return { candleData, volumeData, warnings, errors };
 
@@ -605,7 +640,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
                 : Math.floor(new Date(dateItem.date).getTime() / 1000);
               
               lineData.push({
-                time: timeValue as any,
+                time: timeValue as LineData['time'],
                 value: Number(value),
               });
             }
@@ -625,8 +660,8 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
           const timeSet = new Set<string | number>();
           
           for (const item of lineData) {
-            if (!timeSet.has(item.time as any)) {
-              timeSet.add(item.time as any);
+            if (!timeSet.has(item.time as string | number)) {
+              timeSet.add(item.time as string | number);
               uniqueLineData.push(item);
             }
           }
@@ -728,7 +763,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
       // 🔧 安全地設置K線數據
       try {
-        candlestickSeries.setData(chartData.candleData as any);
+        candlestickSeries.setData(chartData.candleData);
         console.log(`✅ K線數據設置成功: ${chartData.candleData.length} 筆`);
       } catch (error) {
         console.error('❌ K線數據設置失敗:', error);
@@ -750,7 +785,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
           });
 
           volumeSeriesRef.current = volumeSeries;
-          volumeSeries.setData(chartData.volumeData as any);
+          volumeSeries.setData(chartData.volumeData);
           console.log(`✅ 成交量數據設置成功: ${chartData.volumeData.length} 筆`);
         } catch (error) {
           console.error('❌ 成交量設置失敗:', error);
@@ -771,7 +806,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
             if (indicator && indicatorData && indicatorData.length > 0) {
               const lineSeries = chart.addSeries(LineSeries, {
                 color: indicator.color,
-                lineWidth: (indicator.lineWidth ?? 2) as any,
+                lineWidth: (indicator.lineWidth ?? 2) as 1 | 2 | 3 | 4,
                 title: indicator.name,
                 priceLineVisible: false,
                 lastValueVisible: true,
@@ -805,7 +840,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
               const lineSeries = chart.addSeries(LineSeries, {
                 color: indicator.color,
-                lineWidth: (indicator.lineWidth ?? 2) as any,
+                lineWidth: (indicator.lineWidth ?? 2) as 1 | 2 | 3 | 4,
                 title: indicator.name,
                 priceLineVisible: false,
                 lastValueVisible: true,
@@ -1025,14 +1060,14 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
     <div className={`relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${
       isFullscreen ? "fixed inset-0 z-[9999] m-0 rounded-none shadow-lg" : ""
     }`}>
-      {/* 數據警告提示 */}
+      {/* 數據警告提示 - 修改顯示邏輯 */}
       {dataWarnings.length > 0 && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2">
           <div className="flex items-start">
             <ExclamationTriangleIcon className="w-4 h-4 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
             <div className="text-xs text-yellow-700">
-              <span className="font-medium">數據警告:</span> 
-              發現 {dataWarnings.length} 個數據問題，已自動修正。
+              <span className="font-medium">數據品質提醒:</span> 
+              發現 {dataWarnings.length} 個需要注意的數據問題。
               <button
                 onClick={() => setShowWarningDetails(!showWarningDetails)}
                 className="ml-2 underline hover:no-underline"
@@ -1040,13 +1075,18 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
                 {showWarningDetails ? '隱藏' : '查看'}詳情
               </button>
               {showWarningDetails && (
-                <div className="mt-2 max-h-20 overflow-y-auto text-xs bg-yellow-100 p-2 rounded">
-                  {dataWarnings.slice(0, 5).map((warning, index) => (
-                    <div key={index}>• {warning}</div>
+                <div className="mt-2 max-h-24 overflow-y-auto text-xs bg-yellow-100 p-2 rounded">
+                  {dataWarnings.slice(0, 8).map((warning, index) => (
+                    <div key={index} className="mb-1 leading-relaxed">• {warning}</div>
                   ))}
-                  {dataWarnings.length > 5 && (
-                    <div>... 及其他 {dataWarnings.length - 5} 個警告</div>
+                  {dataWarnings.length > 8 && (
+                    <div className="font-medium text-yellow-800">
+                      ... 及其他 {dataWarnings.length - 8} 個問題
+                    </div>
                   )}
+                  <div className="mt-2 pt-2 border-t border-yellow-200 text-yellow-600">
+                    <strong>說明:</strong> OHLC價格邏輯錯誤已自動修正，不會影響圖表顯示
+                  </div>
                 </div>
               )}
             </div>
