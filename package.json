@@ -26,7 +26,7 @@
     "date-fns": "^4.1.0",
     "eslint-config-next": "^15.3.3",
     "express": "^5.1.0",
-    "framer-motion": "^12.9.4",
+    "framer-motion": "^12.23.16",
     "gsap": "^3.13.0",
     "headlessui": "^0.0.0",
     "lightweight-charts": "^5.0.8",
