@@ -373,8 +373,6 @@ const Header: React.FC<{
   messageCount: number;
   selectedModel: string;
   onModelChange: (m: string) => void;
-  customModel: string;
-  onCustomModelChange: (m: string) => void;
   isSettingsOpen: boolean;
   availableModels: string[];
   loadingModels: boolean;
@@ -384,8 +382,6 @@ const Header: React.FC<{
   messageCount,
   selectedModel,
   onModelChange,
-  customModel,
-  onCustomModelChange,
   isSettingsOpen,
   availableModels,
   loadingModels,
@@ -480,26 +476,8 @@ const Header: React.FC<{
                     ))}
                   </optgroup>
                 )}
-                <optgroup label="其他">
-                  <option value="custom">自訂模型...</option>
-                </optgroup>
               </select>
             </div>
-
-            {selectedModel === "custom" && (
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  自訂模型名稱
-                </label>
-                <input
-                  type="text"
-                  value={customModel}
-                  onChange={(e) => onCustomModelChange(e.target.value)}
-                  placeholder="輸入模型名稱"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                />
-              </div>
-            )}
           </div>
         </motion.div>
       )}
@@ -517,7 +495,6 @@ const Chat: React.FC = () => {
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
   const [confirmClear, setConfirmClear] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>(MODEL_NAME);
-  const [customModel, setCustomModel] = useState<string>("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
@@ -729,10 +706,7 @@ const Chat: React.FC = () => {
           return baseMessage;
         });
 
-        const modelToUse =
-          selectedModel === "custom"
-            ? customModel || MODEL_NAME
-            : selectedModel;
+        const modelToUse = selectedModel || MODEL_NAME;
         const res = await fetch(OLLAMA_API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -806,14 +780,7 @@ const Chat: React.FC = () => {
     }
 
     setLoading(false);
-  }, [
-    input,
-    selectedModel,
-    customModel,
-    attachedFiles,
-    attachedImages,
-    messages,
-  ]);
+  }, [input, selectedModel, attachedFiles, attachedImages, messages]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -865,9 +832,7 @@ const Chat: React.FC = () => {
     setSelectedModel(m);
   }, []);
 
-  const handleCustomModelChange = useCallback((m: string) => {
-    setCustomModel(m);
-  }, []);
+  // ...existing code...
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -877,8 +842,6 @@ const Chat: React.FC = () => {
           messageCount={messages.length}
           selectedModel={selectedModel}
           onModelChange={handleModelChange}
-          customModel={customModel}
-          onCustomModelChange={handleCustomModelChange}
           isSettingsOpen={isSettingsOpen}
           availableModels={availableModels}
           loadingModels={loadingModels}
@@ -911,7 +874,7 @@ const Chat: React.FC = () => {
                     <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
                       {[
                         "解釋一個複雜的概念",
-                        "幫我分析數據",
+                        "請幫我分析數據",
                         "創意寫作協助",
                         "程式碼問題解答",
                       ].map((suggestion, i) => (
@@ -1090,7 +1053,7 @@ const Chat: React.FC = () => {
                     onKeyDown={handleKeyDown}
                     placeholder="輸入您的訊息... (Shift+Enter 換行，Enter 送出)"
                     rows={1}
-                    className="w-full p-4 rounded-2xl border border-gray-300 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-gray-400"
+                    className="w-full p-4 rounded-2xl border border-gray-300 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-gray-400 hide-scrollbar"
                     disabled={loading}
                     style={{ minHeight: "56px", maxHeight: "200px" }}
                   />
@@ -1182,9 +1145,7 @@ const Chat: React.FC = () => {
                   >
                     <span>當前模型：</span>
                     <span className="font-medium text-blue-600">
-                      {selectedModel === "custom"
-                        ? customModel || "自訂"
-                        : selectedModel}
+                      {selectedModel}
                     </span>
                     <svg
                       className={`w-4 h-4 text-gray-500 transition-transform ${
@@ -1233,20 +1194,6 @@ const Chat: React.FC = () => {
                               {model}
                             </motion.button>
                           ))}
-                          <motion.button
-                            whileHover={{ backgroundColor: "#f3f4f6" }}
-                            onClick={() => {
-                              setSelectedModel("custom");
-                              setIsSettingsOpen(false);
-                            }}
-                            className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
-                              selectedModel === "custom"
-                                ? "bg-blue-100 text-blue-700"
-                                : "text-gray-700 hover:bg-gray-100"
-                            }`}
-                          >
-                            自訂模型
-                          </motion.button>
                         </div>
 
                         <div className="mt-2 pt-2 border-t border-gray-200">
@@ -1355,3 +1302,21 @@ const Chat: React.FC = () => {
 };
 
 export default Chat;
+
+if (typeof document !== "undefined") {
+  const styleId = "hide-scrollbar-global-style";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
+      .hide-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none; /* WebKit */
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
