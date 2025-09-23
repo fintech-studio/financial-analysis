@@ -33,9 +33,100 @@ interface Message {
   content: string;
   timestamp: number;
   id: string;
+  images?: string[]; // Base64 encoded images
+  files?: {
+    name: string;
+    type: string;
+    content: string; // Base64 encoded content
+  }[];
 }
 
 // 圖標組件 - 使用 React.memo 優化重渲染
+const AttachIcon = React.memo(() => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+    />
+  </svg>
+));
+AttachIcon.displayName = "AttachIcon";
+
+const ImageIcon = React.memo(() => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
+  </svg>
+));
+ImageIcon.displayName = "ImageIcon";
+
+const FileIcon = React.memo(() => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+    />
+  </svg>
+));
+FileIcon.displayName = "FileIcon";
+
+const RemoveIcon = React.memo(() => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 18L18 6M6 6l12 12"
+    />
+  </svg>
+));
+RemoveIcon.displayName = "RemoveIcon";
+
+const RefreshIcon = React.memo(() => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+    />
+  </svg>
+));
+RefreshIcon.displayName = "RefreshIcon";
+
 const SendIcon = React.memo(() => (
   <svg
     className="w-5 h-5"
@@ -149,6 +240,11 @@ const Icons = {
   Clear: ClearIcon,
   Bot: BotIcon,
   User: UserIcon,
+  Attach: AttachIcon,
+  Image: ImageIcon,
+  File: FileIcon,
+  Remove: RemoveIcon,
+  Refresh: RefreshIcon,
 };
 
 const MessageBubble = React.memo<{
@@ -188,6 +284,38 @@ const MessageBubble = React.memo<{
           isUser ? "items-end" : "items-start"
         }`}
       >
+        {/* 檔案附件顯示 */}
+        {msg.files && msg.files.length > 0 && (
+          <div className={`mb-2 ${isUser ? "mr-0" : "ml-0"}`}>
+            {msg.files.map((file, fileIndex) => (
+              <div
+                key={fileIndex}
+                className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 mb-1"
+              >
+                <Icons.File />
+                <span className="text-sm text-gray-700">{file.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 圖片附件顯示 */}
+        {msg.images && msg.images.length > 0 && (
+          <div className={`mb-2 ${isUser ? "mr-0" : "ml-0"}`}>
+            <div className="grid grid-cols-1 gap-2 max-w-xs">
+              {msg.images.map((image, imgIndex) => (
+                <img
+                  key={imgIndex}
+                  src={`data:image/jpeg;base64,${image}`}
+                  alt={`附件圖片 ${imgIndex + 1}`}
+                  className="rounded-lg border border-gray-200 max-w-full h-auto"
+                  style={{ maxHeight: "200px" }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, x: isUser ? 20 : -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -248,7 +376,9 @@ const Header: React.FC<{
   customModel: string;
   onCustomModelChange: (m: string) => void;
   isSettingsOpen: boolean;
-  onToggleSettings: () => void;
+  availableModels: string[];
+  loadingModels: boolean;
+  onRefreshModels: () => void;
 }> = ({
   onClear,
   messageCount,
@@ -257,7 +387,9 @@ const Header: React.FC<{
   customModel,
   onCustomModelChange,
   isSettingsOpen,
-  onToggleSettings,
+  availableModels,
+  loadingModels,
+  onRefreshModels,
 }) => (
   <div className="bg-white border-b border-gray-200 p-6 shadow-sm">
     <div className="flex items-center justify-between">
@@ -276,19 +408,6 @@ const Header: React.FC<{
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           <span>{messageCount} 則對話</span>
         </div>
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onToggleSettings}
-          className={`p-2 rounded-lg transition-colors ${
-            isSettingsOpen
-              ? "bg-blue-100 text-blue-600"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          <Icons.Settings />
-        </motion.button>
 
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -312,19 +431,58 @@ const Header: React.FC<{
         >
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                AI 模型
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  AI 模型
+                </label>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onRefreshModels}
+                  disabled={loadingModels}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors disabled:opacity-50"
+                  title="從伺服器獲取可用模型"
+                >
+                  <motion.div
+                    animate={loadingModels ? { rotate: 360 } : { rotate: 0 }}
+                    transition={{
+                      duration: 1,
+                      repeat: loadingModels ? Infinity : 0,
+                      ease: "linear",
+                    }}
+                  >
+                    <Icons.Refresh />
+                  </motion.div>
+                  <span>刷新模型</span>
+                </motion.button>
+              </div>
               <select
                 value={selectedModel}
                 onChange={(e) => onModelChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               >
-                <option value="gpt-oss">GPT OSS</option>
-                <option value="gemma2:7b">Gemma 3 27B</option>
-                <option value="llama2:13b">Gemma 3 Latest</option>
-                <option value="deepseek-r1:32b">DeepSeek R1 32B</option>
-                <option value="custom">自訂模型...</option>
+                <optgroup label="預設模型">
+                  <option value="gpt-oss">GPT OSS</option>
+                  <option value="llava:latest">LLaVA (支援圖片)</option>
+                  <option value="llava:13b">LLaVA 13B (支援圖片)</option>
+                  <option value="gemma2:27b">Gemma 2 27B</option>
+                  <option value="llama3.2-vision:latest">
+                    Llama 3.2 Vision (支援圖片)
+                  </option>
+                  <option value="deepseek-r1:32b">DeepSeek R1 32B</option>
+                </optgroup>
+                {availableModels.length > 0 && (
+                  <optgroup label="伺服器可用模型">
+                    {availableModels.map((model: string) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                <optgroup label="其他">
+                  <option value="custom">自訂模型...</option>
+                </optgroup>
               </select>
             </div>
 
@@ -361,10 +519,21 @@ const Chat: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<string>(MODEL_NAME);
   const [customModel, setCustomModel] = useState<string>("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<
+    {
+      name: string;
+      type: string;
+      content: string;
+    }[]
+  >([]);
+  const [attachedImages, setAttachedImages] = useState<string[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // 生成唯一ID的函數
   const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -402,8 +571,84 @@ const Chat: React.FC = () => {
   }, [messages]);
 
   // 使用 useCallback 優化事件處理
+  const fetchAvailableModels = useCallback(async () => {
+    setLoadingModels(true);
+    try {
+      const response = await fetch(
+        `${OLLAMA_API_URL.replace("/api/chat", "/api/tags")}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const modelNames =
+          data.models?.map((model: { name: string }) => model.name) || [];
+        setAvailableModels(modelNames);
+        setToastText(`成功獲取 ${modelNames.length} 個模型`);
+      } else {
+        throw new Error("無法獲取模型列表");
+      }
+    } catch (error) {
+      console.error("獲取模型列表失敗:", error);
+      setToastText("獲取模型列表失敗");
+    } finally {
+      setLoadingModels(false);
+    }
+  }, []);
+
+  // 組件載入時自動獲取可用模型
+  useEffect(() => {
+    fetchAvailableModels();
+  }, [fetchAvailableModels]);
+
+  const handleFileUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files;
+      if (!files) return;
+
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          const base64Content = result.split(",")[1]; // 移除 data:type;base64, 前綴
+
+          if (file.type.startsWith("image/")) {
+            setAttachedImages((prev) => [...prev, base64Content]);
+          } else {
+            setAttachedFiles((prev) => [
+              ...prev,
+              {
+                name: file.name,
+                type: file.type,
+                content: base64Content,
+              },
+            ]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // 清除 input
+      if (event.target) {
+        event.target.value = "";
+      }
+    },
+    []
+  );
+
+  const removeAttachedFile = useCallback((index: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const removeAttachedImage = useCallback((index: number) => {
+    setAttachedImages((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
   const sendMessage = useCallback(async () => {
-    if (!input.trim()) return;
+    if (
+      !input.trim() &&
+      attachedFiles.length === 0 &&
+      attachedImages.length === 0
+    )
+      return;
     setBannerError(null);
     const now = Date.now();
     const userMsg: Message = {
@@ -411,6 +656,8 @@ const Chat: React.FC = () => {
       content: input,
       timestamp: now,
       id: generateId(),
+      images: attachedImages.length > 0 ? attachedImages : undefined,
+      files: attachedFiles.length > 0 ? attachedFiles : undefined,
     };
     const aiPlaceholder: Message = {
       role: "assistant",
@@ -421,6 +668,8 @@ const Chat: React.FC = () => {
 
     setMessages((prev) => [...prev, userMsg, aiPlaceholder]);
     setInput("");
+    setAttachedFiles([]);
+    setAttachedImages([]);
     setLoading(true);
 
     const maxRetries = 3;
@@ -430,10 +679,56 @@ const Chat: React.FC = () => {
 
     while (attempt <= maxRetries && !success) {
       try {
-        const payload = [...messages, userMsg].map((m) => ({
-          role: m.role,
-          content: m.content,
-        }));
+        // 建構訊息payload，支援圖片和檔案
+        const messagePayload = [...messages, userMsg].map((m) => {
+          const baseMessage: {
+            role: string;
+            content: string;
+            images?: string[];
+          } = {
+            role: m.role,
+            content: m.content,
+          };
+
+          // 如果有圖片，添加到訊息中
+          if (m.images && m.images.length > 0) {
+            baseMessage.images = m.images;
+          }
+
+          // 如果有檔案，將檔案內容加入到content中
+          if (m.files && m.files.length > 0) {
+            const fileContents = m.files
+              .map((file) => {
+                if (
+                  file.type.includes("text") ||
+                  file.type.includes("json") ||
+                  file.type.includes("javascript") ||
+                  file.type.includes("typescript") ||
+                  file.name.endsWith(".csv") ||
+                  file.name.endsWith(".md") ||
+                  file.name.endsWith(".txt") ||
+                  file.type.includes("csv")
+                ) {
+                  try {
+                    const decoded = atob(file.content);
+                    return `檔案：${file.name}\n內容：\n${decoded}`;
+                  } catch {
+                    return `檔案：${file.name} (無法解析內容)`;
+                  }
+                } else {
+                  return `檔案：${file.name} (${file.type})`;
+                }
+              })
+              .join("\n\n");
+
+            baseMessage.content = baseMessage.content
+              ? `${baseMessage.content}\n\n附加檔案：\n${fileContents}`
+              : `附加檔案：\n${fileContents}`;
+          }
+
+          return baseMessage;
+        });
+
         const modelToUse =
           selectedModel === "custom"
             ? customModel || MODEL_NAME
@@ -441,7 +736,7 @@ const Chat: React.FC = () => {
         const res = await fetch(OLLAMA_API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ model: modelToUse, messages: payload }),
+          body: JSON.stringify({ model: modelToUse, messages: messagePayload }),
         });
         if (!res.body) throw new Error("API 無回應 body");
         const reader = res.body.getReader();
@@ -511,7 +806,14 @@ const Chat: React.FC = () => {
     }
 
     setLoading(false);
-  }, [input, selectedModel, customModel]);
+  }, [
+    input,
+    selectedModel,
+    customModel,
+    attachedFiles,
+    attachedImages,
+    messages,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -567,10 +869,6 @@ const Chat: React.FC = () => {
     setCustomModel(m);
   }, []);
 
-  const toggleSettings = useCallback(() => {
-    setIsSettingsOpen(!isSettingsOpen);
-  }, [isSettingsOpen]);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
@@ -582,7 +880,9 @@ const Chat: React.FC = () => {
           customModel={customModel}
           onCustomModelChange={handleCustomModelChange}
           isSettingsOpen={isSettingsOpen}
-          onToggleSettings={toggleSettings}
+          availableModels={availableModels}
+          loadingModels={loadingModels}
+          onRefreshModels={fetchAvailableModels}
         />
 
         <div className="flex h-full">
@@ -715,6 +1015,72 @@ const Chat: React.FC = () => {
                 </motion.div>
               )}
 
+              {/* 檔案預覽區域 */}
+              {(attachedFiles.length > 0 || attachedImages.length > 0) && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl"
+                >
+                  <div className="text-sm text-gray-600 mb-3 font-medium">
+                    附加的檔案:
+                  </div>
+
+                  {/* 圖片預覽 */}
+                  {attachedImages.length > 0 && (
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-2">
+                        {attachedImages.map((image, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={`data:image/jpeg;base64,${image}`}
+                              alt={`預覽 ${index + 1}`}
+                              className="w-20 h-20 object-cover rounded-lg border border-gray-300"
+                            />
+                            <button
+                              onClick={() => removeAttachedImage(index)}
+                              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                            >
+                              <Icons.Remove />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 檔案列表 */}
+                  {attachedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {attachedFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icons.File />
+                            <div>
+                              <div className="text-sm font-medium text-gray-800">
+                                {file.name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {file.type}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => removeAttachedFile(index)}
+                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                          >
+                            <Icons.Remove />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
               <div className="flex gap-4">
                 <div className="flex-1">
                   <textarea
@@ -729,23 +1095,69 @@ const Chat: React.FC = () => {
                     style={{ minHeight: "56px", maxHeight: "200px" }}
                   />
                 </div>
-                <motion.button
-                  whileHover={{ scale: loading || !input.trim() ? 1 : 1.05 }}
-                  whileTap={{ scale: loading || !input.trim() ? 1 : 0.95 }}
-                  onClick={() => sendMessage()}
-                  disabled={loading || !input.trim()}
-                  className={`px-6 py-4 rounded-2xl font-medium transition-all duration-200 shadow-lg ${
-                    input.trim() && !loading
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl hover:from-blue-700 hover:to-purple-700"
-                      : "bg-gray-200 text-gray-500 cursor-not-allowed shadow-sm"
-                  }`}
-                >
-                  {loading ? (
-                    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Icons.Send />
-                  )}
-                </motion.button>
+
+                {/* 檔案上傳按鈕 */}
+                <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,text/*,.pdf,.doc,.docx,.json,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.h,.css,.html,.xml,.md,.csv,.xlsx,.xls"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading}
+                    className="px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Icons.Attach />
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{
+                      scale:
+                        loading ||
+                        (!input.trim() &&
+                          attachedFiles.length === 0 &&
+                          attachedImages.length === 0)
+                          ? 1
+                          : 1.05,
+                    }}
+                    whileTap={{
+                      scale:
+                        loading ||
+                        (!input.trim() &&
+                          attachedFiles.length === 0 &&
+                          attachedImages.length === 0)
+                          ? 1
+                          : 0.95,
+                    }}
+                    onClick={() => sendMessage()}
+                    disabled={
+                      loading ||
+                      (!input.trim() &&
+                        attachedFiles.length === 0 &&
+                        attachedImages.length === 0)
+                    }
+                    className={`px-6 py-4 rounded-2xl font-medium transition-all duration-200 shadow-lg ${
+                      (input.trim() ||
+                        attachedFiles.length > 0 ||
+                        attachedImages.length > 0) &&
+                      !loading
+                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl hover:from-blue-700 hover:to-purple-700"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed shadow-sm"
+                    }`}
+                  >
+                    {loading ? (
+                      <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Icons.Send />
+                    )}
+                  </motion.button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
@@ -761,13 +1173,111 @@ const Chat: React.FC = () => {
                     </span>
                   </span>
                 </div>
-                <div>
-                  當前模型：
-                  <span className="ml-1 font-medium text-blue-600">
-                    {selectedModel === "custom"
-                      ? customModel || "自訂"
-                      : selectedModel}
-                  </span>
+                <div className="relative">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                    className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <span>當前模型：</span>
+                    <span className="font-medium text-blue-600">
+                      {selectedModel === "custom"
+                        ? customModel || "自訂"
+                        : selectedModel}
+                    </span>
+                    <svg
+                      className={`w-4 h-4 text-gray-500 transition-transform ${
+                        isSettingsOpen ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </motion.button>
+
+                  {/* 模型選擇下拉選單 */}
+                  <AnimatePresence>
+                    {isSettingsOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[250px] z-50"
+                      >
+                        <div className="text-xs text-gray-600 mb-2 px-2">
+                          選擇模型
+                        </div>
+                        <div className="space-y-1 max-h-48 overflow-y-auto">
+                          {availableModels.map((model) => (
+                            <motion.button
+                              key={model}
+                              whileHover={{ backgroundColor: "#f3f4f6" }}
+                              onClick={() => {
+                                setSelectedModel(model);
+                                setIsSettingsOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                                selectedModel === model
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              {model}
+                            </motion.button>
+                          ))}
+                          <motion.button
+                            whileHover={{ backgroundColor: "#f3f4f6" }}
+                            onClick={() => {
+                              setSelectedModel("custom");
+                              setIsSettingsOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                              selectedModel === "custom"
+                                ? "bg-blue-100 text-blue-700"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            自訂模型
+                          </motion.button>
+                        </div>
+
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                              fetchAvailableModels();
+                              setIsSettingsOpen(false);
+                            }}
+                            className="w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors flex items-center justify-center gap-2"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                            重新載入模型
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
