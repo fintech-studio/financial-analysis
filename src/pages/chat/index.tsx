@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import React, {
   useEffect,
   useRef,
@@ -7,483 +6,11 @@ import React, {
   useMemo,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import MessageBubble from "@/components/pages/chat/MessageBubble";
+import { Message, Icons } from "@/components/pages/chat/common";
 
 const OLLAMA_API_URL = "http://172.25.1.24:11434/api/chat";
 const MODEL_NAME = "gpt-oss";
-
-// 動畫配置常量
-const ANIMATION_CONFIG = {
-  messageEnter: {
-    initial: { opacity: 0, y: 20, scale: 0.95 },
-    animate: { opacity: 1, y: 0, scale: 1 },
-    transition: { duration: 0.3, ease: "easeOut" as const },
-  },
-  avatarScale: {
-    initial: { scale: 0 },
-    animate: { scale: 1 },
-    transition: { delay: 0.1, type: "spring" as const, stiffness: 300 },
-  },
-  buttonHover: { scale: 1.05, transition: { duration: 0.1 } },
-  buttonTap: { scale: 0.95, transition: { duration: 0.1 } },
-  toastDuration: 2000,
-};
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  timestamp: number;
-  id: string;
-  images?: string[]; // Base64 encoded images
-  files?: {
-    name: string;
-    type: string;
-    content: string; // Base64 encoded content
-  }[];
-}
-
-// 圖標組件 - 使用 React.memo 優化重渲染
-const AttachIcon = React.memo(() => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-    />
-  </svg>
-));
-AttachIcon.displayName = "AttachIcon";
-
-const ImageIcon = React.memo(() => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-    />
-  </svg>
-));
-ImageIcon.displayName = "ImageIcon";
-
-const FileIcon = React.memo(() => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-    />
-  </svg>
-));
-FileIcon.displayName = "FileIcon";
-
-const RemoveIcon = React.memo(() => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M6 18L18 6M6 6l12 12"
-    />
-  </svg>
-));
-RemoveIcon.displayName = "RemoveIcon";
-
-const RefreshIcon = React.memo(() => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-    />
-  </svg>
-));
-RefreshIcon.displayName = "RefreshIcon";
-
-const SendIcon = React.memo(() => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-    />
-  </svg>
-));
-SendIcon.displayName = "SendIcon";
-
-const CopyIcon = React.memo(() => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-    />
-  </svg>
-));
-CopyIcon.displayName = "CopyIcon";
-
-const CheckIcon = React.memo(() => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M5 13l4 4L19 7"
-    />
-  </svg>
-));
-CheckIcon.displayName = "CheckIcon";
-
-const SettingsIcon = React.memo(() => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-    />
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-    />
-  </svg>
-));
-SettingsIcon.displayName = "SettingsIcon";
-
-const ClearIcon = React.memo(() => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-    />
-  </svg>
-));
-ClearIcon.displayName = "ClearIcon";
-
-const BotIcon = React.memo(() => (
-  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-  </svg>
-));
-BotIcon.displayName = "BotIcon";
-
-const UserIcon = React.memo(() => (
-  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-  </svg>
-));
-UserIcon.displayName = "UserIcon";
-
-const Icons = {
-  Send: SendIcon,
-  Copy: CopyIcon,
-  Check: CheckIcon,
-  Settings: SettingsIcon,
-  Clear: ClearIcon,
-  Bot: BotIcon,
-  User: UserIcon,
-  Attach: AttachIcon,
-  Image: ImageIcon,
-  File: FileIcon,
-  Remove: RemoveIcon,
-  Refresh: RefreshIcon,
-};
-
-const MessageBubble = React.memo<{
-  msg: Message;
-  index: number;
-  onCopy: (i: number) => void;
-  copiedIndex: number | null;
-}>(({ msg, index, onCopy, copiedIndex }) => {
-  const isUser = msg.role === "user";
-
-  const handleCopy = useCallback(() => {
-    onCopy(index);
-  }, [onCopy, index]);
-
-  return (
-    <motion.div
-      key={msg.id}
-      initial={ANIMATION_CONFIG.messageEnter.initial}
-      animate={ANIMATION_CONFIG.messageEnter.animate}
-      transition={ANIMATION_CONFIG.messageEnter.transition}
-      className={`flex gap-3 mb-6 items-end ${
-        isUser ? "justify-end" : "justify-start"
-      }`}
-    >
-      {!isUser && (
-        <motion.div
-          initial={ANIMATION_CONFIG.avatarScale.initial}
-          animate={ANIMATION_CONFIG.avatarScale.animate}
-          transition={ANIMATION_CONFIG.avatarScale.transition}
-          className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center shadow-lg"
-        >
-          <Icons.Bot />
-        </motion.div>
-      )}
-      <div
-        className={`max-w-[75%] flex flex-col ${
-          isUser ? "items-end" : "items-start"
-        }`}
-      >
-        {/* 檔案附件顯示 */}
-        {msg.files && msg.files.length > 0 && (
-          <div className={`mb-2 ${isUser ? "mr-0" : "ml-0"}`}>
-            {msg.files.map((file, fileIndex) => (
-              <div
-                key={fileIndex}
-                className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 mb-1"
-              >
-                <Icons.File />
-                <span className="text-sm text-gray-700">{file.name}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 圖片附件顯示 */}
-        {msg.images && msg.images.length > 0 && (
-          <div className={`mb-2 ${isUser ? "mr-0" : "ml-0"}`}>
-            <div className="grid grid-cols-1 gap-2 max-w-xs">
-              {msg.images.map((image, imgIndex) => (
-                <img
-                  key={imgIndex}
-                  src={`data:image/jpeg;base64,${image}`}
-                  alt={`附件圖片 ${imgIndex + 1}`}
-                  className="rounded-lg border border-gray-200 max-w-full h-auto"
-                  style={{ maxHeight: "200px" }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        <motion.div
-          initial={{ opacity: 0, x: isUser ? 20 : -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className={`px-5 py-3 rounded-2xl text-sm whitespace-pre-wrap break-words leading-relaxed transition-all duration-200 shadow-md hover:shadow-lg ${
-            isUser
-              ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-md"
-              : "bg-white text-gray-800 border border-gray-100 rounded-bl-md"
-          }`}
-        >
-          {msg.content}
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="flex gap-3 items-center mt-2 px-1"
-        >
-          <div className="text-xs text-gray-400">
-            {new Date(msg.timestamp).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </div>
-          <motion.button
-            whileHover={ANIMATION_CONFIG.buttonHover}
-            whileTap={ANIMATION_CONFIG.buttonTap}
-            aria-label={`複製第 ${index + 1} 則訊息`}
-            onClick={handleCopy}
-            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            {copiedIndex === index ? <Icons.Check /> : <Icons.Copy />}
-            <span>{copiedIndex === index ? "已複製" : "複製"}</span>
-          </motion.button>
-        </motion.div>
-      </div>
-      {isUser && (
-        <motion.div
-          initial={ANIMATION_CONFIG.avatarScale.initial}
-          animate={ANIMATION_CONFIG.avatarScale.animate}
-          transition={ANIMATION_CONFIG.avatarScale.transition}
-          className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-blue-600 text-white flex items-center justify-center shadow-lg"
-        >
-          <Icons.User />
-        </motion.div>
-      )}
-    </motion.div>
-  );
-});
-
-MessageBubble.displayName = "MessageBubble";
-
-const Header: React.FC<{
-  onClear: () => void;
-  messageCount: number;
-  selectedModel: string;
-  onModelChange: (m: string) => void;
-  isSettingsOpen: boolean;
-  availableModels: string[];
-  loadingModels: boolean;
-  onRefreshModels: () => void;
-}> = ({
-  onClear,
-  messageCount,
-  selectedModel,
-  onModelChange,
-  isSettingsOpen,
-  availableModels,
-  loadingModels,
-  onRefreshModels,
-}) => (
-  <div className="bg-white border-b border-gray-200 p-6 shadow-sm">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
-          <Icons.Bot />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">AI 助手</h1>
-          <p className="text-sm text-gray-500">由 Ollama 提供支援</p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          <span>{messageCount} 則對話</span>
-        </div>
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onClear}
-          className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
-        >
-          <Icons.Clear />
-        </motion.button>
-      </div>
-    </div>
-
-    <AnimatePresence>
-      {isSettingsOpen && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="mt-4 pt-4 border-t border-gray-200 overflow-hidden"
-        >
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  AI 模型
-                </label>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={onRefreshModels}
-                  disabled={loadingModels}
-                  className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors disabled:opacity-50"
-                  title="從伺服器獲取可用模型"
-                >
-                  <motion.div
-                    animate={loadingModels ? { rotate: 360 } : { rotate: 0 }}
-                    transition={{
-                      duration: 1,
-                      repeat: loadingModels ? Infinity : 0,
-                      ease: "linear",
-                    }}
-                  >
-                    <Icons.Refresh />
-                  </motion.div>
-                  <span>刷新模型</span>
-                </motion.button>
-              </div>
-              <select
-                value={selectedModel}
-                onChange={(e) => onModelChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              >
-                <optgroup label="預設模型">
-                  <option value="gpt-oss">GPT OSS</option>
-                  <option value="llava:latest">LLaVA (支援圖片)</option>
-                  <option value="llava:13b">LLaVA 13B (支援圖片)</option>
-                  <option value="gemma2:27b">Gemma 2 27B</option>
-                  <option value="llama3.2-vision:latest">
-                    Llama 3.2 Vision (支援圖片)
-                  </option>
-                  <option value="deepseek-r1:32b">DeepSeek R1 32B</option>
-                </optgroup>
-                {availableModels.length > 0 && (
-                  <optgroup label="伺服器可用模型">
-                    {availableModels.map((model: string) => (
-                      <option key={model} value={model}>
-                        {model}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </div>
-);
 
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -493,11 +20,19 @@ const Chat: React.FC = () => {
   const [toastText, setToastText] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
-  const [confirmClear, setConfirmClear] = useState(false);
+
   const [selectedModel, setSelectedModel] = useState<string>(MODEL_NAME);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [loadingModels, setLoadingModels] = useState(false);
+  const [availableModels] = useState<string[]>([
+    "gpt-oss",
+    "gemma3:27b",
+    "gemma3:latest",
+    "deepseek-r1:14b",
+    "deepseek-r1:32b",
+    "llama3.2-vision:11b",
+    "llava:7b",
+    "llava:13b",
+  ]);
   const [attachedFiles, setAttachedFiles] = useState<
     {
       name: string;
@@ -526,6 +61,14 @@ const Chat: React.FC = () => {
     textareaRef.current?.focus();
   }, []);
 
+  const removeAttachedFile = useCallback((index: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const removeAttachedImage = useCallback((index: number) => {
+    setAttachedImages((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
   // textarea auto height
   useEffect(() => {
     const el = textareaRef.current;
@@ -547,34 +90,7 @@ const Chat: React.FC = () => {
     return messages.filter((msg) => msg.content.trim() !== "");
   }, [messages]);
 
-  // 使用 useCallback 優化事件處理
-  const fetchAvailableModels = useCallback(async () => {
-    setLoadingModels(true);
-    try {
-      const response = await fetch(
-        `${OLLAMA_API_URL.replace("/api/chat", "/api/tags")}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        const modelNames =
-          data.models?.map((model: { name: string }) => model.name) || [];
-        setAvailableModels(modelNames);
-        setToastText(`成功獲取 ${modelNames.length} 個模型`);
-      } else {
-        throw new Error("無法獲取模型列表");
-      }
-    } catch (error) {
-      console.error("獲取模型列表失敗:", error);
-      setToastText("獲取模型列表失敗");
-    } finally {
-      setLoadingModels(false);
-    }
-  }, []);
-
-  // 組件載入時自動獲取可用模型
-  useEffect(() => {
-    fetchAvailableModels();
-  }, [fetchAvailableModels]);
+  // settings/models 功能已移除
 
   const handleFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -611,14 +127,7 @@ const Chat: React.FC = () => {
     []
   );
 
-  const removeAttachedFile = useCallback((index: number) => {
-    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
-  }, []);
-
-  const removeAttachedImage = useCallback((index: number) => {
-    setAttachedImages((prev) => prev.filter((_, i) => i !== index));
-  }, []);
-
+  // sendMessage: send user input + attachments to OLLAMA and stream reply
   const sendMessage = useCallback(async () => {
     if (
       !input.trim() &&
@@ -626,6 +135,7 @@ const Chat: React.FC = () => {
       attachedImages.length === 0
     )
       return;
+
     setBannerError(null);
     const now = Date.now();
     const userMsg: Message = {
@@ -656,7 +166,6 @@ const Chat: React.FC = () => {
 
     while (attempt <= maxRetries && !success) {
       try {
-        // 建構訊息payload，支援圖片和檔案
         const messagePayload = [...messages, userMsg].map((m) => {
           const baseMessage: {
             role: string;
@@ -667,12 +176,10 @@ const Chat: React.FC = () => {
             content: m.content,
           };
 
-          // 如果有圖片，添加到訊息中
           if (m.images && m.images.length > 0) {
             baseMessage.images = m.images;
           }
 
-          // 如果有檔案，將檔案內容加入到content中
           if (m.files && m.files.length > 0) {
             const fileContents = m.files
               .map((file) => {
@@ -819,35 +326,19 @@ const Chat: React.FC = () => {
     [messages]
   );
 
-  const confirmAndClear = useCallback(() => {
-    setConfirmClear(true);
-  }, []);
-
-  const doClear = useCallback(() => {
-    setMessages([]);
-    setConfirmClear(false);
-  }, []);
-
-  const handleModelChange = useCallback((m: string) => {
-    setSelectedModel(m);
-  }, []);
-
-  // ...existing code...
+  // 是否可以送出（輸入不為空或有附加檔案/圖片，且非 loading）
+  const canSend = useMemo(() => {
+    return (
+      !loading &&
+      (input.trim().length > 0 ||
+        attachedFiles.length > 0 ||
+        attachedImages.length > 0)
+    );
+  }, [loading, input, attachedFiles, attachedImages]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
-        <Header
-          onClear={confirmAndClear}
-          messageCount={messages.length}
-          selectedModel={selectedModel}
-          onModelChange={handleModelChange}
-          isSettingsOpen={isSettingsOpen}
-          availableModels={availableModels}
-          loadingModels={loadingModels}
-          onRefreshModels={fetchAvailableModels}
-        />
-
         <div className="flex h-full">
           <div className="flex-1 flex flex-col">
             <div
@@ -1044,23 +535,9 @@ const Chat: React.FC = () => {
                 </motion.div>
               )}
 
-              <div className="flex gap-4">
+              <div className="flex gap-6">
                 <div className="flex-1">
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="輸入您的訊息... (Shift+Enter 換行，Enter 送出)"
-                    rows={1}
-                    className="w-full p-4 rounded-2xl border border-gray-300 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:border-gray-400 hide-scrollbar"
-                    disabled={loading}
-                    style={{ minHeight: "56px", maxHeight: "200px" }}
-                  />
-                </div>
-
-                {/* 檔案上傳按鈕 */}
-                <div className="flex gap-2">
+                  {/* hidden file input */}
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1069,78 +546,69 @@ const Chat: React.FC = () => {
                     onChange={handleFileUpload}
                     className="hidden"
                   />
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading}
-                    className="px-4 py-4 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Icons.Attach />
-                  </motion.button>
 
-                  <motion.button
-                    whileHover={{
-                      scale:
-                        loading ||
-                        (!input.trim() &&
-                          attachedFiles.length === 0 &&
-                          attachedImages.length === 0)
-                          ? 1
-                          : 1.05,
-                    }}
-                    whileTap={{
-                      scale:
-                        loading ||
-                        (!input.trim() &&
-                          attachedFiles.length === 0 &&
-                          attachedImages.length === 0)
-                          ? 1
-                          : 0.95,
-                    }}
-                    onClick={() => sendMessage()}
-                    disabled={
-                      loading ||
-                      (!input.trim() &&
-                        attachedFiles.length === 0 &&
-                        attachedImages.length === 0)
-                    }
-                    className={`px-6 py-4 rounded-2xl font-medium transition-all duration-200 shadow-lg ${
-                      (input.trim() ||
-                        attachedFiles.length > 0 ||
-                        attachedImages.length > 0) &&
-                      !loading
-                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-xl hover:from-blue-700 hover:to-purple-700"
-                        : "bg-gray-200 text-gray-500 cursor-not-allowed shadow-sm"
-                    }`}
-                  >
-                    {loading ? (
-                      <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Icons.Send />
-                    )}
-                  </motion.button>
+                  {/* Styled input container: attach | textarea | send */}
+                  <div className="relative">
+                    <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-3 py-2 shadow-sm">
+                      {/* Attach button */}
+                      <motion.button
+                        type="button"
+                        title="添加附件"
+                        whileHover={{ scale: loading ? 1 : 1.05 }}
+                        whileTap={{ scale: loading ? 1 : 0.95 }}
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={loading}
+                        aria-label="添加附件"
+                        className="flex items-center justify-center w-10 h-10 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Icons.Attach />
+                      </motion.button>
+
+                      {/* textarea */}
+                      <textarea
+                        ref={textareaRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="輸入您的訊息... (Shift+Enter 換行，Enter 送出)"
+                        rows={1}
+                        className="flex-1 bg-transparent resize-none outline-none px-2 py-2 text-base hide-scrollbar"
+                        disabled={loading}
+                        style={{ minHeight: "56px", maxHeight: "200px" }}
+                      />
+
+                      {/* Send button */}
+                      <motion.button
+                        type="button"
+                        title="傳送訊息"
+                        whileHover={{ scale: canSend ? 1.05 : 1 }}
+                        whileTap={{ scale: canSend ? 0.95 : 1 }}
+                        onClick={() => sendMessage()}
+                        disabled={!canSend}
+                        aria-label="傳送訊息"
+                        className={`flex items-center justify-center w-10 h-10 rounded-md text-white transition-all duration-200 ${
+                          canSend
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-xl"
+                            : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                        }`}
+                      >
+                        {loading ? (
+                          <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Icons.Send />
+                        )}
+                      </motion.button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
-                <div className="flex items-center gap-4">
-                  <span>
-                    自動滾動：
-                    <span
-                      className={`ml-1 font-medium ${
-                        autoScrollEnabled ? "text-green-600" : "text-gray-600"
-                      }`}
-                    >
-                      {autoScrollEnabled ? "開啟" : "關閉"}
-                    </span>
-                  </span>
-                </div>
                 <div className="relative">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                    onClick={() => setIsSettingsOpen((s) => !s)}
                     className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <span>當前模型：</span>
@@ -1164,23 +632,18 @@ const Chat: React.FC = () => {
                     </svg>
                   </motion.button>
 
-                  {/* 模型選擇下拉選單 */}
                   <AnimatePresence>
                     {isSettingsOpen && (
                       <motion.div
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[250px] z-50"
+                        className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px] z-50"
                       >
-                        <div className="text-xs text-gray-600 mb-2 px-2">
-                          選擇模型
-                        </div>
                         <div className="space-y-1 max-h-48 overflow-y-auto">
                           {availableModels.map((model) => (
-                            <motion.button
+                            <button
                               key={model}
-                              whileHover={{ backgroundColor: "#f3f4f6" }}
                               onClick={() => {
                                 setSelectedModel(model);
                                 setIsSettingsOpen(false);
@@ -1192,35 +655,8 @@ const Chat: React.FC = () => {
                               }`}
                             >
                               {model}
-                            </motion.button>
+                            </button>
                           ))}
-                        </div>
-
-                        <div className="mt-2 pt-2 border-t border-gray-200">
-                          <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => {
-                              fetchAvailableModels();
-                              setIsSettingsOpen(false);
-                            }}
-                            className="w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors flex items-center justify-center gap-2"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                              />
-                            </svg>
-                            重新載入模型
-                          </motion.button>
                         </div>
                       </motion.div>
                     )}
@@ -1244,56 +680,6 @@ const Chat: React.FC = () => {
               <Icons.Check />
               <span>{toastText}</span>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {confirmClear && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50"
-            onClick={() => setConfirmClear(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white p-6 rounded-2xl shadow-2xl max-w-md mx-4"
-            >
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
-                  <Icons.Clear />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                  清除所有對話
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  確定要清除所有對話記錄嗎？此操作無法復原。
-                </p>
-                <div className="flex gap-3 justify-end">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setConfirmClear(false)}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    取消
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={doClear}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    確定清除
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
