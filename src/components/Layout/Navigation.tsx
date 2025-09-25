@@ -71,7 +71,7 @@ const Navigation: React.FC = () => {
   // 導覽項目配置
   const navigationItems: NavigationItem[] = [
     {
-      name: "市場分析",
+      name: "市場分",
       href: "/market-analysis",
       icon: ChartBarIcon,
       description: "即時市場動態與技術分析",
