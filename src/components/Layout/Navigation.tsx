@@ -13,7 +13,8 @@ import {
   ChevronRightIcon,
   ArrowTrendingUpIcon,
   BeakerIcon,
-  ChatBubbleBottomCenterIcon
+  ChatBubbleBottomCenterIcon,
+  SignalIcon
 } from "@heroicons/react/24/outline";
 
 // TypeScript 接口定義
@@ -75,9 +76,35 @@ const Navigation: React.FC = () => {
       children: [
         {
           name: "技術分析",
-          href: "/technical-analysis",
-          icon: NewspaperIcon,
-          description: "AI 精選全球財經資訊",
+          href: "/market-analysis/stock-query",
+          icon: ArrowTrendingUpIcon,
+          description: "股價走勢、技術指標與圖表分析",
+          color: "text-blue-600",
+          bgColor: "bg-blue-50",
+        },
+        {
+          name: "基本面分析",
+          href: "/market-analysis/fundamental",
+          icon: ChartBarIcon,
+          description: "財務報表、營收獲利與基本面數據分析",
+          color: "text-orange-600",
+          bgColor: "bg-orange-50",
+        },
+        {
+          name: "交易訊號",
+          href: "/market-analysis/trade-signals",
+          icon: SignalIcon,
+          description: "即時交易訊號與策略建議",
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+        },
+        {
+          name: "金融代號查詢",
+          href: "/market-analysis/financial-code",
+          icon: SignalIcon,
+          description: "金融代號查詢與資訊",
+          color: "text-purple-600",
+          bgColor: "bg-purple-50",
         },
       ],
     },
@@ -99,12 +126,12 @@ const Navigation: React.FC = () => {
       icon: BeakerIcon,
       description: "AI 預測",
     },
-    {
-      name: "開發測試",
-      href: "/test",
-      icon: BeakerIcon,
-      description: "開發測試工具",
-    },
+    // {
+    //   name: "開發測試",
+    //   href: "/test",
+    //   icon: BeakerIcon,
+    //   description: "開發測試工具",
+    // },
   ];
 
   // 關閉所有選單
@@ -454,6 +481,12 @@ const Navigation: React.FC = () => {
                         className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors"
                       >
                         登出
+                      </Link>
+                      <Link
+                        href="/test"
+                        className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors"
+                      >
+                        開發測試
                       </Link>
                     </div>
                   </div>
