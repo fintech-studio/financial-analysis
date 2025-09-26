@@ -71,8 +71,14 @@ const Navigation: React.FC = () => {
       href: "/market-analysis",
       icon: ChartBarIcon,
       description: "即時市場動態與技術分析",
-      hasDropdown: false,
+      hasDropdown: true,
       children: [
+        {
+          name: "技術分析",
+          href: "/technical-analysis",
+          icon: NewspaperIcon,
+          description: "AI 精選全球財經資訊",
+        },
       ],
     },
     {
@@ -82,17 +88,23 @@ const Navigation: React.FC = () => {
       description: "AI 精選全球財經資訊",
     },
     {
+      name: "AI 助理",
+      href: "/chat",
+      icon: ChatBubbleBottomCenterIcon,
+      description: "智慧AI助理",
+    },
+    {
+      name: "AI 預測",
+      href: "/predict",
+      icon: BeakerIcon,
+      description: "AI 預測",
+    },
+    {
       name: "開發測試",
       href: "/test",
       icon: BeakerIcon,
       description: "開發測試工具",
     },
-    {
-      name: "AI 助理",
-      href: "/chat",
-      icon: ChatBubbleBottomCenterIcon,
-      description: "智慧AI助理",
-    }, 
   ];
 
   // 關閉所有選單
