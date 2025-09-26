@@ -14,6 +14,7 @@ import { ChartBarIcon, TableCellsIcon } from "@heroicons/react/24/outline";
 import TechnicalAnalysisPanel from "@/components/pages/stock-query/TechnicalAnalysisPanel";
 import KLinePattern from "@/components/pages/stock-query/KLinePattern";
 import type { MarketType } from "@/components/pages/stock-query/SearchBar";
+import Footer from "@/components/Layout/Footer";
 
 // 型別與預設值集中
 const VIEW_OPTIONS = [
@@ -177,7 +178,6 @@ const StockAnalysisPage: React.FC = () => {
     handleSymbolChange,
     renderPatternAndPanel,
   ]);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -248,6 +248,7 @@ const StockAnalysisPage: React.FC = () => {
         {/* 主要內容區域 */}
         {renderContent()}
       </div>
+      <Footer />
     </div>
   );
 };

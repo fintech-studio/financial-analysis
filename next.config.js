@@ -17,6 +17,14 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/py/:path*',
+        destination: 'http://localhost:8080/:path*',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
