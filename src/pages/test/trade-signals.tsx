@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
+import {
+  SignalIcon,
+} from "@heroicons/react/24/outline";
 
 interface TradeSignalData {
   summary: {
@@ -442,9 +445,28 @@ const TradeSignalsPage: React.FC = () => {
       )}
 
       {!loading && !analysisData && !error && (
-        <div className="text-center py-12 text-gray-500">
-          <div className="text-6xl mb-4">📈</div>
-          <div className="text-lg">請輸入股票代號並點擊分析開始</div>
+        <div className="text-center py-16">
+          <div className="relative mb-6">
+            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-indigo-100 to-blue-100 rounded-full flex items-center justify-center shadow-lg">
+              <SignalIcon className="w-12 h-12 text-indigo-500" />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h3 className="text-xl font-semibold text-gray-700">開始交易訊號分析</h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+              輸入股票代號，獲得專業的技術分析與交易建議
+            </p>
+            <div className="flex items-center justify-center gap-4 text-sm text-gray-400 mt-6">
+              <div className="flex items-center gap-1">
+          <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+          <span>買入訊號</span>
+              </div>
+              <div className="flex items-center gap-1">
+          <span className="w-2 h-2 bg-red-400 rounded-full"></span>
+          <span>賣出訊號</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

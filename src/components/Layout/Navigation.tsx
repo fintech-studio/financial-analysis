@@ -18,6 +18,7 @@ import {
   GlobeAltIcon,
   SparklesIcon,
   BeakerIcon,
+  ChatBubbleBottomCenterIcon
 } from "@heroicons/react/24/outline";
 
 // TypeScript 接口定義
@@ -75,47 +76,9 @@ const Navigation: React.FC = () => {
       href: "/market-analysis",
       icon: ChartBarIcon,
       description: "即時市場動態與技術分析",
-      hasDropdown: true,
+      hasDropdown: false,
       children: [
-        {
-          name: "股票分析",
-          href: "/market-analysis/stock",
-          icon: ChartBarIcon,
-          description: "台股、美股即時分析",
-          color: "text-blue-600",
-          bgColor: "bg-blue-50",
-        },
-        {
-          name: "加密貨幣",
-          href: "/market-analysis/crypto",
-          icon: CurrencyDollarIcon,
-          description: "數位資產市場動態",
-          color: "text-orange-600",
-          bgColor: "bg-orange-50",
-        },
-        {
-          name: "全球市場",
-          href: "/market-analysis/global",
-          icon: GlobeAltIcon,
-          description: "國際指數與外匯",
-          color: "text-green-600",
-          bgColor: "bg-green-50",
-        },
-        {
-          name: "AI 智能預測",
-          href: "/ai-prediction",
-          icon: SparklesIcon,
-          description: "機器學習市場預測",
-          color: "text-purple-600",
-          bgColor: "bg-purple-50",
-        },
       ],
-    },
-    {
-      name: "投資組合",
-      href: "/portfolio",
-      icon: BriefcaseIcon,
-      description: "智能投資組合管理",
     },
     {
       name: "財經新聞",
@@ -124,17 +87,17 @@ const Navigation: React.FC = () => {
       description: "AI 精選全球財經資訊",
     },
     {
-      name: "社群討論",
-      href: "/community",
-      icon: ChatBubbleLeftRightIcon,
-      description: "投資者交流平台",
-    },
-    {
       name: "開發測試",
       href: "/test",
       icon: BeakerIcon,
       description: "開發測試工具",
     },
+    {
+      name: "AI 助理",
+      href: "/chat",
+      icon: ChatBubbleBottomCenterIcon,
+      description: "智慧AI助理",
+    }, 
   ];
 
   // 關閉所有選單

@@ -1,965 +1,304 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import {
   ChartBarIcon,
-  CurrencyDollarIcon,
-  HeartIcon,
+  CogIcon,
+  BeakerIcon,
   ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
-  GlobeAltIcon,
-  BoltIcon,
-  LightBulbIcon,
-  FireIcon,
-  NewspaperIcon,
+  CodeBracketIcon,
+  DocumentMagnifyingGlassIcon,
+  ChartPieIcon,
+  SignalIcon,
 } from "@heroicons/react/24/outline";
-import { SparklesIcon } from "@heroicons/react/24/solid";
-import {
-  ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-  ExclamationTriangleIcon,
-  EyeIcon,
-  CommandLineIcon,
-} from "@heroicons/react/24/outline";
-import Footer from "@/components/Layout/Footer";
 
-// MVC 架構引入
-import { MarketController } from "../../controllers/MarketController";
-import { UserController } from "../../controllers/UserController";
-import {
-  MarketOverview,
-  MarketSentiment,
-  MarketNews,
-  HotStock,
-  SectorPerformance,
-} from "../../types/market";
-import { MarketAnalytics, MarketTrend } from "../../models/MarketModel";
-import { User } from "../../models/UserModel";
-
-interface MarketData {
-  index?: string;
-  change?: string;
-  changePercent?: string;
-  trend?: string;
-  volume?: string;
-  highlights?: string;
-  btc?: string;
-  dominance?: string;
-  dow?: string;
-  vix?: string;
-  status?: string;
-  strength?: string;
-}
-
-interface AnalysisModule {
-  title: string;
-  description: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  href: string;
-  data: MarketData;
-  color: string;
-  bgColor: string;
-}
-
-const MarketAnalysis: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>("overview");
-
-  // MVC 架構相關狀態
-  const [, setUser] = useState<User | null>(null);
-  const [marketOverview, setMarketOverview] = useState<MarketOverview | null>(
-    null
-  );
-  const [marketSentiment, setMarketSentiment] =
-    useState<MarketSentiment | null>(null);
-  const [marketNews, setMarketNews] = useState<MarketNews[]>([]);
-  const [, setHotStocks] = useState<HotStock[]>([]);
-  const [, setSectorPerformance] = useState<SectorPerformance[]>([]);
-  const [marketAnalytics, setMarketAnalytics] =
-    useState<MarketAnalytics | null>(null);
-  const [marketTrend, setMarketTrend] = useState<MarketTrend | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<string>("");
-
-  // 控制器實例
-  const marketController = MarketController.getInstance();
-  const userController = UserController.getInstance();
-
-  // 載入初始數據
-  const loadMarketData = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const userId = "user_001"; // 模擬用戶 ID
-
-      // 並行載入所有市場數據
-      const [
-        userResult,
-        overviewResult,
-        sentimentResult,
-        newsResult,
-        hotStocksResult,
-        sectorResult,
-        analyticsResult,
-        trendResult,
-      ] = await Promise.allSettled([
-        userController.getUserProfile(userId),
-        marketController.getMarketOverview(),
-        marketController.getMarketSentiment(),
-        marketController.getMarketNews(10),
-        marketController.getHotStocks(),
-        marketController.getSectorPerformance(),
-        marketController.getMarketAnalytics(),
-        marketController.getMarketTrend("1d"),
-      ]);
-
-      // 處理各項結果
-      if (userResult.status === "fulfilled") {
-        setUser(userResult.value);
-      }
-
-      if (overviewResult.status === "fulfilled") {
-        setMarketOverview(overviewResult.value);
-      } else {
-        console.error("載入市場概覽失敗:", overviewResult.reason);
-      }
-
-      if (sentimentResult.status === "fulfilled") {
-        setMarketSentiment(sentimentResult.value);
-      } else {
-        console.error("載入市場情緒失敗:", sentimentResult.reason);
-      }
-
-      if (newsResult.status === "fulfilled") {
-        setMarketNews(newsResult.value);
-      } else {
-        console.error("載入市場新聞失敗:", newsResult.reason);
-      }
-
-      if (hotStocksResult.status === "fulfilled") {
-        setHotStocks(hotStocksResult.value);
-      } else {
-        console.error("載入熱門股票失敗:", hotStocksResult.reason);
-      }
-
-      if (sectorResult.status === "fulfilled") {
-        setSectorPerformance(sectorResult.value);
-      } else {
-        console.error("載入板塊表現失敗:", sectorResult.reason);
-      }
-
-      if (analyticsResult.status === "fulfilled") {
-        setMarketAnalytics(analyticsResult.value);
-      } else {
-        console.error("載入市場分析失敗:", analyticsResult.reason);
-      }
-
-      if (trendResult.status === "fulfilled") {
-        setMarketTrend(trendResult.value);
-      } else {
-        console.error("載入市場趨勢失敗:", trendResult.reason);
-      }
-
-      setLastUpdate(new Date().toLocaleString("zh-TW"));
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "載入數據失敗");
-    } finally {
-      setLoading(false);
-    }
-  }, [userController, marketController]);
-
-  useEffect(() => {
-    loadMarketData();
-  }, [loadMarketData]);
-
-  const handleRefreshData = async () => {
-    try {
-      await marketController.refreshMarketData();
-      await loadMarketData();
-    } catch (error) {
-      console.error("刷新數據失敗:", error);
-      setError(error instanceof Error ? error.message : "刷新失敗");
-    }
-  };
-
-  // 模擬數據映射（從 MVC 數據生成）
-  const marketData = React.useMemo(() => {
-    if (!marketOverview || !marketSentiment) {
-      return {
-        stock: {
-          index: "載入中...",
-          change: "...",
-          changePercent: "...",
-          trend: "載入中",
-          volume: "...",
-          highlights: "載入中...",
-        },
-        crypto: {
-          btc: "載入中...",
-          change: "...",
-          changePercent: "...",
-          volume: "...",
-          dominance: "...",
-          highlights: "載入中...",
-        },
-        global: {
-          dow: "載入中...",
-          change: "...",
-          changePercent: "...",
-          trend: "載入中",
-          vix: "...",
-          highlights: "載入中...",
-        },
-        sentiment: {
-          index: "載入中",
-          status: "載入中",
-          strength: "載入中",
-          change: "...",
-          highlights: "載入中...",
-        },
-      };
-    }
-
-    // 找到對應的市場指數
-    const taiexIndex = marketOverview.indices?.find(
-      (index) => index.symbol === "TAIEX" || index.name.includes("加權")
-    );
-    const dowIndex = marketOverview.indices?.find(
-      (index) => index.symbol === "DJI" || index.name.includes("道瓊")
-    );
-    const cryptoIndex = marketOverview.indices?.find(
-      (index) => index.symbol === "BTC" || index.name.includes("比特幣")
-    );
-
-    return {
-      stock: {
-        index: taiexIndex?.value || marketOverview.stock?.value || "17,935",
-        change: taiexIndex?.change || marketOverview.stock?.change || "+125",
-        changePercent:
-          taiexIndex?.changePercent ||
-          marketOverview.stock?.changePercent ||
-          "+0.70%",
-        trend:
-          marketTrend?.direction === "up"
-            ? "上漲"
-            : marketTrend?.direction === "down"
-            ? "下跌"
-            : "持平",
-        volume:
-          marketAnalytics?.totalVolume ||
-          marketOverview.stock?.volume ||
-          "2,835億",
-        highlights:
-          marketOverview.stock?.highlights ||
-          "科技股帶動大盤上漲，AI概念股表現強勁",
-      },
-      crypto: {
-        btc: cryptoIndex?.value || marketOverview.crypto?.value || "65,280",
-        change:
-          cryptoIndex?.change || marketOverview.crypto?.change || "+1,250",
-        changePercent:
-          cryptoIndex?.changePercent ||
-          marketOverview.crypto?.changePercent ||
-          "+1.95%",
-        volume: "485億",
-        dominance: marketOverview.crypto?.dominance || "52.3%",
-        highlights:
-          marketOverview.crypto?.highlights ||
-          "比特幣突破65,000美元，機構投資需求增加",
-      },
-      global: {
-        dow: dowIndex?.value || marketOverview.global?.value || "38,790",
-        change: dowIndex?.change || marketOverview.global?.change || "-125",
-        changePercent:
-          dowIndex?.changePercent ||
-          marketOverview.global?.changePercent ||
-          "-0.32%",
-        trend: "下跌",
-        vix: marketSentiment.vix?.value || "15.2",
-        highlights:
-          marketOverview.global?.highlights ||
-          "美股科技股回調，歐洲市場維持穩定",
-      },
-      sentiment: {
-        index: marketSentiment.score?.toString() || "65",
-        status: marketSentiment.overall || "樂觀",
-        strength:
-          marketSentiment.indicators?.fearGreedIndex?.toString() || "強",
-        change: "+5",
-        highlights:
-          marketSentiment.analysis?.summary || "市場情緒維持樂觀，風險偏好提升",
-      },
-    };
-  }, [marketOverview, marketSentiment, marketTrend, marketAnalytics]);
-
-  // 分析模組配置
-  const analysisModules: AnalysisModule[] = [
+const TestPage: React.FC = () => {
+  const testItems = [
     {
-      title: "股票分析",
-      description: "股票市場指數與產業表現",
-      icon: ChartBarIcon,
-      href: "/market-analysis/stock",
-      data: marketData.stock,
+      title: "技術分析",
+      description: "股價走勢、技術指標與圖表分析",
+      href: "/test/stock-query",
+      icon: ArrowTrendingUpIcon,
       color: "text-blue-600",
-      bgColor: "bg-blue-100",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-200",
+      hoverColor: "hover:border-blue-300",
     },
     {
-      title: "加密貨幣",
-      description: "主要幣種與市場趨勢",
-      icon: CurrencyDollarIcon,
-      href: "/market-analysis/crypto",
-      data: marketData.crypto,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-100",
-    },
-    {
-      title: "全球市場",
-      description: "國際指數與經濟指標",
-      icon: GlobeAltIcon,
-      href: "/market-analysis/global",
-      data: marketData.global,
+      title: "基本面分析",
+      description: "財務報表、營收獲利與基本面數據分析",
+      href: "/test/fundamental",
+      icon: ChartBarIcon,
       color: "text-green-600",
-      bgColor: "bg-green-100",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-200",
+      hoverColor: "hover:border-green-300",
     },
     {
-      title: "趨勢預測",
-      description: "AI智能趨勢預測",
-      icon: LightBulbIcon,
-      href: "/ai-prediction",
-      data: { trend: "關注", status: "熱門" },
-      color: "text-purple-600",
-      bgColor: "bg-purple-100",
+      title: "金融代號查詢",
+      description: "查詢金融代號相關資訊",
+      href: "/test/financial-code",
+      icon: DocumentMagnifyingGlassIcon,
+      color: "text-teal-600",
+      bgColor: "bg-teal-50",
+      borderColor: "border-teal-200",
+      hoverColor: "hover:border-teal-300",
+    },
+    {
+      title: "交易訊號",
+      description: "智能交易建議與買賣點提示",
+      href: "/test/trade-signals",
+      icon: SignalIcon,
+      color: "text-teal-600",
+      bgColor: "bg-teal-50",
+      borderColor: "border-teal-200",
+      hoverColor: "hover:border-teal-300",
     },
   ];
 
-  const getStatusColor = (status?: string): string => {
-    if (!status) return "text-blue-500";
-
-    switch (status.toLowerCase()) {
-      case "上漲":
-      case "樂觀":
-      case "強":
-        return "text-green-500";
-      case "下跌":
-      case "悲觀":
-      case "弱":
-        return "text-red-500";
-      default:
-        return "text-blue-500";
-    }
-  };
-
-  // 載入狀態
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">載入市場分析數據中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 錯誤狀態
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 max-w-md">
-            <h3 className="text-lg font-medium text-red-800">載入失敗</h3>
-            <p className="mt-2 text-red-600">{error}</p>
-            <button
-              onClick={loadMarketData}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-            >
-              重新載入
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 頁面標題 */}
-      <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-xl relative overflow-hidden">
-        {/* 裝飾性背景元素 */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-100">
+      {/* Enhanced Background Pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(120,119,198,0.3),transparent_50%),radial-gradient(circle_at_80%_20%,rgba(255,119,198,0.3),transparent_50%),radial-gradient(circle_at_40%_80%,rgba(119,255,198,0.3),transparent_50%)] pointer-events-none" />
+
+      {/* Header Section */}
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-700 shadow-2xl relative overflow-hidden">
+        {/* Enhanced Decorative Background */}
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-white opacity-5 rounded-full"></div>
-          <div className="absolute bottom-10 right-20 w-32 h-32 bg-white opacity-5 rounded-full"></div>
-          <div className="absolute top-20 right-40 w-16 h-16 bg-white opacity-5 rounded-full"></div>
+          <div className="absolute top-12 left-12 w-24 h-24 bg-white opacity-5 rounded-full animate-pulse"></div>
+          <div className="absolute bottom-12 right-24 w-36 h-36 bg-white opacity-5 rounded-full animate-pulse" style={{ animationDelay: "1s" }}></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
+
+          {/* Enhanced floating elements */}
+          <div className="absolute top-24 right-12 w-4 h-4 bg-white opacity-20 rounded-full animate-bounce"></div>
+          <div className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-30 rounded-full animate-pulse" style={{ animationDelay: "1.5s" }}></div>
+          <div className="absolute top-48 left-1/4 w-5 h-5 bg-white opacity-15 rounded-full animate-bounce" style={{ animationDelay: "2s" }}></div>
+          <div className="absolute top-32 right-1/3 w-2 h-2 bg-white opacity-25 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }}></div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
-          {/* 頂部區域 */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-            <div className="flex items-center">
-              <div className="p-3 bg-white/15 backdrop-blur-sm rounded-2xl shadow-lg mr-4">
-                <ChartBarIcon className="h-9 w-9 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">
-                  市場分析
-                </h1>
-                <p className="text-blue-100 mt-1 text-sm">
-                  專業投資數據分析與市場洞察
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center mt-4 md:mt-0 space-x-3">
-              <button
-                onClick={handleRefreshData}
-                className="p-2 bg-indigo-800/50 backdrop-blur-sm rounded-xl border border-indigo-400/30 text-blue-200 hover:text-white transition-colors"
-                title="刷新數據"
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-              </button>
-
-              <div className="bg-indigo-800/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-indigo-400/30 flex items-center space-x-3">
+        <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            <div className="flex-1">
+              <div className="flex items-center mb-6">
+                <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300 shadow-lg">
+                  <ChartPieIcon className="h-10 w-10 text-white group-hover:scale-110 transition-transform duration-300" />
+                </div>
                 <div>
-                  <div className="text-xs text-blue-200">最後更新</div>
-                  <div className="text-sm font-medium text-white">
-                    {lastUpdate || "載入中..."}
-                  </div>
+                  <h1 className="text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
+                    市場分析
+                  </h1>
+                  <p className="text-purple-100 mt-3 text-xl font-medium">
+                    專業的金融市場分析工具平台
+                  </p>
+                </div>
+              </div>
+              <p className="text-purple-100 text-xl max-w-3xl leading-relaxed">
+                提供完整的技術分析與基本面分析工具，助您洞察市場趨勢，做出明智的投資決策
+              </p>
+            </div>
+
+            {/* Enhanced Statistics Panel */}
+            <div className="flex flex-col lg:items-end space-y-4">
+              <div className="grid grid-cols-2 gap-6 lg:gap-8">
+                <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                  <div className="text-3xl font-bold text-white">{testItems.length}</div>
+                  <div className="text-purple-200 text-sm font-medium">分析工具</div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* 關鍵指標摘要 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-blue-100">台股加權</span>
-                <div className="bg-green-500/20 rounded-full px-2 py-0.5">
-                  <span className="text-xs text-green-300">
-                    {marketData.stock.changePercent}
-                  </span>
-                </div>
-              </div>
-              <div className="text-lg font-bold text-white">
-                {marketData.stock.index}
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-blue-100">美元/台幣</span>
-                <div className="bg-red-500/20 rounded-full px-2 py-0.5">
-                  <span className="text-xs text-red-300">-0.25%</span>
-                </div>
-              </div>
-              <div className="text-lg font-bold text-white">31.56</div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-blue-100">比特幣</span>
-                <div className="bg-green-500/20 rounded-full px-2 py-0.5">
-                  <span className="text-xs text-green-300">
-                    {marketData.crypto.changePercent}
-                  </span>
-                </div>
-              </div>
-              <div className="text-lg font-bold text-white">
-                ${marketData.crypto.btc}
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-blue-100">市場情緒</span>
-                <div className="bg-blue-500/20 rounded-full px-2 py-0.5">
-                  <span className="text-xs text-blue-300">
-                    {marketData.sentiment.status}
-                  </span>
-                </div>
-              </div>
-              <div className="text-lg font-bold text-white">
-                {marketData.sentiment.index}
-              </div>
-            </div>
-          </div>
-
-          {/* 導航標籤 */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-1 inline-flex border border-white/20 space-x-1">
-            {["overview", "news", "alerts"].map((tab) => (
-              <button
-                key={tab}
-                className={`${
-                  activeTab === tab
-                    ? "bg-white text-indigo-700 shadow-md"
-                    : "text-white hover:bg-white/10"
-                } px-5 py-2 rounded-lg font-medium text-sm transition-all duration-200`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab === "overview" && (
-                  <div className="flex items-center">
-                    <ChartBarIcon className="h-4 w-4 mr-1.5" />
-                    <span>市場概況</span>
-                  </div>
-                )}
-                {tab === "news" && (
-                  <div className="flex items-center">
-                    <NewspaperIcon className="h-4 w-4 mr-1.5" />
-                    <span>市場新聞</span>
-                  </div>
-                )}
-                {tab === "alerts" && (
-                  <div className="flex items-center">
-                    <BoltIcon className="h-4 w-4 mr-1.5" />
-                    <span>重要提醒</span>
-                  </div>
-                )}
-              </button>
-            ))}
           </div>
         </div>
       </div>
 
-      {/* 主要內容 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === "overview" && (
-          <>
-            {/* 市場深度分析 */}
-            <div className="mb-10">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                <FireIcon className="h-5 w-5 text-orange-500 mr-2" />
-                市場深度分析
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* 台股表現卡片 */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      台股表現
-                    </h3>
-                    <ChartBarIcon className="h-6 w-6 text-indigo-600" />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">加權指數</span>
-                      <span className="text-green-500 font-medium">
-                        {marketData.stock.index}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">漲跌幅</span>
-                      <span className="text-green-500 font-medium">
-                        {marketData.stock.changePercent}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">成交量</span>
-                      <span className="text-gray-800 font-medium">
-                        {marketData.stock.volume}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+      {/* Main Content Area */}
+      <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
+        
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            選擇分析工具
+          </h2>
+          <p className="text-gray-600 text-xl max-w-2xl mx-auto leading-relaxed">
+            多種專業分析工具，滿足不同投資策略需求
+          </p>
+          <div className="w-24 h-1 bg-gradient-to-r from-indigo-500 to-purple-500 mx-auto mt-6 rounded-full"></div>
+        </div>
 
-                {/* 美股表現卡片 */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      美股表現
-                    </h3>
-                    <GlobeAltIcon className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">道瓊指數</span>
-                      <span className="text-red-500 font-medium">
-                        {marketData.global.dow}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">那斯達克</span>
-                      <span className="text-green-500 font-medium">17,245</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">S&P 500</span>
-                      <span className="text-red-500 font-medium">5,475</span>
-                    </div>
-                  </div>
-                </div>
+        {/* Enhanced Test Items Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 mb-20">
+          {testItems.map((item, index) => (
+            <Link key={item.title} href={item.href} className="group block">
+              <div className={`relative bg-white/95 backdrop-blur-sm rounded-3xl border-2 ${item.borderColor} ${item.hoverColor} p-10 hover:shadow-2xl transition-all duration-500 hover:-translate-y-4 overflow-hidden shadow-xl`}>
+                
+                {/* Enhanced background decorations */}
+                <div className={`absolute top-0 right-0 w-40 h-40 ${item.bgColor} rounded-full -translate-y-20 translate-x-20 opacity-20 group-hover:scale-150 transition-transform duration-700`}></div>
+                <div className={`absolute bottom-0 left-0 w-24 h-24 ${item.bgColor} rounded-full translate-y-12 -translate-x-12 opacity-15 group-hover:scale-125 transition-transform duration-500`}></div>
+                <div className={`absolute top-1/2 right-1/4 w-16 h-16 ${item.bgColor} rounded-full opacity-10 group-hover:scale-110 transition-transform duration-600`}></div>
 
-                {/* 國際匯率卡片 */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      國際匯率
-                    </h3>
-                    <CurrencyDollarIcon className="h-6 w-6 text-yellow-600" />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">美元/台幣</span>
-                      <span className="text-red-500 font-medium">31.56</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">美元/歐元</span>
-                      <span className="text-green-500 font-medium">1.088</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">美元/日元</span>
-                      <span className="text-green-500 font-medium">153.25</span>
-                    </div>
-                  </div>
-                </div>
+                {/* Gradient overlay effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
 
-                {/* 市場情緒卡片 */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      市場情緒
-                    </h3>
-                    <HeartIcon className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">情緒指數</span>
-                      <span className="text-gray-800 font-medium">
-                        {marketData.sentiment.index}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">整體狀態</span>
-                      <span
-                        className={`font-medium ${getStatusColor(
-                          marketData.sentiment.status
-                        )}`}
-                      >
-                        {marketData.sentiment.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">信心強度</span>
-                      <span className="text-gray-800 font-medium">
-                        {marketData.sentiment.strength}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                {/* Enhanced corner decorations */}
+                <div className="absolute top-6 right-6 w-4 h-4 border-t-2 border-r-2 border-gray-200 opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-110"></div>
+                <div className="absolute bottom-6 left-6 w-4 h-4 border-b-2 border-l-2 border-gray-200 opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-110"></div>
 
-            {/* 分析工具 */}
-            <div className="mb-10">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                <CommandLineIcon className="h-5 w-5 text-blue-500 mr-2" />
-                分析工具
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-                {analysisModules.map((module) => (
-                  <Link
-                    key={module.title}
-                    href={module.href}
-                    className="group block bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
-                  >
-                    <div
-                      className={`w-full h-1 ${module.bgColor} group-hover:opacity-100 opacity-70 transition-opacity duration-300`}
-                    ></div>
-                    <div className="p-6">
-                      <div className="flex items-center space-x-4">
-                        <div className={`p-3 rounded-lg ${module.bgColor}`}>
-                          <module.icon className={`h-6 w-6 ${module.color}`} />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {module.title}
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            {module.description}
-                          </p>
-                        </div>
-                      </div>
-                      {module.data && (
-                        <div className="mt-4 pt-4 border-t border-gray-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500">
-                              最新狀態
-                            </span>
-                            <span
-                              className={`text-sm font-medium ${getStatusColor(
-                                module.data.trend || module.data.status
-                              )}`}
-                            >
-                              {module.data.trend || module.data.status}
-                            </span>
-                          </div>
-                          {module.data.changePercent && (
-                            <div className="mt-2 flex items-center">
-                              {module.data.changePercent.startsWith("+") ? (
-                                <ArrowTrendingUpIcon className="h-4 w-4 text-green-500 mr-1" />
-                              ) : (
-                                <ArrowTrendingDownIcon className="h-4 w-4 text-red-500 mr-1" />
-                              )}
-                              <span
-                                className={`text-sm font-medium ${
-                                  module.data.changePercent.startsWith("+")
-                                    ? "text-green-500"
-                                    : "text-red-500"
-                                }`}
-                              >
-                                {module.data.changePercent}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* AI 市場見解 */}
-            <div className="mb-10">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                <SparklesIcon className="h-6 w-6 text-purple-600 mr-2" />
-                AI 智能市場洞察
-              </h2>
-
-              <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-purple-100">
-                {/* 頂部標題區 */}
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
-                        <SparklesIcon className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-white">
-                          本週智能市場分析
-                        </h3>
-                        <p className="text-sm text-purple-100">
-                          基於大數據與機器學習模型分析 |{" "}
-                          {new Date().toLocaleDateString("zh-TW")}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={handleRefreshData}
-                        className="bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors"
-                      >
-                        <ArrowPathIcon className="h-4 w-4 text-white" />
-                      </button>
-                      <button className="bg-white/20 hover:bg-white/30 rounded-full p-2 transition-colors">
-                        <ArrowTopRightOnSquareIcon className="h-4 w-4 text-white" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 主要內容區 */}
-                <div className="p-6">
-                  {/* 市場摘要 */}
-                  <div className="mb-6">
-                    <div className="flex items-center mb-3">
-                      <div className="p-2 bg-purple-100 rounded-md text-purple-600 mr-2">
-                        <ChartBarIcon className="h-5 w-5" />
-                      </div>
-                      <h4 className="font-medium text-lg text-gray-900">
-                        市場摘要
-                      </h4>
-                    </div>
-                    <p className="text-gray-700 bg-gray-50 p-4 rounded-lg border-l-4 border-purple-400">
-                      {marketData.stock.highlights ||
-                        "本週市場呈現震盪格局，科技股表現較強，金融股表現平淡。"}
-                    </p>
-                  </div>
-
-                  {/* 關鍵洞察 */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                      <div className="flex items-center mb-2">
-                        <ArrowTrendingUpIcon className="h-5 w-5 text-green-600 mr-2" />
-                        <span className="font-medium text-green-800">
-                          上漲動能
-                        </span>
-                      </div>
-                      <p className="text-sm text-green-700">
-                        科技股領漲，AI概念股表現強勁，預期短期內維持上漲趨勢。
-                      </p>
+                {/* Content Area */}
+                <div className="relative z-10">
+                  <div className="flex items-start space-x-8 mb-8">
+                    <div className={`relative flex-shrink-0 w-20 h-20 ${item.bgColor} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-xl group-hover:shadow-2xl`}>
+                      {/* Enhanced icon background effects */}
+                      <div className={`absolute inset-0 ${item.bgColor} rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity animate-pulse`}></div>
+                      <item.icon className={`h-10 w-10 ${item.color} relative z-10 group-hover:scale-110 transition-transform`} />
+                      
+                      {/* Enhanced icon decorations */}
+                      <div className={`absolute -top-2 -right-2 w-3 h-3 ${item.color.replace('text-', 'bg-')} rounded-full animate-pulse`}></div>
+                      <div className={`absolute -bottom-1 -left-1 w-2 h-2 ${item.color.replace('text-', 'bg-')} rounded-full opacity-60 animate-pulse`} style={{ animationDelay: "0.5s" }}></div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-lg border border-yellow-200">
-                      <div className="flex items-center mb-2">
-                        <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600 mr-2" />
-                        <span className="font-medium text-yellow-800">
-                          風險提示
-                        </span>
-                      </div>
-                      <p className="text-sm text-yellow-700">
-                        注意國際地緣政治風險，美聯儲政策變化可能影響市場情緒。
-                      </p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                      <div className="flex items-center mb-2">
-                        <LightBulbIcon className="h-5 w-5 text-blue-600 mr-2" />
-                        <span className="font-medium text-blue-800">
-                          投資建議
-                        </span>
-                      </div>
-                      <p className="text-sm text-blue-700">
-                        建議關注科技、醫療保健板塊，適度配置防禦性資產。
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-3xl font-bold text-gray-900 mb-4 group-hover:text-gray-700 transition-colors relative leading-tight">
+                        {item.title}
+                        {/* Enhanced title underline */}
+                        <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${item.color.replace('text-', 'from-')} to-transparent w-0 group-hover:w-full transition-all duration-500 rounded-full`}></div>
+                      </h3>
+                      <p className="text-gray-600 text-lg leading-relaxed group-hover:text-gray-800 transition-colors">
+                        {item.description}
                       </p>
                     </div>
                   </div>
 
-                  {/* 詳細分析按鈕 */}
-                  <div className="flex justify-center">
-                    <Link
-                      href="/ai-prediction"
-                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                    >
-                      <SparklesIcon className="h-5 w-5 mr-2" />
-                      查看完整 AI 預測報告
-                      <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-2" />
-                    </Link>
+                  {/* Enhanced bottom action area */}
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-100 relative">
+                    {/* Enhanced separator decoration */}
+                    <div className={`absolute top-0 left-0 h-px w-0 bg-gradient-to-r ${item.color.replace('text-', 'from-')} to-transparent group-hover:w-full transition-all duration-700`}></div>
+
+                    <span className={`text-sm font-bold ${item.color} bg-white/90 px-6 py-3 rounded-xl border-2 ${item.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group/btn backdrop-blur-sm`}>
+                      {/* Enhanced button background animation */}
+                      <span className={`absolute inset-0 ${item.bgColor} translate-x-full group-hover/btn:translate-x-0 transition-transform duration-300`}></span>
+                      <span className="relative z-10 flex items-center space-x-2">
+                        <span>開始分析</span>
+                        <div className="w-1 h-1 bg-current rounded-full animate-pulse"></div>
+                      </span>
+                    </span>
+
+                    <div className={`w-12 h-12 ${item.bgColor} rounded-2xl flex items-center justify-center group-hover:translate-x-3 group-hover:rotate-12 transition-all duration-300 shadow-xl relative`}>
+                      {/* Enhanced arrow background effects */}
+                      <div className={`absolute inset-0 ${item.bgColor} rounded-2xl blur-md opacity-50 animate-pulse`}></div>
+                      <svg className={`w-6 h-6 ${item.color} relative z-10 group-hover:scale-110 transition-transform`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
+
+                {/* Enhanced card number decoration */}
+                <div className="absolute top-4 left-4 w-8 h-8 bg-gray-100/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-40 group-hover:opacity-60 transition-opacity border border-gray-200/50">
+                  <span className="text-sm text-gray-600 font-bold">{String(index + 1).padStart(2, "0")}</span>
+                </div>
+
+                {/* Progress indicator */}
+                <div className="absolute bottom-4 right-4 flex space-x-1">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className={`w-2 h-2 rounded-full ${i === 0 ? item.color.replace('text-', 'bg-') : 'bg-gray-300'} opacity-50`}></div>
+                  ))}
+                </div>
               </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Enhanced Feature Highlights Section */}
+        <div className="mb-20">
+          <h3 className="text-3xl font-bold text-center text-gray-900 mb-4">平台特色</h3>
+          <p className="text-center text-gray-600 mb-12 text-lg">為投資者提供全方位的市場分析支援</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-100 rounded-3xl p-8 border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
+              {/* Background decoration */}
+              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
+              
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
+                  <ArrowTrendingUpIcon className="w-7 h-7 text-white" />
+                </div>
+                <h4 className="text-xl font-bold text-gray-900">即時數據</h4>
+              </div>
+              <p className="text-gray-600 leading-relaxed">
+                獲取最新的市場數據和即時價格更新，確保分析結果的準確性與時效性
+              </p>
+              <div className="absolute bottom-4 right-4 w-3 h-3 bg-blue-500 rounded-full opacity-20 animate-pulse"></div>
             </div>
-          </>
-        )}
 
-        {activeTab === "news" && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-              <NewspaperIcon className="h-5 w-5 text-blue-500 mr-2" />
-              最新市場新聞
-            </h2>
-
-            {marketNews.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {marketNews.map((news, index) => (
-                  <div
-                    key={news.id || index}
-                    className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          news.impact === "高"
-                            ? "bg-red-100 text-red-700"
-                            : news.impact === "中"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {news.impact}影響
-                      </span>
-                      <span className="text-xs text-gray-500">{news.time}</span>
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                      {news.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                      {news.summary}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
-                        {news.source}
-                      </span>
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          news.category === "股市"
-                            ? "bg-blue-100 text-blue-700"
-                            : news.category === "加密貨幣"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {news.category}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+            <div className="bg-gradient-to-br from-green-50 via-white to-emerald-100 rounded-3xl p-8 border-2 border-green-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
+              
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
+                  <ChartBarIcon className="w-7 h-7 text-white" />
+                </div>
+                <h4 className="text-xl font-bold text-gray-900">深度分析</h4>
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <NewspaperIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">暫無市場新聞</p>
-              </div>
-            )}
-          </div>
-        )}
+              <p className="text-gray-600 leading-relaxed">
+                專業的技術指標和基本面分析工具，提供多維度的市場洞察與投資建議
+              </p>
+              <div className="absolute bottom-4 right-4 w-3 h-3 bg-green-500 rounded-full opacity-20 animate-pulse" style={{ animationDelay: "0.5s" }}></div>
+            </div>
 
-        {activeTab === "alerts" && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-              <BoltIcon className="h-5 w-5 text-orange-500 mr-2" />
-              重要市場提醒
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-                <div className="flex items-center mb-3">
-                  <ExclamationTriangleIcon className="h-6 w-6 text-red-600 mr-2" />
-                  <h3 className="font-semibold text-red-800">高風險警告</h3>
+            <div className="bg-gradient-to-br from-purple-50 via-white to-pink-100 rounded-3xl p-8 border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
+              
+              <div className="flex items-center mb-6">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
+                  <DocumentMagnifyingGlassIcon className="w-7 h-7 text-white" />
                 </div>
-                <p className="text-red-700 text-sm mb-3">
-                  美聯儲會議本週舉行，利率決策可能對全球市場造成重大影響。
-                </p>
-                <div className="text-xs text-red-600">
-                  風險等級: 高 | 預估影響: 全球股市、債市、匯市
-                </div>
+                <h4 className="text-xl font-bold text-gray-900">智能搜尋</h4>
               </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-                <div className="flex items-center mb-3">
-                  <BoltIcon className="h-6 w-6 text-yellow-600 mr-2" />
-                  <h3 className="font-semibold text-yellow-800">
-                    重要數據發布
-                  </h3>
-                </div>
-                <p className="text-yellow-700 text-sm mb-3">
-                  本週將公布消費者物價指數(CPI)數據，預期將影響通膨預期。
-                </p>
-                <div className="text-xs text-yellow-600">
-                  重要性: 中高 | 發布時間: 本週三 21:30
-                </div>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-                <div className="flex items-center mb-3">
-                  <EyeIcon className="h-6 w-6 text-blue-600 mr-2" />
-                  <h3 className="font-semibold text-blue-800">技術面信號</h3>
-                </div>
-                <p className="text-blue-700 text-sm mb-3">
-                  台股加權指數接近前高阻力位，注意是否出現突破信號。
-                </p>
-                <div className="text-xs text-blue-600">
-                  關鍵位置: 18,000點 | 建議: 密切關注成交量變化
-                </div>
-              </div>
-
-              <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-                <div className="flex items-center mb-3">
-                  <ArrowTrendingUpIcon className="h-6 w-6 text-green-600 mr-2" />
-                  <h3 className="font-semibold text-green-800">機會提醒</h3>
-                </div>
-                <p className="text-green-700 text-sm mb-3">
-                  AI概念股持續受到市場關注，相關企業財報表現值得留意。
-                </p>
-                <div className="text-xs text-green-600">
-                  投資機會: AI、半導體板塊 | 風險: 估值偏高需謹慎
-                </div>
-              </div>
+              <p className="text-gray-600 leading-relaxed">
+                快速查詢和篩選相關金融商品資訊，智能化的搜尋體驗提升分析效率
+              </p>
+              <div className="absolute bottom-4 right-4 w-3 h-3 bg-purple-500 rounded-full opacity-20 animate-pulse" style={{ animationDelay: "1s" }}></div>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Enhanced Call-to-Action Section */}
+        <div className="text-center relative">
+          {/* Enhanced decorative elements */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-12 w-20 h-px bg-gradient-to-r from-transparent via-indigo-300 to-transparent"></div>
+          
+          <div className="inline-block relative">
+            <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl blur-xl animate-pulse"></div>
+            
+            <div className="relative inline-flex items-center px-12 py-8 bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-3 border-indigo-200 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group cursor-pointer">
+              {/* Enhanced background animation */}
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/5 via-purple-600/5 to-pink-600/5 translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+
+              <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center mr-6 relative shadow-xl group-hover:scale-110 transition-transform">
+                {/* Enhanced icon effects */}
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
+                <svg className="w-7 h-7 text-white relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              
+              <div className="text-left relative z-10">
+                <p className="text-2xl font-bold bg-gradient-to-r from-indigo-800 via-purple-800 to-pink-800 bg-clip-text text-transparent mb-2 relative">
+                  開始您的市場分析之旅
+                  <span className="absolute -right-10 top-0 w-3 h-3 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full animate-ping"></span>
+                </p>
+                <p className="text-lg text-indigo-700 font-semibold">
+                  選擇合適的分析工具，發現投資機會
+                </p>
+              </div>
+
+              {/* Enhanced corner decorations */}
+              <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-indigo-300 opacity-40 group-hover:opacity-70 transition-opacity group-hover:scale-110"></div>
+              <div className="absolute bottom-4 left-4 w-3 h-3 border-b-2 border-l-2 border-indigo-300 opacity-40 group-hover:opacity-70 transition-opacity group-hover:scale-110"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <Footer />
     </div>
   );
 };
-
-export default MarketAnalysis;
+export default TestPage;
