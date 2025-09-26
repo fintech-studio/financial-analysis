@@ -1,6 +1,7 @@
 import { DocumentMagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/router";
+import Footer from "@/components/Layout/Footer";
 
 interface FinancialResult {
   market_category?: string;
@@ -119,6 +120,7 @@ const FinancialCodeTestPage = () => {
   ];
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-pink-100 flex flex-col items-center justify-start py-10">
       <div className="bg-white/90 p-10 rounded-2xl shadow-xl w-full max-w-7xl border border-blue-100">
         <div className="flex items-center justify-between mb-6">
@@ -318,6 +320,8 @@ const FinancialCodeTestPage = () => {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 };
 

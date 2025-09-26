@@ -8,6 +8,7 @@ import React, {
 import { motion, AnimatePresence } from "framer-motion";
 import MessageBubble from "@/components/pages/chat/MessageBubble";
 import { Message, Icons } from "@/components/pages/chat/common";
+import Footer from "@/components/Layout/Footer";
 
 const OLLAMA_API_URL = "http://172.25.1.24:11434/api/chat";
 const MODEL_NAME = "gpt-oss";
@@ -337,6 +338,7 @@ const Chat: React.FC = () => {
   }, [loading, input, attachedFiles, attachedImages]);
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
         <div className="flex h-full">
@@ -684,6 +686,8 @@ const Chat: React.FC = () => {
         )}
       </AnimatePresence>
     </div>
+    <Footer />
+    </>
   );
 };
 
