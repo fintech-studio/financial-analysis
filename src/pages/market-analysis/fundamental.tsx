@@ -25,7 +25,7 @@ const NotFoundPage = () => {
       <div className="z-10 flex flex-col items-center">
         <span className="text-[6rem] mb-2 select-none">😕</span>
         <h1 className="text-5xl font-extrabold text-blue-900 mb-4 drop-shadow-lg">
-          404 - 找不到頁面
+          萬隆的頁面不見了
         </h1>
         <p className="text-lg text-slate-600 mb-8 text-center max-w-md">
           很抱歉，您要找的頁面不存在，或已被移除。

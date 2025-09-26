@@ -2,10 +2,7 @@ import React from "react";
 import Link from "next/link";
 import {
   ChartBarIcon,
-  CogIcon,
-  BeakerIcon,
   ArrowTrendingUpIcon,
-  CodeBracketIcon,
   DocumentMagnifyingGlassIcon,
   ChartPieIcon,
   SignalIcon,
@@ -16,7 +13,7 @@ const TestPage: React.FC = () => {
     {
       title: "技術分析",
       description: "股價走勢、技術指標與圖表分析",
-      href: "/test/stock-query",
+      href: "/market-analysis/stock-query",
       icon: ArrowTrendingUpIcon,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
@@ -26,7 +23,7 @@ const TestPage: React.FC = () => {
     {
       title: "基本面分析",
       description: "財務報表、營收獲利與基本面數據分析",
-      href: "/test/fundamental",
+      href: "/market-analysis/fundamental",
       icon: ChartBarIcon,
       color: "text-green-600",
       bgColor: "bg-green-50",
@@ -36,7 +33,7 @@ const TestPage: React.FC = () => {
     {
       title: "金融代號查詢",
       description: "查詢金融代號相關資訊",
-      href: "/test/financial-code",
+      href: "/market-analysis/financial-code",
       icon: DocumentMagnifyingGlassIcon,
       color: "text-teal-600",
       bgColor: "bg-teal-50",
@@ -46,7 +43,7 @@ const TestPage: React.FC = () => {
     {
       title: "交易訊號",
       description: "智能交易建議與買賣點提示",
-      href: "/test/trade-signals",
+      href: "/market-analysis/trade-signals",
       icon: SignalIcon,
       color: "text-teal-600",
       bgColor: "bg-teal-50",

@@ -8,15 +8,10 @@ import {
   ChevronDownIcon,
   ChartBarIcon,
   NewspaperIcon,
-  ChatBubbleLeftRightIcon,
-  BriefcaseIcon,
   MagnifyingGlassIcon,
   BellIcon,
   ChevronRightIcon,
   ArrowTrendingUpIcon,
-  CurrencyDollarIcon,
-  GlobeAltIcon,
-  SparklesIcon,
   BeakerIcon,
   ChatBubbleBottomCenterIcon
 } from "@heroicons/react/24/outline";
