@@ -12,9 +12,10 @@ import {
   BellIcon,
   ChevronRightIcon,
   ArrowTrendingUpIcon,
-  BeakerIcon,
-  ChatBubbleBottomCenterIcon,
-  SignalIcon
+  SignalIcon,
+  DocumentMagnifyingGlassIcon,
+  ChatBubbleLeftRightIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
 // TypeScript 接口定義
@@ -101,7 +102,7 @@ const Navigation: React.FC = () => {
         {
           name: "金融代號查詢",
           href: "/market-analysis/financial-code",
-          icon: SignalIcon,
+          icon: DocumentMagnifyingGlassIcon,
           description: "金融代號查詢與資訊",
           color: "text-purple-600",
           bgColor: "bg-purple-50",
@@ -117,13 +118,13 @@ const Navigation: React.FC = () => {
     {
       name: "AI 助理",
       href: "/chat",
-      icon: ChatBubbleBottomCenterIcon,
+      icon: ChatBubbleLeftRightIcon,
       description: "智慧AI助理",
     },
     {
       name: "AI 預測",
       href: "/predict",
-      icon: BeakerIcon,
+      icon: SparklesIcon,
       description: "AI 預測",
     },
     // {

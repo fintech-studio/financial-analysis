@@ -23,9 +23,9 @@ const TestPage: React.FC = () => {
       hoverColor: "hover:border-blue-300",
     },
     {
-      title: "金融市場查詢測試",
+      title: "金融市場查詢",
       description: "輸入金融代號查詢資料庫數據",
-      href: "/test/stock-query",
+      href: "/market-analysis/stock-query",
       icon: ArrowTrendingUpIcon,
       color: "text-pink-600",
       bgColor: "bg-pink-50",
@@ -45,7 +45,7 @@ const TestPage: React.FC = () => {
     {
       title: "金融代號查詢",
       description: "查詢金融代號相關資訊",
-      href: "/test/financial-code",
+      href: "/market-analysis/financial-code",
       icon: DocumentMagnifyingGlassIcon,
       color: "text-teal-600",
       bgColor: "bg-teal-50",
@@ -106,11 +106,6 @@ const TestPage: React.FC = () => {
               <div
                 className={`relative bg-white rounded-2xl border-2 ${item.borderColor} ${item.hoverColor} p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden`}
               >
-                {/* 背景裝飾 */}
-                <div
-                  className={`absolute top-0 right-0 w-32 h-32 ${item.bgColor} rounded-full -translate-y-16 translate-x-16 opacity-20 group-hover:scale-150 transition-transform duration-700`}
-                ></div>
-
                 {/* 內容區域 */}
                 <div className="relative z-10">
                   <div className="flex items-start space-x-6 mb-6">
