@@ -8,10 +8,10 @@ import React, {
 import { motion, AnimatePresence } from "framer-motion";
 import MessageBubble from "@/components/pages/chat/MessageBubble";
 import { Message, Icons } from "@/components/pages/chat/common";
-// import Footer from "@/components/Layout/Footer";
+import AttachPreview from "@/components/pages/chat/AttachPreview";
+import ChatInput from "@/components/pages/chat/ChatInput";
+import { sendMessageService } from "@/services/ChatService";
 
-// 使用同源 proxy，以避免瀏覽器直接向內網 IP 的跨域 / 綁定限制
-const OLLAMA_API_URL = "/api/ollama-proxy";
 const MODEL_NAME = "gpt-oss";
 
 const Chat: React.FC = () => {
@@ -30,8 +30,8 @@ const Chat: React.FC = () => {
     "gemma3:12b",
     "deepseek-r1:8b",
     "deepseek-r1:14b",
-    "llama3.2-vision",
-    "llava",
+    "llama3.2-vision:latest",
+    "llava:latest",
   ]);
   const [attachedFiles, setAttachedFiles] = useState<
     {
@@ -49,7 +49,28 @@ const Chat: React.FC = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // 生成唯一ID的函數
-  const generateId = () => Math.random().toString(36).substr(2, 9);
+  const generateId = useCallback(
+    () => Math.random().toString(36).slice(2, 11),
+    []
+  );
+
+  // helper: 找到最後一個 assistant 訊息的索引
+  const findLastAssistantIndex = useCallback((arr: Message[]) => {
+    return arr.map((m) => m.role).lastIndexOf("assistant");
+  }, []);
+
+  // helper: 用於替換最後一個 assistant 訊息內容
+  const replaceLastAssistantContent = useCallback(
+    (content: string) => {
+      setMessages((prev) => {
+        const copy = prev.slice();
+        const idx = findLastAssistantIndex(copy);
+        if (idx >= 0) copy[idx] = { ...copy[idx], content };
+        return copy;
+      });
+    },
+    [findLastAssistantIndex]
+  );
 
   // auto scroll to bottom on messages change when enabled
   useEffect(() => {
@@ -60,6 +81,26 @@ const Chat: React.FC = () => {
   // autofocus on mount
   useEffect(() => {
     textareaRef.current?.focus();
+  }, []);
+
+  // inject global hide-scrollbar style on client only
+  useEffect(() => {
+    const styleId = "hide-scrollbar-global-style";
+    if (typeof document === "undefined") return;
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.innerHTML = `
+      .hide-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none; /* WebKit */
+      }
+    `;
+      document.head.appendChild(style);
+    }
   }, []);
 
   const removeAttachedFile = useCallback((index: number) => {
@@ -126,186 +167,39 @@ const Chat: React.FC = () => {
     []
   );
 
-  // sendMessage: send user input + attachments to OLLAMA and stream reply
+  // sendMessage wrapper calls service (logic extracted to services/ChatService)
   const sendMessage = useCallback(async () => {
-    if (
-      !input.trim() &&
-      attachedFiles.length === 0 &&
-      attachedImages.length === 0
-    )
-      return;
-
-    setBannerError(null);
-    const now = Date.now();
-    const userMsg: Message = {
-      role: "user",
-      content: input,
-      timestamp: now,
-      id: generateId(),
-      images: attachedImages.length > 0 ? attachedImages : undefined,
-      files: attachedFiles.length > 0 ? attachedFiles : undefined,
-    };
-    const aiPlaceholder: Message = {
-      role: "assistant",
-      content: "",
-      timestamp: now,
-      id: generateId(),
-    };
-
-    setMessages((prev) => [...prev, userMsg, aiPlaceholder]);
-    setInput("");
-    setAttachedFiles([]);
-    setAttachedImages([]);
-    setLoading(true);
-
-    const maxRetries = 3;
-    let attempt = 0;
-    let success = false;
-    let finalReply = "";
-
-    while (attempt <= maxRetries && !success) {
-      try {
-        const messagePayload = [...messages, userMsg].map((m) => {
-          const baseMessage: {
-            role: string;
-            content: string;
-            images?: string[];
-          } = {
-            role: m.role,
-            content: m.content,
-          };
-
-          if (m.images && m.images.length > 0) {
-            baseMessage.images = m.images;
-          }
-
-          if (m.files && m.files.length > 0) {
-            const fileContents = m.files
-              .map((file) => {
-                if (
-                  file.type.includes("text") ||
-                  file.type.includes("json") ||
-                  file.type.includes("javascript") ||
-                  file.type.includes("typescript") ||
-                  file.name.endsWith(".csv") ||
-                  file.name.endsWith(".md") ||
-                  file.name.endsWith(".txt") ||
-                  file.type.includes("csv")
-                ) {
-                  try {
-                    const decoded = atob(file.content);
-                    return `檔案：${file.name}\n內容：\n${decoded}`;
-                  } catch {
-                    return `檔案：${file.name} (無法解析內容)`;
-                  }
-                } else {
-                  return `檔案：${file.name} (${file.type})`;
-                }
-              })
-              .join("\n\n");
-
-            baseMessage.content = baseMessage.content
-              ? `${baseMessage.content}\n\n附加檔案：\n${fileContents}`
-              : `附加檔案：\n${fileContents}`;
-          }
-
-          return baseMessage;
-        });
-
-        const modelToUse = selectedModel || MODEL_NAME;
-        // create abort controller so we can stop streaming
-        const controller = new AbortController();
-        abortControllerRef.current = controller;
-        const res = await fetch(OLLAMA_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ model: modelToUse, messages: messagePayload }),
-          signal: controller.signal,
-        });
-        if (!res.body) throw new Error("API 無回應 body");
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let done = false;
-        let reply = "";
-
-        while (!done) {
-          const { value, done: doneReading } = await reader.read();
-          done = doneReading;
-          if (value) {
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-            for (const line of lines) {
-              try {
-                const obj = JSON.parse(line);
-                const chunk =
-                  obj.message?.content ?? obj.choices?.[0]?.message?.content;
-                if (typeof chunk === "string") {
-                  reply += chunk;
-                  setMessages((prev) => {
-                    const copy = prev.slice();
-                    const idx = copy
-                      .map((m) => m.role)
-                      .lastIndexOf("assistant");
-                    if (idx >= 0) copy[idx] = { ...copy[idx], content: reply };
-                    return copy;
-                  });
-                }
-              } catch {
-                // ignore unparsable lines
-              }
-            }
-          }
-        }
-
-        finalReply = reply || "（無回應）";
-        success = true;
-        // clear controller after success
-        abortControllerRef.current = null;
-      } catch (e: unknown) {
-        // if aborted by user, stop retrying
-        if ((e as DOMException)?.name === "AbortError") {
-          setBannerError("已停止");
-          setMessages((prev) => {
-            const copy = prev.slice();
-            const idx = copy.map((m) => m.role).lastIndexOf("assistant");
-            if (idx >= 0) copy[idx] = { ...copy[idx], content: "（已停止）" };
-            return copy;
-          });
-          break;
-        }
-        attempt += 1;
-        if (attempt > maxRetries) {
-          const msg = e instanceof Error ? e.message || "發生錯誤" : "未知錯誤";
-          setBannerError(`請求失敗：${msg} (嘗試 ${attempt} 次)`);
-          setMessages((prev) => {
-            const copy = prev.slice();
-            const idx = copy.map((m) => m.role).lastIndexOf("assistant");
-            if (idx >= 0)
-              copy[idx] = { ...copy[idx], content: `（回應失敗） ${msg}` };
-            return copy;
-          });
-          break;
-        }
-        const wait = Math.pow(2, attempt) * 500;
-        await new Promise((r) => setTimeout(r, wait));
-      }
-    }
-
-    if (success) {
-      setMessages((prev) => {
-        const copy = prev.slice();
-        const idx = copy.map((m) => m.role).lastIndexOf("assistant");
-        if (idx >= 0) copy[idx] = { ...copy[idx], content: finalReply };
-        return copy;
-      });
-    }
-
-    // ensure controller cleared and loading state reset
-    abortControllerRef.current = null;
-    setLoading(false);
-  }, [input, selectedModel, attachedFiles, attachedImages, messages]);
+    await sendMessageService({
+      input,
+      attachedFiles,
+      attachedImages,
+      messages,
+      selectedModel,
+      generateId,
+      setMessages,
+      setInput,
+      setAttachedFiles,
+      setAttachedImages,
+      setLoading,
+      setBannerError,
+      replaceLastAssistantContent,
+      abortControllerRef,
+    });
+  }, [
+    input,
+    attachedFiles,
+    attachedImages,
+    messages,
+    selectedModel,
+    generateId,
+    setMessages,
+    setInput,
+    setAttachedFiles,
+    setAttachedImages,
+    setLoading,
+    setBannerError,
+    replaceLastAssistantContent,
+  ]);
 
   const stopStreaming = useCallback(() => {
     if (abortControllerRef.current) {
@@ -365,7 +259,7 @@ const Chat: React.FC = () => {
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-7xl h-[100vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
+        <div className="w-full max-w-7xl h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 mt-20">
           <div className="flex h-full">
             <div className="flex-1 flex flex-col">
               <div
@@ -496,239 +390,32 @@ const Chat: React.FC = () => {
                   </motion.div>
                 )}
 
-                {/* 檔案預覽區域 */}
-                {(attachedFiles.length > 0 || attachedImages.length > 0) && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl"
-                  >
-                    <div className="text-sm text-gray-600 mb-3 font-medium">
-                      附加的檔案:
-                    </div>
+                {/* 檔案預覽區域 - 已移出為元件 */}
+                <AttachPreview
+                  attachedFiles={attachedFiles}
+                  attachedImages={attachedImages}
+                  removeAttachedFile={removeAttachedFile}
+                  removeAttachedImage={removeAttachedImage}
+                />
 
-                    {/* 圖片預覽 */}
-                    {attachedImages.length > 0 && (
-                      <div className="mb-3">
-                        <div className="flex flex-wrap gap-2">
-                          {attachedImages.map((image, index) => (
-                            <div key={index} className="relative">
-                              <img
-                                src={`data:image/jpeg;base64,${image}`}
-                                alt={`預覽 ${index + 1}`}
-                                className="w-20 h-20 object-cover rounded-lg border border-gray-300"
-                              />
-                              <button
-                                onClick={() => removeAttachedImage(index)}
-                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                              >
-                                <Icons.Remove />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 檔案列表 */}
-                    {attachedFiles.length > 0 && (
-                      <div className="space-y-2">
-                        {attachedFiles.map((file, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Icons.File />
-                              <div>
-                                <div className="text-sm font-medium text-gray-800">
-                                  {file.name}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {file.type}
-                                </div>
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => removeAttachedFile(index)}
-                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
-                            >
-                              <Icons.Remove />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-
-                <div className="flex gap-6">
-                  <div className="flex-1">
-                    {/* hidden file input */}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept="image/*,text/*,.pdf,.doc,.docx,.json,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.h,.css,.html,.xml,.md,.csv,.xlsx,.xls"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-
-                    {/* Styled input container: attach | textarea | send */}
-                    <div className="relative">
-                      <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-2xl px-3 py-2 shadow-sm">
-                        {/* Attach button */}
-                        <motion.button
-                          type="button"
-                          title="添加附件"
-                          whileHover={{ scale: loading ? 1 : 1.05 }}
-                          whileTap={{ scale: loading ? 1 : 0.95 }}
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={loading}
-                          aria-label="添加附件"
-                          className="flex items-center justify-center w-10 h-10 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Icons.Attach />
-                        </motion.button>
-
-                        {/* textarea */}
-                        <textarea
-                          ref={textareaRef}
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={handleKeyDown}
-                          placeholder="輸入您的訊息... (Shift+Enter 換行，Enter 送出)"
-                          rows={1}
-                          className="flex-1 bg-transparent resize-none outline-none px-2 py-2 text-base hide-scrollbar"
-                          disabled={loading}
-                          style={{ minHeight: "56px", maxHeight: "200px" }}
-                        />
-
-                        {/* Model selector inserted to the left of Send button */}
-                        <div className="flex items-center gap-2">
-                          <div className="relative">
-                            <motion.button
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              onClick={() => setIsSettingsOpen((s) => !s)}
-                              className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-                              type="button"
-                              title="切換模型"
-                            >
-                              <span className="text-sm text-gray-500">
-                                當前模型：
-                              </span>
-                              <span className="font-medium text-blue-600 text-sm">
-                                {selectedModel}
-                              </span>
-                              <svg
-                                className={`w-4 h-4 text-gray-500 transition-transform ${
-                                  isSettingsOpen ? "rotate-180" : ""
-                                }`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 9l-7 7-7-7"
-                                />
-                              </svg>
-                            </motion.button>
-
-                            <AnimatePresence>
-                              {isSettingsOpen && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                  className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px] z-50"
-                                >
-                                  <div className="space-y-1 max-h-48 overflow-y-auto">
-                                    {availableModels.map((model) => (
-                                      <button
-                                        key={model}
-                                        onClick={() => {
-                                          setSelectedModel(model);
-                                          setIsSettingsOpen(false);
-                                        }}
-                                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
-                                          selectedModel === model
-                                            ? "bg-blue-100 text-blue-700"
-                                            : "text-gray-700 hover:bg-gray-100"
-                                        }`}
-                                        type="button"
-                                      >
-                                        {model}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        </div>
-
-                        {/* Stop button (visible when loading) */}
-                        <motion.button
-                          type="button"
-                          title="停止回覆"
-                          whileHover={{ scale: loading ? 1.02 : 1 }}
-                          whileTap={{ scale: loading ? 0.98 : 1 }}
-                          onClick={() => stopStreaming()}
-                          disabled={!loading}
-                          aria-label="停止回覆"
-                          className={`flex items-center justify-center w-10 h-10 rounded-md text-white transition-all duration-200 mr-1 ${
-                            loading
-                              ? "bg-red-500 hover:shadow-md"
-                              : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          }`}
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                          >
-                            <rect
-                              x="6"
-                              y="6"
-                              width="12"
-                              height="12"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </motion.button>
-
-                        {/* Send button */}
-                        <motion.button
-                          type="button"
-                          title="傳送訊息"
-                          whileHover={{ scale: canSend ? 1.05 : 1 }}
-                          whileTap={{ scale: canSend ? 0.95 : 1 }}
-                          onClick={() => sendMessage()}
-                          disabled={!canSend}
-                          aria-label="傳送訊息"
-                          className={`flex items-center justify-center w-10 h-10 rounded-md text-white transition-all duration-200 ${
-                            canSend
-                              ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-xl"
-                              : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                          }`}
-                        >
-                          {loading ? (
-                            <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <Icons.Send />
-                          )}
-                        </motion.button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/* Input area - 抽成元件 */}
+                <ChatInput
+                  input={input}
+                  setInput={setInput}
+                  textareaRef={textareaRef}
+                  fileInputRef={fileInputRef}
+                  handleFileUpload={handleFileUpload}
+                  handleKeyDown={handleKeyDown}
+                  canSend={canSend}
+                  sendMessage={sendMessage}
+                  stopStreaming={stopStreaming}
+                  loading={loading}
+                  selectedModel={selectedModel}
+                  setSelectedModel={setSelectedModel}
+                  isSettingsOpen={isSettingsOpen}
+                  setIsSettingsOpen={setIsSettingsOpen}
+                  availableModels={availableModels}
+                />
 
                 {/* model selector moved into input area above */}
               </div>
@@ -752,27 +439,8 @@ const Chat: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
-      {/* <Footer /> */}
     </>
   );
 };
 
 export default Chat;
-
-if (typeof document !== "undefined") {
-  const styleId = "hide-scrollbar-global-style";
-  if (!document.getElementById(styleId)) {
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.innerHTML = `
-      .hide-scrollbar {
-        -ms-overflow-style: none; /* IE and Edge */
-        scrollbar-width: none; /* Firefox */
-      }
-      .hide-scrollbar::-webkit-scrollbar {
-        display: none; /* WebKit */
-      }
-    `;
-    document.head.appendChild(style);
-  }
-}
