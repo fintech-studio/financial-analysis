@@ -8,9 +8,10 @@ import React, {
 import { motion, AnimatePresence } from "framer-motion";
 import MessageBubble from "@/components/pages/chat/MessageBubble";
 import { Message, Icons } from "@/components/pages/chat/common";
-import Footer from "@/components/Layout/Footer";
+// import Footer from "@/components/Layout/Footer";
 
-const OLLAMA_API_URL = "http://172.25.1.24:11434/api/chat";
+// 使用同源 proxy，以避免瀏覽器直接向內網 IP 的跨域 / 綁定限制
+const OLLAMA_API_URL = "/api/ollama-proxy";
 const MODEL_NAME = "gpt-oss";
 
 const Chat: React.FC = () => {
@@ -45,6 +46,7 @@ const Chat: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // 生成唯一ID的函數
   const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -88,8 +90,6 @@ const Chat: React.FC = () => {
   const filteredMessages = useMemo(() => {
     return messages.filter((msg) => msg.content.trim() !== "");
   }, [messages]);
-
-  // settings/models 功能已移除
 
   const handleFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,10 +213,14 @@ const Chat: React.FC = () => {
         });
 
         const modelToUse = selectedModel || MODEL_NAME;
+        // create abort controller so we can stop streaming
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
         const res = await fetch(OLLAMA_API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ model: modelToUse, messages: messagePayload }),
+          signal: controller.signal,
         });
         if (!res.body) throw new Error("API 無回應 body");
         const reader = res.body.getReader();
@@ -257,7 +261,20 @@ const Chat: React.FC = () => {
 
         finalReply = reply || "（無回應）";
         success = true;
+        // clear controller after success
+        abortControllerRef.current = null;
       } catch (e: unknown) {
+        // if aborted by user, stop retrying
+        if ((e as DOMException)?.name === "AbortError") {
+          setBannerError("已停止");
+          setMessages((prev) => {
+            const copy = prev.slice();
+            const idx = copy.map((m) => m.role).lastIndexOf("assistant");
+            if (idx >= 0) copy[idx] = { ...copy[idx], content: "（已停止）" };
+            return copy;
+          });
+          break;
+        }
         attempt += 1;
         if (attempt > maxRetries) {
           const msg = e instanceof Error ? e.message || "發生錯誤" : "未知錯誤";
@@ -285,8 +302,18 @@ const Chat: React.FC = () => {
       });
     }
 
+    // ensure controller cleared and loading state reset
+    abortControllerRef.current = null;
     setLoading(false);
   }, [input, selectedModel, attachedFiles, attachedImages, messages]);
+
+  const stopStreaming = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -338,7 +365,7 @@ const Chat: React.FC = () => {
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-6xl h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
+        <div className="w-full max-w-7xl h-[100vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
           <div className="flex h-full">
             <div className="flex-1 flex flex-col">
               <div
@@ -427,7 +454,7 @@ const Chat: React.FC = () => {
                             ))}
                           </div>
                           <span className="text-sm text-gray-600 ml-2">
-                            AI 正在思考中...
+                            正在思考中...
                           </span>
                         </div>
                       </div>
@@ -577,6 +604,106 @@ const Chat: React.FC = () => {
                           style={{ minHeight: "56px", maxHeight: "200px" }}
                         />
 
+                        {/* Model selector inserted to the left of Send button */}
+                        <div className="flex items-center gap-2">
+                          <div className="relative">
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => setIsSettingsOpen((s) => !s)}
+                              className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                              type="button"
+                              title="切換模型"
+                            >
+                              <span className="text-sm text-gray-500">
+                                當前模型：
+                              </span>
+                              <span className="font-medium text-blue-600 text-sm">
+                                {selectedModel}
+                              </span>
+                              <svg
+                                className={`w-4 h-4 text-gray-500 transition-transform ${
+                                  isSettingsOpen ? "rotate-180" : ""
+                                }`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </motion.button>
+
+                            <AnimatePresence>
+                              {isSettingsOpen && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px] z-50"
+                                >
+                                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                                    {availableModels.map((model) => (
+                                      <button
+                                        key={model}
+                                        onClick={() => {
+                                          setSelectedModel(model);
+                                          setIsSettingsOpen(false);
+                                        }}
+                                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                                          selectedModel === model
+                                            ? "bg-blue-100 text-blue-700"
+                                            : "text-gray-700 hover:bg-gray-100"
+                                        }`}
+                                        type="button"
+                                      >
+                                        {model}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+
+                        {/* Stop button (visible when loading) */}
+                        <motion.button
+                          type="button"
+                          title="停止回覆"
+                          whileHover={{ scale: loading ? 1.02 : 1 }}
+                          whileTap={{ scale: loading ? 0.98 : 1 }}
+                          onClick={() => stopStreaming()}
+                          disabled={!loading}
+                          aria-label="停止回覆"
+                          className={`flex items-center justify-center w-10 h-10 rounded-md text-white transition-all duration-200 mr-1 ${
+                            loading
+                              ? "bg-red-500 hover:shadow-md"
+                              : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          }`}
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                          >
+                            <rect
+                              x="6"
+                              y="6"
+                              width="12"
+                              height="12"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </motion.button>
+
                         {/* Send button */}
                         <motion.button
                           type="button"
@@ -603,66 +730,7 @@ const Chat: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
-                  <div className="relative">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setIsSettingsOpen((s) => !s)}
-                      className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <span>當前模型：</span>
-                      <span className="font-medium text-blue-600">
-                        {selectedModel}
-                      </span>
-                      <svg
-                        className={`w-4 h-4 text-gray-500 transition-transform ${
-                          isSettingsOpen ? "rotate-180" : ""
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </motion.button>
-
-                    <AnimatePresence>
-                      {isSettingsOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute bottom-full right-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px] z-50"
-                        >
-                          <div className="space-y-1 max-h-48 overflow-y-auto">
-                            {availableModels.map((model) => (
-                              <button
-                                key={model}
-                                onClick={() => {
-                                  setSelectedModel(model);
-                                  setIsSettingsOpen(false);
-                                }}
-                                className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
-                                  selectedModel === model
-                                    ? "bg-blue-100 text-blue-700"
-                                    : "text-gray-700 hover:bg-gray-100"
-                                }`}
-                              >
-                                {model}
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
+                {/* model selector moved into input area above */}
               </div>
             </div>
           </div>
@@ -684,7 +752,7 @@ const Chat: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 };
