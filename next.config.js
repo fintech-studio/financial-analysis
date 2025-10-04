@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const isStaticExport = process.env.STATIC_EXPORT === "true";
+const PY_API_HOST = process.env.PY_API_HOST;
 
 const nextConfig = {
   // 只有靜態輸出時才設定 basePath 和 assetPrefix
@@ -20,8 +21,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/py/:path*',
-        destination: 'http://localhost:8080/:path*',
+        source: "/api/py/:path*",
+        destination: `${PY_API_HOST}/:path*`,
       },
     ];
   },

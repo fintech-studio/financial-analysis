@@ -744,7 +744,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
           type="button"
           className="ml-4 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow transition-colors duration-150 flex items-center gap-1"
           onClick={() => {
-            router.push("/test/trade-signals");
+            router.push("/market-analysis/trade-signals");
           }}
         >
           <RocketLaunchIcon className="w-5 h-6 mr-1" />

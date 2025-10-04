@@ -5,22 +5,36 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
+  if (req.method !== "POST" && req.method !== "GET") {
     return res.status(405).json({
       success: false,
-      message: "只允許 POST 請求",
+      message: "只允許 GET 或 POST 請求",
       data: [],
       count: 0,
     });
   }
 
   try {
-    // 直接從 body 取得所有連線資訊（允許前端傳入 user/password/server/port/database）
-    const { user, password, server, port, database } = req.body;
+    // 若為 POST，優先使用 body 提供的連線資訊；若為 GET 或 body 為空，使用 server-side env（非公開）
+    let { user, password, server, port, database } =
+      req.method === "POST" ? req.body : ({} as Record<string, unknown>);
+
+    // fallback to server env when not provided
+    user = user || process.env.DB_WEBUSER || process.env.DB_USER;
+    password =
+      password || process.env.DB_WEBUSER_PASSWORD || process.env.DB_PASSWORD;
+    server = server || process.env.DB_SERVER;
+    port =
+      port || (process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined);
+    database =
+      database ||
+      process.env.DB_DATABASE ||
+      process.env.NEXT_PUBLIC_DB_DATABASE;
     if (!server || !user || !password) {
       return res.status(400).json({
         success: false,
-        message: "請填寫完整的連接資訊：伺服器地址、使用者名稱和密碼",
+        message:
+          "請填寫完整的連接資訊：伺服器地址、使用者名稱和密碼（或在伺服器端設定 DB_WEBUSER / DB_WEBUSER_PASSWORD / DB_SERVER）",
         data: [],
         count: 0,
       });
@@ -88,7 +102,11 @@ export default async function handler(
       });
     } catch (dbError: unknown) {
       console.error("[API] 資料庫連接錯誤", dbError);
-      const dbErrorObj = dbError as { code?: string; message?: string; originalError?: { message?: string } };
+      const dbErrorObj = dbError as {
+        code?: string;
+        message?: string;
+        originalError?: { message?: string };
+      };
       console.log("[API] 錯誤詳細資訊:", {
         code: dbErrorObj.code,
         message: dbErrorObj.message,
@@ -133,7 +151,10 @@ export default async function handler(
         dbErrorObj.message.includes("does not exist")
       ) {
         errorMessage = "資料庫不存在：請檢查資料庫名稱是否正確";
-      } else if (dbErrorObj.message && dbErrorObj.message.includes("permission")) {
+      } else if (
+        dbErrorObj.message &&
+        dbErrorObj.message.includes("permission")
+      ) {
         errorMessage = "權限不足：使用者沒有存取此資料庫的權限";
       } else if (dbErrorObj.message) {
         errorMessage = `連接錯誤：${dbErrorObj.message}`;
