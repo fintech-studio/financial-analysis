@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MessageBubble from "@/components/pages/Chat/MessageBubble";
-import { Message, Icons } from "@/components/pages/Chat/common";
+import { Message, Icons } from "@/components/pages/Chat/Common";
 import AttachPreview from "@/components/pages/Chat/AttachPreview";
 import ChatInput from "@/components/pages/Chat/ChatInput";
 import { sendMessageService } from "@/services/ChatService";

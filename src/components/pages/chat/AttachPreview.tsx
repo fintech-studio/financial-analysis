@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Icons } from "@/components/pages/Chat/common";
+import { Icons } from "@/components/pages/Chat/Common";
 
 interface FileEntry {
   name: string;
