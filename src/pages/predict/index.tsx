@@ -1,8 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   ChatBubbleLeftIcon,
   Cog6ToothIcon,
   MagnifyingGlassIcon,
+  SparklesIcon,
+  ServerIcon,
+  CpuChipIcon,
+  ExclamationTriangleIcon,
+  DocumentTextIcon,
+  DocumentDuplicateIcon,
 } from "@heroicons/react/24/outline";
 import Footer from "../../components/Layout/Footer";
 import PredictionLineChart from "../../components/Charts/PredictChart";
@@ -37,7 +43,7 @@ interface PredictionRequest {
   prediction_length: number;
 }
 
-const DiscussionPage: React.FC = () => {
+const PredictPage: React.FC = () => {
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [evaluation, setEvaluation] = useState<EvaluationData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -79,10 +85,11 @@ const DiscussionPage: React.FC = () => {
   const [dbLoading, setDbLoading] = useState(false);
   const [stockData, setStockData] = useState<number[]>([]);
 
-  const databaseService = DatabaseService.getInstance();
+  // memoize DatabaseService instance to avoid repeated lookups
+  const databaseService = useMemo(() => DatabaseService.getInstance(), []);
 
   // 測試資料庫連接
-  const testDbConnection = async () => {
+  const testDbConnection = useCallback(async () => {
     setDbLoading(true);
     setError("");
 
@@ -110,10 +117,10 @@ const DiscussionPage: React.FC = () => {
     } finally {
       setDbLoading(false);
     }
-  };
+  }, [dbConfig]);
 
   // 查詢股票資料
-  const queryStockData = async () => {
+  const queryStockData = useCallback(async () => {
     if (!dbConnected) {
       setError("請先連接資料庫");
       return;
@@ -130,9 +137,9 @@ const DiscussionPage: React.FC = () => {
     try {
       const tableName = `stock_data_1h`;
 
-      // 修正 SQL 語法，移除錯誤的字符串拼接
+      // 使用參數化查詢，限制筆數
       const query = `
-        SELECT TOP 10000 
+        SELECT TOP 10000
           close_price
         FROM ${tableName}
         WHERE symbol = @symbol
@@ -146,9 +153,7 @@ const DiscussionPage: React.FC = () => {
       if (result.success && result.data) {
         const stocks = result.data as StockRecord[];
         const values = stocks.map((item) => item.close_price);
-        console.log(values);
         setStockData(values);
-        console.log(`查詢到 ${stocks.length} 筆 ${stockSymbol} 股票資料`);
       } else {
         setError(result.error || `找不到 ${stockSymbol} 的資料`);
       }
@@ -157,46 +162,49 @@ const DiscussionPage: React.FC = () => {
     } finally {
       setDbLoading(false);
     }
-  };
+  }, [dbConnected, stockSymbol, dbConfig, databaseService]);
 
   // 快速選擇熱門股票
-  const selectPopularStock = (symbol: string) => {
+  const selectPopularStock = useCallback((symbol: string) => {
     setStockSymbol(symbol);
-  };
+  }, []);
 
-  const callStockPrediction = async (stockData: PredictionRequest) => {
-    setLoading(true);
-    setError("");
-    setPrediction(null);
-    setEvaluation(null); // 清除之前的評估結果
+  const callStockPrediction = useCallback(
+    async (stockData: PredictionRequest) => {
+      setLoading(true);
+      setError("");
+      setPrediction(null);
+      setEvaluation(null); // 清除之前的評估結果
 
-    try {
-      const response = await fetch("/api/py/stock_prediction/predict", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(stockData),
-      });
+      try {
+        const response = await fetch("/api/py/stock_prediction/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(stockData),
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      // 檢查是否有錯誤 (後端返回 500 狀態碼時，FastAPI 會包裝成 detail 字段)
-      if (!response.ok || result.detail) {
-        throw new Error(
-          result.detail || `HTTP error! status: ${response.status}`
-        );
+        // 檢查是否有錯誤 (後端返回 500 狀態碼時，FastAPI 會包裝成 detail 字段)
+        if (!response.ok || result.detail) {
+          throw new Error(
+            result.detail || `HTTP error! status: ${response.status}`
+          );
+        }
+
+        setPrediction(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "預測失敗");
+      } finally {
+        setLoading(false);
       }
+    },
+    []
+  );
 
-      setPrediction(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "預測失敗");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const callEvaluation = async (stockData: PredictionRequest) => {
+  const callEvaluation = useCallback(async (stockData: PredictionRequest) => {
     setLoading(true);
     setError("");
     setEvaluation(null);
@@ -226,130 +234,186 @@ const DiscussionPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handlePrediction = () => {
+  const handlePrediction = useCallback(() => {
     const testData = {
       data_numpy: stockData,
       context_length: contextLength,
       prediction_length: predictionLength,
     };
-
-    console.log("發送到後端的數據:", {
-      data_length: testData.data_numpy.length,
-      context_length: testData.context_length,
-      prediction_length: testData.prediction_length,
-    });
 
     callStockPrediction(testData);
-  };
-  const handleEvaluation = () => {
+  }, [stockData, contextLength, predictionLength, callStockPrediction]);
+
+  const handleEvaluation = useCallback(() => {
     const testData = {
       data_numpy: stockData,
       context_length: contextLength,
       prediction_length: predictionLength,
     };
 
-    console.log("發送到後端的數據:", {
-      data_numpy: testData.data_numpy,
-      context_length: testData.context_length,
-      prediction_length: testData.prediction_length,
-    });
-
     callEvaluation(testData);
-  };
+  }, [stockData, contextLength, predictionLength, callEvaluation]);
 
   // 轉換預測數據為折線圖格式
-  const convertPredictionToLineData = (
-    predictionData: PredictionData
-  ): LineChartData[] => {
-    const baseDate = new Date();
-    const chartData: LineChartData[] = [];
+  const convertPredictionToLineData = useCallback(
+    (predictionData: PredictionData): LineChartData[] => {
+      const baseDate = new Date();
+      const chartData: LineChartData[] = [];
 
-    console.log("PredictionData received:", predictionData);
+      // 後端返回的是 mean: [數值1, 數值2, ...] 格式 (一維數組)
+      const meanArray = predictionData.mean;
+      if (!Array.isArray(meanArray) || meanArray.length === 0) {
+        return [];
+      }
 
-    // 後端返回的是 mean: [數值1, 數值2, ...] 格式 (一維數組)
-    const meanArray = predictionData.mean;
-    if (!Array.isArray(meanArray) || meanArray.length === 0) {
-      console.error("Mean array is empty or invalid:", meanArray);
-      return [];
-    }
+      // 使用小時級距（和 evaluation 保持一致）
+      for (let i = 0; i < meanArray.length; i++) {
+        const date = new Date(baseDate);
+        date.setHours(date.getHours() + (i + 1));
 
-    for (let i = 0; i < meanArray.length; i++) {
-      const date = new Date(baseDate);
-      date.setDate(date.getDate() + (i + 1));
+        const meanValue = meanArray[i];
 
-      const meanValue = meanArray[i];
+        chartData.push({
+          date: date.toISOString(),
+          value: Number(meanValue) || 0,
+        });
+      }
 
-      chartData.push({
-        date: date.toISOString(),
-        value: Number(meanValue) || 0,
-        // 預測模式下不包含 predictValue
-      });
-    }
-
-    console.log("Converted prediction chart data:", chartData);
-    return chartData;
-  };
+      return chartData;
+    },
+    []
+  );
 
   // 轉換評估數據為折線圖格式
-  const convertEvaluationToLineData = (
-    evaluationData: EvaluationData
-  ): LineChartData[] => {
-    const baseDate = new Date();
-    const chartData: LineChartData[] = [];
+  const convertEvaluationToLineData = useCallback(
+    (evaluationData: EvaluationData): LineChartData[] => {
+      const baseDate = new Date();
+      const chartData: LineChartData[] = [];
 
-    console.log("EvaluationData received:", evaluationData);
+      if (
+        !evaluationData.true_value?.length ||
+        !evaluationData.predict?.length
+      ) {
+        return [];
+      }
 
-    if (!evaluationData.true_value?.length || !evaluationData.predict?.length) {
-      console.error("Evaluation data is missing or empty:", evaluationData);
-      return [];
-    }
+      const maxLength = Math.max(
+        evaluationData.true_value.length,
+        evaluationData.predict.length
+      );
 
-    // 同時處理真實值和預測值
-    const maxLength = Math.max(
-      evaluationData.true_value.length,
-      evaluationData.predict.length
-    );
+      for (let i = 0; i < maxLength; i++) {
+        const date = new Date(baseDate);
+        date.setHours(date.getHours() + (i + 1));
 
-    for (let i = 0; i < maxLength; i++) {
-      const date = new Date(baseDate);
-      date.setHours(date.getHours() + (i + 1));
+        const trueValue =
+          i < evaluationData.true_value.length
+            ? evaluationData.true_value[i]
+            : 0;
 
-      // 真實值作為主線
-      const trueValue =
-        i < evaluationData.true_value.length ? evaluationData.true_value[i] : 0;
+        const predictValue =
+          i < evaluationData.predict.length ? evaluationData.predict[i] : 0;
 
-      // 預測值作為預測線
-      const predictValue =
-        i < evaluationData.predict.length ? evaluationData.predict[i] : 0;
+        chartData.push({
+          date: date.toISOString(),
+          value: Number(trueValue) || 0,
+          predictValue: Number(predictValue) || 0,
+        });
+      }
 
-      chartData.push({
-        date: date.toISOString(),
-        value: Number(trueValue) || 0,
-        predictValue: Number(predictValue) || 0,
-      });
-    }
+      return chartData;
+    },
+    []
+  );
 
-    console.log("Converted evaluation chart data:", chartData);
-    return chartData;
-  };
+  // memoized converted data for charts
+  const predictionChartData = useMemo(
+    () => (prediction ? convertPredictionToLineData(prediction) : []),
+    [prediction, convertPredictionToLineData]
+  );
+
+  const evaluationChartData = useMemo(
+    () => (evaluation ? convertEvaluationToLineData(evaluation) : []),
+    [evaluation, convertEvaluationToLineData]
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 頁面標題區域 */}
-      <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-xl relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-white tracking-tight">
-              股票預測分析
-            </h1>
-            <p className="text-blue-100 mt-4 text-lg">
-              基於機器學習的股票價格預測模型
-            </p>
+      {/* 頁面標題區域（改為與 news 頁面一致的裝飾風格） */}
+      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+        {/* subtle grid background */}
+        <div className="absolute inset-0 opacity-20">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)
+              `,
+              backgroundSize: "60px 60px",
+            }}
+          />
+        </div>
+
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-12 left-12 w-24 h-24 bg-white opacity-5 rounded-full animate-pulse"></div>
+          <div
+            className="absolute bottom-12 right-24 w-36 h-36 bg-white opacity-5 rounded-full animate-pulse"
+            style={{ animationDelay: "1s" }}
+          ></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
+          <div className="absolute top-24 right-12 w-4 h-4 bg-white opacity-20 rounded-full animate-bounce"></div>
+          <div
+            className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-30 rounded-full animate-pulse"
+            style={{ animationDelay: "1.5s" }}
+          ></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10 w-full">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            <div className="flex-1">
+              <div className="flex items-center mb-6">
+                <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300 shadow-lg">
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <SparklesIcon className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
+                    股票預測分析
+                  </h1>
+                  <p className="text-blue-100 mt-3 text-lg font-medium">
+                    基於機器學習的股票價格預測模型
+                  </p>
+                </div>
+              </div>
+              <p className="text-blue-100 text-lg max-w-3xl leading-relaxed">
+                使用真實歷史價格資料與 AI
+                模型，產生短期/中期價格走勢預測，並提供模型評估視覺化結果。
+              </p>
+            </div>
+
+            <div className="flex flex-col lg:items-end space-y-4">
+              <div className="grid grid-cols-2 gap-6 lg:gap-8">
+                <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                  <div className="text-3xl font-bold text-white">即時</div>
+                  <div className="text-blue-200 text-sm font-medium">
+                    模型回饋
+                  </div>
+                </div>
+                <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                  <div className="text-3xl font-bold text-white">可視化</div>
+                  <div className="text-blue-200 text-sm font-medium">
+                    趨勢圖表
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* 主要內容區域 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -409,7 +473,7 @@ const DiscussionPage: React.FC = () => {
                 placeholder={`輸入${
                   countryOptions.find((c) => c.value === selectedCountry)?.label
                 }股票代碼`}
-                onKeyPress={(e) => e.key === "Enter" && queryStockData()}
+                onKeyDown={(e) => e.key === "Enter" && queryStockData()}
               />
               <button
                 onClick={queryStockData}
@@ -607,7 +671,7 @@ const DiscussionPage: React.FC = () => {
                     AI 預測結果
                   </h3>
                   <PredictionLineChart
-                    data={convertPredictionToLineData(prediction)}
+                    data={predictionChartData}
                     title="股票價格預測趨勢"
                     height={600}
                   />
@@ -620,7 +684,7 @@ const DiscussionPage: React.FC = () => {
                     模型評估結果
                   </h3>
                   <PredictionLineChart
-                    data={convertEvaluationToLineData(evaluation)}
+                    data={evaluationChartData}
                     title="預測準確度評估 - 真實值 vs 預測值"
                     height={600}
                     showBothLines={true}
@@ -632,9 +696,81 @@ const DiscussionPage: React.FC = () => {
         </div>
       </div>
 
+      {/* 諮詢資訊區塊 */}
+      <div className="bg-gray-50 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+              {/* 系統資訊 */}
+              <div>
+                <div className="flex items-center mb-4">
+                  <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                    <ServerIcon className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    系統資訊
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center text-sm">
+                    <CpuChipIcon className="h-4 w-4 text-gray-400 mr-2" />
+                    <span className="text-gray-600">預測模型：</span>
+                    <span className="ml-1 font-medium text-gray-900">
+                      Chronos Forecasting
+                    </span>
+                  </div>
+                  <span className="block mt-2 text-xs text-gray-500">
+                    使用 LSTM、Transformer 等深度學習架構進行時間序列預測
+                  </span>
+                </div>
+              </div>
+
+              {/* 數據來源 */}
+              <div>
+                <div className="flex items-center mb-4">
+                  <div className="p-2 bg-green-100 rounded-lg mr-3">
+                    <DocumentDuplicateIcon className="h-5 w-5 text-green-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    數據來源
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center text-sm">
+                    <DocumentTextIcon className="h-4 w-4 text-gray-400 mr-2" />
+                    <span className="text-gray-700">歷史真實市場數據</span>
+                  </div>
+                  <span className="block mt-2 text-xs text-gray-500">
+                    資料來自 Yahoo Finance，包含股票與加密貨幣的歷史價格
+                  </span>
+                </div>
+              </div>
+
+              {/* 免責聲明 */}
+              <div>
+                <div className="flex items-center mb-4">
+                  <div className="p-2 bg-yellow-100 rounded-lg mr-3">
+                    <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    免責聲明
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  本系統提供的分析僅供參考，投資決策請自行評估風險。
+                  <span className="block mt-2 text-xs text-gray-500">
+                    AI預測結果基於歷史數據分析，不保證未來表現。
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <Footer />
     </div>
   );
 };
 
-export default DiscussionPage;
+export default PredictPage;
