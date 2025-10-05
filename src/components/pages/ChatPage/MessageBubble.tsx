@@ -4,7 +4,7 @@ import {
   Message,
   ANIMATION_CONFIG,
   Icons,
-} from "@/components/pages/Chat/Common";
+} from "@/components/pages/ChatPage/ChatCommon";
 
 const MessageBubble: React.FC<{
   msg: Message;
