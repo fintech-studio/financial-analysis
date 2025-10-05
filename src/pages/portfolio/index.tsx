@@ -355,37 +355,30 @@ const PortfolioPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Enhanced Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(120,119,198,0.3),transparent_50%),radial-gradient(circle_at_80%_20%,rgba(255,119,198,0.3),transparent_50%),radial-gradient(circle_at_40%_80%,rgba(119,255,198,0.3),transparent_50%)] pointer-events-none" />
-
-      {/* Header Section */}
-      <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-2xl relative overflow-hidden">
-        {/* Decorative Background Elements */}
+    <div className="min-h-screen bg-gray-50">
+      {/* 統一的頁面標題區域 */}
+      <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 shadow-xl relative overflow-hidden">
+        {/* 裝飾性背景元素 */}
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-white opacity-5 rounded-full animate-pulse"></div>
-          <div className="absolute bottom-10 right-20 w-32 h-32 bg-white opacity-5 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white opacity-5 rounded-full"></div>
+          <div className="absolute bottom-10 right-20 w-32 h-32 bg-white opacity-5 rounded-full"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
-          
-          {/* Additional floating elements */}
-          <div className="absolute top-20 right-10 w-3 h-3 bg-white opacity-20 rounded-full animate-bounce"></div>
-          <div className="absolute bottom-20 left-20 w-2 h-2 bg-white opacity-30 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-            <div className="flex-1">
-              <div className="flex items-center mb-6">
-                <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300">
-                  <BriefcaseIcon className="h-10 w-10 text-white group-hover:scale-110 transition-transform duration-300" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-8 lg:mb-0">
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-sm mr-4">
+                  <BriefcaseIcon className="h-8 w-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
+                  <h1 className="text-4xl font-bold text-white tracking-tight">
                     投資組合管理
                   </h1>
-                  <p className="text-blue-100 mt-3 text-xl">
+                  <p className="text-blue-100 mt-2">
                     歡迎回來，
-                    <span className="font-semibold text-white ml-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                    <span className="font-semibold text-white ml-1">
                       {typeof preloadedData.user === "object" &&
                       preloadedData.user &&
                       "name" in preloadedData.user &&
@@ -396,67 +389,62 @@ const PortfolioPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <p className="text-blue-100 text-xl max-w-3xl leading-relaxed">
+              <p className="text-blue-100 text-lg max-w-2xl">
                 智能投資組合管理系統，追蹤績效表現、風險評估，並提供最佳化建議
               </p>
             </div>
 
-            {/* Status Panel */}
-            <div className="flex flex-col lg:items-end space-y-4">
-              <div className="flex items-center space-x-4">
-                {realtimeLoading && (
-                  <div className="flex items-center bg-white/10 backdrop-blur-sm text-white px-6 py-3 rounded-full border border-white/20 shadow-lg">
-                    <ArrowPathIcon className="w-5 h-5 mr-3 animate-spin" />
-                    <span className="text-sm font-medium">更新中...</span>
-                  </div>
-                )}
-                {realtimeError && (
-                  <button
-                    onClick={retryRealtime}
-                    className="text-red-200 hover:text-white text-sm flex items-center bg-red-500/20 hover:bg-red-500/30 px-6 py-3 rounded-full border border-red-300/30 transition-all duration-200 shadow-lg"
-                  >
-                    <ArrowPathIcon className="w-5 h-5 mr-2" />
-                    重試
-                  </button>
-                )}
-                
+            {/* 優化的實時更新狀態顯示 */}
+            <div className="flex items-center space-x-4">
+              {realtimeLoading && (
+                <div className="flex items-center bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-full border border-white/20">
+                  <ArrowPathIcon className="w-4 h-4 mr-2 animate-spin" />
+                  <span className="text-sm font-medium">更新中...</span>
+                </div>
+              )}
+              {realtimeError && (
                 <button
-                  onClick={handleManualRefresh}
-                  className="text-white/80 hover:text-white text-sm flex items-center bg-white/10 hover:bg-white/20 px-6 py-3 rounded-full border border-white/20 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  title="手動刷新數據"
+                  onClick={retryRealtime}
+                  className="text-red-200 hover:text-white text-sm flex items-center bg-red-500/20 hover:bg-red-500/30 px-4 py-2 rounded-full border border-red-300/30 transition-all duration-200"
                 >
-                  <ArrowPathIcon className="w-5 h-5 mr-2" />
-                  刷新
+                  <ArrowPathIcon className="w-4 h-4 mr-1" />
+                  重試
                 </button>
-              </div>
-              
-              <div className="text-white/60 text-sm bg-white/5 px-4 py-2 rounded-full backdrop-blur-sm">
+              )}
+              {/* 手動刷新按鈕 */}
+              <button
+                onClick={handleManualRefresh}
+                className="text-white/80 hover:text-white text-sm flex items-center bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full border border-white/20 transition-all duration-200"
+                title="手動刷新數據"
+              >
+                <ArrowPathIcon className="w-4 h-4 mr-1" />
+                刷新
+              </button>
+              {/* 最後更新時間 */}
+              <div className="text-white/60 text-xs">
                 最後更新: {lastUpdateTime.toLocaleTimeString("zh-TW")}
               </div>
             </div>
           </div>
 
-          {/* Enhanced Tab Navigation */}
-          <div className="mt-12">
-            <nav className="flex flex-wrap gap-3 lg:gap-4">
+          {/* 標籤導航 */}
+          <div className="mt-8">
+            <nav className="flex space-x-6 overflow-x-auto pb-2 scrollbar-hide">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-3 px-6 py-4 text-sm font-semibold rounded-2xl whitespace-nowrap transition-all duration-300 shadow-lg hover:shadow-xl ${
+                    className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-all duration-200 ${
                       activeTab === tab.id
-                        ? "bg-white text-indigo-700 shadow-white/20 scale-105"
-                        : "text-white bg-white/10 hover:bg-white/20 hover:scale-105 backdrop-blur-sm border border-white/20"
+                        ? "bg-white text-indigo-700 shadow-lg"
+                        : "text-white hover:bg-white/10 hover:text-white"
                     }`}
                     title={tab.description}
                   >
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-4 w-4" />
                     <span>{tab.name}</span>
-                    {activeTab === tab.id && (
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                    )}
                   </button>
                 );
               })}
@@ -465,203 +453,101 @@ const PortfolioPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-12">
-        <div className="space-y-12">
-          {/* Overview Section */}
+      {/* 主要內容區域 */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
+          {/* 投資組合概覽 */}
           {activeTab === "overview" && (
-            <div className="space-y-10 animate-fadeIn">
+            <div className="space-y-8 animate-fadeIn">
               {isPortfolioData(processedData.portfolio) ? (
-                <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20"></div>
-                  <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-                    <div className="p-8 lg:p-12">
-                      <PortfolioOverview data={processedData.portfolio.overview} />
-                    </div>
-                  </div>
-                </div>
+                <PortfolioOverview data={processedData.portfolio.overview} />
               ) : (
-                <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-12 text-center border border-white/30">
-                  <div className="animate-pulse space-y-6">
-                    <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto"></div>
-                    <div className="space-y-3">
-                      <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
-                    </div>
+                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                  <div className="animate-pulse">
+                    <div className="w-16 h-16 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Allocation Section */}
+          {/* 資產配置 */}
           {activeTab === "allocation" && (
             <div className="animate-fadeIn">
               {isAssetAllocationData(processedData.allocation) ? (
-                <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 rounded-3xl blur opacity-20"></div>
-                  <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-green-200/50 overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500"></div>
-                    <div className="p-8 lg:p-12">
-                      <AssetAllocation data={processedData.allocation} />
-                    </div>
-                  </div>
-                </div>
+                <AssetAllocation data={processedData.allocation} />
               ) : (
-                <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-12 text-center border border-white/30">
-                  <div className="animate-pulse space-y-6">
-                    <div className="w-40 h-40 bg-gray-200 rounded-full mx-auto"></div>
-                    <div className="h-6 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                  <div className="animate-pulse">
+                    <div className="w-32 h-32 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Holdings Section */}
+          {/* 持倉明細 */}
           {activeTab === "holdings" && (
             <div className="animate-fadeIn">
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-3xl blur opacity-20"></div>
-                <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-indigo-200/50 overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-                  
-                  {/* Section Header */}
-                  <div className="px-8 py-6 border-b border-gray-100/50 bg-gradient-to-r from-indigo-50/30 to-purple-50/30">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                      <CurrencyDollarIcon className="w-8 h-8 text-indigo-600 mr-3" />
-                      持倉明細
-                    </h2>
-                    <p className="text-gray-600 mt-2">詳細的投資組合持倉資訊與表現</p>
-                  </div>
-                  
-                  <div className="p-8 lg:p-12">
-                    <HoldingsTable
-                      holdings={
-                        isPortfolioData(processedData.portfolio) &&
-                        Array.isArray(processedData.portfolio.holdings)
-                          ? processedData.portfolio.holdings
-                          : []
-                      }
-                      onSelectHolding={setSelectedHolding}
-                      selectedHolding={selectedHolding || undefined}
-                    />
-                  </div>
-                </div>
-              </div>
+              <HoldingsTable
+                holdings={
+                  isPortfolioData(processedData.portfolio) &&
+                  Array.isArray(processedData.portfolio.holdings)
+                    ? processedData.portfolio.holdings
+                    : []
+                }
+                onSelectHolding={setSelectedHolding}
+                selectedHolding={selectedHolding || undefined}
+              />
             </div>
           )}
 
-          {/* Performance Section */}
+          {/* 績效分析 */}
           {activeTab === "performance" && (
-            <div className="animate-fadeIn space-y-10">
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 rounded-3xl blur opacity-20"></div>
-                <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-cyan-200/50 overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500"></div>
-                  
-                  {/* Section Header */}
-                  <div className="px-8 py-6 border-b border-gray-100/50 bg-gradient-to-r from-cyan-50/30 to-blue-50/30">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                      <ArrowTrendingUpIcon className="w-8 h-8 text-cyan-600 mr-3" />
-                      績效分析
-                    </h2>
-                    <p className="text-gray-600 mt-2">投資組合歷史表現與趨勢分析</p>
-                  </div>
-                  
-                  <div className="p-8 lg:p-12">
-                    <PerformanceChart
-                      data={
-                        isPortfolioData(processedData.portfolio) &&
-                        processedData.performance &&
-                        isChartData(processedData.performance)
-                          ? (processedData.performance as ChartData)
-                          : ({
-                              daily: { labels: [], portfolio: [] },
-                              weekly: { labels: [], portfolio: [] },
-                              monthly: { labels: [], portfolio: [] },
-                              returns: {},
-                            } as ChartData)
-                      }
-                      timeRange={"1M"}
-                      showDetails={true}
-                      showBenchmark={true}
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="animate-fadeIn space-y-8">
+              <PerformanceChart
+                data={
+                  isPortfolioData(processedData.portfolio) &&
+                  processedData.performance &&
+                  isChartData(processedData.performance)
+                    ? (processedData.performance as ChartData)
+                    : ({
+                        daily: { labels: [], portfolio: [] },
+                        weekly: { labels: [], portfolio: [] },
+                        monthly: { labels: [], portfolio: [] },
+                        returns: {},
+                      } as ChartData)
+                }
+                timeRange={"1M"}
+                showDetails={true}
+                showBenchmark={true}
+              />
             </div>
           )}
 
-          {/* Transactions Section */}
+          {/* 交易歷史 */}
           {activeTab === "transactions" && (
             <div className="animate-fadeIn">
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500 rounded-3xl blur opacity-20"></div>
-                <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-orange-200/50 overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500"></div>
-                  
-                  {/* Section Header */}
-                  <div className="px-8 py-6 border-b border-gray-100/50 bg-gradient-to-r from-orange-50/30 to-pink-50/30">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                      <PlusCircleIcon className="w-8 h-8 text-orange-600 mr-3" />
-                      交易歷史
-                    </h2>
-                    <p className="text-gray-600 mt-2">完整的交易記錄與統計分析</p>
-                  </div>
-                  
-                  <div className="p-8 lg:p-12">
-                    <TransactionHistory
-                      transactions={
-                        processedData.transactions &&
-                        Array.isArray(processedData.transactions)
-                          ? processedData.transactions
-                          : []
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
+              <TransactionHistory
+                transactions={
+                  processedData.transactions &&
+                  Array.isArray(processedData.transactions)
+                    ? processedData.transactions
+                    : []
+                }
+              />
             </div>
           )}
 
-          {/* Risk Section */}
-          {activeTab === "risk" && (
-            <div className="animate-fadeIn">
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-violet-500 to-fuchsia-500 rounded-3xl blur opacity-20"></div>
-                <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-purple-200/50 overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-violet-500 to-fuchsia-500"></div>
-                  
-                  {/* Section Header */}
-                  <div className="px-8 py-6 border-b border-gray-100/50 bg-gradient-to-r from-purple-50/30 to-fuchsia-50/30">
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                      <ShieldCheckIcon className="w-8 h-8 text-purple-600 mr-3" />
-                      風險評估與建議
-                    </h2>
-                    <p className="text-gray-600 mt-2">投資風險分析與AI智能建議</p>
-                  </div>
-                  
-                  <div className="p-8 lg:p-12">
-                    <div className="text-center py-20">
-                      <div className="w-20 h-20 bg-purple-100 rounded-full mx-auto mb-6 flex items-center justify-center">
-                        <ShieldCheckIcon className="w-10 h-10 text-purple-600" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-3">風險分析功能開發中</h3>
-                      <p className="text-gray-600">我們正在為您準備更完善的風險評估工具</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* 風險與建議 */}
+          {activeTab === "risk" && <div className="animate-fadeIn"></div>}
         </div>
       </div>
 
-      <div className="mt-20">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 };

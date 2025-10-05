@@ -6,10 +6,10 @@ import React, {
   useMemo,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import MessageBubble from "@/components/pages/chat/MessageBubble";
-import { Message, Icons } from "@/components/pages/chat/common";
-import AttachPreview from "@/components/pages/chat/AttachPreview";
-import ChatInput from "@/components/pages/chat/ChatInput";
+import MessageBubble from "@/components/pages/Chat/MessageBubble";
+import { Message, Icons } from "@/components/pages/Chat/common";
+import AttachPreview from "@/components/pages/Chat/AttachPreview";
+import ChatInput from "@/components/pages/Chat/ChatInput";
 import { sendMessageService } from "@/services/ChatService";
 
 const MODEL_NAME = "gpt-oss";

@@ -118,7 +118,7 @@ const TestPage: React.FC = () => {
 
             {/* Enhanced Statistics Panel */}
             <div className="flex flex-col lg:items-end space-y-4">
-              <div className="grid grid-cols-2 gap-6 lg:gap-8">
+              <div className="grid grid-cols-1 gap-6 lg:gap-8">
                 <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
                   <div className="text-3xl font-bold text-white">
                     {testItems.length}

@@ -130,7 +130,10 @@ export abstract class BaseController {
     if (
       errorMessage.includes("網路") ||
       errorMessage.includes("network") ||
-      (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "ECONNREFUSED")
+      (typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: string }).code === "ECONNREFUSED")
     ) {
       throw new Error(`${context}: 網路連線異常，請檢查網路設定並稍後重試`);
     }
@@ -237,9 +240,7 @@ export class DIContainer {
 export const SERVICE_KEYS = {
   USER_MODEL: "UserModel",
   PORTFOLIO_MODEL: "PortfolioModel",
-  STOCK_MODEL: "StockModel",
   NEWS_MODEL: "NewsModel",
-  MARKET_MODEL: "MarketModel",
   EDUCATION_MODEL: "EducationModel",
 } as const;
 

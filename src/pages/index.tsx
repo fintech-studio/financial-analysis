@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useCallback } from "react";
 import Link from "next/link";
 import {
   SparklesIcon,
@@ -12,15 +12,8 @@ import dynamic from "next/dynamic";
 import Wave from "@/components/Wave";
 import Footer from "@/components/Layout/Footer";
 
-// 優化後的 MVC 控制器引入
-import { MarketController } from "@/controllers/MarketController";
-
 // 增強的Hook引入
-import {
-  usePreloadData,
-  useFormController,
-  useRealTimeData,
-} from "@/hooks/useMvcController";
+import { useFormController } from "@/hooks/useMvcController";
 
 // 動態引入元件以改善首次載入效能
 const TerminalAnimation = dynamic(
@@ -29,34 +22,6 @@ const TerminalAnimation = dynamic(
 );
 
 export default function Home() {
-  const [, setIsScrolled] = useState(false);
-  const [appReady, setAppReady] = useState(false);
-
-  // 控制器實例 - 使用 useMemo 避免重複建立
-  const marketController = useMemo(() => MarketController.getInstance(), []);
-
-  // 修復：穩定的載入函數，避免重複建立
-  const loaders = useMemo(
-    () => ({
-      marketOverview: () =>
-        marketController.getMarketOverview().catch((error) => {
-          console.warn("市場概況載入失敗:", error);
-          return { indices: [], trending: [] }; // 返回預設值
-        }),
-    }),
-    [marketController]
-  );
-
-  // 使用多控制器Hook管理多個數據源
-  const { loading: pageLoading, isComplete } = usePreloadData(loaders, {
-    onProgress: (loaded, total) => {
-      console.log(`載入進度: ${loaded}/${total}`);
-    },
-  });
-
-  // 計算載入狀態
-  const isAnyLoading = pageLoading || !isComplete || !appReady;
-
   // 搜尋表單管理 - 穩定的 validator 函數
   const searchValidator = useCallback(
     (values: { query: string; type: string }) => ({
@@ -89,76 +54,6 @@ export default function Home() {
     searchValidator
   );
 
-  // 實時市場數據 - 穩定的載入函數
-  const marketDataLoader = useCallback(
-    () =>
-      marketController.getMarketOverview().catch((error) => {
-        console.warn("實時市場數據載入失敗:", error);
-        return null;
-      }),
-    [marketController]
-  );
-
-  const {
-    isActive: marketActive,
-    start: startMarket,
-    stop: stopMarket,
-  } = useRealTimeData(
-    marketDataLoader,
-    30000, // 30秒更新
-    {
-      autoStart: false, // 改為手動啟動，等應用程式準備好
-      onSuccess: useCallback((data: unknown) => {
-        console.log("市場數據更新:", data);
-      }, []),
-      onError: useCallback((error: unknown) => {
-        console.warn("市場數據更新失敗:", error);
-      }, []),
-    }
-  );
-
-  // 應用程式初始化 - 修復依賴問題
-  useEffect(() => {
-    let isMounted = true;
-
-    const initializeApp = async () => {
-      try {
-        if (!isMounted) return;
-
-        setAppReady(false);
-        // 等待一小段時間確保組件完全掛載
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        if (!isMounted) return;
-        setAppReady(true);
-      } catch (error) {
-        console.error("應用程式初始化失敗:", error);
-        if (isMounted) {
-          setAppReady(true); // 即使失敗也要繼續顯示頁面
-        }
-      }
-    };
-
-    initializeApp();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []); // 移除所有依賴，只執行一次
-
-  // 當應用程式準備好後啟動市場數據
-  useEffect(() => {
-    if (appReady && !marketActive) {
-      startMarket();
-    }
-
-    return () => {
-      if (marketActive) {
-        stopMarket();
-      }
-    };
-  }, [appReady, marketActive, startMarket, stopMarket]);
-
   // 處理搜尋
   const handleSearch = useCallback(
     async (e: React.FormEvent) => {
@@ -171,44 +66,6 @@ export default function Home() {
     },
     [handleSearchSubmit]
   );
-
-  // 監聽滾動事件
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // 頁面可見性變化時控制實時數據
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        stopMarket();
-      } else if (appReady) {
-        startMarket();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [appReady, startMarket, stopMarket]);
-
-  // 如果應用程式還沒準備好，顯示載入畫面
-  if (!appReady) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-violet-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white text-lg">正在載入應用程式...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -380,12 +237,6 @@ export default function Home() {
                         v3.2.1
                       </span>
                     </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      {/* 載入狀態指示器 */}
-                      {isAnyLoading && (
-                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                      )}
-                    </div>
                   </div>
 
                   {/* 終端機主體 */}
@@ -401,12 +252,8 @@ export default function Home() {
                   {/* 終端機底部狀態列 */}
                   <div className="bg-gray-800/70 px-3 py-1.5 border-t border-gray-700/40 flex items-center justify-between text-xs text-gray-400">
                     <div className="flex items-center">
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                          marketActive ? "bg-green-500" : "bg-gray-500"
-                        }`}
-                      ></span>
-                      {marketActive ? "已連接" : "連線中斷"}
+                      <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-green-500"></span>
+                      已連接
                     </div>
                     <div className="flex items-center space-x-3">
                       <span>12ms 延遲</span>

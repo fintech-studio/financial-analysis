@@ -1,6 +1,10 @@
 import React, { useCallback } from "react";
 import { motion } from "framer-motion";
-import { Message, ANIMATION_CONFIG, Icons } from "./common";
+import {
+  Message,
+  ANIMATION_CONFIG,
+  Icons,
+} from "@/components/pages/Chat/common";
 
 const MessageBubble: React.FC<{
   msg: Message;
