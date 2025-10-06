@@ -2,7 +2,7 @@ name: Branch status check
 
 on:
   push:
-    branches: [main]
+    branches: [main, pull-request]
   pull_request:
     branches: [pull-request]
 
@@ -14,8 +14,8 @@ env:
   CI: true
 
 jobs:
-  status:
-    name: status
+  status-check:
+    name: status-check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
