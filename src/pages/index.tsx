@@ -5,7 +5,6 @@ import {
   NewspaperIcon,
   ChatBubbleLeftRightIcon,
   ChevronRightIcon,
-  BriefcaseIcon,
   ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import dynamic from "next/dynamic";
@@ -427,15 +426,6 @@ const features = [
     link: "/market-analysis",
   },
   {
-    title: "投資組合",
-    description:
-      "智能投資組合管理系統，追蹤績效表現、風險評估，並提供最佳化建議，讓您的資產配置更有效率",
-    icon: BriefcaseIcon,
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
-    link: "/portfolio",
-  },
-  {
     title: "財經新聞",
     description:
       "AI 精選與分析全球財經新聞，即時掌握市場脈動，為您提供關鍵投資訊息與市場洞察",
@@ -445,12 +435,21 @@ const features = [
     link: "/news",
   },
   {
-    title: "社群討論",
+    title: "AI 助理",
     description:
-      "連結專業投資者社群，分享投資心得與策略，集結群體智慧，擴展投資視野",
+      "智能投資助理，隨時解答您的財經疑問，提供個人化投資建議與策略規劃，讓投資更輕鬆",
     icon: ChatBubbleLeftRightIcon,
     iconBg: "bg-amber-100",
     iconColor: "text-amber-600",
-    link: "/community",
+    link: "/chat",
+  },
+  {
+    title: "AI 預測",
+    description:
+      "結合機器學習與大數據，提供股票、加密貨幣等多元資產的價格走勢預測，助您做出明智投資決策",
+    icon: SparklesIcon,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    link: "/predict",
   },
 ];
