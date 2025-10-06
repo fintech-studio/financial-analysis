@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
 import {
-  ChatBubbleLeftIcon,
   Cog6ToothIcon,
   MagnifyingGlassIcon,
   SparklesIcon,
@@ -617,7 +616,7 @@ const PredictPage: React.FC = () => {
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="mb-8 text-center">
             <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
-              <ChatBubbleLeftIcon className="w-12 h-12 text-gray-400" />
+              <SparklesIcon className="w-12 h-12 text-gray-400" />
             </div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               股票預測模型
