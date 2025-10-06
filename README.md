@@ -63,7 +63,7 @@ financial-analysis/
 ├── 📁 .github/workflows/              # GitHub Actions CI/CD
 ├── 📁 public/                         # 靜態資源
 │   ├── 📁 kline-patterns/             # K線型態圖片資源
-│   ├── 📁 python-app/                 # Python 分析引擎
+│   ├── 📁 python-app/                 # Python 程式
 │   │   ├── 📁Technical-Indicators/    # 技術指標分析系統
 │   │   └── 📁Trade-Signals/           # 交易訊號分析
 │   └── 📄favicon.ico                  # 網站圖標
@@ -92,8 +92,8 @@ financial-analysis/
 - **Node.js** 22.x 或更高版本
 - **npm** 或 **yarn** 套件管理器
 - **MS SQL Server** 2017 或更高版本
-- **Python 3.8+**
-- **Ollama**
+- **Python** 3.10 或更高版本
+- **Ollama** (用於本地 LLM 模型)
 
 ### ⚡ 安裝與啟動
 
@@ -126,7 +126,7 @@ financial-analysis/
    npm run dev
    ```
 
-   🌐 開啟瀏覽器訪問 [http://localhost:3000](http://localhost:3000)
+   開啟瀏覽器訪問 [http://localhost:3000](http://localhost:3000)
 
 ### 🔧 可用腳本
 
@@ -169,7 +169,7 @@ PY_API_HOST = http://localhost:8080
 OLLAMA_LOCAL = http://localhost:11434/api/chat
 ```
 
-## 🐍 Python 分析引擎配置
+## 🐍 Python 程式配置
 
 ### 技術分析系統
 
@@ -196,8 +196,9 @@ cp .env .env.local  # 複製環境變數範本
 
 詳細基本使用說明請參考以下專案：
 
-[技術指標分析系統](https://github.com/HaoXun97/technical-indicators)
-[交易訊號分析系統](https://github.com/HaoXun97/trade-signals)
+- [技術指標分析系統](https://github.com/HaoXun97/technical-indicators)
+
+- [交易訊號分析系統](https://github.com/HaoXun97/trade-signals)
 
 ## 🌐 GitHub Pages 自動部署
 
