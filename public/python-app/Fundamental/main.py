@@ -203,8 +203,6 @@ def show_help():
   --help                顯示此幫助資訊
   --nfp                 NFP（Nonfarm Payrolls, 非農就業人數）
   --cpi                 CPI（Consumer Price Index, 消費者物價指數）
-  --start_date yyyy/mm/dd  查詢起始日期（僅CPI/NFP有效）
-  --end_date yyyy/mm/dd    查詢結束日期（僅CPI/NFP有效）
 
 使用範例:
   python main.py --us AAPL # 查詢美股AAPL
