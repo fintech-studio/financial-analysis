@@ -142,3 +142,4 @@ public/python-app/**/__pycache__/
 
 !public/python-app/Trade-Signals/.env
 !public/python-app/Technical-Indicators/.env
+!public/python-app/Fundamental/.env
