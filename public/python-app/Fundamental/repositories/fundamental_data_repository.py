@@ -76,29 +76,31 @@ class FundamentalDataRepository:
             """)
             conn.commit()
 
-    def save_fundamental_data(self, market: str, data: dict):
+    def save_fundamental_data(self, market: str, data):
         self._ensure_table(market)
         table = self._get_table_name(market)
         with pyodbc.connect(self.conn_str) as conn:
             cursor = conn.cursor()
             # --- CPI/NFP更新區塊 ---
             if market in ['cpi_us', 'nfp_us']:
-                cursor.execute(f"SELECT value FROM {table} WHERE date=?", data['date'])
-                row = cursor.fetchone()
-                if row:
-                    # 若 value 不同則匯入新資料
-                    if float(row[0]) != float(data['value']):
-                        cursor.execute(
-                            f"UPDATE {table} SET value=?, lastUpdate=GETDATE() WHERE date=?",
-                            data['value'], data['date']
-                        )
-                        conn.commit()
-                    return
-                cursor.execute(
-                    f"INSERT INTO {table} (date, value) VALUES (?, ?)",
-                    data['date'], data['value']
-                )
-                conn.commit()
+                # 支援批量資料
+                data_list = data if isinstance(data, list) else [data]
+                for item in data_list:
+                    cursor.execute(f"SELECT value FROM {table} WHERE date=?", item['date'])
+                    row = cursor.fetchone()
+                    if row:
+                        if float(row[0]) != float(item['value']):
+                            cursor.execute(
+                                f"UPDATE {table} SET value=?, lastUpdate=GETDATE() WHERE date=?",
+                                item['value'], item['date']
+                            )
+                            conn.commit()
+                        continue
+                    cursor.execute(
+                        f"INSERT INTO {table} (date, value) VALUES (?, ?)",
+                        item['date'], item['value']
+                    )
+                    conn.commit()
                 return
             # --- 股票更新區塊 ---
             symbol = data['symbol']

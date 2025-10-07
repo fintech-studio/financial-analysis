@@ -42,6 +42,11 @@ const QuickFillPanel: React.FC<{
 
   const currentMarketOptions = mode === "fundamental" ? fundamentalOptions : marketOptions;
 
+  const dateQuickOptions = [
+    { param: "--start_date", label: "起始日期" },
+    { param: "--end_date", label: "結束日期" },
+  ];
+
   return (
     <>
       <div className="flex flex-wrap gap-2 mb-2">
@@ -81,6 +86,22 @@ const QuickFillPanel: React.FC<{
           </button>
         ))}
       </div>
+      {mode === "fundamental" && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {dateQuickOptions.map(({ param, label }) => (
+            <button
+              key={param}
+              type="button"
+              className="px-3 py-1.5 rounded-lg bg-pink-100 text-pink-700 font-medium border border-pink-300 hover:bg-pink-200 transition text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
+              onClick={() => setSymbol((prev) => (prev ? prev + " " + param : param))}
+              disabled={loading}
+            >
+              {param.split(" ")[0]}{" "}
+              <span className="text-[10px] text-pink-400 ml-1">({label})</span>
+            </button>
+          ))}
+        </div>
+      )}
     </>
   );
 };
@@ -141,7 +162,7 @@ LogBox.displayName = "LogBox";
 
 const RunPython: React.FC = () => {
   const [symbol, setSymbol] = useState("");
-  const [mode, setMode] = useState("technical"); // 新增模式狀態
+  const [mode, setMode] = useState("technical");
   const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -158,9 +179,13 @@ const RunPython: React.FC = () => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
-    const es = new EventSource(
-      `/api/test/run-python?symbol=${encodeURIComponent(symbol)}&mode=${mode}`
-    );
+    const params = [
+      `symbol=${encodeURIComponent(symbol)}`,
+      `mode=${mode}`,
+    ]
+      .filter(Boolean)
+      .join("&");
+    const es = new EventSource(`/api/test/run-python?${params}`);
     eventSourceRef.current = es;
     es.onmessage = (e) => {
       setLogs((prev) => [...prev, e.data]);
@@ -416,5 +441,4 @@ const RunPython: React.FC = () => {
     </div>
   );
 };
-
 export default RunPython;

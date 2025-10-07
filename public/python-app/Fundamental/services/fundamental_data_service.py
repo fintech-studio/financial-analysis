@@ -40,3 +40,15 @@ class FundamentalDataService:
         data = self.provider.get_nfp_us()
         self.repository.save_fundamental_data('nfp_us', data)
         return data
+
+    def fetch_and_store_cpi_us_range(self, start_date, end_date):
+        """取得並儲存美國CPI指定期間資料"""
+        data_list = self.provider.get_cpi_us_range(start_date, end_date)
+        self.repository.save_fundamental_data('cpi_us', data_list)
+        return data_list
+
+    def fetch_and_store_nfp_us_range(self, start_date, end_date):
+        """取得並儲存美國NFP指定期間資料"""
+        data_list = self.provider.get_nfp_us_range(start_date, end_date)
+        self.repository.save_fundamental_data('nfp_us', data_list)
+        return data_list
