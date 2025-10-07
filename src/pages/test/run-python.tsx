@@ -3,16 +3,24 @@ import React, { useState, useRef, useEffect } from "react";
 // 參數與市場快速填入元件
 const QuickFillPanel: React.FC<{
   loading: boolean;
+  mode: string;
   setSymbol: (cb: (prev: string) => string) => void;
   setSymbolDirect: (s: string) => void;
-}> = ({ loading, setSymbol, setSymbolDirect }) => {
-  const paramOptions = [
+}> = ({ loading, mode, setSymbol, setSymbolDirect }) => {
+  const technicalParamOptions = [
     { param: "--help", label: "顯示說明" },
     { param: "--indicators-only", label: "重新計算技術指標" },
     { param: "--expand-history", label: "獲取歷史資料" },
     { param: "--pattern", label: "重新辨識 K 線型態-歷史" },
     { param: "--show-all-stats", label: "顯示統計資訊" },
   ];
+  
+  const fundamentalParamOptions = [
+    { param: "--help", label: "顯示說明" },
+    { param: "--nfp", label: "美國非農就業人數" },
+    { param: "--cpi", label: "美國消費者物價指數" },
+  ];
+  
   const marketOptions = [
     { param: "--tw", label: "台股" },
     { param: "--us", label: "美股" },
@@ -22,10 +30,22 @@ const QuickFillPanel: React.FC<{
     { param: "--crypto", label: "加密貨幣" },
     { param: "--futures", label: "期貨" },
   ];
+  const fundamentalOptions = [
+    { param: "--tw", label: "台股" },
+    { param: "--two", label: "台股上櫃" },
+    { param: "--us", label: "美股" },
+    { param: "--forex", label: "外匯" },
+    { param: "--crypto", label: "加密貨幣" },
+  ];
+
+  const currentParamOptions = mode === "fundamental" ? fundamentalParamOptions : technicalParamOptions;
+
+  const currentMarketOptions = mode === "fundamental" ? fundamentalOptions : marketOptions;
+
   return (
     <>
       <div className="flex flex-wrap gap-2 mb-2">
-        {marketOptions.map(({ param, label }) => (
+        {currentMarketOptions.map(({ param, label }) => (
           <button
             key={param}
             type="button"
@@ -48,7 +68,7 @@ const QuickFillPanel: React.FC<{
         ))}
       </div>
       <div className="flex flex-wrap gap-2 mb-2">
-        {paramOptions.map(({ param, label }) => (
+        {currentParamOptions.map(({ param, label }) => (
           <button
             key={param}
             type="button"
@@ -121,6 +141,7 @@ LogBox.displayName = "LogBox";
 
 const RunPython: React.FC = () => {
   const [symbol, setSymbol] = useState("");
+  const [mode, setMode] = useState("technical"); // 新增模式狀態
   const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -138,7 +159,7 @@ const RunPython: React.FC = () => {
       eventSourceRef.current.close();
     }
     const es = new EventSource(
-      `/api/test/run-python?symbol=${encodeURIComponent(symbol)}`
+      `/api/test/run-python?symbol=${encodeURIComponent(symbol)}&mode=${mode}`
     );
     eventSourceRef.current = es;
     es.onmessage = (e) => {
@@ -197,7 +218,7 @@ const RunPython: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-8 pb-20">
       <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-10 items-stretch">
         {/* 左側：操作區 */}
-        <div className="flex-1 w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8 border border-blue-100 mb-8 lg:mb-0 min-h-[600px] h-[600px] flex flex-col">
+        <div className="flex-1 w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8 border border-blue-100 mb-8 lg:mb-0 min-h-[670px] h-[670px] flex flex-col">
           <h2 className="text-3xl font-extrabold text-blue-700 mb-2 text-center lg:text-left tracking-tight drop-shadow-sm">
             金融數據手動獲取 / 更新
           </h2>
@@ -212,6 +233,38 @@ const RunPython: React.FC = () => {
               查看程式碼
             </a>
           </p>
+          
+          {/* 模式選擇 */}
+          <div className="mb-4">
+            <label className="block text-blue-700 font-semibold mb-2">
+              選擇模式
+            </label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setMode("technical")}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  mode === "technical"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                disabled={loading}
+              >
+                技術指標模式
+              </button>
+              <button
+                onClick={() => setMode("fundamental")}
+                className={`px-4 py-2 rounded-lg font-medium transition ${
+                  mode === "fundamental"
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+                disabled={loading}
+              >
+                基本面模式
+              </button>
+            </div>
+          </div>
+
           <div className="mb-4">
             <label
               className="block text-blue-700 font-semibold mb-1"
@@ -226,7 +279,11 @@ const RunPython: React.FC = () => {
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="可輸入多個金融代號或參數，Enter換行，Ctrl+Enter執行"
+                placeholder={
+                  mode === "fundamental"
+                    ? "基本面模式：輸入股票代號和市場參數，例：2330 --tw 或 AAPL --us"
+                    : "技術指標模式：可輸入多個金融代號或參數，Enter換行，Ctrl+Enter執行"
+                }
                 className="w-full px-5 py-3 rounded-xl border-2 border-blue-200 focus:ring-4 focus:ring-blue-200 focus:outline-none text-lg bg-blue-50 placeholder-blue-300 text-blue-900 shadow-md pr-16 transition-all duration-200 resize-vertical min-h-[48px] max-h-[120px]"
                 disabled={loading}
                 rows={2}
@@ -282,10 +339,11 @@ const RunPython: React.FC = () => {
           </div>
           <div className="mb-4 mt-4">
             <span className="block text-xs text-slate-400 mb-1">
-              市場/參數選項
+              {mode === "fundamental" ? "市場/參數選項" : "市場/參數選項"}
             </span>
             <QuickFillPanel
               loading={loading}
+              mode={mode}
               setSymbol={setSymbol}
               setSymbolDirect={setSymbol}
             />
