@@ -282,6 +282,35 @@ const TestPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Add Line Friend */}
+          <div className="text-center mb-20">
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">
+              加入我們的Line好友
+            </h3>
+            <p className="text-gray-600 mb-6 text-lg">
+              獲取最新市場分析資訊與專屬優惠
+            </p>
+            <div className="inline-block relative flex flex-col items-center space-y-6">
+              <div className="absolute -inset-4 bg-gradient-to-r from-green-400/20 via-green-500/20 to-green-600/20 rounded-3xl blur-xl animate-pulse"></div>
+              <img
+              src="https://qr-official.line.me/gs/M_415qhoyf_GW.png"
+              alt="Line Logo"
+              className="w-64 h-64 mb-4 relative z-10 rounded-2xl shadow-lg"
+              />
+              <a
+              href="https://line.me/R/ti/p/@415qhoyf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-50 via-green-100 to-green-200 border-2 border-green-300 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group"
+              >
+              <div className="absolute inset-0 bg-gradient-to-r from-green-100 via-green-200 to-green-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <span className="text-lg font-bold text-green-800 relative z-10">
+                加入Line好友
+              </span>
+              </a>
+            </div>
+          </div>
+
           {/* Enhanced Call-to-Action Section */}
           <div className="text-center relative">
             {/* Enhanced decorative elements */}

@@ -28,12 +28,12 @@ const Footer: React.FC = () => {
 
             <p className="text-gray-400 leading-relaxed mb-6 max-w-md">
               金融走勢智慧分析，讓投資更簡單。透過 AI
-              技術，提供即時市場分析、投資組合建議和風險評估，助您做出明智的投資決策。
+              技術，提供即時市場分析、訊號分析和交易建議，助您做出明智的投資決策。
             </p>
 
             <div className="flex space-x-4">
               <a
-                href="https://github.com/HaoXun97/financial-analysis"
+                href="https://github.com/fintech-studio/financial-analysis"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center transition-colors group"
@@ -47,10 +47,12 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-white font-semibold mb-6">功能</h4>
             <ul className="space-y-3">
-              {["市場分析", "投資組合", "AI 預測", "風險管理"].map((item) => (
+              {["市場分析", "財經新聞", "AI 預測", "AI 助理"].map((item) => (
                 <li key={item}>
                   <a
-                    href="#"
+                    href={["/market-analysis", "/news", "/predict", "/chat"][
+                      ["市場分析", "財經新聞", "AI 預測", "AI 助理"].indexOf(item)
+                    ]}
                     className="text-gray-400 hover:text-white transition-colors"
                   >
                     {item}

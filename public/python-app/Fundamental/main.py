@@ -96,6 +96,8 @@ def main():
     parser.add_argument('--futures', action='store_true', help='期貨')
     parser.add_argument('--cpi', action='store_true', help='查詢美國CPI')
     parser.add_argument('--nfp', action='store_true', help='查詢美國NFP')
+    parser.add_argument('--start_date', type=str, help='查詢起始日期 (yyyy/mm/dd)')
+    parser.add_argument('--end_date', type=str, help='查詢結束日期 (yyyy/mm/dd)')
     #parser.add_argument('--help-markets', action='store_true', help='顯示支援的市場類型')
     
     args = parser.parse_args()
@@ -104,10 +106,18 @@ def main():
     if args.cpi:
         service = FundamentalDataService()
         try:
-            print("正在獲取美國CPI...")
-            cpi_data = service.fetch_and_store_cpi_us()
-            print(f"✓ 美國CPI最新資料: 日期={cpi_data['date']} 數值={cpi_data['value']}（指數）")
-            print("CPI已成功儲存")
+            if args.start_date and args.end_date:
+                print(f"正在獲取美國CPI期間資料: {args.start_date} ~ {args.end_date}")
+                cpi_list = service.fetch_and_store_cpi_us_range(args.start_date, args.end_date)
+                print("✓ 美國CPI期間資料:")
+                for cpi_data in cpi_list:
+                    print(f"  日期={cpi_data['date']} 數值={cpi_data['value']}（指數）")
+                print("CPI期間資料已成功儲存")
+            else:
+                print("正在獲取美國CPI...")
+                cpi_data = service.fetch_and_store_cpi_us()
+                print(f"✓ 美國CPI最新資料: 日期={cpi_data['date']} 數值={cpi_data['value']}（指數）")
+                print("CPI已成功儲存")
         except Exception as e:
             print(f"✗ 美國CPI獲取失敗: {str(e)}")
         return
@@ -115,10 +125,18 @@ def main():
     if args.nfp:
         service = FundamentalDataService()
         try:
-            print("正在獲取美國NFP...")
-            nfp_data = service.fetch_and_store_nfp_us()
-            print(f"✓ 美國NFP最新資料: 日期={nfp_data['date']} 數值={nfp_data['value']}（千人）")
-            print("NFP已成功儲存")
+            if args.start_date and args.end_date:
+                print(f"正在獲取美國NFP期間資料: {args.start_date} ~ {args.end_date}")
+                nfp_list = service.fetch_and_store_nfp_us_range(args.start_date, args.end_date)
+                print("✓ 美國NFP期間資料:")
+                for nfp_data in nfp_list:
+                    print(f"  日期={nfp_data['date']} 數值={nfp_data['value']}（千人）")
+                print("NFP期間資料已成功儲存")
+            else:
+                print("正在獲取美國NFP...")
+                nfp_data = service.fetch_and_store_nfp_us()
+                print(f"✓ 美國NFP最新資料: 日期={nfp_data['date']} 數值={nfp_data['value']}（千人）")
+                print("NFP已成功儲存")
         except Exception as e:
             print(f"✗ 美國NFP獲取失敗: {str(e)}")
         return
@@ -195,6 +213,8 @@ def show_help():
   python main.py --tw 2330 2317  # 查詢台股2330、2317
   python main.py 2330 2317 --tw  # 查詢台股2330、2317
   python main.py --nfp # NFP（Nonfarm Payrolls, 非農就業人數)
+  python main.py --cpi --start_date 2008/08/01 --end_date 2025/10/01 # 查詢CPI指定期間
+  python main.py --nfp --start_date 2010/01/01 --end_date 2024/06/01 # 查詢NFP指定期間
 """
     print(help_text, flush=True)
 

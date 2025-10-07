@@ -94,3 +94,37 @@ class FundamentalDataProvider:
             'date': str(latest_date.date()),
             'value': float(latest_value)
         }
+
+    def get_cpi_us_range(self, start_date, end_date):
+        """取得美國CPI指定期間資料"""
+        if not self.fred:
+            raise Exception("FRED API Key 未設定")
+        # 轉換日期格式 yyyy/mm/dd -> yyyy-mm-dd
+        start = datetime.strptime(start_date, "%Y/%m/%d")
+        end = datetime.strptime(end_date, "%Y/%m/%d")
+        cpi_series = self.fred.get_series('CPIAUCSL')
+        # 篩選期間
+        filtered = cpi_series[(cpi_series.index >= start) & (cpi_series.index <= end)]
+        result = []
+        for date, value in filtered.items():
+            result.append({
+                'date': date.strftime("%Y/%m/%d"),
+                'value': float(value)
+            })
+        return result
+
+    def get_nfp_us_range(self, start_date, end_date):
+        """取得美國NFP指定期間資料"""
+        if not self.fred:
+            raise Exception("FRED API Key 未設定")
+        start = datetime.strptime(start_date, "%Y/%m/%d")
+        end = datetime.strptime(end_date, "%Y/%m/%d")
+        nfp_series = self.fred.get_series('PAYEMS')
+        filtered = nfp_series[(nfp_series.index >= start) & (nfp_series.index <= end)]
+        result = []
+        for date, value in filtered.items():
+            result.append({
+                'date': date.strftime("%Y/%m/%d"),
+                'value': float(value)
+            })
+        return result
