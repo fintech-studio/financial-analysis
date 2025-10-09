@@ -264,7 +264,6 @@ export default function Home() {
 
                 {/* 浮動資訊卡片 */}
                 <div className="absolute -right-8 bottom-20 transform rotate-6 bg-gradient-to-r from-blue-600/90 to-blue-500/90 px-3 py-2 rounded-lg shadow-lg text-white text-xs flex items-center backdrop-blur-sm border border-blue-400/30 group-hover:scale-105 transition-transform">
-                  <div className="absolute inset-0 bg-blue-600 animate-pulse-slow opacity-30 rounded-lg"></div>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-3.5 w-3.5 mr-1.5 text-blue-200"
