@@ -24,14 +24,14 @@ def read_ohlcv_from_mssql(
             count_query = f"SELECT COUNT(*) FROM {table}"
             cursor = conn.cursor()
             row_count = cursor.execute(count_query).fetchval()
-            print(f"資料表 {table} 共有 {row_count:,} 筆資料")
+            print(f"資料表 {table} 共有 {row_count:,} 筆資料", flush=True)
 
             if row_count <= chunk_size:
                 query = f"SELECT * FROM {table} ORDER BY datetime"
                 df = pd.read_sql(query, conn)
-                print(f"已一次讀取全部 {len(df):,} 筆資料")
+                print(f"已一次讀取全部 {len(df):,} 筆資料", flush=True)
             else:
-                print("資料量較大，使用分塊讀取...")
+                print("資料量較大，使用分塊讀取...", flush=True)
                 date_range_query = (
                     f"SELECT MIN(datetime) as min_date, "
                     f"MAX(datetime) as max_date FROM {table}"
@@ -56,12 +56,12 @@ def read_ohlcv_from_mssql(
                     chunks.append(chunk)
                     print(
                         f"已讀取 {current_date} 至 {next_date} 期間的 "
-                        f"{len(chunk):,} 筆資料"
+                        f"{len(chunk):,} 筆資料", flush=True
                     )
                     current_date = next_date
 
                 df = pd.concat(chunks, ignore_index=True)
-                print(f"共讀取 {len(df):,} 筆資料")
+                print(f"共讀取 {len(df):,} 筆資料", flush=True)
 
         if 'datetime' in df.columns:
             df['datetime'] = pd.to_datetime(df['datetime'], errors='coerce')
@@ -69,7 +69,7 @@ def read_ohlcv_from_mssql(
         return df
 
     except Exception as e:
-        print(f"讀取資料時發生錯誤: {str(e)}")
+        print(f"讀取資料時發生錯誤: {str(e)}", flush=True)
         return pd.DataFrame()
 
 
@@ -141,7 +141,7 @@ def save_signals_to_mssql(
 
         # 不執行預刪除，改為使用 staging + MERGE 做 upsert
         # 這樣會保留歷史紀錄，只對相同 (symbol, datetime) 做更新或插入
-        print("使用 MERGE 進行 upsert，不會先刪除歷史紀錄")
+        print("使用 MERGE 進行 upsert，不會先刪除歷史紀錄", flush=True)
 
         # 使用暫存 staging table 與 MERGE 做 upsert（更新或插入）
         batch_size = 1000
@@ -224,7 +224,7 @@ def save_signals_to_mssql(
             progress = min(i + batch_size, total_rows)
             print(
                 f"已處理 {progress}/{total_rows} 筆資料 (已寫入暫存表) "
-                f"({progress/total_rows*100:.1f}%)"
+                f"({progress/total_rows*100:.1f}%)", flush=True
             )
 
         # 使用 MERGE 從 #staging 合併到主表，根據 symbol + datetime 做匹配
@@ -274,12 +274,13 @@ def save_signals_to_mssql(
         print(
             "成功將 {} 筆資料 upsert 至 {} 資料表，耗時 {:.2f} 秒".format(
                 total_rows, table_name, elapsed_time
-            )
+            ),
+            flush=True
         )
 
     except Exception as e:
         conn.rollback()
-        print(f"\n[錯誤] 儲存資料至MSSQL時發生錯誤: {str(e)}")
+        print(f"\n[錯誤] 儲存資料至MSSQL時發生錯誤: {str(e)}", flush=True)
     finally:
         cursor.close()
         conn.close()

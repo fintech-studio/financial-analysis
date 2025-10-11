@@ -215,7 +215,7 @@ def _resolve_output_for_symbol(
 
 
 print(
-    f"symbols={symbols}, database={database}, table={table}"
+    f"symbols={symbols}, database={database}, table={table}", flush=True
 )
 
 multiple = len(symbols) > 1
@@ -223,7 +223,7 @@ for symbol in symbols:
     out_path = _resolve_output_for_symbol(
         args.output, default_output, symbol, table, multiple
     )
-    print(f"開始分析 symbol={symbol}")
+    print(f"開始分析 symbol={symbol}", flush=True)
     analyze_signals_from_db_with_symbol(
         server,
         database,

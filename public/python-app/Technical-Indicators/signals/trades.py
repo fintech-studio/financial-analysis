@@ -75,23 +75,24 @@ def generate_trade_signals(df, min_signals=3):
 
 
 def print_analysis_summary(df):
-    print("\n=== 交易訊號分析報告 ===")
+    print("\n=== 交易訊號分析報告 ===", flush=True)
     total_records = len(df)
     signal_records = len(df[df['Trade_Signal'] != ''])
 
-    print(f"總資料筆數: {total_records:,}")
+    print(f"總資料筆數: {total_records:,}", flush=True)
     if total_records > 0:
         print(
             f"有訊號筆數: {signal_records:,} "
-            f"({signal_records/total_records*100:.1f}%)"
+            f"({signal_records/total_records*100:.1f}%)",
+            flush=True
         )
 
     trade_counts = df['Trade_Signal'].value_counts()
-    print("\n交易訊號統計：")
+    print("\n交易訊號統計：", flush=True)
     for signal, count in trade_counts.items():
         if signal != '':
             percentage = count/total_records*100 if total_records > 0 else 0
-            print(f"  {signal}: {count:,} 次 ({percentage:.2f}%)")
+            print(f"  {signal}: {count:,} 次 ({percentage:.2f}%)", flush=True)
 
     buy_signals = df[df['Trade_Signal'].isin(['買入', '強烈買入'])]
     sell_signals = df[df['Trade_Signal'].isin(['賣出', '強烈賣出'])]
@@ -101,7 +102,7 @@ def print_analysis_summary(df):
         max_buy_strength = buy_signals['Buy_Signals'].max()
         print(
             f"\n多頭訊號強度: 平均 {avg_buy_strength:.1f}分, "
-            f"最高 {max_buy_strength:.1f}分"
+            f"最高 {max_buy_strength:.1f}分", flush=True
         )
 
     if len(sell_signals) > 0:
@@ -109,14 +110,14 @@ def print_analysis_summary(df):
         max_sell_strength = sell_signals['Sell_Signals'].max()
         print(
             f"空頭訊號強度: 平均 {avg_sell_strength:.1f}分, "
-            f"最高 {max_sell_strength:.1f}分"
+            f"最高 {max_sell_strength:.1f}分", flush=True
         )
 
     latest_signals = df[df['Trade_Signal'] != ''].tail(3)
     if len(latest_signals) > 0:
-        print("\n最近3個交易訊號:")
+        print("\n最近3個交易訊號:", flush=True)
         for _, row in latest_signals.iterrows():
             print(
                 f"  {row['datetime'].strftime('%Y-%m-%d')}: "
-                f"{row['Trade_Signal']} ({row['Signal_Strength']})"
+                f"{row['Trade_Signal']} ({row['Signal_Strength']})", flush=True
             )
