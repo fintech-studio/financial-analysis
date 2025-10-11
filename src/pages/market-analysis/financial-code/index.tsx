@@ -1,4 +1,4 @@
-import { DocumentMagnifyingGlassIcon, MagnifyingGlassIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { DocumentMagnifyingGlassIcon, MagnifyingGlassIcon} from "@heroicons/react/24/outline";
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
@@ -122,7 +122,6 @@ const FinancialCodeTestPage = () => {
     { key: "market_type", label: "市場類別" },
     { key: "industry_type", label: "產業類別" },
   ];
-   const submitvalue = query
   return (
     <>
     <div className="min-h-screen">
