@@ -156,11 +156,23 @@ const TradeSignalsPage: React.FC = () => {
   const sanitizeSymbol = useCallback(
     (s: string) => {
       // allow different symbol character sets per database
-      if (dbName === "market_crypto") {
-        // crypto symbols may contain -, /, . or lowercase letters
-        // use RegExp constructor to avoid escaping the forward-slash in a literal
+      if (
+        dbName === "market_futures" ||
+        dbName === "market_forex" ||
+        dbName === "market_index" ||
+        dbName === "market_etf" ||
+        dbName === "market_stock_us" ||
+        dbName === "market_stock_tw" ||
+        dbName === "market_crypto"
+      ) {
+        // Allow special characters for various market symbols:
+        // = for futures (CL=F, ES=F)
+        // ^ for indices (^TWII, ^DJI, ^GSPC)
+        // - for some symbols
+        // / for crypto pairs (BTC/USDT)
+        // . for some tickers
         return s
-          .replace(new RegExp("[^0-9A-Za-z_/.\\-]", "g"), "")
+          .replace(new RegExp("[^0-9A-Za-z_/.\\-=^]", "g"), "")
           .toUpperCase();
       }
       // default: stock symbols - only alphanumeric
