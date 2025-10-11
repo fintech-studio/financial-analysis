@@ -27,13 +27,13 @@ def analyze_signals_from_db(
 ):
     total_start_time = time.time()
 
-    print("開始從資料庫讀取資料...")
+    print("開始從資料庫讀取資料...", flush=True)
     read_start = time.time()
     df = dbmod.read_ohlcv_from_mssql(server, database, table, user, password)
     read_time = time.time() - read_start
-    print(f"讀取完成，共 {len(df)} 筆資料，耗時 {read_time:.2f} 秒")
+    print(f"讀取完成，共 {len(df)} 筆資料，耗時 {read_time:.2f} 秒", flush=True)
 
-    print("開始計算技術指標...")
+    print("開始計算技術指標...", flush=True)
     calc_start = time.time()
 
     df = df.sort_values('datetime').reset_index(drop=True)
@@ -54,12 +54,12 @@ def analyze_signals_from_db(
     df = ind.momentum_signal(df)
 
     calc_time = time.time() - calc_start
-    print(f"指標計算完成，耗時 {calc_time:.2f} 秒")
+    print(f"指標計算完成，耗時 {calc_time:.2f} 秒", flush=True)
 
     signal_start = time.time()
     df = tradesmod.generate_trade_signals(df)
     signal_time = time.time() - signal_start
-    print(f"訊號生成完成，耗時 {signal_time:.2f} 秒")
+    print(f"訊號生成完成，耗時 {signal_time:.2f} 秒", flush=True)
 
     # 根據輸入的資料表名稱決定要儲存到哪個 trade_signals 表
     def _signals_table_for_data_table(data_table: str) -> str:
@@ -74,51 +74,59 @@ def analyze_signals_from_db(
         return 'trade_signals'
 
     signals_table = _signals_table_for_data_table(table)
-    print(f"開始儲存結果到資料庫（目標表：{signals_table}）...")
+    print(f"開始儲存結果到資料庫（目標表：{signals_table}）...", flush=True)
     save_start = time.time()
     dbmod.save_signals_to_mssql(
         df, server, database, user, password, table_name=signals_table
     )
     save_time = time.time() - save_start
-    print(f"資料庫儲存完成，耗時 {save_time:.2f} 秒")
+    print(f"資料庫儲存完成，耗時 {save_time:.2f} 秒", flush=True)
 
     if output_path:
         csv_start = time.time()
         df.to_csv(output_path, index=False, encoding='utf-8-sig')
         csv_time = time.time() - csv_start
-        print(f"CSV檔案儲存完成，耗時 {csv_time:.2f} 秒，路徑: {output_path}")
+        print(f"CSV檔案儲存完成，耗時 {csv_time:.2f} 秒，路徑: {output_path}", flush=True)
 
     total_time = time.time() - total_start_time
-    print(f"\n總執行時間: {total_time:.2f} 秒")
-    print(f"- 資料讀取: {read_time:.2f}秒 ({read_time/total_time*100:.1f}%)")
-    print(f"- 指標計算: {calc_time:.2f}秒 ({calc_time/total_time*100:.1f}%)")
-    print(f"- 訊號生成: {signal_time:.2f}秒 ({signal_time/total_time*100:.1f}%)")
-    print(f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)")
+    print(f"\n總執行時間: {total_time:.2f} 秒", flush=True)
+    print(
+        f"- 資料讀取: {read_time:.2f}秒 ({read_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 指標計算: {calc_time:.2f}秒 ({calc_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 訊號生成: {signal_time:.2f}秒 ({signal_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)",
+        flush=True)
 
     tradesmod.print_analysis_summary(df)
 
 
 def _print_db_connection_help(err, server, database, user):
     """輔助函式：顯示資料庫連線錯誤訊息"""
-    print("\n[錯誤] 無法連線到 MSSQL 資料庫")
-    print("\n--- 原始錯誤 ---")
+    print("\n[錯誤] 無法連線到 MSSQL 資料庫", flush=True)
+    print("\n--- 原始錯誤 ---", flush=True)
     try:
         # 若 err 為 pyodbc 的錯誤物件，通常 .args 含有詳細資訊
-        print(repr(err))
+        print(repr(err), flush=True)
     except Exception:
-        print(str(err))
-    print("----------------------------------------\n")
+        print(str(err), flush=True)
+    print("----------------------------------------\n", flush=True)
 
 
 def _print_table_error_help(err, table, server, database):
     """輔助函式：顯示資料表相關錯誤訊息"""
-    print("\n[錯誤] 找不到指定的資料表或物件。")
-    print("\n--- 原始錯誤（供技術人員參考） ---")
+    print("\n[錯誤] 找不到指定的資料表或物件。", flush=True)
+    print("\n--- 原始錯誤（供技術人員參考） ---", flush=True)
     try:
-        print(repr(err))
+        print(repr(err), flush=True)
     except Exception:
-        print(str(err))
-    print("----------------------------------------\n")
+        print(str(err), flush=True)
+    print("----------------------------------------\n", flush=True)
 
 
 def analyze_signals_from_db_with_symbol(
@@ -132,7 +140,7 @@ def analyze_signals_from_db_with_symbol(
 ):
     total_start_time = time.time()
 
-    print(f"開始分析 symbol={symbol}" if symbol else "開始分析全部資料")
+    print(f"開始分析 symbol={symbol}" if symbol else "開始分析全部資料", flush=True)
 
     if symbol and symbol != 'Unknown':
         conn_str = (
@@ -156,10 +164,10 @@ def analyze_signals_from_db_with_symbol(
                 return
 
             if count == 0:
-                print(f"找不到 symbol={symbol} 的資料，程式結束。")
+                print(f"找不到 symbol={symbol} 的資料，程式結束。", flush=True)
                 return
 
-            print(f"找到 {count} 筆 {symbol} 的資料，開始讀取...")
+            print(f"找到 {count} 筆 {symbol} 的資料，開始讀取...", flush=True)
             query = f"SELECT * FROM {table} WHERE symbol = ? "
             query += "ORDER BY datetime"
             read_start = time.time()
@@ -169,7 +177,7 @@ def analyze_signals_from_db_with_symbol(
                 _print_table_error_help(e, table, server, database)
                 return
             read_time = time.time() - read_start
-            print(f"讀取完成，耗時 {read_time:.2f} 秒")
+            print(f"讀取完成，耗時 {read_time:.2f} 秒", flush=True)
     else:
         read_start = time.time()
         df = dbmod.read_ohlcv_from_mssql(
@@ -178,10 +186,10 @@ def analyze_signals_from_db_with_symbol(
         read_time = time.time() - read_start
 
     if df.empty:
-        print("沒有資料可分析，程式結束。")
+        print("沒有資料可分析，程式結束。", flush=True)
         return
 
-    print("開始計算技術指標...")
+    print("開始計算技術指標...", flush=True)
     calc_start = time.time()
 
     signals = []
@@ -231,12 +239,12 @@ def analyze_signals_from_db_with_symbol(
     signals.append("動量指標")
 
     calc_time = time.time() - calc_start
-    print(f"指標計算完成，耗時 {calc_time:.2f} 秒，共計算 {len(signals)} 個指標")
+    print(f"指標計算完成，耗時 {calc_time:.2f} 秒，共計算 {len(signals)} 個指標", flush=True)
 
     signal_start = time.time()
     df = tradesmod.generate_trade_signals(df)
     signal_time = time.time() - signal_start
-    print(f"訊號生成完成，耗時 {signal_time:.2f} 秒")
+    print(f"訊號生成完成，耗時 {signal_time:.2f} 秒", flush=True)
 
     # 決定 trade_signals 表名，並儲存
     def _signals_table_for_data_table(data_table: str) -> str:
@@ -251,7 +259,7 @@ def analyze_signals_from_db_with_symbol(
 
     signals_table = _signals_table_for_data_table(table)
     save_start = time.time()
-    print(f"開始儲存結果到資料庫（目標表：{signals_table}）...")
+    print(f"開始儲存結果到資料庫（目標表：{signals_table}）...", flush=True)
     dbmod.save_signals_to_mssql(
         df, server, database, user, password, table_name=signals_table
     )
@@ -259,13 +267,21 @@ def analyze_signals_from_db_with_symbol(
 
     if output_path:
         df.to_csv(output_path, index=False, encoding='utf-8-sig')
-        print(f'分析結果已儲存至 {output_path}')
+        print(f'分析結果已儲存至 {output_path}', flush=True)
 
     total_time = time.time() - total_start_time
-    print(f"\n總執行時間: {total_time:.2f} 秒")
-    print(f"- 資料讀取: {read_time:.2f}秒 ({read_time/total_time*100:.1f}%)")
-    print(f"- 指標計算: {calc_time:.2f}秒 ({calc_time/total_time*100:.1f}%)")
-    print(f"- 訊號生成: {signal_time:.2f}秒 ({signal_time/total_time*100:.1f}%)")
-    print(f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)")
+    print(f"\n總執行時間: {total_time:.2f} 秒", flush=True)
+    print(
+        f"- 資料讀取: {read_time:.2f}秒 ({read_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 指標計算: {calc_time:.2f}秒 ({calc_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 訊號生成: {signal_time:.2f}秒 ({signal_time/total_time*100:.1f}%)",
+        flush=True)
+    print(
+        f"- 資料儲存: {save_time:.2f}秒 ({save_time/total_time*100:.1f}%)",
+        flush=True)
 
     tradesmod.print_analysis_summary(df)
