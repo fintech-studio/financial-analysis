@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Footer from "@/components/Layout/Footer";
 import { DatabaseService, DatabaseConfig } from "@/services/DatabaseService";
 import { FiDownload } from "react-icons/fi";
+import { SignalIcon } from "@heroicons/react/24/outline";
 
 type SignalRow = Record<string, unknown>;
 
@@ -94,7 +95,13 @@ const TradeSignalsPage: React.FC = () => {
   const [symbol, setSymbol] = useState("");
   const [timeframe, setTimeframe] = useState<"1d" | "1h" | "both">("1d");
   const [dbName, setDbName] = useState<
-    "market_stock_tw" | "market_stock_us" | "market_crypto"
+    | "market_stock_tw"
+    | "market_stock_us"
+    | "market_crypto"
+    | "market_forex"
+    | "market_etf"
+    | "market_futures"
+    | "market_index"
   >("market_stock_tw");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -219,7 +226,10 @@ const TradeSignalsPage: React.FC = () => {
     const rows = results[key] || [];
     const csv = toCSV(rows);
     if (!csv) return;
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    // prepend UTF-8 BOM to help Excel and other programs detect UTF-8 with Chinese characters
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -343,23 +353,76 @@ const TradeSignalsPage: React.FC = () => {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto py-10 px-4">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">交易訊號查詢</h1>
-            <div className="text-sm text-gray-500">
-              可查詢 `trade_signals_1d` 與 `trade_signals_1h`，並匯出 CSV
-            </div>
-          </div>
-          <button
-            type="button"
-            className="px-4 py-2 bg-white hover:bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg text-base font-semibold shadow-sm"
-            onClick={() => window.history.back()}
-          >
-            ← 返回
-          </button>
+      {/* 頁面標題區域 */}
+
+      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+        {/* subtle grid background */}
+
+        <div className="absolute inset-0 opacity-20">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)
+              `,
+              backgroundSize: "60px 60px",
+            }}
+          />
         </div>
 
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-12 left-12 w-24 h-24 bg-white opacity-5 rounded-full animate-pulse"></div>
+          <div
+            className="absolute bottom-12 right-24 w-36 h-36 bg-white opacity-5 rounded-full animate-pulse"
+            style={{ animationDelay: "1s" }}
+          ></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
+          <div className="absolute top-24 right-12 w-4 h-4 bg-white opacity-20 rounded-full animate-bounce"></div>
+          <div
+            className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-30 rounded-full animate-pulse"
+            style={{ animationDelay: "1.5s" }}
+          ></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10 w-full">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+            <div className="flex-1">
+              <div className="flex items-center mb-6">
+                <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300 shadow-lg">
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <SignalIcon className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
+                    進階交易訊號分析
+                  </h1>
+                  <p className="text-blue-100 mt-3 text-lg font-medium">
+                    提供股票與加密貨幣等等的交易訊號查詢與分析工具。
+                  </p>
+                </div>
+              </div>
+              <p className="text-blue-100 text-lg max-w-3xl leading-relaxed">
+                查詢並分析技術指標產生的交易訊號，協助投資人做出更明智的交易決策。
+              </p>
+            </div>
+
+            <div className="flex flex-col lg:items-end space-y-4">
+              <div className="grid grid-cols-1 gap-6 lg:gap-8">
+                <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                  <div className="text-3xl font-bold text-white">買賣建議</div>
+                  <div className="text-blue-200 text-sm font-medium">
+                    Trade Signals
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-6xl mx-auto py-10 px-4">
         <form
           className="flex flex-col sm:flex-row gap-3 mb-6"
           onSubmit={(e) => {
@@ -399,6 +462,10 @@ const TradeSignalsPage: React.FC = () => {
                   | "market_stock_tw"
                   | "market_stock_us"
                   | "market_crypto"
+                  | "market_forex"
+                  | "market_etf"
+                  | "market_futures"
+                  | "market_index"
               )
             }
             className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
@@ -407,6 +474,10 @@ const TradeSignalsPage: React.FC = () => {
             <option value="market_stock_tw">🇹🇼 market_stock_tw</option>
             <option value="market_stock_us">🇺🇸 market_stock_us</option>
             <option value="market_crypto">🌐 market_crypto</option>
+            <option value="market_forex">💱 market_forex</option>
+            <option value="market_etf">📊 market_etf</option>
+            <option value="market_futures">📈 market_futures</option>
+            <option value="market_index">📉 market_index</option>
           </select>
 
           <button
@@ -510,33 +581,96 @@ const TradeSignalsPage: React.FC = () => {
                 {rows.length > 0 &&
                   (() => {
                     const ins = computeInsights(rows);
+                    const sigEntries = Object.entries(ins.counts).sort(
+                      (a, b) => b[1] - a[1]
+                    );
+
                     return (
-                      <div className="mt-4 grid grid-cols-1 gap-3">
-                        <div className="p-3 border rounded text-sm text-gray-700">
-                          訊號分布：
-                          {Object.entries(ins.counts).length === 0
-                            ? "無"
-                            : Object.entries(ins.counts)
-                                .map(([k, v]) => `${k}(${v})`)
-                                .join("，")}
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {/* 訊號分布 */}
+                        <div className="p-4 border rounded bg-white shadow-sm sm:col-span-1">
+                          <div className="text-sm text-gray-500 mb-2">
+                            訊號分布
+                          </div>
+                          {sigEntries.length === 0 ? (
+                            <div className="text-sm text-gray-400">無</div>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {sigEntries.map(([s, cnt]) => {
+                                const badge = getSignalBadge(String(s));
+                                return (
+                                  <div
+                                    key={s}
+                                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-sm"
+                                  >
+                                    <span
+                                      className={`${badge.cls} px-2 py-0.5 rounded-full text-xs`}
+                                    >
+                                      {badge.text}
+                                    </span>
+                                    <span className="text-gray-600 text-xs">
+                                      {cnt}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
-                        <div className="p-3 border rounded text-sm text-gray-700">
-                          熱門指標：
-                          {ins.indicatorsSorted.length === 0
-                            ? "無"
-                            : ins.indicatorsSorted
-                                .slice(0, 6)
-                                .map(([k, v]) => `${k}(${v})`)
-                                .join("，")}
+
+                        {/* 熱門指標 */}
+                        <div className="p-4 border rounded bg-white shadow-sm sm:col-span-2">
+                          <div className="text-sm text-gray-500 mb-2">
+                            指標出現次數（前200筆）
+                          </div>
+                          {ins.indicatorsSorted.length === 0 ? (
+                            <div className="text-sm text-gray-400">無</div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              {ins.indicatorsSorted
+                                .slice(0, 12)
+                                .map(([k, v]) => (
+                                  <div
+                                    key={k}
+                                    className="flex items-center justify-between px-2 py-1 rounded"
+                                  >
+                                    <div className="text-gray-700">{k}</div>
+                                    <div className="text-blue-600 font-semibold">
+                                      {v}
+                                    </div>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
                         </div>
-                        <div className="p-3 border rounded text-sm text-gray-700">
-                          最近訊號：
-                          {ins.timeline
-                            .slice(0, 5)
-                            .map(
-                              (t) => `${t.date} ${t.price} ${t.signal || ""}`
-                            )
-                            .join("； ")}
+
+                        {/* 最近訊號時間線 */}
+                        <div className="p-4 border rounded bg-white shadow-sm sm:col-span-3">
+                          <div className="text-sm text-gray-500 mb-2">
+                            最近訊號時間線
+                          </div>
+                          {ins.timeline.length === 0 ? (
+                            <div className="text-sm text-gray-400">無</div>
+                          ) : (
+                            <div className="space-y-2 max-h-48 overflow-auto">
+                              {ins.timeline.slice(0, 8).map((t, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between gap-3"
+                                >
+                                  <div className="text-xs text-gray-500 w-48 truncate">
+                                    {t.date}
+                                  </div>
+                                  <div className="flex-1 text-sm text-gray-700">
+                                    {t.price}
+                                  </div>
+                                  <div className="ml-2">
+                                    <SignalBadgeSmall signal={t.signal} />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
