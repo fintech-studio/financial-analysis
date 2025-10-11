@@ -30,7 +30,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/pages/market-analysis/stock/index.jsx"
+    "src/pages/market-analysis/stock/index.jsx",
+    "src/pages/market-analysis/trade-signals-bak.tsx"
   ],
   "exclude": ["node_modules"]
 }
