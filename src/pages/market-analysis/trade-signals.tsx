@@ -91,6 +91,43 @@ const SignalBadgeSmall: React.FC<{ signal?: string }> = ({ signal }) => {
   );
 };
 
+const AnimatedSelectWrapper: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+}> = ({ children, className = "" }) => (
+  <div className={`relative ${className}`}>
+    {children}
+    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+      <svg
+        className="w-4 h-4 text-white/70 transition-all duration-300 group-hover:text-white group-focus-within:text-white group-focus-within:rotate-180"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
+      </svg>
+    </div>
+  </div>
+);
+
+const AnimatedSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & {
+  children: React.ReactNode;
+}> = ({ className = "", children, ...props }) => (
+  <AnimatedSelectWrapper className="group">
+    <select
+      {...props}
+      className={`${className} appearance-none cursor-pointer pr-10`}
+    >
+      {children}
+    </select>
+  </AnimatedSelectWrapper>
+);
+
 const TradeSignalsPage: React.FC = () => {
   const [symbol, setSymbol] = useState("");
   const [timeframe, setTimeframe] = useState<"1d" | "1h" | "both">("1d");
@@ -417,98 +454,93 @@ const TradeSignalsPage: React.FC = () => {
               </p>
               
               <form
-                className="flex flex-col sm:flex-row gap-4 max-w-2xl"
+                className="flex flex-col xl:flex-row gap-4 max-w-5xl"
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!loading) handleSearch();
                 }}
               >
-                <div className="flex-1 relative">
+                <div className="flex-1 min-w-0 relative">
                   <input
                     type="text"
-                    className="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:border-white/40 transition-all duration-300 text-lg"
-                    placeholder="輸入股票代號"
+                    className="w-full px-6 py-4 bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:border-white/40 transition-all duration-300 text-lg min-w-80"
+                    placeholder="輸入市場代號..."
                     value={symbol}
                     onChange={(e) => setSymbol(e.target.value)}
-                    maxLength={10}
+                    maxLength={15}
                     autoFocus
                   />
                 </div>
-                <select
-                  value={timeframe}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    setTimeframe(e.target.value as "1d" | "1h" | "both")
-                  }
-                  className="px-4 py-3 border-2 border-white/20 rounded-2xl bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:border-white/40 transition-all duration-300 appearance-none cursor-pointer hover:border-white/30"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 12px center',
-                    backgroundSize: '16px'
-                  }}
-                >
-                  <option value="1d" className="bg-white text-gray-900 py-2">📊 日線</option>
-                  <option value="1h" className="bg-white text-gray-900 py-2">⏰ 小時線</option>
-                  <option value="both" className="bg-white text-gray-900 py-2">📈 日線&小時線</option>
-                </select>
-                <select
-                  value={dbName}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    setDbName(
-                      e.target.value as
-                        | "market_stock_tw"
-                        | "market_stock_us"
-                        | "market_crypto"
-                        | "market_forex"
-                        | "market_etf"
-                        | "market_futures"
-                        | "market_index"
-                    )
-                  }
-                  className="px-4 py-3 border-2 border-white/20 rounded-2xl bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:border-white/40 transition-all duration-300 appearance-none cursor-pointer hover:border-white/30"
-                  title="選擇查詢的資料庫"
-                >
-                  <option value="market_stock_tw" className="bg-white text-gray-900 py-2">🇹🇼 market_stock_tw</option>
-                  <option value="market_stock_us" className="bg-white text-gray-900 py-2">🇺🇸 market_stock_us</option>
-                  <option value="market_crypto" className="bg-white text-gray-900 py-2">🌐 market_crypto</option>
-                  <option value="market_forex" className="bg-white text-gray-900 py-2">💱 market_forex</option>
-                  <option value="market_etf" className="bg-white text-gray-900 py-2">📊 market_etf</option>
-                  <option value="market_futures" className="bg-white text-gray-900 py-2">📈 market_futures</option>
-                  <option value="market_index" className="bg-white text-gray-900 py-2">📉 market_index</option>
-                </select>
-                <button
-                  type="submit"
-                  className="px-8 py-4 bg-white text-blue-900 font-bold rounded-2xl hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 relative overflow-hidden group flex items-center gap-2"
-                  disabled={loading || !symbol}
-                >
-                  <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-10 transition-opacity"></span>
-                  {loading ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5 relative" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      <span className="relative">查詢中...</span>
-                    </>
-                  ) : (
-                    <>
-                      <MagnifyingGlassIcon className="h-5 w-5 relative" />
-                      <span className="relative">查詢</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex flex-col sm:flex-row gap-4 flex-shrink-0">
+                  <AnimatedSelect
+                    value={timeframe}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      setTimeframe(e.target.value as "1d" | "1h" | "both")
+                    }
+                    className="px-5 py-4 border-2 border-white/20 rounded-2xl bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:border-white/40 transition-all duration-300 hover:border-white/30 min-w-32"
+                  >
+                    <option value="1d" className="bg-white text-gray-900 py-2">📊 日線</option>
+                    <option value="1h" className="bg-white text-gray-900 py-2">⏰ 小時線</option>
+                    <option value="both" className="bg-white text-gray-900 py-2">📈 日線&小時線</option>
+                  </AnimatedSelect>
+                  <AnimatedSelect
+                    value={dbName}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      setDbName(
+                        e.target.value as
+                          | "market_stock_tw"
+                          | "market_stock_us"
+                          | "market_crypto"
+                          | "market_forex"
+                          | "market_etf"
+                          | "market_futures"
+                          | "market_index"
+                      )
+                    }
+                    className="px-5 py-4 border-2 border-white/20 rounded-2xl bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:border-white/40 transition-all duration-300 hover:border-white/30 min-w-48"
+                  >
+                    <option value="market_stock_tw" className="bg-white text-gray-900 py-2">🇹🇼 台股</option>
+                    <option value="market_stock_us" className="bg-white text-gray-900 py-2">🇺🇸 美股</option>
+                    <option value="market_crypto" className="bg-white text-gray-900 py-2">🌐 加密貨幣</option>
+                    <option value="market_forex" className="bg-white text-gray-900 py-2">💱 外匯</option>
+                    <option value="market_etf" className="bg-white text-gray-900 py-2">📊 ETF</option>
+                    <option value="market_futures" className="bg-white text-gray-900 py-2">📈 期貨</option>
+                    <option value="market_index" className="bg-white text-gray-900 py-2">📉 指數</option>
+                  </AnimatedSelect>
+                  <button
+                    type="submit"
+                    className="px-8 py-4 bg-white text-blue-900 font-bold rounded-2xl hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 relative overflow-hidden group flex items-center gap-2 min-w-28 justify-center"
+                    disabled={loading || !symbol}
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-10 transition-opacity"></span>
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 relative" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        <span className="relative">查詢中...</span>
+                      </>
+                    ) : (
+                      <>
+                        <MagnifyingGlassIcon className="h-5 w-5 relative" />
+                        <span className="relative">查詢</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
             </div>
             
@@ -724,7 +756,7 @@ const TradeSignalsPage: React.FC = () => {
                             <input
                               type="search"
                               placeholder="搜尋列（含 signal / datetime / price）"
-                              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-79"
+                              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-64"
                               value={getTableState(k).search}
                               onChange={(e) =>
                                 setTableState(k, {
@@ -735,28 +767,39 @@ const TradeSignalsPage: React.FC = () => {
                             />
                             <div className="flex items-center gap-2">
                               <label className="text-sm font-medium text-gray-700">每頁</label>
-                              <select
-                                value={getTableState(k).pageSize}
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white backdrop-blur-sm transition-all duration-300 appearance-none cursor-pointer hover:border-blue-400"
-                                style={{
-                                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                                  backgroundRepeat: 'no-repeat',
-                                  backgroundPosition: 'right 8px center',
-                                  backgroundSize: '12px'
-                                }}
-                                onChange={(e) =>
-                                  setTableState(k, {
-                                    pageSize: Number(e.target.value),
-                                    page: 1,
-                                  })
-                                }
-                              >
-                                {[10, 20, 50, 100].map((n) => (
-                                  <option key={n} value={n} className="py-2">
-                                    {n}
-                                  </option>
-                                ))}
-                              </select>
+                              <div className="relative group">
+                                <select
+                                  value={getTableState(k).pageSize}
+                                  className="px-3 py-2 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white backdrop-blur-sm transition-all duration-300 appearance-none cursor-pointer hover:border-blue-400"
+                                  onChange={(e) =>
+                                    setTableState(k, {
+                                      pageSize: Number(e.target.value),
+                                      page: 1,
+                                    })
+                                  }
+                                >
+                                  {[10, 20, 50, 100].map((n) => (
+                                    <option key={n} value={n} className="py-2">
+                                      {n}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                                  <svg
+                                    className="w-3 h-3 text-gray-400 transition-all duration-300 group-hover:text-blue-500 group-focus-within:text-blue-500 group-focus-within:rotate-180"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 9l-7 7-7-7"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
                             </div>
                           </div>
                           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
