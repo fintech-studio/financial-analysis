@@ -163,10 +163,12 @@ const FinancialCodeTestPage = () => {
             <div className="flex-1">
               <div className="flex items-center mb-6">
                 <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300 shadow-lg">
-                  <DocumentMagnifyingGlassIcon className="h-10 w-10 text-white group-hover:scale-110 transition-transform duration-300" />
+                  <div className="w-10 h-10 flex items-center justify-center">
+                    <DocumentMagnifyingGlassIcon className="h-8 w-8 text-white group-hover:scale-110 transition-transform duration-300" />
+                  </div>
                 </div>
                 <div>
-                  <h1 className="text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
+                  <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
                     金融代號查詢
                   </h1>
                   <p className="text-blue-200 mt-3 text-xl font-medium">

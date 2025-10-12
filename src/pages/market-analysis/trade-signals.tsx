@@ -404,7 +404,7 @@ const TradeSignalsPage: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
+                  <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
                     進階交易訊號分析
                   </h1>
                   <p className="text-blue-200 mt-3 text-xl font-medium">
