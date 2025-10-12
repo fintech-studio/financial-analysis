@@ -556,7 +556,7 @@ const TradeSignalsPage: React.FC = () => {
                 <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-blue-200/50 max-w-md">
                   <h3 className="text-2xl font-bold text-gray-800 mb-3">開始分析交易訊號</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    請輸入股票代號，獲取由交易訊號與投資建議
+                    請輸入股票代號，獲取交易訊號與投資建議
                   </p>
                 </div>
               </div>
