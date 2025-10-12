@@ -91,10 +91,15 @@ const SignalBadgeSmall: React.FC<{ signal?: string }> = ({ signal }) => {
   );
 };
 
-const AnimatedSelectWrapper: React.FC<{
+interface AnimatedSelectWrapperProps {
   children: React.ReactNode;
   className?: string;
-}> = ({ children, className = "" }) => (
+}
+
+const AnimatedSelectWrapper: React.FC<AnimatedSelectWrapperProps> = ({ 
+  children, 
+  className = "" 
+}) => (
   <div className={`relative ${className}`}>
     {children}
     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -115,10 +120,16 @@ const AnimatedSelectWrapper: React.FC<{
   </div>
 );
 
-const AnimatedSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & {
+interface AnimatedSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   children: React.ReactNode;
-}> = ({ className = "", children, ...props }) => (
-  <AnimatedSelectWrapper className="group">
+}
+
+const AnimatedSelect: React.FC<AnimatedSelectProps> = ({ 
+  className = "", 
+  children, 
+  ...props 
+}) => (
+  <AnimatedSelectWrapper>
     <select
       {...props}
       className={`${className} appearance-none cursor-pointer pr-10`}
