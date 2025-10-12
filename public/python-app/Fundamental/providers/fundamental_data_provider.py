@@ -79,7 +79,7 @@ class FundamentalDataProvider:
         latest_date = cpi_series.index[-1]
         latest_value = cpi_series.iloc[-1]
         return {
-            'date': str(latest_date.date()),
+            'date': latest_date.strftime("%Y/%m/%d"),
             'value': float(latest_value)
         }
 
@@ -91,7 +91,7 @@ class FundamentalDataProvider:
         latest_date = nfp_series.index[-1]
         latest_value = nfp_series.iloc[-1]
         return {
-            'date': str(latest_date.date()),
+            'date': latest_date.strftime("%Y/%m/%d"),
             'value': float(latest_value)
         }
 
