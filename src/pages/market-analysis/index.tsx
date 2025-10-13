@@ -103,7 +103,7 @@ const TestPage: React.FC = () => {
                   <ChartBarIcon className="h-10 w-10 text-white group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <div>
-                  <h1 className="text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
+                  <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
                     市場分析
                   </h1>
                   <p className="text-blue-200 mt-3 text-xl font-medium">

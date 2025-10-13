@@ -3,12 +3,12 @@ import React, { useEffect, useState } from "react";
 type DataPoint = { date: string; value: number };
 type IndicatorKey = "oil" | "gold" | "cpi" | "nfp";
 
-// NOTE: 改為指定資料庫的 table 名稱，稍後 fetchIndicator 會用此 table 去查詢 DB
-const INDICATORS: { key: IndicatorKey; label: string; table: string }[] = [
-  { key: "oil", label: "石油 (WTI)", table: "fundamental_data_oil" },
-  { key: "gold", label: "黃金 (Gold)", table: "fundamental_data_gold" },
-  { key: "cpi", label: "CPI", table: "fundamental_data_cpi_us" },
-  { key: "nfp", label: "NFP (非農就業)", table: "fundamental_data_nfp_us" },
+const INDICATORS: { key: IndicatorKey; label: string; endpoint: string }[] = [
+  // NOTE: 調整 endpoint 至實際後端路由
+  { key: "oil", label: "石油 (WTI)", endpoint: "/api/fundamentals/oil" },
+  { key: "gold", label: "黃金 (Gold)", endpoint: "/api/fundamentals/gold" },
+  { key: "cpi", label: "CPI", endpoint: "/api/fundamentals/cpi" },
+  { key: "nfp", label: "NFP (非農就業)", endpoint: "/api/fundamentals/nfp" },
 ];
 
 // 簡單線圖（SVG）
@@ -92,46 +92,23 @@ export default function FundamentalPage(): React.ReactElement {
   const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
   const [dataMap, setDataMap] = useState<Record<string, DataPoint[]>>({});
   const [error, setError] = useState<string | null>(null);
-  const [pinnedChart, setPinnedChart] = useState<IndicatorKey | null>(null);
-
-  const UNIT_MAP: Record<IndicatorKey, string> = {
-    oil: "USD/bbl",
-    gold: "USD/oz",
-    cpi: "Index",
-    nfp: "Persons",
-  };
 
   useEffect(() => {
     // 預載入四項指標的最近資料（非必需，可按需調整）
     INDICATORS.forEach((it) => fetchIndicator(it.key));
   }, []);
 
-  // 由資料庫撈資料：呼叫後端統一 API /api/database/execute-query
   async function fetchIndicator(key: IndicatorKey) {
     const info = INDICATORS.find((i) => i.key === key);
     if (!info) return;
     setError(null);
     setLoadingMap((s) => ({ ...s, [key]: true }));
     try {
-      // 伺服器端的 API 應該使用環境變數的 DB 連線資訊來實際連接 market_fundamental
-      const payload = {
-        config: { database: "market_fundamental" },
-        // 以 SELECT * 起手，後端會回傳欄位陣列，我們再由 rowsToDataPoints 嘗試抽出日期與數值欄位
-        query: `SELECT * FROM ${info.table}`,
-      };
-      const res = await fetch("/api/database/execute-query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(info.endpoint);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      if (!json || !json.success || !Array.isArray(json.data)) {
-        throw new Error(json?.error || json?.message || "後端未回傳資料");
-      }
-      const rows: Record<string, unknown>[] = json.data;
-      const parsed = rowsToDataPoints(rows);
-      setDataMap((s) => ({ ...s, [key]: parsed }));
+      // 預期回傳格式: [{date: "...", value: number}, ...]
+      setDataMap((s) => ({ ...s, [key]: json }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "載入失敗");
     } finally {
@@ -164,7 +141,7 @@ export default function FundamentalPage(): React.ReactElement {
 
   return (
     <div style={{ padding: 20, fontFamily: "Segoe UI, Roboto, Arial" }}>
-
+      <h2>基本面分析 — 綜合指標</h2>
 
       {/* 新增：顯示聚合指標 */}
       <div
@@ -374,27 +351,6 @@ export default function FundamentalPage(): React.ReactElement {
                 >
                   重新載入
                 </button>
-                <button
-                  onClick={async () => {
-                    // upload current active data to API
-                    const payload = { data: dataMap[active] || [] };
-                    try {
-                      const resp = await fetch(`/api/fundamentals/${active}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload),
-                      });
-                      const j = await resp.json();
-                      if (!resp.ok) throw new Error(j.message || "上傳失敗");
-                      alert(`上傳成功：${j.message || "已完成"}`);
-                    } catch (e) {
-                      alert(`上傳錯誤：${e instanceof Error ? e.message : String(e)}`);
-                    }
-                  }}
-                  style={{ padding: "6px 10px", marginRight: 8 }}
-                >
-                  上傳到資料庫
-                </button>
                 <span>
                   {loadingMap[active]
                     ? "載入中..."
@@ -405,9 +361,7 @@ export default function FundamentalPage(): React.ReactElement {
 
             <div style={{ marginTop: 12 }}>
               {error && <div style={{ color: "crimson" }}>{error}</div>}
-              <div style={{ color: '#6b7280' }}>
-                圖表預覽已移至頁面下方的「圖表預覽」區。請在下方選擇或點擊任一指標卡的「秀出圖表」以在預覽區查看完整圖表。
-              </div>
+              <LineChart data={dataMap[active] || []} />
             </div>
 
             <div style={{ marginTop: 12 }}>
@@ -484,159 +438,65 @@ export default function FundamentalPage(): React.ReactElement {
           {INDICATORS.map((it) => {
             const d = dataMap[it.key] || [];
             const ev = evaluateStrength(d);
-            const indexValue = Math.round((ev.score / 2) * 100); // 0..100
-            const isActive = active === it.key;
             return (
               <div
                 key={it.key}
-                onClick={() => setActive(it.key)}
-                role="button"
-                tabIndex={0}
                 style={{
-                  border: isActive ? "2px solid #2563eb" : "1px solid #eee",
+                  border: "1px solid #eee",
                   borderRadius: 8,
                   padding: 12,
-                  cursor: "pointer",
-                  background: isActive ? "#fbfdff" : "#fff",
-                  transition: "box-shadow 0.15s",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: 'center' }}>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <div>
                     <strong>{it.label}</strong>
                     <div style={{ fontSize: 12, color: "#666" }}>
                       {d.length ? `${d.length} 筆資料` : "尚無資料"}
                     </div>
                   </div>
-
                   <div style={{ textAlign: "right" }}>
                     <div
                       style={{
-                        fontSize: 20,
-                        fontWeight: 800,
                         color:
-                          indexValue >= 70
-                            ? "#059669"
-                            : indexValue <= 30
-                            ? "#dc2626"
-                            : "#6b7280",
+                          ev.status === "偏強"
+                            ? "#047857"
+                            : ev.status === "偏弱"
+                            ? "#b91c1c"
+                            : "#666",
+                        fontWeight: 700,
                       }}
                     >
-                      {indexValue}
+                      {ev.status}
                     </div>
                     <div style={{ fontSize: 12, color: "#999" }}>
-                      {ev.status} • score: {ev.score}
+                      score: {ev.score}
                     </div>
                   </div>
                 </div>
-
                 <div style={{ marginTop: 8 }}>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>圖表將在下方預覽區顯示（點選「秀出圖表」）。</div>
+                  <LineChart data={d} width={300} height={100} />
                 </div>
-
-                {/* controls */}
-                <div style={{ marginTop: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                    <button onClick={(e) => { e.stopPropagation(); fetchIndicator(it.key); }} style={{ padding: '6px 8px' }}>重新載入</button>
-                    <button onClick={(e) => { e.stopPropagation(); setPinnedChart(it.key); }} style={{ padding: '6px 8px' }}>秀出圖表</button>
-                  </div>
+                <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => fetchIndicator(it.key)}
+                    style={{ padding: "6px 8px" }}
+                  >
+                    重新載入
+                  </button>
+                  <button
+                    onClick={() => setActive(it.key)}
+                    style={{ padding: "6px 8px" }}
+                  >
+                    查看
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
       </section>
-
-      {/* 白色展示區：用來顯示使用者點選的指標圖表（從後端上傳或 fetch 的 CSV 資料） */}
-      <div
-        style={{
-          marginTop: 18,
-          padding: 16,
-          background: '#ffffff',
-          border: '1px solid #e6eef8',
-          borderRadius: 8,
-          minHeight: 140,
-        }}
-      >
-        {pinnedChart ? (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontWeight: 700 }}>{INDICATORS.find(i => i.key === pinnedChart)?.label} - 圖表預覽</div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{UNIT_MAP[pinnedChart as IndicatorKey]}</div>
-                <button onClick={() => { setPinnedChart(null); }} style={{ padding: '6px 8px' }}>關閉</button>
-                <button onClick={() => fetchIndicator(pinnedChart!)} style={{ padding: '6px 8px' }}>重新載入</button>
-              </div>
-            </div>
-            <div style={{ marginTop: 10 }}>
-              <LineChart data={dataMap[pinnedChart] || []} width={760} height={220} />
-            </div>
-          </div>
-        ) : (
-          <div style={{ color: '#6b7280' }}>選擇一個指標後按「秀出圖表」會在此處顯示對應圖表（資料來自你未來上傳或後端提供的 CSV）。</div>
-        )}
-      </div>
     </div>
   );
-}
-
-
-// 將資料庫回傳的 row[] 轉為 DataPoint[]
-function rowsToDataPoints(rows: Record<string, unknown>[]): DataPoint[] {
-  if (!rows || rows.length === 0) return [];
-  const keys = Object.keys(rows[0] || {});
-
-  // 偵測日期欄位與數值欄位
-  const dateRegex = /(date|day|month|year|obs_date|timestamp)/i;
-  const valueRegex = /(value|price|cpi|nfp|amount|close|val|obs_value|persons)/i;
-
-  let dateKey: string | null = null;
-  let valueKey: string | null = null;
-
-  for (const k of keys) {
-    if (!dateKey && dateRegex.test(k)) dateKey = k;
-    if (!valueKey && valueRegex.test(k)) valueKey = k;
-  }
-  // fallback: first string-like as date, first numeric-like as value
-  if (!dateKey) {
-    dateKey = keys.find((k) =>
-      rows.some((r) => typeof r[k] === "string" && /\d{4}/.test(String(r[k])))
-    ) || keys[0];
-  }
-  if (!valueKey) {
-    valueKey =
-      keys.find((k) =>
-        rows.some((r) => typeof r[k] === "number" || /^-?\d+(\.\d+)?$/.test(String(r[k])))
-      ) || keys[1] || keys[0]
-  }
-
-  const out: DataPoint[] = [];
-  for (const r of rows) {
-    const rawDate = r[dateKey as string];
-    const rawVal = r[valueKey as string];
-
-    if (rawDate == null || rawVal == null) continue;
-
-    // 解析日期
-    let dateStr = String(rawDate).trim();
-    // remove quotes
-    dateStr = dateStr.replace(/^"|"$/g, "");
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      dateStr = `${yyyy}-${mm}-${dd}`;
-    }
-
-    // 解析數值
-    const v = Number(String(rawVal).replace(/[^0-9.-]/g, ""));
-    if (isNaN(v)) continue
-
-    out.push({ date: dateStr, value: v });
-  }
-
-  // sort by date ascending
-  out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  return out;
 }

@@ -96,13 +96,15 @@ def main():
     parser.add_argument('--futures', action='store_true', help='期貨')
     parser.add_argument('--cpi', action='store_true', help='查詢美國CPI')
     parser.add_argument('--nfp', action='store_true', help='查詢美國NFP')
+    parser.add_argument('--oil', action='store_true', help='查詢WTI原油價格')  # 新增石油查詢
+    parser.add_argument('--gold', action='store_true', help='查詢黃金期貨價格')  # 新增黃金查詢
     parser.add_argument('--start_date', type=str, help='查詢起始日期 (yyyy/mm/dd)')
     parser.add_argument('--end_date', type=str, help='查詢結束日期 (yyyy/mm/dd)')
     #parser.add_argument('--help-markets', action='store_true', help='顯示支援的市場類型')
     
     args = parser.parse_args()
 
-    # CPI/NFP 查詢 (優先處理)
+    # CPI/NFP/OIL/GOLD 查詢 (優先處理)
     if args.cpi:
         service = FundamentalDataService()
         try:
@@ -139,6 +141,44 @@ def main():
                 print("NFP已成功儲存")
         except Exception as e:
             print(f"✗ 美國NFP獲取失敗: {str(e)}")
+        return
+
+    if args.oil:
+        service = FundamentalDataService()
+        try:
+            if args.start_date and args.end_date:
+                print(f"正在獲取WTI原油價格期間資料: {args.start_date} ~ {args.end_date}")
+                oil_list = service.fetch_and_store_oil_price_range(args.start_date, args.end_date)
+                print("✓ WTI原油價格期間資料:")
+                for oil_data in oil_list:
+                    print(f"  日期={oil_data['date']} 價格={oil_data['value']} (USD)")
+                print("WTI原油價格期間資料已成功儲存")
+            else:
+                print("正在獲取WTI原油最新價格...")
+                oil_data = service.fetch_and_store_oil_price()
+                print(f"✓ WTI原油最新價格: 日期={oil_data['date']} 價格={oil_data['value']} (USD)")
+                print("WTI原油價格已成功儲存")
+        except Exception as e:
+            print(f"✗ WTI原油價格獲取失敗: {str(e)}")
+        return
+
+    if args.gold:
+        service = FundamentalDataService()
+        try:
+            if args.start_date and args.end_date:
+                print(f"正在獲取黃金期貨價格期間資料: {args.start_date} ~ {args.end_date}")
+                gold_list = service.fetch_and_store_gold_price_range(args.start_date, args.end_date)
+                print("✓ 黃金期貨價格期間資料:")
+                for gold_data in gold_list:
+                    print(f"  日期={gold_data['date']} 價格={gold_data['value']} (USD)")
+                print("黃金期貨價格期間資料已成功儲存")
+            else:
+                print("正在獲取黃金期貨最新價格...")
+                gold_data = service.fetch_and_store_gold_price()
+                print(f"✓ 黃金期貨最新價格: 日期={gold_data['date']} 價格={gold_data['value']} (USD)")
+                print("黃金期貨價格已成功儲存")
+        except Exception as e:
+            print(f"✗ 黃金期貨價格獲取失敗: {str(e)}")
         return
 
     if not args.symbols:
@@ -203,6 +243,8 @@ def show_help():
   --help                顯示此幫助資訊
   --nfp                 NFP（Nonfarm Payrolls, 非農就業人數）
   --cpi                 CPI（Consumer Price Index, 消費者物價指數）
+  --oil                 WTI原油價格
+  --gold                黃金期貨價格
 
 使用範例:
   python main.py --us AAPL # 查詢美股AAPL
@@ -215,6 +257,8 @@ def show_help():
   python main.py --nfp # NFP（Nonfarm Payrolls, 非農就業人數)
   python main.py --cpi --start_date 2008/08/01 --end_date 2025/10/01 # 查詢CPI指定期間
   python main.py --nfp --start_date 2010/01/01 --end_date 2024/06/01 # 查詢NFP指定期間
+  python main.py --oil --start_date 2022/01/01 --end_date 2022/12/31 # 查詢石油價格指定期間
+  python main.py --gold --start_date 2022/01/01 --end_date 2022/12/31 # 查詢黃金期貨價格指定期間
 """
     print(help_text, flush=True)
 

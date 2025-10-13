@@ -29,9 +29,6 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    "src/pages/market-analysis/stock/index.jsx",
-    "src/pages/market-analysis/trade-signals-bak.tsx"
-  ],
+    ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

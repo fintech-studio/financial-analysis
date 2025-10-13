@@ -15,6 +15,7 @@ export default function NewsPage() {
   const [query, setQuery] = useState("金融"); // 查詢關鍵字
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchedQuery, setSearchedQuery] = useState("");
 
   const fetchNews = async (q: string) => {
     setLoading(true);
@@ -35,6 +36,7 @@ export default function NewsPage() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     fetchNews(query);
+    setSearchedQuery(query.trim());
   };
 
   // 新增重整按鈕的事件
@@ -86,7 +88,7 @@ export default function NewsPage() {
                   <NewspaperIcon className="h-10 w-10 text-white group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <div>
-                  <h1 className="text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
+                  <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
                     即時金融新聞
                   </h1>
                   <p className="text-blue-200 mt-3 text-xl font-medium">
@@ -181,7 +183,7 @@ export default function NewsPage() {
                 <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-yellow-200/50 max-w-md">
                   <h3 className="text-2xl font-bold text-gray-800 mb-3">查無相關新聞</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    很抱歉，目前沒有找到與「<span className="font-semibold text-blue-600">{query}</span>」相關的新聞。
+                    很抱歉，目前沒有找到與「<span className="font-semibold text-blue-600">{searchedQuery}</span>」相關的新聞。
                   </p>
                   <p className="text-sm text-gray-500 mt-3">
                     請嘗試其他關鍵字或稍後再試

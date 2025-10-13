@@ -19,6 +19,8 @@ const QuickFillPanel: React.FC<{
     { param: "--help", label: "顯示說明" },
     { param: "--nfp", label: "美國非農就業人數" },
     { param: "--cpi", label: "美國消費者物價指數" },
+    { param: "--oil", label: "WTI原油價格" },
+    { param: "--gold", label: "黃金期貨價格" },
   ];
   
   const marketOptions = [
