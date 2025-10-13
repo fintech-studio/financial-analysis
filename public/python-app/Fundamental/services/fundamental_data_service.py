@@ -52,3 +52,27 @@ class FundamentalDataService:
         data_list = self.provider.get_nfp_us_range(start_date, end_date)
         self.repository.save_fundamental_data('nfp_us', data_list)
         return data_list
+
+    def fetch_and_store_oil_price(self):
+        """取得並儲存最新WTI原油價格"""
+        data = self.provider.get_oil_price()
+        self.repository.save_fundamental_data('oil', data)
+        return data
+
+    def fetch_and_store_oil_price_range(self, start_date, end_date):
+        """取得並儲存WTI原油價格指定期間資料"""
+        data_list = self.provider.get_oil_price_range(start_date, end_date)
+        self.repository.save_fundamental_data('oil', data_list)
+        return data_list
+
+    def fetch_and_store_gold_price(self):
+        """取得並儲存最新黃金期貨價格"""
+        data = self.provider.get_gold_price()
+        self.repository.save_fundamental_data('gold', data)
+        return data
+
+    def fetch_and_store_gold_price_range(self, start_date, end_date):
+        """取得並儲存黃金期貨指定期間價格"""
+        data_list = self.provider.get_gold_price_range(start_date, end_date)
+        self.repository.save_fundamental_data('gold', data_list)
+        return data_list
