@@ -5,7 +5,7 @@ import Portfolio from "./pages/portfolio";
 import MarketAnalysisPage from "./pages/market-analysis";
 import StockQueryPage from "./pages/market-analysis/stock-query";
 import FundamentalPage from "./pages/market-analysis/fundamental";
-import TradeSignalsPage from "./pages/market-analysis/trade-signals-bak";
+import TradeSignalsPage from "./pages/market-analysis/trade-signals";
 import FinancialCodePage from "./pages/market-analysis/financial-code";
 import Education from "./pages/education";
 import Community from "./pages/community";
