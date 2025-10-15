@@ -1,9 +1,71 @@
 import React, { useEffect, useState } from "react";
+import Head from "next/head";
+import Footer from "@/components/Layout/Footer";
+import { ChartBarIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 type DataPoint = { date: string; value: number };
 type IndicatorKey = "oil" | "gold" | "cpi" | "nfp";
+type MarketKey = "tw" | "two" | "us";
 
-// NOTE: 改為指定資料庫的 table 名稱，稍後 fetchIndicator 會用此 table 去查詢 DB
+// 股票基本面資料類型
+interface StockFundamental {
+  symbol: string;
+  name: string | null;
+  market: string;
+  basicInfo: {
+    industry: string | null;
+    sector: string | null;
+    country: string | null;
+    exchange: string | null;
+    currency: string | null;
+  };
+  valuation: {
+    marketCap: number | null;
+    pe: number | null;
+    forwardPE: number | null;
+    pb: number | null;
+    ps: number | null;
+    peg: number | null;
+    enterpriseToRevenue: number | null;
+    enterpriseToEbitda: number | null;
+  };
+  financialHealth: {
+    debtToEquity: number | null;
+    currentRatio: number | null;
+    quickRatio: number | null;
+    totalCash: number | null;
+    totalDebt: number | null;
+  };
+  profitability: {
+    roe: number | null;
+    roa: number | null;
+    netMargin: number | null;
+    operatingMargin: number | null;
+    grossMargin: number | null;
+  };
+  growth: {
+    revenueGrowth: number | null;
+    earningsGrowth: number | null;
+    totalRevenue: number | null;
+  };
+  dividend: {
+    dividendYield: number | null;
+    dividendAmount: number | null;
+    payoutRatio: number | null;
+    exDividendDate: string | null;
+  };
+  stockInfo: {
+    beta: number | null;
+    bookValue: number | null;
+    week52High: number | null;
+    week52Low: number | null;
+    avgVolume: number | null;
+    sharesOutstanding: number | null;
+    netIncomeToCommon: number | null;
+  };
+  updatedAt: string | null;
+}
+
 const INDICATORS: { key: IndicatorKey; label: string; table: string }[] = [
   { key: "oil", label: "石油 (WTI)", table: "fundamental_data_oil" },
   { key: "gold", label: "黃金 (Gold)", table: "fundamental_data_gold" },
@@ -11,14 +73,13 @@ const INDICATORS: { key: IndicatorKey; label: string; table: string }[] = [
   { key: "nfp", label: "NFP (非農就業)", table: "fundamental_data_nfp_us" },
 ];
 
-// 簡單線圖（SVG）
 const LineChart: React.FC<{
   data: DataPoint[];
   width?: number;
   height?: number;
 }> = ({ data, width = 520, height = 160 }) => {
   if (!data || data.length === 0)
-    return <div style={{ color: "#666" }}>無資料</div>;
+    return <div style={{ color: "#666" }}>N/A</div>;
   const vals = data.map((d) => d.value);
   const max = Math.max(...vals);
   const min = Math.min(...vals);
@@ -58,7 +119,6 @@ const LineChart: React.FC<{
   );
 };
 
-// 計算趨勢與強弱：使用簡單線性回歸斜率與 z-score 判定
 function evaluateStrength(data: DataPoint[]): {
   status: "偏弱" | "中性" | "偏強";
   score: number;
@@ -79,7 +139,6 @@ function evaluateStrength(data: DataPoint[]): {
   const den = xs.reduce((s, xi) => s + (xi - xMean) ** 2, 0) || 1;
   const slope = num / den;
 
-  // thresholds: 調整可依指標特性 tweak
   if (z > 0.6 || slope > Math.abs(mean) * 0.002)
     return { status: "偏強", score: 2 };
   if (z < -0.6 || slope < -Math.abs(mean) * 0.002)
@@ -94,6 +153,13 @@ export default function FundamentalPage(): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [pinnedChart, setPinnedChart] = useState<IndicatorKey | null>(null);
 
+  // 股票基本面分析相關狀態
+  const [selectedMarket, setSelectedMarket] = useState<MarketKey>("tw");
+  const [stockSymbol, setStockSymbol] = useState<string>("");
+  const [stockData, setStockData] = useState<StockFundamental | null>(null);
+  const [stockLoading, setStockLoading] = useState<boolean>(false);
+  const [stockError, setStockError] = useState<string | null>(null);
+
   const UNIT_MAP: Record<IndicatorKey, string> = {
     oil: "USD/bbl",
     gold: "USD/oz",
@@ -102,21 +168,52 @@ export default function FundamentalPage(): React.ReactElement {
   };
 
   useEffect(() => {
-    // 預載入四項指標的最近資料（非必需，可按需調整）
     INDICATORS.forEach((it) => fetchIndicator(it.key));
   }, []);
 
-  // 由資料庫撈資料：呼叫後端統一 API /api/database/execute-query
+  // 查詢股票基本面資料
+  async function fetchStockFundamental() {
+    if (!stockSymbol.trim()) {
+      setStockError("請輸入股票代號");
+      return;
+    }
+
+    setStockLoading(true);
+    setStockError(null);
+    setStockData(null);
+
+    try {
+      const res = await fetch("/api/fundamental", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          market: selectedMarket,
+          symbol: stockSymbol.trim().toUpperCase(),
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || `HTTP ${res.status}`);
+      }
+
+      setStockData(json.data);
+    } catch (err) {
+      setStockError(err instanceof Error ? err.message : "查詢失敗");
+    } finally {
+      setStockLoading(false);
+    }
+  }
+
   async function fetchIndicator(key: IndicatorKey) {
     const info = INDICATORS.find((i) => i.key === key);
     if (!info) return;
     setError(null);
     setLoadingMap((s) => ({ ...s, [key]: true }));
     try {
-      // 伺服器端的 API 應該使用環境變數的 DB 連線資訊來實際連接 market_fundamental
       const payload = {
         config: { database: "market_fundamental" },
-        // 以 SELECT * 起手，後端會回傳欄位陣列，我們再由 rowsToDataPoints 嘗試抽出日期與數值欄位
         query: `SELECT * FROM ${info.table}`,
       };
       const res = await fetch("/api/database/execute-query", {
@@ -139,7 +236,6 @@ export default function FundamentalPage(): React.ReactElement {
     }
   }
 
-  // 一鍵統整：對四項指標分別評估並生成總索引（0-100）
   function aggregateIndex() {
     const results: { key: IndicatorKey; status: string; score: number }[] = [];
     INDICATORS.forEach((it) => {
@@ -147,9 +243,8 @@ export default function FundamentalPage(): React.ReactElement {
       const ev = evaluateStrength(d);
       results.push({ key: it.key, status: ev.status, score: ev.score });
     });
-    const avgScore = results.reduce((s, r) => s + r.score, 0) / results.length; // 0..2
-    const index = Math.round((avgScore / 2) * 100); // 0..100
-    // 簡短結論
+    const avgScore = results.reduce((s, r) => s + r.score, 0) / results.length;
+    const index = Math.round((avgScore / 2) * 100);
     const strongCount = results.filter((r) => r.status === "偏強").length;
     const weakCount = results.filter((r) => r.status === "偏弱").length;
     let conclusion = "";
@@ -162,424 +257,667 @@ export default function FundamentalPage(): React.ReactElement {
 
   const agg = aggregateIndex();
 
+  // 格式化數值的輔助函數
+  const formatValue = (value: number | null | undefined, type: 'number' | 'percent' | 'currency' | 'volume' = 'number', decimals: number = 2): string => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return 'N/A';
+    }
+    
+    switch (type) {
+      case 'percent':
+        return `${value.toFixed(decimals)}%`;
+      case 'currency':
+        if (Math.abs(value) >= 1e12) {
+          return `$${(value / 1e12).toFixed(decimals)}兆`;
+        } else if (Math.abs(value) >= 1e9) {
+          return `$${(value / 1e9).toFixed(decimals)}B`;
+        } else if (Math.abs(value) >= 1e6) {
+          return `$${(value / 1e6).toFixed(decimals)}M`;
+        }
+        return `$${value.toFixed(decimals)}`;
+      case 'volume':
+        if (value >= 1e9) {
+          return `${(value / 1e9).toFixed(decimals)}B`;
+        } else if (value >= 1e6) {
+          return `${(value / 1e6).toFixed(decimals)}M`;
+        }
+        return value.toLocaleString();
+      default:
+        return value.toFixed(decimals);
+    }
+  };
+
+  const formatDate = (dateValue: string | number | null | undefined): string => {
+    if (!dateValue) return 'N/A';
+    
+    try {
+      // 如果是時間戳（數字）
+      if (typeof dateValue === 'number') {
+        return new Date(dateValue * 1000).toLocaleDateString('zh-TW');
+      }
+      // 如果是日期字串
+      return new Date(dateValue).toLocaleDateString('zh-TW');
+    } catch {
+      return 'N/A';
+    }
+  };
+
   return (
-    <div style={{ padding: 20, fontFamily: "Segoe UI, Roboto, Arial" }}>
+    <>
+      <div className="min-h-screen">
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </Head>
 
-
-      {/* 新增：顯示聚合指標 */}
-      <div
-        style={{
-          padding: 16,
-          marginBottom: 16,
-          background: "#f8fafc",
-          borderRadius: 8,
-          border: "1px solid #e2e8f0",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <h3 style={{ margin: 0, color: "#1e293b" }}>基本面綜合指數</h3>
-            <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: 14 }}>
-              {agg.conclusion}
-            </p>
-          </div>
-          <div style={{ textAlign: "right" }}>
+        {/* Header Section (仿 finance-code/index.tsx) */}
+        <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+          {/* 動態網格背景 */}
+          <div className="absolute inset-0 opacity-20">
             <div
+              className="absolute inset-0"
               style={{
-                fontSize: 32,
-                fontWeight: "bold",
-                color:
-                  agg.index >= 70
-                    ? "#059669"
-                    : agg.index <= 30
-                    ? "#dc2626"
-                    : "#6b7280",
+                backgroundImage: `
+                  linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+                `,
+                backgroundSize: "50px 50px",
               }}
-            >
-              {agg.index}
-            </div>
-            <div style={{ fontSize: 12, color: "#9ca3af" }}>0-100</div>
+            />
           </div>
-        </div>
-      </div>
-
-      <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
-        {/* 左側：基本面各項現況，逐一展示石油、黃金、NFP、CPI 的目前現況 */}
-        <div
-          style={{
-            padding: 12,
-            border: "1px solid #eee",
-            borderRadius: 8,
-            minWidth: 320,
-          }}
-        >
-          <div style={{ fontSize: 13, color: "#666" }}>基本面各項現況</div>
-
-          <div
-            style={{
-              marginTop: 10,
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-            }}
-          >
-            {INDICATORS.map((it) => {
-              const d = dataMap[it.key] || [];
-              const ev = evaluateStrength(d);
-              const latest = d.length ? d[d.length - 1].value : "—";
-              const latestDate = d.length ? d[d.length - 1].date : "";
-              return (
-                <div
-                  key={it.key}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "8px 10px",
-                    borderRadius: 6,
-                    background: "#fff",
-                    border: "1px solid #f3f4f6",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>
-                      {it.label}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
-                      最近數值：
-                      <span style={{ fontWeight: 700, color: "#111" }}>
-                        {latest}
-                      </span>
-                      {latestDate ? (
-                        <span
-                          style={{ marginLeft: 8, color: "#999", fontSize: 11 }}
-                        >
-                          ({latestDate})
-                        </span>
-                      ) : null}
+          {/* Enhanced Decorative Background */}
+          <div className="absolute top-0 left-0 w-full h-full">
+            <div className="absolute top-12 left-12 w-24 h-24 bg-white opacity-5 rounded-full animate-pulse"></div>
+            <div className="absolute bottom-12 right-24 w-36 h-36 bg-white opacity-5 rounded-full animate-pulse" style={{ animationDelay: "1s" }}></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
+            <div className="absolute top-24 right-12 w-4 h-4 bg-white opacity-20 rounded-full animate-bounce"></div>
+            <div className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-30 rounded-full animate-pulse" style={{ animationDelay: "1.5s" }}></div>
+            <div className="absolute top-48 left-1/4 w-5 h-5 bg-white opacity-15 rounded-full animate-bounce" style={{ animationDelay: "2s" }}></div>
+            <div className="absolute top-32 right-1/3 w-2 h-2 bg-white opacity-25 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }}></div>
+          </div>
+          <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10 w-full">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+              <div className="flex-1">
+                <div className="flex items-center mb-6">
+                  <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300 shadow-lg">
+                    <div className="w-10 h-10 flex items-center justify-center">
+                      <ChartBarIcon className="h-8 w-8 text-white group-hover:scale-110 transition-transform duration-300" />
                     </div>
                   </div>
-
-                  <div style={{ textAlign: "right" }}>
-                    <div
-                      style={{
-                        color:
-                          ev.status === "偏強"
-                            ? "#047857"
-                            : ev.status === "偏弱"
-                            ? "#dc2626"
-                            : "#666",
-                        fontWeight: 700,
-                        fontSize: 14,
-                      }}
-                    >
-                      {ev.status}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#999" }}>
-                      score: {ev.score}
-                    </div>
+                  <div>
+                    <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
+                      基本面指標總覽
+                    </h1>
+                    <p className="text-blue-200 mt-3 text-xl font-medium">
+                      快速掌握石油、黃金、CPI、NFP等重要經濟指標
+                    </p>
                   </div>
                 </div>
-              );
-            })}
+                <p className="text-blue-200 text-xl max-w-3xl leading-relaxed mb-8">
+                  本頁提供美國與全球市場重要基本面指標的即時查詢與趨勢分析，協助你做出更精準的投資決策。
+                </p>
+              </div>
+              {/* 統計面板 */}
+              <div className="flex flex-col lg:items-end space-y-4">
+                <div className="grid grid-cols-2 gap-6 lg:gap-8">
+                  <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                    <div className="text-3xl font-bold text-white">{agg.index}</div>
+                    <div className="text-blue-200 text-sm font-medium">基本面綜合指數</div>
+                  </div>
+                  <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                    <div className="text-3xl font-bold text-white">{new Date().toISOString().slice(0, 10)}</div>
+                    <div className="text-blue-200 text-sm font-medium">資料更新</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        </section>
 
-          <div style={{ marginTop: 12 }}>
-            <button
-              onClick={() => {
-                // 重新抓取全部資料
-                INDICATORS.forEach((it) => fetchIndicator(it.key));
-              }}
-              style={{ marginTop: 10, padding: "8px 10px" }}
-            >
-              重新抓取資料
-            </button>
+        {/* Main Content Area */}
+        <div className="relative bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full opacity-30 blur-3xl"></div>
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full opacity-20 blur-3xl"></div>
           </div>
-        </div>
-
-        {/* 右側：原有互動與圖表展示 */}
-        <div
-          style={{
-            flex: 1,
-            padding: 12,
-            border: "1px solid #eee",
-            borderRadius: 8,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              alignItems: "center",
-              marginBottom: 8,
-            }}
-          >
-            {INDICATORS.map((it) => {
-              const d = dataMap[it.key] || [];
-              const ev = evaluateStrength(d);
-              return (
-                <button
-                  key={it.key}
-                  onClick={() => setActive(it.key)}
-                  style={{
-                    padding: "6px 10px",
-                    borderRadius: 6,
-                    border:
-                      active === it.key
-                        ? "2px solid #2563eb"
-                        : "1px solid #ddd",
-                    background: "#fff",
-                  }}
-                >
-                  <div style={{ fontSize: 13 }}>{it.label}</div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color:
-                        ev.status === "偏強"
-                          ? "#047857"
-                          : ev.status === "偏弱"
-                          ? "#dc2626"
-                          : "#666",
-                    }}
+          <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
+            {/* 綜合指標卡片 */}
+            <div className="mb-8">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-blue-900 mb-2">基本面綜合指數</h3>
+                  <p className="text-blue-700">{agg.conclusion}</p>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className={`text-5xl font-bold ${agg.index >= 70 ? "text-green-600" : agg.index <= 30 ? "text-red-600" : "text-gray-600"}`}>{agg.index}</span>
+                  <span className="text-gray-400 text-sm">0-100</span>
+                </div>
+              </div>
+            </div>
+            {/* 指標現況卡片 */}
+            <div className="mb-8">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-8">
+                <div className="text-lg font-bold text-blue-900 mb-4">基本面各項現況</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {INDICATORS.map((it) => {
+                    const d = dataMap[it.key] || [];
+                    const ev = evaluateStrength(d);
+                    const latest = d.length ? d[d.length - 1].value : "—";
+                    const latestDate = d.length ? d[d.length - 1].date : "";
+                    return (
+                      <div key={it.key} className="flex items-center justify-between bg-white rounded-2xl border border-blue-100 p-6 shadow hover:shadow-lg transition-all duration-300">
+                        <div>
+                          <div className="text-base font-semibold text-blue-800">{it.label}</div>
+                          <div className="text-sm text-gray-500 mt-1">
+                            最近數值：<span className="font-bold text-gray-800">{latest}</span>
+                            {latestDate && (
+                              <span className="ml-2 text-gray-400 text-xs">({latestDate})</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`font-bold text-lg ${ev.status === "偏強" ? "text-green-600" : ev.status === "偏弱" ? "text-red-600" : "text-gray-600"}`}>{ev.status}</div>
+                          <div className="text-xs text-gray-400">score: {ev.score}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => INDICATORS.forEach((it) => fetchIndicator(it.key))}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all duration-300 shadow"
                   >
-                    {ev.status}
+                    重新抓取資料
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* 互動與圖表展示 */}
+            <div className="mb-8">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-8">
+                <div className="flex flex-wrap gap-3 mb-4">
+                  {INDICATORS.map((it) => {
+                    const d = dataMap[it.key] || [];
+                    const ev = evaluateStrength(d);
+                    return (
+                      <button
+                        key={it.key}
+                        onClick={() => setActive(it.key)}
+                        className={`px-5 py-2 rounded-xl font-semibold border transition-all duration-200 ${
+                          active === it.key
+                            ? "border-blue-600 bg-blue-50 text-blue-900"
+                            : "border-gray-200 bg-white text-gray-700"
+                        }`}
+                      >
+                        <span>{it.label}</span>
+                        <span className={`ml-2 text-xs ${ev.status === "偏強" ? "text-green-600" : ev.status === "偏弱" ? "text-red-600" : "text-gray-500"}`}>{ev.status}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="border-t border-blue-100 pt-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-blue-900 mb-1">
+                        {INDICATORS.find((i) => i.key === active)?.label}
+                      </h3>
+                      <div className="text-sm text-gray-500">
+                        {loadingMap[active]
+                          ? "載入中..."
+                          : `資料點數：${(dataMap[active] || []).length}`}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => fetchIndicator(active)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all duration-300 shadow"
+                      >
+                        重新載入
+                      </button>
+                      <button
+                        onClick={() => setPinnedChart(active)}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all duration-300 shadow"
+                      >
+                        秀出圖表
+                      </button>
+                    </div>
                   </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <h3 style={{ margin: 0 }}>
-                {INDICATORS.find((i) => i.key === active)?.label}
-              </h3>
-              <div style={{ fontSize: 13, color: "#666" }}>
-                <button
-                  onClick={() => fetchIndicator(active)}
-                  style={{ padding: "6px 10px", marginRight: 8 }}
-                >
-                  重新載入
-                </button>
-                <button
-                  onClick={async () => {
-                    // upload current active data to API
-                    const payload = { data: dataMap[active] || [] };
-                    try {
-                      const resp = await fetch(`/api/fundamentals/${active}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload),
-                      });
-                      const j = await resp.json();
-                      if (!resp.ok) throw new Error(j.message || "上傳失敗");
-                      alert(`上傳成功：${j.message || "已完成"}`);
-                    } catch (e) {
-                      alert(`上傳錯誤：${e instanceof Error ? e.message : String(e)}`);
-                    }
-                  }}
-                  style={{ padding: "6px 10px", marginRight: 8 }}
-                >
-                  上傳到資料庫
-                </button>
-                <span>
-                  {loadingMap[active]
-                    ? "載入中..."
-                    : `資料點數：${(dataMap[active] || []).length}`}
-                </span>
+                  <div className="mt-4">
+                    <div className="font-semibold text-gray-700 mb-1">近期判斷</div>
+                    <div className="text-gray-600">
+                      {(() => {
+                        const ev = evaluateStrength(dataMap[active] || []);
+                        return `${INDICATORS.find((i) => i.key === active)?.label}：${ev.status}（數據點 ${(dataMap[active] || []).length}）`;
+                      })()}
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <div className="font-semibold text-gray-700 mb-1">建議</div>
+                    <div className="text-gray-600 text-sm">
+                      {(() => {
+                        const ev = evaluateStrength(dataMap[active] || []);
+                        const status = ev.status;
+                        switch (active) {
+                          case "cpi":
+                            if (status === "偏強")
+                              return "CPI 偏強：通膨壓力升高，央行可能偏向收緊貨幣政策。後果可能包含利率上行、債券價格承壓與美元走強。建議：減少利率敏感與高槓桿部位、關注能源與食品等輸入性通膨來源。";
+                            if (status === "偏弱")
+                              return "CPI 偏弱：物價壓力趨緩，貨幣政策可能維持寬鬆或放緩升息。後果可能包含債券收益率下降與風險資產表現改善。建議：關注成長型資產與消費類表現，並留意就業與薪資數據。";
+                            return "CPI 中性：物價走勢穩定，短期對資產配置影響有限。建議：維持分散配置，觀察後續數據與核心通膨趨勢。";
+                          case "nfp":
+                            if (status === "偏強")
+                              return "NFP 偏強：就業與薪資動能佳，短期可能加速升息節奏，推升利率與美元。建議：檢視利率敏感資產（如長債、房地產）風險，並留意薪資成長是否推升核心通膨。";
+                            if (status === "偏弱")
+                              return "NFP 偏弱：就業疲弱，可能降低升息壓力或促成寬鬆政策，利好債市與部分風險資產。建議：關注失業率、勞動參與率與薪資趨勢，留意消費性支出變化。";
+                            return "NFP 中性：就業數據無明顯方向，建議以薪資與勞動參與率等補充指標做進一步判斷。";
+                          case "oil":
+                            if (status === "偏強")
+                              return "石油偏強：油價上升可能推升輸入性通膨並利好能源股，但會增加企業與消費者成本。建議：評估上游能源曝險與消費品成本壓力，關注地緣政治與供需變化。";
+                            if (status === "偏弱")
+                              return "石油偏弱：油價下跌有助於緩解通膨與降低企業成本，利好消費類股但壓抑能源股。建議：關注下游消費與運輸成本改善的產業機會。";
+                            return "石油中性：油價波動有限，短期對通膨影響較小。建議：以供需與地緣事件為重點監控。";
+                          case "gold":
+                            if (status === "偏強")
+                              return "黃金偏強：可能反映避險需求上升或實質利率下降，對通膨與市場風險情緒敏感。建議：考慮適度保值配置並留意美元與利率走勢。";
+                            if (status === "偏弱")
+                              return "黃金偏弱：避險需求減少或利率上行，對黃金不利。建議：關注美元強弱與實質利率變動，調整貴金屬曝險。";
+                            return "黃金中性：市場對風險與通膨預期平衡，建議以事件驅動調整倉位。";
+                          default:
+                            return "建議：以上為自動化簡單評估結果，請搭配技術面與其他基本面指標進行綜合判斷。";
+                        }
+                      })()}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div style={{ marginTop: 12 }}>
-              {error && <div style={{ color: "crimson" }}>{error}</div>}
-              <div style={{ color: '#6b7280' }}>
-                圖表預覽已移至頁面下方的「圖表預覽」區。請在下方選擇或點擊任一指標卡的「秀出圖表」以在預覽區查看完整圖表。
-              </div>
-            </div>
-
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 600 }}>近期判斷</div>
-              <div style={{ color: "#444", marginTop: 6 }}>
-                {
-                  // 顯示評估結果明細
-                  (() => {
-                    const ev = evaluateStrength(dataMap[active] || []);
-                    return `${
-                      INDICATORS.find((i) => i.key === active)?.label
-                    }：${ev.status}（數據點 ${
-                      (dataMap[active] || []).length
-                    }）`;
-                  })()
-                }
-              </div>
-            </div>
-
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 600 }}>建議</div>
-              <div style={{ color: "#666", fontSize: 13, marginTop: 6 }}>
-                {(() => {
-                  const ev = evaluateStrength(dataMap[active] || []);
-                  const status = ev.status;
-                  switch (active) {
-                    case "cpi":
-                      if (status === "偏強")
-                        return "CPI 偏強：通膨壓力升高，央行可能偏向收緊貨幣政策。後果可能包含利率上行、債券價格承壓與美元走強。建議：減少利率敏感與高槓桿部位、關注能源與食品等輸入性通膨來源。";
-                      if (status === "偏弱")
-                        return "CPI 偏弱：物價壓力趨緩，貨幣政策可能維持寬鬆或放緩升息。後果可能包含債券收益率下降與風險資產表現改善。建議：關注成長型資產與消費類表現，並留意就業與薪資數據。";
-                      return "CPI 中性：物價走勢穩定，短期對資產配置影響有限。建議：維持分散配置，觀察後續數據與核心通膨趨勢。";
-
-                    case "nfp":
-                      if (status === "偏強")
-                        return "NFP 偏強：就業與薪資動能佳，短期可能加速升息節奏，推升利率與美元。建議：檢視利率敏感資產（如長債、房地產）風險，並留意薪資成長是否推升核心通膨。";
-                      if (status === "偏弱")
-                        return "NFP 偏弱：就業疲弱，可能降低升息壓力或促成寬鬆政策，利好債市與部分風險資產。建議：關注失業率、勞動參與率與薪資趨勢，留意消費性支出變化。";
-                      return "NFP 中性：就業數據無明顯方向，建議以薪資與勞動參與率等補充指標做進一步判斷。";
-
-                    case "oil":
-                      if (status === "偏強")
-                        return "石油偏強：油價上升可能推升輸入性通膨並利好能源股，但會增加企業與消費者成本。建議：評估上游能源曝險與消費品成本壓力，關注地緣政治與供需變化。";
-                      if (status === "偏弱")
-                        return "石油偏弱：油價下跌有助於緩解通膨與降低企業成本，利好消費類股但壓抑能源股。建議：關注下游消費與運輸成本改善的產業機會。";
-                      return "石油中性：油價波動有限，短期對通膨影響較小。建議：以供需與地緣事件為重點監控。";
-
-                    case "gold":
-                      if (status === "偏強")
-                        return "黃金偏強：可能反映避險需求上升或實質利率下降，對通膨與市場風險情緒敏感。建議：考慮適度保值配置並留意美元與利率走勢。";
-                      if (status === "偏弱")
-                        return "黃金偏弱：避險需求減少或利率上行，對黃金不利。建議：關注美元強弱與實質利率變動，調整貴金屬曝險。";
-                      return "黃金中性：市場對風險與通膨預期平衡，建議以事件驅動調整倉位。";
-
-                    default:
-                      return "建議：以上為自動化簡單評估結果，請搭配技術面與其他基本面指標進行綜合判斷。";
-                  }
-                })()}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <section style={{ borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
-        <h4>各指標詳情</h4>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
-            gap: 12,
-          }}
-        >
-          {INDICATORS.map((it) => {
-            const d = dataMap[it.key] || [];
-            const ev = evaluateStrength(d);
-            const indexValue = Math.round((ev.score / 2) * 100); // 0..100
-            const isActive = active === it.key;
-            return (
-              <div
-                key={it.key}
-                onClick={() => setActive(it.key)}
-                role="button"
-                tabIndex={0}
-                style={{
-                  border: isActive ? "2px solid #2563eb" : "1px solid #eee",
-                  borderRadius: 8,
-                  padding: 12,
-                  cursor: "pointer",
-                  background: isActive ? "#fbfdff" : "#fff",
-                  transition: "box-shadow 0.15s",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: 'center' }}>
+            {/* 圖表預覽區 */}
+            <div className="mb-8">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-8 min-h-[180px]">
+                {pinnedChart ? (
                   <div>
-                    <strong>{it.label}</strong>
-                    <div style={{ fontSize: 12, color: "#666" }}>
-                      {d.length ? `${d.length} 筆資料` : "尚無資料"}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="font-bold text-blue-900">
+                        {INDICATORS.find(i => i.key === pinnedChart)?.label} - 圖表預覽
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <span className="text-xs text-gray-500">{UNIT_MAP[pinnedChart as IndicatorKey]}</span>
+                        <button onClick={() => setPinnedChart(null)} className="px-3 py-1 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200">關閉</button>
+                        <button onClick={() => fetchIndicator(pinnedChart!)} className="px-3 py-1 bg-blue-100 rounded-lg text-blue-700 hover:bg-blue-200">重新載入</button>
+                      </div>
                     </div>
+                    <LineChart data={dataMap[pinnedChart] || []} width={760} height={220} />
                   </div>
-
-                  <div style={{ textAlign: "right" }}>
-                    <div
-                      style={{
-                        fontSize: 20,
-                        fontWeight: 800,
-                        color:
-                          indexValue >= 70
-                            ? "#059669"
-                            : indexValue <= 30
-                            ? "#dc2626"
-                            : "#6b7280",
-                      }}
-                    >
-                      {indexValue}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#999" }}>
-                      {ev.status} • score: {ev.score}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 8 }}>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>圖表將在下方預覽區顯示（點選「秀出圖表」）。</div>
-                </div>
-
-                {/* controls */}
-                <div style={{ marginTop: 8 }}>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                    <button onClick={(e) => { e.stopPropagation(); fetchIndicator(it.key); }} style={{ padding: '6px 8px' }}>重新載入</button>
-                    <button onClick={(e) => { e.stopPropagation(); setPinnedChart(it.key); }} style={{ padding: '6px 8px' }}>秀出圖表</button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* 白色展示區：用來顯示使用者點選的指標圖表（從後端上傳或 fetch 的 CSV 資料） */}
-      <div
-        style={{
-          marginTop: 18,
-          padding: 16,
-          background: '#ffffff',
-          border: '1px solid #e6eef8',
-          borderRadius: 8,
-          minHeight: 140,
-        }}
-      >
-        {pinnedChart ? (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontWeight: 700 }}>{INDICATORS.find(i => i.key === pinnedChart)?.label} - 圖表預覽</div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{UNIT_MAP[pinnedChart as IndicatorKey]}</div>
-                <button onClick={() => { setPinnedChart(null); }} style={{ padding: '6px 8px' }}>關閉</button>
-                <button onClick={() => fetchIndicator(pinnedChart!)} style={{ padding: '6px 8px' }}>重新載入</button>
+                ) : (
+                  <div className="text-gray-400">選擇一個指標後按「秀出圖表」會在此處顯示對應圖表</div>
+                )}
               </div>
             </div>
-            <div style={{ marginTop: 10 }}>
-              <LineChart data={dataMap[pinnedChart] || []} width={760} height={220} />
+
+            {/* 股票基本面分析區 */}
+            <div className="mb-8">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-8">
+                <div className="flex items-center mb-6">
+                  <MagnifyingGlassIcon className="h-8 w-8 text-blue-600 mr-3" />
+                  <h2 className="text-2xl font-bold text-blue-900">股票基本面分析</h2>
+                </div>
+
+                {/* 市場選擇與股票代號輸入 */}
+                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      選擇市場
+                    </label>
+                    <div className="flex gap-3">
+                      {[
+                        { key: "tw", label: "台灣 (TW)" },
+                        { key: "two", label: "櫃買 (TWO)" },
+                        { key: "us", label: "美國 (US)" },
+                      ].map((market) => (
+                        <button
+                          key={market.key}
+                          onClick={() => setSelectedMarket(market.key as MarketKey)}
+                          className={`px-6 py-3 rounded-xl font-semibold border-2 transition-all duration-200 ${
+                            selectedMarket === market.key
+                              ? "border-blue-600 bg-blue-50 text-blue-900"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-blue-300"
+                          }`}
+                        >
+                          {market.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      股票代號
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={stockSymbol}
+                        onChange={(e) => setStockSymbol(e.target.value.toUpperCase())}
+                        onKeyPress={(e) => e.key === "Enter" && fetchStockFundamental()}
+                        placeholder={selectedMarket === "us" ? "輸入股票代號 (例: AAPL)" : "輸入股票代號 (例: 2330)"}
+                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none text-gray-800 font-semibold"
+                      />
+                      <button
+                        onClick={fetchStockFundamental}
+                        disabled={stockLoading}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all duration-300 shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {stockLoading ? "查詢中..." : "查詢"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 錯誤訊息 */}
+                {stockError && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-red-600 font-semibold">{stockError}</p>
+                  </div>
+                )}
+
+                {/* 股票基本面資料顯示 */}
+                {stockData && (
+                  <div className="space-y-6">
+                    {/* 股票基本資訊 */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-2xl font-bold text-blue-900">
+                            {stockData.symbol} - {stockData.name || 'N/A'}
+                          </h3>
+                          <p className="text-blue-600 mt-1">
+                            {stockData.basicInfo.industry || 'N/A'} | {stockData.basicInfo.sector || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-500">市場</div>
+                          <div className="text-xl font-bold text-blue-900">{stockData.market}</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                          <div className="text-xs text-gray-500">國家</div>
+                          <div className="text-sm font-semibold text-gray-800">{stockData.basicInfo.country || 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">交易所</div>
+                          <div className="text-sm font-semibold text-gray-800">{stockData.basicInfo.exchange || 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">貨幣</div>
+                          <div className="text-sm font-semibold text-gray-800">{stockData.basicInfo.currency || 'N/A'}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">更新時間</div>
+                          <div className="text-sm font-semibold text-gray-800">
+                            {formatDate(stockData.updatedAt)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 估值指標 */}
+                    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span className="text-2xl mr-2">💰</span> 估值指標
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">市值</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.valuation.marketCap, 'currency')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">本益比 (P/E)</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.valuation.pe)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">預估本益比</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.valuation.forwardPE)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">股價淨值比 (P/B)</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.valuation.pb)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">股價營收比 (P/S)</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.valuation.ps)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">PEG比率</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.valuation.peg)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">企業價值/營收</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.valuation.enterpriseToRevenue)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">企業價值/EBITDA</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.valuation.enterpriseToEbitda)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 財務健康度 */}
+                    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span className="text-2xl mr-2">🏥</span> 財務健康度
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">負債權益比</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.financialHealth.debtToEquity)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">流動比率</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.financialHealth.currentRatio)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">速動比率</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.financialHealth.quickRatio)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">總現金</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.financialHealth.totalCash, 'currency')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">總負債</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.financialHealth.totalDebt, 'currency')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 獲利能力 */}
+                    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span className="text-2xl mr-2">📈</span> 獲利能力
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">股東權益報酬率 (ROE)</div>
+                          <div className="text-base font-bold text-green-700">
+                            {formatValue(stockData.profitability.roe, 'percent')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">資產報酬率 (ROA)</div>
+                          <div className="text-base font-bold text-green-700">
+                            {formatValue(stockData.profitability.roa, 'percent')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">淨利率</div>
+                          <div className="text-base font-bold text-green-700">
+                            {formatValue(stockData.profitability.netMargin, 'percent')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">營業利益率</div>
+                          <div className="text-base font-bold text-green-700">
+                            {formatValue(stockData.profitability.operatingMargin, 'percent')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-green-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">毛利率</div>
+                          <div className="text-base font-bold text-green-700">
+                            {formatValue(stockData.profitability.grossMargin, 'percent')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 成長性 */}
+                    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span className="text-2xl mr-2">🚀</span> 成長性
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">營收成長率</div>
+                          <div className="text-base font-bold text-blue-700">
+                            {formatValue(stockData.growth.revenueGrowth, 'percent')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">盈餘成長率</div>
+                          <div className="text-base font-bold text-blue-700">
+                            {formatValue(stockData.growth.earningsGrowth, 'percent')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">總營收</div>
+                          <div className="text-base font-bold text-blue-700">
+                            {formatValue(stockData.growth.totalRevenue, 'currency')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 股利資訊 */}
+                    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span className="text-2xl mr-2">💵</span> 股利資訊
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">股利率</div>
+                          <div className="text-base font-bold text-purple-700">
+                            {formatValue(stockData.dividend.dividendYield, 'percent')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">股利金額</div>
+                          <div className="text-base font-bold text-purple-700">
+                            {formatValue(stockData.dividend.dividendAmount, 'number')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">配息率</div>
+                          <div className="text-base font-bold text-purple-700">
+                            {formatValue(stockData.dividend.payoutRatio, 'percent')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">除息日</div>
+                          <div className="text-sm font-bold text-purple-700">
+                            {formatDate(stockData.dividend.exDividendDate)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 股票資訊 */}
+                    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                      <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <span className="text-2xl mr-2">📊</span> 股票資訊
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">Beta值</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.stockInfo.beta)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">每股淨值</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.stockInfo.bookValue)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">52週最高</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.stockInfo.week52High)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">52週最低</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.stockInfo.week52Low)}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">平均成交量</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.stockInfo.avgVolume, 'volume')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">流通股數</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.stockInfo.sharesOutstanding, 'volume')}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <div className="text-xs text-gray-500 mb-1">普通股淨利</div>
+                          <div className="text-base font-bold text-gray-800">
+                            {formatValue(stockData.stockInfo.netIncomeToCommon, 'currency')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        ) : (
-          <div style={{ color: '#6b7280' }}>選擇一個指標後按「秀出圖表」會在此處顯示對應圖表（資料來自你未來上傳或後端提供的 CSV）。</div>
-        )}
+        </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }
-
 
 // 將資料庫回傳的 row[] 轉為 DataPoint[]
 function rowsToDataPoints(rows: Record<string, unknown>[]): DataPoint[] {
