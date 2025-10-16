@@ -297,18 +297,17 @@ const PredictPage: React.FC = () => {
         return [];
       }
 
-      // Ensure arrays are ordered from oldest -> newest.
-      // Many backends (or our DB query) can return newest first; reverse to get chronological order.
+      // 後端現在回傳 chronological (oldest -> newest)，因此不再需要 reverse
       const trueArr = Array.isArray(evaluationData.true_value)
-        ? [...evaluationData.true_value].reverse()
+        ? [...evaluationData.true_value]
         : [];
       const predArr = Array.isArray(evaluationData.predict)
-        ? [...evaluationData.predict].reverse()
+        ? [...evaluationData.predict]
         : [];
 
       const maxLength = Math.max(trueArr.length, predArr.length);
 
-      // Start date is 'maxLength' hours in the past so timestamps go from past -> present.
+      // Start date 是 maxLength 小時前，時間從過去 -> 現在
       const startDate = new Date();
       startDate.setHours(startDate.getHours() - maxLength);
 
