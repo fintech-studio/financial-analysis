@@ -246,18 +246,8 @@ const PredictPage: React.FC = () => {
   }, [stockData, contextLength, predictionLength, callStockPrediction]);
 
   const handleEvaluation = useCallback(() => {
-    // Limit to most recent 1000 points and ensure chronological order (oldest -> newest)
-    const MAX_EVAL_POINTS = 1000;
-    let dataForEval: number[] = [];
-
-    if (stockData && stockData.length > 0) {
-      // stockData is fetched with ORDER BY datetime DESC (latest first).
-      // Take up to MAX_EVAL_POINTS most recent points, then reverse to oldest->newest.
-      dataForEval = stockData.slice(0, MAX_EVAL_POINTS).reverse();
-    }
-
     const testData = {
-      data_numpy: dataForEval,
+      data_numpy: stockData,
       context_length: contextLength,
       prediction_length: predictionLength,
     };
