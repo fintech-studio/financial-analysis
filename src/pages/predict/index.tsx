@@ -288,7 +288,6 @@ const PredictPage: React.FC = () => {
   // 轉換評估數據為折線圖格式
   const convertEvaluationToLineData = useCallback(
     (evaluationData: EvaluationData): LineChartData[] => {
-      const baseDate = new Date();
       const chartData: LineChartData[] = [];
 
       if (
@@ -298,22 +297,27 @@ const PredictPage: React.FC = () => {
         return [];
       }
 
-      const maxLength = Math.max(
-        evaluationData.true_value.length,
-        evaluationData.predict.length
-      );
+      // Ensure arrays are ordered from oldest -> newest.
+      // Many backends (or our DB query) can return newest first; reverse to get chronological order.
+      const trueArr = Array.isArray(evaluationData.true_value)
+        ? [...evaluationData.true_value].reverse()
+        : [];
+      const predArr = Array.isArray(evaluationData.predict)
+        ? [...evaluationData.predict].reverse()
+        : [];
+
+      const maxLength = Math.max(trueArr.length, predArr.length);
+
+      // Start date is 'maxLength' hours in the past so timestamps go from past -> present.
+      const startDate = new Date();
+      startDate.setHours(startDate.getHours() - maxLength);
 
       for (let i = 0; i < maxLength; i++) {
-        const date = new Date(baseDate);
+        const date = new Date(startDate);
         date.setHours(date.getHours() + (i + 1));
 
-        const trueValue =
-          i < evaluationData.true_value.length
-            ? evaluationData.true_value[i]
-            : 0;
-
-        const predictValue =
-          i < evaluationData.predict.length ? evaluationData.predict[i] : 0;
+        const trueValue = i < trueArr.length ? trueArr[i] : 0;
+        const predictValue = i < predArr.length ? predArr[i] : 0;
 
         chartData.push({
           date: date.toISOString(),

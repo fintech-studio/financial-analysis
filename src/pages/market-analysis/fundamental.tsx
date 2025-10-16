@@ -560,7 +560,7 @@ export default function FundamentalPage(): React.ReactElement {
               <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-8">
                 <div className="flex items-center mb-6">
                   <MagnifyingGlassIcon className="h-8 w-8 text-blue-600 mr-3" />
-                  <h2 className="text-2xl font-bold text-blue-900">股票基本面分析</h2>
+                  <h2 className="text-2xl font-bold text-blue-900">股票基本面資訊</h2>
                 </div>
 
                 {/* 市場選擇與股票代號輸入 */}
