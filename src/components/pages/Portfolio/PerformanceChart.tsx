@@ -470,13 +470,34 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
             if (label) {
               label += ": ";
             }
-            if (context.datasetIndex === 0) {
+
+            const parsed = context.parsed as unknown;
+            let yValue: number | null = null;
+
+            if (parsed == null) {
+              yValue = null;
+            } else if (typeof parsed === "number") {
+              yValue = parsed;
+            } else if (
+              typeof parsed === "object" &&
+              "y" in (parsed as object)
+            ) {
+              const maybeY = (parsed as { y?: number }).y;
+              yValue = typeof maybeY === "number" ? maybeY : null;
+            } else {
+              yValue = null;
+            }
+
+            if (yValue == null) {
+              label += "N/A";
+            } else if (context.datasetIndex === 0) {
               // 投資組合數據 - 顯示為貨幣
-              label += "NT$" + context.parsed.y.toLocaleString();
+              label += "NT$" + Number(yValue).toLocaleString();
             } else {
               // 基準指數 - 顯示數值
-              label += context.parsed.y.toLocaleString();
+              label += Number(yValue).toLocaleString();
             }
+
             return label;
           },
         },

@@ -170,7 +170,21 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
         callbacks: {
           title: () => "",
           label: function (context: import("chart.js").TooltipItem<"line">) {
-            return `NT$${context.parsed.y.toLocaleString()}`;
+            const parsed = context.parsed as unknown;
+            let yValue: number | null = null;
+            if (parsed == null) {
+              yValue = null;
+            } else if (typeof parsed === "number") {
+              yValue = parsed;
+            } else if (
+              typeof parsed === "object" &&
+              "y" in (parsed as object)
+            ) {
+              const maybeY = (parsed as { y?: number }).y;
+              yValue = typeof maybeY === "number" ? maybeY : null;
+            }
+
+            return yValue == null ? "NT$ N/A" : `NT$${yValue.toLocaleString()}`;
           },
         },
       },
@@ -327,13 +341,29 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
             if (label) {
               label += ": ";
             }
-            if (context.datasetIndex === 0) {
-              // 投資組合數據 - 顯示為貨幣
-              label += "NT$" + context.parsed.y.toLocaleString();
-            } else {
-              // 基準指數 - 顯示數值
-              label += context.parsed.y.toLocaleString();
+
+            const parsed = context.parsed as unknown;
+            let yValue: number | null = null;
+            if (parsed == null) {
+              yValue = null;
+            } else if (typeof parsed === "number") {
+              yValue = parsed;
+            } else if (
+              typeof parsed === "object" &&
+              "y" in (parsed as object)
+            ) {
+              const maybeY = (parsed as { y?: number }).y;
+              yValue = typeof maybeY === "number" ? maybeY : null;
             }
+
+            if (yValue == null) {
+              label += "N/A";
+            } else if (context.datasetIndex === 0) {
+              label += "NT$" + Number(yValue).toLocaleString();
+            } else {
+              label += Number(yValue).toLocaleString();
+            }
+
             return label;
           },
         },
