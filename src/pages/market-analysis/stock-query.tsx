@@ -179,6 +179,85 @@ const StockAnalysisPage: React.FC = () => {
     renderPatternAndPanel,
   ]);
   return (
+    <>
+    {/* Header Section */}
+          <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+            {/* 動態網格背景 */}
+            <div className="absolute inset-0 opacity-20">
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `
+                  linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+                `,
+                  backgroundSize: "50px 50px",
+                }}
+              />
+            </div>
+    
+            {/* Enhanced Decorative Background */}
+            <div className="absolute top-0 left-0 w-full h-full">
+              <div className="absolute top-12 left-12 w-24 h-24 bg-white opacity-5 rounded-full animate-pulse"></div>
+              <div
+                className="absolute bottom-12 right-24 w-36 h-36 bg-white opacity-5 rounded-full animate-pulse"
+                style={{ animationDelay: "1s" }}
+              ></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
+    
+              {/* Enhanced floating elements */}
+              <div className="absolute top-24 right-12 w-4 h-4 bg-white opacity-20 rounded-full animate-bounce"></div>
+              <div
+                className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-30 rounded-full animate-pulse"
+                style={{ animationDelay: "1.5s" }}
+              ></div>
+              <div
+                className="absolute top-48 left-1/4 w-5 h-5 bg-white opacity-15 rounded-full animate-bounce"
+                style={{ animationDelay: "2s" }}
+              ></div>
+              <div
+                className="absolute top-32 right-1/3 w-2 h-2 bg-white opacity-25 rounded-full animate-pulse"
+                style={{ animationDelay: "0.5s" }}
+              ></div>
+            </div>
+    
+            <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10 w-full">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+                <div className="flex-1">
+                  <div className="flex items-center mb-6">
+                    <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300 shadow-lg">
+                      <ChartBarIcon className="h-10 w-10 text-white group-hover:scale-110 transition-transform duration-300" />
+                    </div>
+                    <div>
+                      <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
+                        技術分析
+                      </h1>
+                      <p className="text-blue-200 mt-3 text-xl font-medium">
+                        深入洞察市場趨勢
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-blue-200 text-xl max-w-3xl leading-relaxed">
+                    利用先進的技術指標和圖表模式，深入分析股票走勢，幫助投資者做出明智決策。
+                  </p>
+                </div>
+    
+                {/* Enhanced Statistics Panel */}
+                <div className="flex flex-col lg:items-end space-y-4">
+                  <div className="grid grid-cols-1 gap-6 lg:gap-8">
+                    <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
+                      <div className="text-3xl font-bold text-white">
+                        yahoo
+                      </div>
+                      <div className="text-blue-200 text-sm font-medium">
+                        市場數據來源
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
         {/* 搜索欄 */}
@@ -250,6 +329,7 @@ const StockAnalysisPage: React.FC = () => {
       </div>
       <Footer />
     </div>
+    </>
   );
 };
 
