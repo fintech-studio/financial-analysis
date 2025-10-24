@@ -11,8 +11,7 @@ export default function QuestionnairePage(): React.ReactElement {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 從 PY_API_HOST 讀取後端位址，若未設定則回退到 localhost:8000
-  const apiBase = (process.env.PY_API_HOST as string) || "http://localhost:8000";
+  const apiBase = "http://localhost:8080";
 
   const startTest = async () => {
     setLoading(true);
