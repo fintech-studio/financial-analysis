@@ -1,3 +1,5 @@
+/* eslint-env node */
+/* global process, module */
 /** @type {import('next').NextConfig} */
 const isStaticExport = process.env.STATIC_EXPORT === "true";
 const PY_API_HOST = process.env.PY_API_HOST;
@@ -14,9 +16,6 @@ const nextConfig = {
     : {}),
   images: {
     unoptimized: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   async rewrites() {
     return [
