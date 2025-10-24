@@ -100,7 +100,7 @@ financial-analysis/
 1. **複製專案**
 
    ```bash
-   git clone https://github.com/HaoXun97/financial-analysis.git
+   git clone https://github.com/fintech-studio/financial-analysis.git
    cd financial-analysis
    ```
 
