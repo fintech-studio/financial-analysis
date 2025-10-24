@@ -11,8 +11,8 @@ export default function QuestionnairePage(): React.ReactElement {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 從 NEXT_PUBLIC_API_BASE 讀取後端位址（在 Next.js 中可設定 env），若未設定則回退到 localhost
-  const apiBase = (process.env.NEXT_PUBLIC_API_BASE as string) || "http://localhost:8000";
+  // 從 PY_API_HOST 讀取後端位址，若未設定則回退到 localhost:8000
+  const apiBase = (process.env.PY_API_HOST as string) || "http://localhost:8000";
 
   const startTest = async () => {
     setLoading(true);
