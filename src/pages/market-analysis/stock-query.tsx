@@ -13,6 +13,7 @@ import { useStockData } from "@/hooks/useStockData";
 import { ChartBarIcon, TableCellsIcon } from "@heroicons/react/24/outline";
 import TechnicalAnalysisPanel from "@/components/pages/stock-query/TechnicalAnalysisPanel";
 import KLinePattern from "@/components/pages/stock-query/KLinePattern";
+import AIInsights from "@/components/pages/stock-query/AIInsights";
 import type { MarketType } from "@/components/pages/stock-query/SearchBar";
 import Footer from "@/components/Layout/Footer";
 
@@ -113,6 +114,21 @@ const StockAnalysisPage: React.FC = () => {
           loading={loading}
           candlestickData={candlestickData}
         />
+          {/* AI 分析與見解 */}
+          <div className="mt-4">
+            <AIInsights
+              data={latest}
+              symbol={queryState.symbol}
+              timeframe={timeframe}
+              open_price={latest?.open}
+              high_price={latest?.high}
+              low_price={latest?.low}
+              close_price={latest?.close}
+              volume={latest?.volume}
+              technicalData={technicalData}
+              candlestickData={candlestickData}
+            />
+          </div>
       </>
     ),
     [
