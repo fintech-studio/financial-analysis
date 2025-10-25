@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Footer from "@/components/Layout/Footer";
+import AIInsights from "@/components/pages/trade-signals/AIInsights";
 import { DatabaseService, DatabaseConfig } from "@/services/DatabaseService";
 import { FiDownload } from "react-icons/fi";
-import { SignalIcon, MagnifyingGlassIcon, ChartBarIcon, ClockIcon } from "@heroicons/react/24/outline";
+import {
+  SignalIcon,
+  MagnifyingGlassIcon,
+  ChartBarIcon,
+  ClockIcon,
+} from "@heroicons/react/24/outline";
 
 type SignalRow = Record<string, unknown>;
 
@@ -85,7 +91,9 @@ const SkeletonLoader: React.FC = () => (
 const SignalBadgeSmall: React.FC<{ signal?: string }> = ({ signal }) => {
   const badge = getSignalBadge(signal);
   return (
-    <span className={`inline-block px-3 py-1 text-sm rounded-full border ${badge.cls}`}>
+    <span
+      className={`inline-block px-3 py-1 text-sm rounded-full border ${badge.cls}`}
+    >
       {badge.text}
     </span>
   );
@@ -96,9 +104,9 @@ interface AnimatedSelectWrapperProps {
   className?: string;
 }
 
-const AnimatedSelectWrapper: React.FC<AnimatedSelectWrapperProps> = ({ 
-  children, 
-  className = "" 
+const AnimatedSelectWrapper: React.FC<AnimatedSelectWrapperProps> = ({
+  children,
+  className = "",
 }) => (
   <div className={`relative ${className}`}>
     {children}
@@ -120,14 +128,15 @@ const AnimatedSelectWrapper: React.FC<AnimatedSelectWrapperProps> = ({
   </div>
 );
 
-interface AnimatedSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface AnimatedSelectProps
+  extends React.SelectHTMLAttributes<HTMLSelectElement> {
   children: React.ReactNode;
 }
 
-const AnimatedSelect: React.FC<AnimatedSelectProps> = ({ 
-  className = "", 
-  children, 
-  ...props 
+const AnimatedSelect: React.FC<AnimatedSelectProps> = ({
+  className = "",
+  children,
+  ...props
 }) => (
   <AnimatedSelectWrapper>
     <select
@@ -179,10 +188,7 @@ const TradeSignalsPage: React.FC = () => {
   const getTableState = (k: string) =>
     tableStates[k] ?? { visible: true, search: "", page: 1, pageSize: 10 };
 
-  const setTableState = (
-    k: string,
-    patch: Partial<TableState>
-  ) => {
+  const setTableState = (k: string, patch: Partial<TableState>) => {
     setTableStates((prev) => ({
       ...prev,
       [k]: { ...getTableState(k), ...patch },
@@ -311,7 +317,9 @@ const TradeSignalsPage: React.FC = () => {
             </div>
           </div>
           <div className="text-sm text-gray-600 font-medium mb-1">總筆數</div>
-          <div className="text-2xl font-bold text-gray-900">{total.toLocaleString()}</div>
+          <div className="text-2xl font-bold text-gray-900">
+            {total.toLocaleString()}
+          </div>
         </div>
         <div className="bg-white/90 rounded-2xl shadow-lg border border-green-100 p-6 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
@@ -320,7 +328,9 @@ const TradeSignalsPage: React.FC = () => {
             </div>
           </div>
           <div className="text-sm text-gray-600 font-medium mb-1">最新時間</div>
-          <div className="text-sm font-semibold text-gray-900">{formatDate(latestDate)}</div>
+          <div className="text-sm font-semibold text-gray-900">
+            {formatDate(latestDate)}
+          </div>
         </div>
         <div className="bg-white/90 rounded-2xl shadow-lg border border-purple-100 p-6 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
@@ -339,12 +349,20 @@ const TradeSignalsPage: React.FC = () => {
               <div className="w-5 h-5 bg-orange-500 rounded"></div>
             </div>
           </div>
-          <div className="text-sm text-gray-600 font-medium mb-1">最新收盤價</div>
+          <div className="text-sm text-gray-600 font-medium mb-1">
+            最新收盤價
+          </div>
           <div className="text-lg font-bold text-gray-900">
             {latestPrice ? `NT$ ${formatNumber(latestPrice)}` : "-"}
           </div>
-          <div className={`text-sm font-medium mt-1 ${sparkDeltaPct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {sparkDeltaPct ? `${sparkDeltaPct > 0 ? '+' : ''}${sparkDeltaPct.toFixed(2)}%` : "-"}
+          <div
+            className={`text-sm font-medium mt-1 ${
+              sparkDeltaPct >= 0 ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {sparkDeltaPct
+              ? `${sparkDeltaPct > 0 ? "+" : ""}${sparkDeltaPct.toFixed(2)}%`
+              : "-"}
           </div>
         </div>
       </div>
@@ -438,8 +456,14 @@ const TradeSignalsPage: React.FC = () => {
             className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-30 rounded-full animate-pulse"
             style={{ animationDelay: "1.5s" }}
           ></div>
-          <div className="absolute top-48 left-1/4 w-5 h-5 bg-white opacity-15 rounded-full animate-bounce" style={{ animationDelay: "2s" }}></div>
-          <div className="absolute top-32 right-1/3 w-2 h-2 bg-white opacity-25 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }}></div>
+          <div
+            className="absolute top-48 left-1/4 w-5 h-5 bg-white opacity-15 rounded-full animate-bounce"
+            style={{ animationDelay: "2s" }}
+          ></div>
+          <div
+            className="absolute top-32 right-1/3 w-2 h-2 bg-white opacity-25 rounded-full animate-pulse"
+            style={{ animationDelay: "0.5s" }}
+          ></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10 w-full">
@@ -463,7 +487,7 @@ const TradeSignalsPage: React.FC = () => {
               <p className="text-blue-200 text-xl max-w-3xl leading-relaxed mb-8">
                 查詢並分析技術指標產生的交易訊號，協助投資人做出更明智的交易決策。
               </p>
-              
+
               <form
                 className="flex flex-col xl:flex-row gap-4 max-w-5xl"
                 onSubmit={(e) => {
@@ -490,9 +514,18 @@ const TradeSignalsPage: React.FC = () => {
                     }
                     className="px-5 py-4 border-2 border-white/20 rounded-2xl bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:border-white/40 transition-all duration-300 hover:border-white/30 min-w-32"
                   >
-                    <option value="1d" className="bg-white text-gray-900 py-2">📊 日線</option>
-                    <option value="1h" className="bg-white text-gray-900 py-2">⏰ 小時線</option>
-                    <option value="both" className="bg-white text-gray-900 py-2">📈 日線&小時線</option>
+                    <option value="1d" className="bg-white text-gray-900 py-2">
+                      📊 日線
+                    </option>
+                    <option value="1h" className="bg-white text-gray-900 py-2">
+                      ⏰ 小時線
+                    </option>
+                    <option
+                      value="both"
+                      className="bg-white text-gray-900 py-2"
+                    >
+                      📈 日線&小時線
+                    </option>
                   </AnimatedSelect>
                   <AnimatedSelect
                     value={dbName}
@@ -510,13 +543,48 @@ const TradeSignalsPage: React.FC = () => {
                     }
                     className="px-5 py-4 border-2 border-white/20 rounded-2xl bg-white/10 backdrop-blur-sm text-white focus:outline-none focus:border-white/40 transition-all duration-300 hover:border-white/30 min-w-48"
                   >
-                    <option value="market_stock_tw" className="bg-white text-gray-900 py-2">🇹🇼 台股</option>
-                    <option value="market_stock_us" className="bg-white text-gray-900 py-2">🇺🇸 美股</option>
-                    <option value="market_crypto" className="bg-white text-gray-900 py-2">🌐 加密貨幣</option>
-                    <option value="market_forex" className="bg-white text-gray-900 py-2">💱 外匯</option>
-                    <option value="market_etf" className="bg-white text-gray-900 py-2">📊 ETF</option>
-                    <option value="market_futures" className="bg-white text-gray-900 py-2">📈 期貨</option>
-                    <option value="market_index" className="bg-white text-gray-900 py-2">📉 指數</option>
+                    <option
+                      value="market_stock_tw"
+                      className="bg-white text-gray-900 py-2"
+                    >
+                      🇹🇼 台股
+                    </option>
+                    <option
+                      value="market_stock_us"
+                      className="bg-white text-gray-900 py-2"
+                    >
+                      🇺🇸 美股
+                    </option>
+                    <option
+                      value="market_crypto"
+                      className="bg-white text-gray-900 py-2"
+                    >
+                      🌐 加密貨幣
+                    </option>
+                    <option
+                      value="market_forex"
+                      className="bg-white text-gray-900 py-2"
+                    >
+                      💱 外匯
+                    </option>
+                    <option
+                      value="market_etf"
+                      className="bg-white text-gray-900 py-2"
+                    >
+                      📊 ETF
+                    </option>
+                    <option
+                      value="market_futures"
+                      className="bg-white text-gray-900 py-2"
+                    >
+                      📈 期貨
+                    </option>
+                    <option
+                      value="market_index"
+                      className="bg-white text-gray-900 py-2"
+                    >
+                      📉 指數
+                    </option>
                   </AnimatedSelect>
                   <button
                     type="submit"
@@ -526,7 +594,10 @@ const TradeSignalsPage: React.FC = () => {
                     <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-10 transition-opacity"></span>
                     {loading ? (
                       <>
-                        <svg className="animate-spin h-5 w-5 relative" viewBox="0 0 24 24">
+                        <svg
+                          className="animate-spin h-5 w-5 relative"
+                          viewBox="0 0 24 24"
+                        >
                           <circle
                             className="opacity-25"
                             cx="12"
@@ -554,16 +625,25 @@ const TradeSignalsPage: React.FC = () => {
                 </div>
               </form>
             </div>
-            
+
             <div className="flex flex-col lg:items-end space-y-4">
               <div className="grid grid-cols-2 gap-6 lg:gap-8">
                 <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-                  <div className="text-3xl font-bold text-white">{Object.values(results).reduce((acc, arr) => acc + arr.length, 0)}</div>
-                  <div className="text-blue-200 text-sm font-medium">資料筆數</div>
+                  <div className="text-3xl font-bold text-white">
+                    {Object.values(results).reduce(
+                      (acc, arr) => acc + arr.length,
+                      0
+                    )}
+                  </div>
+                  <div className="text-blue-200 text-sm font-medium">
+                    資料筆數
+                  </div>
                 </div>
                 <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
                   <div className="text-3xl font-bold text-white">多市場</div>
-                  <div className="text-blue-200 text-sm font-medium">支援類型</div>
+                  <div className="text-blue-200 text-sm font-medium">
+                    支援類型
+                  </div>
                 </div>
               </div>
             </div>
@@ -584,7 +664,9 @@ const TradeSignalsPage: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <div className="text-red-500 text-xl">⚠️</div>
                   <div>
-                    <div className="text-red-800 font-semibold text-lg mb-1">查詢錯誤</div>
+                    <div className="text-red-800 font-semibold text-lg mb-1">
+                      查詢錯誤
+                    </div>
                     <div className="text-red-700">{error}</div>
                   </div>
                 </div>
@@ -597,7 +679,9 @@ const TradeSignalsPage: React.FC = () => {
                   <SignalIcon className="w-12 h-12 text-blue-600" />
                 </div>
                 <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-blue-200/50 max-w-md">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-3">開始分析交易訊號</h3>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                    開始分析交易訊號
+                  </h3>
                   <p className="text-gray-600 leading-relaxed">
                     請輸入股票代號，獲取交易訊號與投資建議
                   </p>
@@ -626,7 +710,9 @@ const TradeSignalsPage: React.FC = () => {
                             {k === "1d" ? "日線交易訊號" : "小時線交易訊號"}
                           </h2>
                           <div className="text-sm text-gray-500 mt-1">
-                            {k === "1d" ? "trade_signals_1d" : "trade_signals_1h"}
+                            {k === "1d"
+                              ? "trade_signals_1d"
+                              : "trade_signals_1h"}
                           </div>
                         </div>
                       </div>
@@ -646,7 +732,9 @@ const TradeSignalsPage: React.FC = () => {
                           type="button"
                           className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-sm font-medium transition-colors"
                           onClick={() =>
-                            setTableState(k, { visible: !getTableState(k).visible })
+                            setTableState(k, {
+                              visible: !getTableState(k).visible,
+                            })
                           }
                         >
                           {getTableState(k).visible ? "👁️ 隱藏" : "👁️ 顯示"}
@@ -656,6 +744,18 @@ const TradeSignalsPage: React.FC = () => {
                   </div>
                   <div className="p-6">
                     {rows.length > 0 && renderSummary(rows)}
+                    {/* AI insights (LLM) */}
+                    {rows.length > 0 && (
+                      <div className="mb-6">
+                        <AIInsights
+                          data={rows.slice(0, 100)}
+                          symbol={symbol}
+                          timeframe={k}
+                          nCandles={50}
+                          model={"fincoach"}
+                        />
+                      </div>
+                    )}
                     {/* insights */}
                     {rows.length > 0 &&
                       (() => {
@@ -669,10 +769,14 @@ const TradeSignalsPage: React.FC = () => {
                             <div className="bg-gray-50 rounded-xl p-6">
                               <div className="flex items-center gap-2 mb-4">
                                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <div className="text-sm font-semibold text-gray-700">訊號分布</div>
+                                <div className="text-sm font-semibold text-gray-700">
+                                  訊號分布
+                                </div>
                               </div>
                               {sigEntries.length === 0 ? (
-                                <div className="text-sm text-gray-500">無資料</div>
+                                <div className="text-sm text-gray-500">
+                                  無資料
+                                </div>
                               ) : (
                                 <div className="space-y-2">
                                   {sigEntries.map(([s, cnt]) => {
@@ -705,7 +809,9 @@ const TradeSignalsPage: React.FC = () => {
                                 </div>
                               </div>
                               {ins.indicatorsSorted.length === 0 ? (
-                                <div className="text-sm text-gray-500">無資料</div>
+                                <div className="text-sm text-gray-500">
+                                  無資料
+                                </div>
                               ) : (
                                 <div className="grid grid-cols-2 gap-3">
                                   {ins.indicatorsSorted
@@ -715,7 +821,9 @@ const TradeSignalsPage: React.FC = () => {
                                         key={k}
                                         className="flex items-center justify-between p-3 bg-white rounded-lg"
                                       >
-                                        <div className="text-sm text-gray-700 font-medium">{k}</div>
+                                        <div className="text-sm text-gray-700 font-medium">
+                                          {k}
+                                        </div>
                                         <div className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
                                           {v}
                                         </div>
@@ -733,7 +841,9 @@ const TradeSignalsPage: React.FC = () => {
                                 </div>
                               </div>
                               {ins.timeline.length === 0 ? (
-                                <div className="text-sm text-gray-500">無資料</div>
+                                <div className="text-sm text-gray-500">
+                                  無資料
+                                </div>
                               ) : (
                                 <div className="space-y-3 max-h-64 overflow-auto">
                                   {ins.timeline.slice(0, 8).map((t, idx) => (
@@ -759,7 +869,9 @@ const TradeSignalsPage: React.FC = () => {
                         );
                       })()}
                     {rows.length === 0 ? (
-                      <div className="text-center py-12 text-gray-500">查無資料</div>
+                      <div className="text-center py-12 text-gray-500">
+                        查無資料
+                      </div>
                     ) : (
                       getTableState(k).visible && (
                         <div>
@@ -777,7 +889,9 @@ const TradeSignalsPage: React.FC = () => {
                               }
                             />
                             <div className="flex items-center gap-2">
-                              <label className="text-sm font-medium text-gray-700">每頁</label>
+                              <label className="text-sm font-medium text-gray-700">
+                                每頁
+                              </label>
                               <div className="relative group">
                                 <select
                                   value={getTableState(k).pageSize}
@@ -855,12 +969,16 @@ const TradeSignalsPage: React.FC = () => {
                                 Math.max(1, state.page),
                                 totalPages
                               );
-                              const startIdx = (currentPage - 1) * state.pageSize;
+                              const startIdx =
+                                (currentPage - 1) * state.pageSize;
                               const endIdx = Math.min(
                                 startIdx + state.pageSize,
                                 sorted.length
                               );
-                              const paginatedRows = sorted.slice(startIdx, endIdx);
+                              const paginatedRows = sorted.slice(
+                                startIdx,
+                                endIdx
+                              );
                               const first = rows[0] || {};
                               const cols = Object.keys(first);
                               const preferred = [
@@ -919,7 +1037,9 @@ const TradeSignalsPage: React.FC = () => {
                                                 <span>{col}</span>
                                                 {sortColumn === col && (
                                                   <span className="text-blue-500">
-                                                    {sortDirection === "asc" ? "↑" : "↓"}
+                                                    {sortDirection === "asc"
+                                                      ? "↑"
+                                                      : "↓"}
                                                   </span>
                                                 )}
                                               </div>
@@ -955,7 +1075,10 @@ const TradeSignalsPage: React.FC = () => {
                                                   String(val || "")
                                                 );
                                                 return (
-                                                  <td key={col} className="px-4 py-3">
+                                                  <td
+                                                    key={col}
+                                                    className="px-4 py-3"
+                                                  >
                                                     <span
                                                       className={`px-3 py-1 rounded-full text-xs font-medium ${badge.cls}`}
                                                     >
@@ -975,7 +1098,9 @@ const TradeSignalsPage: React.FC = () => {
                                                     className="px-4 py-3 font-semibold text-gray-900"
                                                   >
                                                     {val
-                                                      ? `NT$ ${formatNumber(val)}`
+                                                      ? `NT$ ${formatNumber(
+                                                          val
+                                                        )}`
                                                       : "-"}
                                                   </td>
                                                 );
@@ -998,7 +1123,8 @@ const TradeSignalsPage: React.FC = () => {
                                     <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
                                       <div className="flex items-center justify-between">
                                         <div className="text-sm text-gray-600">
-                                          顯示 {startIdx + 1} - {endIdx} / {sorted.length} 筆結果
+                                          顯示 {startIdx + 1} - {endIdx} /{" "}
+                                          {sorted.length} 筆結果
                                         </div>
                                         <div className="flex items-center gap-2">
                                           <button
@@ -1006,7 +1132,9 @@ const TradeSignalsPage: React.FC = () => {
                                             className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                             disabled={currentPage === 1}
                                             onClick={() =>
-                                              setTableState(k, { page: currentPage - 1 })
+                                              setTableState(k, {
+                                                page: currentPage - 1,
+                                              })
                                             }
                                           >
                                             上一頁
@@ -1017,9 +1145,13 @@ const TradeSignalsPage: React.FC = () => {
                                           <button
                                             type="button"
                                             className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            disabled={currentPage === totalPages}
+                                            disabled={
+                                              currentPage === totalPages
+                                            }
                                             onClick={() =>
-                                              setTableState(k, { page: currentPage + 1 })
+                                              setTableState(k, {
+                                                page: currentPage + 1,
+                                              })
                                             }
                                           >
                                             下一頁
