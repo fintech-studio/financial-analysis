@@ -558,35 +558,39 @@ export default function AIInsights({
       )}
 
       {insights && !loading && !error && (
-        <div className="prose prose-sm max-w-none text-gray-800">
+        <div className="prose max-w-full text-gray-800 leading-relaxed space-y-4">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeSanitize]}
             components={{
-              p: ({ children }) => <p className="my-0">{children}</p>,
-              h1: ({ children }) => <h1 className="text-xl font-semibold my-2">{children}</h1>,
-              h2: ({ children }) => <h2 className="text-lg font-semibold my-2">{children}</h2>,
-              h3: ({ children }) => <h3 className="text-md font-semibold my-2">{children}</h3>,
-              ul: ({ children }) => <ul className="list-disc ml-5">{children}</ul>,
-              ol: ({ children }) => <ol className="list-decimal ml-5">{children}</ol>,
-              blockquote: ({ children }) => <blockquote className="border-l-4 pl-4 italic text-gray-600">{children}</blockquote>,
+              p: ({ children }) => <p className="mb-3 leading-relaxed text-md text-gray-800">{children}</p>,
+              h1: ({ children }) => <h1 className="text-2xl font-semibold my-3">{children}</h1>,
+              h2: ({ children }) => <h2 className="text-xl font-semibold my-3">{children}</h2>,
+              h3: ({ children }) => <h3 className="text-lg font-semibold my-2">{children}</h3>,
+              ul: ({ children }) => <ul className="list-disc ml-6 space-y-1 mb-3">{children}</ul>,
+              ol: ({ children }) => <ol className="list-decimal ml-6 space-y-1 mb-3">{children}</ol>,
+              blockquote: ({ children }) => <blockquote className="border-l-4 pl-4 italic text-gray-600 my-3">{children}</blockquote>,
               code: (props) => {
                 const p = props as unknown as { inline?: boolean; className?: string; children?: React.ReactNode };
                 const { inline, className, children } = p;
                 if (inline) return <code className="bg-gray-100 px-1 rounded text-sm">{children}</code>;
                 return (
-                  <pre className="bg-gray-900 text-gray-100 p-3 rounded overflow-auto text-sm">
+                  <pre className="bg-gray-900 text-gray-100 p-3 rounded overflow-auto text-sm my-3">
                     <code className={className}>{children}</code>
                   </pre>
                 );
               },
               table: ({ children }) => (
-                <div className="overflow-auto">
-                  <table className="min-w-full table-auto text-sm">{children}</table>
+                <div className="overflow-auto rounded-md border border-gray-100 my-4">
+                  <table className="min-w-full divide-y divide-gray-200 text-sm">{children}</table>
                 </div>
               ),
-              th: ({ children }) => <th className="px-2 py-1 text-left bg-gray-100">{children}</th>,
-              td: ({ children }) => <td className="px-2 py-1 align-top">{children}</td>,
+              hr: () => <hr className="border-t border-gray-200 my-6" />,
+              thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+              tbody: ({ children }) => <tbody className="bg-white divide-y divide-gray-100">{children}</tbody>,
+              tr: ({ children }) => <tr className="hover:bg-gray-50">{children}</tr>,
+              th: ({ children }) => <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{children}</th>,
+              td: ({ children }) => <td className="px-4 py-3 align-top whitespace-normal text-sm">{children}</td>,
             }}
           >
             {insights}
