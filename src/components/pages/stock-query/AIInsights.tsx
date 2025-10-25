@@ -1,4 +1,8 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
+import { ArrowPathIcon, ClipboardDocumentIcon, DocumentTextIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
 
 type Props = {
   data?: unknown;
@@ -112,6 +116,7 @@ export default function AIInsights({
   const [error, setError] = useState<string | null>(null);
   const [raw, setRaw] = useState<string | null>(null);
   const [retryCounter, setRetryCounter] = useState(0);
+  const [copied, setCopied] = useState(false);
   const [showRaw, setShowRaw] = useState<boolean>(Boolean(debug));
 
   // abort previous request on new analysis
@@ -384,6 +389,8 @@ export default function AIInsights({
     if (!insights) return;
     try {
       await navigator.clipboard.writeText(insights);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
     } catch {
       // ignore clipboard failures
     }
@@ -426,51 +433,65 @@ export default function AIInsights({
   };
 
   const handleRetry = () => {
-    // abort previous and trigger a new effect by toggling a tiny state could be used,
-    // but easiest is to re-run by calling setInsights to null then letting useEffect trigger from data unchanged.
-    // Instead we call the effect by creating a shallow copy of data (no-op) via setting insights to null.
+    // Explicitly retrigger the analysis by incrementing retryCounter.
     setInsights(null);
     setError(null);
-    // abort previous
     abortRef.current?.abort();
-    // effect will rerun because abort doesn't change deps; to ensure rerun consumer can re-pass data or remount.
-    // As a pragmatic approach, we call a fetch manually here by toggling a small fake state would be needed,
-    // but to keep the component simple we rely on data changes or parent to re-trigger. Provide a console hint.
-    // If immediate retry required, parent may re-render this component.
-    console.info("請重新傳入或更新 props.data 以重新觸發分析，或重新 mount 此組件以重試。");
+    setRetryCounter((c) => c + 1);
+    setLoading(true);
   };
 
   return (
     <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold">AI 分析與見解</h3>
-        <div className="flex items-center space-x-2">
-          <div className="text-sm text-gray-500">
-            {loading ? "分析中..." : error ? "錯誤" : `來源：${model}`}
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0">
+              <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                <SparklesIcon className="h-5 w-5 text-gray-700" />
+              </div>
+            </div>
+            <div>
+              <div className="text-xl font-semibold">AI 分析與見解</div>
+              {/* <div className="text-sm text-gray-500">{symbol ?? (Array.isArray(data) ? ((data[0] as Record<string, unknown>)?.symbol as string | undefined) : undefined) ?? ''} {timeframe ? `· ${timeframe}` : ''}</div> */}
+            </div>
           </div>
+          <div className="hidden sm:flex items-center space-x-3 text-xs text-gray-500">
+            <div className="px-2 py-0.5 bg-gray-100 rounded">Token 估計：{tokenEstimate}</div>
+            <div className="px-2 py-0.5 bg-gray-100 rounded">K 線：{effectiveNCandles}</div>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <div className="text-sm text-gray-500">{loading ? "分析中..." : error ? "錯誤" : `來源：`}</div>
+          <span className="inline-block text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">{model}</span>
           <button
             onClick={handleImmediateRetry}
-            className="px-2 py-1 bg-gray-100 rounded-md text-sm hover:bg-gray-200 border"
+            className="flex items-center px-2 py-1 bg-white rounded-md text-sm hover:bg-gray-50 border"
             aria-label="重新分析"
+            disabled={loading}
           >
-            重新分析
+            <ArrowPathIcon className="h-4 w-4 mr-2 text-gray-600" />
+            <span>重新分析</span>
           </button>
           <button
             onClick={handleCopy}
-            disabled={!insights}
-            className="px-2 py-1 bg-gray-100 rounded-md text-sm hover:bg-gray-200 border disabled:opacity-50"
+            disabled={!insights || loading}
+            className="flex items-center px-2 py-1 bg-white rounded-md text-sm hover:bg-gray-50 border disabled:opacity-50"
             aria-label="複製分析結果"
           >
-            複製
+            <ClipboardDocumentIcon className="h-4 w-4 mr-2 text-gray-600" />
+            <span>{copied ? '已複製' : '複製'}</span>
           </button>
           {debug && (
             <button
               onClick={() => setShowRaw((s) => !s)}
-              className="px-2 py-1 bg-gray-100 rounded-md text-sm hover:bg-gray-200 border"
+              className="flex items-center px-2 py-1 bg-white rounded-md text-sm hover:bg-gray-50 border"
               aria-pressed={showRaw}
               aria-label="切換原始回應"
             >
-              {showRaw ? "隱藏 Raw" : "顯示 Raw"}
+              <DocumentTextIcon className="h-4 w-4 mr-2 text-gray-600" />
+              <span>{showRaw ? "隱藏 Raw" : "顯示 Raw"}</span>
             </button>
           )}
         </div>
@@ -485,11 +506,38 @@ export default function AIInsights({
       {loading && (
         <div className="py-6 text-center">
           <div className="inline-flex items-center space-x-3">
-            <svg className="animate-spin h-5 w-5 text-gray-600" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-            </svg>
-            <span className="text-sm text-gray-700">AI 正在分析中…</span>
+            <div className="relative">
+                <svg
+                    className="animate-spin h-7 w-7"
+                    style={{ animationDuration: "900ms" }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                >
+                    <defs>
+                        <linearGradient id="gradSpinner" x1="0" x2="1">
+                            <stop offset="0%" stopColor="#656565ff" />
+                            <stop offset="100%" stopColor="#3c3c3cff" />
+                            {/* <stop offset="0%" stopColor="#60a5fa" />
+                            <stop offset="100%" stopColor="#2563eb" /> */}
+                        </linearGradient>
+                    </defs>
+
+                    {/* soft track */}
+                    <circle cx="12" cy="12" r="10" stroke="rgba(0,0,0,0.08)" strokeWidth="3.5" fill="none" />
+
+                    {/* colored arc */}
+                    <path
+                        d="M22 12a10 10 0 00-10-10"
+                        stroke="url(#gradSpinner)"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        fill="none"
+                    />
+                </svg>
+            </div>
+            <span className="text-gray-700">AI 正在分析中…</span>
           </div>
         </div>
       )}
@@ -500,9 +548,10 @@ export default function AIInsights({
           <div className="flex space-x-2 mt-2">
             <button
               onClick={handleRetry}
-              className="px-3 py-1 bg-gray-100 rounded-md text-sm hover:bg-gray-200 border"
+              className="flex items-center px-3 py-1 bg-gray-100 rounded-md text-sm hover:bg-gray-200 border"
             >
-              重試
+              <ArrowPathIcon className="h-4 w-4 mr-2 text-gray-600" />
+              <span>重試</span>
             </button>
           </div>
         </div>
@@ -510,14 +559,38 @@ export default function AIInsights({
 
       {insights && !loading && !error && (
         <div className="prose prose-sm max-w-none text-gray-800">
-          {/* Preserve basic line breaks and simple formatting */}
-          {insights.split(/\n\n|\r\n\r\n/).map((block, i) => (
-            <div key={i} className="mb-2">
-              {block.split(/\n|\r\n/).map((line, j) => (
-                <p key={j} className="my-0">{line}</p>
-              ))}
-            </div>
-          ))}
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeSanitize]}
+            components={{
+              p: ({ children }) => <p className="my-0">{children}</p>,
+              h1: ({ children }) => <h1 className="text-xl font-semibold my-2">{children}</h1>,
+              h2: ({ children }) => <h2 className="text-lg font-semibold my-2">{children}</h2>,
+              h3: ({ children }) => <h3 className="text-md font-semibold my-2">{children}</h3>,
+              ul: ({ children }) => <ul className="list-disc ml-5">{children}</ul>,
+              ol: ({ children }) => <ol className="list-decimal ml-5">{children}</ol>,
+              blockquote: ({ children }) => <blockquote className="border-l-4 pl-4 italic text-gray-600">{children}</blockquote>,
+              code: (props) => {
+                const p = props as unknown as { inline?: boolean; className?: string; children?: React.ReactNode };
+                const { inline, className, children } = p;
+                if (inline) return <code className="bg-gray-100 px-1 rounded text-sm">{children}</code>;
+                return (
+                  <pre className="bg-gray-900 text-gray-100 p-3 rounded overflow-auto text-sm">
+                    <code className={className}>{children}</code>
+                  </pre>
+                );
+              },
+              table: ({ children }) => (
+                <div className="overflow-auto">
+                  <table className="min-w-full table-auto text-sm">{children}</table>
+                </div>
+              ),
+              th: ({ children }) => <th className="px-2 py-1 text-left bg-gray-100">{children}</th>,
+              td: ({ children }) => <td className="px-2 py-1 align-top">{children}</td>,
+            }}
+          >
+            {insights}
+          </ReactMarkdown>
         </div>
       )}
 
