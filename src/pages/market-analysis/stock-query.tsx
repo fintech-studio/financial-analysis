@@ -117,6 +117,7 @@ const StockAnalysisPage: React.FC = () => {
           {/* AI 分析與見解 */}
           <div className="mt-4">
             <AIInsights
+              // model="fincoach"
               data={latest}
               symbol={queryState.symbol}
               timeframe={timeframe}
@@ -127,6 +128,8 @@ const StockAnalysisPage: React.FC = () => {
               volume={latest?.volume}
               technicalData={technicalData}
               candlestickData={candlestickData}
+              nCandles={30}     // 使用最近 30 根 K 線進行分析
+              debug={false}      // 啟用除錯模式以顯示更多資訊
             />
           </div>
       </>
