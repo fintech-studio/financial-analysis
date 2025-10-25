@@ -130,7 +130,8 @@ export default async function handler(
           const lines = buf.split(/\r?\n/);
           const dataLines: string[] = [];
           for (const line of lines) {
-            if (line.startsWith("data:")) dataLines.push(line.replace(/^data:\s*/i, ""));
+            if (line.startsWith("data:"))
+              dataLines.push(line.replace(/^data:\s*/i, ""));
           }
           const data = dataLines.join("\n").trim();
           if (data && data !== "[DONE]") {

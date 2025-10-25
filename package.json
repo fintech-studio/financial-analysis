@@ -41,6 +41,7 @@
     "react-router-dom": "^7.9.4",
     "react-sparklines": "^1.7.0",
     "rehype-sanitize": "^6.0.0",
+    "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {

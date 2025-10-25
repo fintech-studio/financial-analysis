@@ -5,6 +5,10 @@ import {
   ANIMATION_CONFIG,
   Icons,
 } from "@/components/pages/ChatPage/ChatCommon";
+import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
+import rehypeSanitize from "rehype-sanitize";
 
 const MessageBubble: React.FC<{
   msg: Message;
@@ -14,6 +18,69 @@ const MessageBubble: React.FC<{
 }> = ({ msg, index, onCopy, copiedIndex }) => {
   const isUser = msg.role === "user";
   const handleCopy = useCallback(() => onCopy(index), [onCopy, index]);
+
+  // custom renderer for code blocks / inline code
+  const CodeComponent = ({
+    inline,
+    className,
+    children,
+  }: {
+    inline?: boolean;
+    className?: string;
+    children?: React.ReactNode;
+  }) => {
+    if (inline) {
+      return (
+        <code className="bg-gray-100 text-sm px-1 py-[2px] rounded-sm">{children}</code>
+      );
+    }
+    return (
+      <pre className="bg-gray-900 text-white rounded-md p-3 overflow-auto text-sm my-2">
+        <code className={className}>{children}</code>
+      </pre>
+    );
+  };
+
+  // markdown components to control spacing and link behavior
+  const mdComponents: Components = {
+    code: CodeComponent as unknown as Components["code"],
+    h1: ({ children, ...props }) => (
+      <h1 className="text-2xl font-bold mb-4 mt-6" {...props}>
+        {children}
+      </h1>
+    ),
+    h2: ({ children, ...props }) => (
+      <h2 className="text-xl font-bold mb-3 mt-4" {...props}>
+        {children}
+      </h2>
+    ),
+    h3: ({ children, ...props }) => (
+      <h3 className="text-lg font-bold mb-2 mt-3" {...props}>
+        {children}
+      </h3>
+    ),
+    p: ({ children, ...props }) => (
+      <p className="mb-1" {...props}>
+        {children}
+      </p>
+    ),
+    ul: ({ children, ...props }) => (
+      <ul className="list-disc ml-5 mb-1" {...props}>
+        {children}
+      </ul>
+    ),
+    ol: ({ children, ...props }) => (
+      <ol className="list-decimal ml-5 mb-1" {...props}>
+        {children}
+      </ol>
+    ),
+    a: ({ children, href, ...props }) => (
+      <a className="text-blue-600 underline" target="_blank" rel="noopener noreferrer" href={href} {...props}>
+        {children}
+      </a>
+    ),
+    hr: (props) => <hr className="my-4 border-gray-300" {...props} />,
+  };
 
   return (
     <motion.div
@@ -75,13 +142,18 @@ const MessageBubble: React.FC<{
           initial={{ opacity: 0, x: isUser ? 20 : -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className={`px-5 py-3 rounded-2xl text-sm whitespace-pre-wrap break-words leading-relaxed transition-all duration-200 shadow-md hover:shadow-lg ${
+          className={`px-5 py-3 rounded-2xl text-sm leading-relaxed transition-all duration-200 shadow-md hover:shadow-lg ${
             isUser
               ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-md"
               : "bg-white text-gray-800 border border-gray-100 rounded-bl-md"
           }`}
         >
-          {msg.content}
+          {/* 使用 react-markdown + rehype-sanitize 安全渲染 markdown */}
+          <div className="break-words">
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeSanitize]} components={mdComponents}>
+              {msg.content}
+            </ReactMarkdown>
+          </div>
         </motion.div>
 
         <motion.div
