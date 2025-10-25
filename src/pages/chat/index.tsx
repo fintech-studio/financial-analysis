@@ -12,7 +12,7 @@ import AttachPreview from "@/components/pages/ChatPage/AttachPreview";
 import ChatInput from "@/components/pages/ChatPage/ChatInput";
 import { sendMessageService } from "@/services/ChatService";
 
-const MODEL_NAME = "gpt-oss";
+const MODEL_NAME = "fincoach";
 
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -26,12 +26,9 @@ const Chat: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<string>(MODEL_NAME);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [availableModels] = useState<string[]>([
-    "gpt-oss",
-    "gemma3:12b",
-    "deepseek-r1:8b",
-    "deepseek-r1:14b",
-    "llama3.2-vision:latest",
-    "llava:latest",
+    "fincoach",
+    "fincoach-hf",
+    "taide",
   ]);
   const [attachedFiles, setAttachedFiles] = useState<
     {

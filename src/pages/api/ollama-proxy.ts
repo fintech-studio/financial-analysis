@@ -80,13 +80,78 @@ export default async function handler(
       upstream.body as unknown as ReadableStream<Uint8Array>
     ).getReader();
     try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          // value 可能是 Uint8Array
-          const chunk = Buffer.from(value);
-          res.write(chunk);
+      const contentType = String(upstream.headers.get("content-type") || "");
+      const isSSE = contentType.includes("text/event-stream");
+
+      if (isSSE) {
+        // 若 upstream 使用 SSE (text/event-stream)，我們把 event 的 data 欄位抽出，
+        // 嘗試解析成 JSON（若成功則以一行 JSON 傳回），否則以純文字傳回。
+        const decoder = new TextDecoder();
+        let buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!value) continue;
+          buf += decoder.decode(value, { stream: true });
+
+          // SSE events are typically separated by a blank line
+          let idx;
+          while ((idx = buf.indexOf("\n\n")) !== -1) {
+            const event = buf.slice(0, idx);
+            buf = buf.slice(idx + 2);
+
+            // collect data: lines
+            const lines = event.split(/\r?\n/);
+            const dataLines: string[] = [];
+            for (const line of lines) {
+              if (line.startsWith("data:")) {
+                dataLines.push(line.replace(/^data:\s*/i, ""));
+              }
+            }
+            const data = dataLines.join("\n").trim();
+            if (!data) continue;
+
+            // 常見的控制訊息 [DONE] 可忽略
+            if (data === "[DONE]") continue;
+
+            // 嘗試解析為 JSON
+            try {
+              const parsed = JSON.parse(data);
+              res.write(Buffer.from(JSON.stringify(parsed) + "\n"));
+            } catch {
+              // 非 JSON，直接以文字傳回（加換行以利前端以 line-delimited JSON 方式處理）
+              res.write(Buffer.from(data + "\n"));
+            }
+          }
+        }
+
+        // 如果 buffer 還有殘留但 upstream 已結束，嘗試處理一次
+        if (buf.trim()) {
+          const lines = buf.split(/\r?\n/);
+          const dataLines: string[] = [];
+          for (const line of lines) {
+            if (line.startsWith("data:")) dataLines.push(line.replace(/^data:\s*/i, ""));
+          }
+          const data = dataLines.join("\n").trim();
+          if (data && data !== "[DONE]") {
+            try {
+              const parsed = JSON.parse(data);
+              res.write(Buffer.from(JSON.stringify(parsed) + "\n"));
+            } catch {
+              res.write(Buffer.from(data + "\n"));
+            }
+          }
+        }
+      } else {
+        // 非 SSE，直接把原始二進位 chunk stream 寫回 client
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            // value 可能是 Uint8Array
+            const chunk = Buffer.from(value);
+            res.write(chunk);
+          }
         }
       }
     } finally {

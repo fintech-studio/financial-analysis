@@ -28,6 +28,29 @@ type Params = {
   abortControllerRef: { current: AbortController | null };
 };
 
+// Helper: 從可能的 upstream 物件中擷取 content 字串，做型別安全檢查
+function extractContent(obj: unknown): string | undefined {
+  if (!obj || typeof obj !== "object") return undefined;
+  const o = obj as Record<string, unknown>;
+
+  // case: { message: { content: "..." } }
+  if (o.message && typeof o.message === "object") {
+    const m = o.message as Record<string, unknown>;
+    if (typeof m.content === "string") return m.content;
+  }
+
+  // case: { choices: [ { message: { content: "..." } } ] }
+  if (Array.isArray(o.choices) && o.choices.length > 0) {
+    const first = o.choices[0] as Record<string, unknown> | undefined;
+    if (first && first.message && typeof first.message === "object") {
+      const fm = first.message as Record<string, unknown>;
+      if (typeof fm.content === "string") return fm.content;
+    }
+  }
+
+  return undefined;
+}
+
 export async function sendMessageService({
   input,
   attachedFiles,
@@ -152,16 +175,44 @@ export async function sendMessageService({
           const lines = buffer.split("\n");
           buffer = lines.pop() || "";
           for (const line of lines) {
+            const raw = line.trim();
+            if (!raw) continue;
+
+            // 嘗試解析多種可能的 payload 格式：
+            // 1) 直接的 JSON 每一行
+            // 2) SSE style lines like "data: {...}"
+            // 3) 如果無法解析，退回到將 raw 文本視為純文字片段附加（避免遺失訊息）
+            let parsed: unknown = null;
             try {
-              const obj = JSON.parse(line);
-              const chunk =
-                obj.message?.content ?? obj.choices?.[0]?.message?.content;
+              parsed = JSON.parse(raw);
+            } catch {
+              // 如果是 SSE 格式 (data: ...)，嘗試去掉前綴再解析
+              if (raw.startsWith("data:")) {
+                const after = raw.replace(/^data:\s*/, "");
+                try {
+                  parsed = JSON.parse(after);
+                } catch {
+                  parsed = null;
+                }
+              }
+            }
+
+            if (parsed) {
+              const chunk = extractContent(parsed);
               if (typeof chunk === "string") {
                 reply += chunk;
                 replaceLastAssistantContent(reply);
               }
-            } catch {
-              // ignore unparsable lines
+            } else {
+              // 無法解析成 JSON，將 raw 當作文字片段處理。
+              // 有些 upstream 會傳回純文字 chunk（非 JSON），直接 append 可以避免遺漏。
+              // 同時把可能的 SSE 前綴移除。
+              const textChunk = raw.replace(/^data:\s*/i, "");
+              // 若看起來像 JSON 但解析失敗就跳過，以免加入殘缺的 JSON 片段。
+              if (!textChunk.startsWith("{") && textChunk.length > 0) {
+                reply += textChunk;
+                replaceLastAssistantContent(reply);
+              }
             }
           }
         }
