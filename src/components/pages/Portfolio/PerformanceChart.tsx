@@ -587,11 +587,11 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
       }`}
     >
       {/* 背景裝飾 */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-green-100/30 to-blue-100/30 rounded-full blur-3xl -translate-y-32 -translate-x-32"></div>
+      <div className="absolute top-0 left-0 w-64 h-64 bg-linear-to-br from-green-100/30 to-blue-100/30 rounded-full blur-3xl -translate-y-32 -translate-x-32"></div>
 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 relative z-10">
         <div className="flex items-center space-x-3 mb-4 lg:mb-0">
-          <div className="p-3 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl shadow-lg">
+          <div className="p-3 bg-linear-to-br from-green-500 to-blue-600 rounded-2xl shadow-lg">
             <DocumentChartBarIcon className="h-7 w-7 text-white" />
           </div>
           <div>
@@ -784,7 +784,7 @@ const PerformanceChart: React.FC<PerformanceChartProps> = ({
       </div>
 
       {/* 績效分析洞察 */}
-      <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 relative z-10">
+      <div className="mt-6 bg-linear-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 relative z-10">
         <div className="flex items-start space-x-3">
           <div className="p-2 bg-blue-500 rounded-lg">
             <ChartBarIcon className="h-5 w-5 text-white" />

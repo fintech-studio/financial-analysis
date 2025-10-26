@@ -103,7 +103,7 @@ const InputField = React.memo<{
             className="text-sm text-red-600 flex items-center mt-2"
             role="alert"
           >
-            <ExclamationTriangleIcon className="h-4 w-4 mr-2 flex-shrink-0" />
+            <ExclamationTriangleIcon className="h-4 w-4 mr-2 shrink-0" />
             {error}
           </p>
         )}
@@ -134,7 +134,7 @@ const LoadingButton = React.memo<{
     <button
       type={type}
       disabled={isLoading || disabled}
-      className={`w-full bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 hover:from-blue-700 hover:via-blue-800 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-70 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center space-x-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-lg ${className}`}
+      className={`w-full bg-linear-to-r from-blue-600 via-blue-700 to-purple-600 hover:from-blue-700 hover:via-blue-800 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl disabled:opacity-70 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center space-x-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-lg ${className}`}
       aria-label={isLoading ? loadingText : undefined}
     >
       {isLoading ? (
@@ -175,7 +175,7 @@ const ErrorAlert = React.memo<{ message: string; onDismiss?: () => void }>(
   ({ message, onDismiss }) => (
     <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
       <div className="flex items-start space-x-3">
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
             <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
           </div>
@@ -187,7 +187,7 @@ const ErrorAlert = React.memo<{ message: string; onDismiss?: () => void }>(
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="flex-shrink-0 text-red-400 hover:text-red-600 transition-colors rounded-lg p-1 hover:bg-red-100"
+            className="shrink-0 text-red-400 hover:text-red-600 transition-colors rounded-lg p-1 hover:bg-red-100"
             aria-label="關閉錯誤訊息"
           >
             <XMarkIcon className="h-4 w-4" />
@@ -240,7 +240,7 @@ const SuccessMessage = React.memo<{
         <div className="space-y-4 mb-8">
           <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
             <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center shrink-0">
                 <EnvelopeIcon className="h-4 w-4 text-green-600" />
               </div>
               <div className="flex-1">
@@ -257,7 +257,7 @@ const SuccessMessage = React.memo<{
 
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
             <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
                 <ClockIcon className="h-4 w-4 text-amber-600" />
               </div>
               <div className="flex-1">
@@ -273,7 +273,7 @@ const SuccessMessage = React.memo<{
 
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
             <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
                 <ShieldCheckIcon className="h-4 w-4 text-blue-600" />
               </div>
               <div className="flex-1">
@@ -293,7 +293,7 @@ const SuccessMessage = React.memo<{
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={onBackToLogin}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               返回登入
             </button>
@@ -444,7 +444,7 @@ const ForgotPasswordPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-gray-900 relative overflow-hidden">
       {/* 成功訊息 Modal */}
       {showSuccessMessage && (
         <SuccessMessage
@@ -476,8 +476,8 @@ const ForgotPasswordPage = () => {
         <div className="w-full max-w-md mx-auto">
           <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden relative">
             {/* 頁面標題區域 */}
-            <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 p-8 text-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-blue-700/90 to-purple-600/90"></div>
+            <div className="bg-linear-to-r from-blue-600 via-blue-700 to-purple-600 p-8 text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-linear-to-r from-blue-600/90 via-blue-700/90 to-purple-600/90"></div>
               <div className="relative z-10">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-4">
                   <KeyIcon className="h-8 w-8 text-white" />
@@ -543,15 +543,15 @@ const ForgotPasswordPage = () => {
                   </h3>
                   <ul className="text-sm text-gray-600 space-y-3">
                     <li className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full shrink-0"></div>
                       <span>檢查垃圾郵件或促銷資料夾</span>
                     </li>
                     <li className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full shrink-0"></div>
                       <span>確認電子郵件地址正確無誤</span>
                     </li>
                     <li className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0"></div>
+                      <div className="w-2 h-2 bg-blue-400 rounded-full shrink-0"></div>
                       <span>
                         需要協助？聯絡{" "}
                         <Link

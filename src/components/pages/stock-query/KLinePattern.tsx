@@ -50,12 +50,12 @@ const PatternCard = memo(
           {englishName && (
             <span className="text-xs text-gray-500 mb-2">{englishName}</span>
           )}
-          <div className="text-gray-700 text-sm leading-relaxed min-h-[48px]">
+          <div className="text-gray-700 text-sm leading-relaxed min-h-12">
             {description || "此形態暫無詳細說明。"}
           </div>
         </div>
         {/* 圖片區塊 */}
-        <div className="flex-shrink-0 flex items-center justify-center w-28 h-28 relative">
+        <div className="shrink-0 flex items-center justify-center w-28 h-28 relative">
           {!imgError ? (
             <Image
               src={imageUrl}

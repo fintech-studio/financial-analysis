@@ -28,10 +28,9 @@ export interface PreloadOptions {
 }
 
 // 預加載數據 Hook
-export function usePreloadData<T extends Record<string, () => Promise<unknown>>>(
-  loaders: T,
-  options: PreloadOptions = {}
-) {
+export function usePreloadData<
+  T extends Record<string, () => Promise<unknown>>
+>(loaders: T, options: PreloadOptions = {}) {
   const [data, setData] = useState<Record<keyof T, unknown>>(
     {} as Record<keyof T, unknown>
   );
@@ -547,8 +546,10 @@ function debounce(
 
 // 緩存管理器
 export class CacheManager {
-  private cache: Map<string, { data: unknown; timestamp: number; ttl: number }> =
-    new Map();
+  private cache: Map<
+    string,
+    { data: unknown; timestamp: number; ttl: number }
+  > = new Map();
 
   set(key: string, data: unknown, ttl: number = 300000): void {
     // 預設5分鐘

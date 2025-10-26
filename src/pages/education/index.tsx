@@ -6,7 +6,7 @@ const EducationPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 頁面標題區域 */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+      <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
         {/* subtle grid background */}
         <div className="absolute inset-0 opacity-20">
           <div

@@ -430,7 +430,7 @@ const TradeSignalsPage: React.FC = () => {
     <>
       {/* 頁面標題區域 */}
 
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+      <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
         {/* 背景網格與裝飾 */}
         <div className="absolute inset-0 opacity-20">
           <div
@@ -506,7 +506,7 @@ const TradeSignalsPage: React.FC = () => {
                     autoFocus
                   />
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row gap-4 shrink-0">
                   <AnimatedSelect
                     value={timeframe}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -591,7 +591,7 @@ const TradeSignalsPage: React.FC = () => {
                     className="px-8 py-4 bg-white text-blue-900 font-bold rounded-2xl hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 relative overflow-hidden group flex items-center gap-2 min-w-28 justify-center"
                     disabled={loading || !symbol}
                   >
-                    <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-10 transition-opacity"></span>
+                    <span className="absolute inset-0 bg-linear-to-r from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-10 transition-opacity"></span>
                     {loading ? (
                       <>
                         <svg
@@ -652,10 +652,10 @@ const TradeSignalsPage: React.FC = () => {
       </section>
 
       {/* 主要內容區域 */}
-      <div className="relative bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
+      <div className="relative bg-linear-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full opacity-30 blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full opacity-20 blur-3xl"></div>
+          <div className="absolute top-20 left-20 w-64 h-64 bg-linear-to-br from-blue-100 to-indigo-100 rounded-full opacity-30 blur-3xl"></div>
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-linear-to-br from-indigo-100 to-purple-100 rounded-full opacity-20 blur-3xl"></div>
         </div>
         <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
           <div className="grid gap-6" id="signalsList">
@@ -675,7 +675,7 @@ const TradeSignalsPage: React.FC = () => {
             {loading && <SkeletonLoader />}
             {Object.keys(results).length === 0 && !loading && (
               <div className="flex flex-col items-center justify-center py-16 space-y-6">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-24 h-24 bg-linear-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center shadow-lg">
                   <SignalIcon className="w-12 h-12 text-blue-600" />
                 </div>
                 <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-blue-200/50 max-w-md">
@@ -752,7 +752,7 @@ const TradeSignalsPage: React.FC = () => {
                           symbol={symbol}
                           timeframe={k}
                           nCandles={50}
-                          model={"fincoach"}
+                          model={"FinCoach"}
                         />
                       </div>
                     )}

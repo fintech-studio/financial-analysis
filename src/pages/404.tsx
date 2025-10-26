@@ -18,7 +18,7 @@ const NotFoundPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-blue-50 to-white relative overflow-hidden">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-linear-to-b from-blue-50 to-white relative overflow-hidden">
       {/* 背景裝飾圓圈 */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-100 rounded-full opacity-30 z-0 animate-pulse" />
       <div className="absolute bottom-0 right-0 w-72 h-72 bg-yellow-100 rounded-full opacity-20 z-0 animate-pulse" />

@@ -70,7 +70,7 @@ export default function Home() {
     <>
       <main>
         {/* Hero Section - 漸變背景與波浪效果 */}
-        <section className="relative min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden mt-[-60px]">
+        <section className="relative min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden mt-[-60px]">
           {/* 動態網格背景 */}
           <div className="absolute inset-0 opacity-20">
             <div
@@ -93,11 +93,11 @@ export default function Home() {
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
                     <span className="block text-white">未來金融</span>
                     <div className="relative">
-                      <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 animate-gradient">
+                      <span className="block text-transparent bg-clip-text bg-linear-to-r from-blue-300 via-purple-300 to-pink-300 animate-gradient">
                         智慧投資決策
                       </span>
                       {/* 文字光效 */}
-                      <div className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-purple-300 to-pink-300 blur-sm opacity-50 animate-pulse"></div>
+                      <div className="absolute inset-0 text-transparent bg-clip-text bg-linear-to-r from-blue-300 via-purple-300 to-pink-300 blur-sm opacity-50 animate-pulse"></div>
                     </div>
                   </h1>
 
@@ -117,7 +117,7 @@ export default function Home() {
                 {/* 搜尋區塊 - 使用Hook管理 */}
                 <div className="max-w-2x1">
                   <div className="relative">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-400/30 to-indigo-400/30 rounded-xl blur opacity-40"></div>
+                    <div className="absolute -inset-1 bg-linear-to-r from-blue-400/30 to-indigo-400/30 rounded-xl blur opacity-40"></div>
                     <div className="relative bg-white/10 backdrop-blur-xl rounded-xl p-3 border border-white/20 shadow-lg">
                       {/* 搜尋類型選擇標籤 */}
                       <div className="flex gap-2 mb-4">
@@ -162,7 +162,7 @@ export default function Home() {
                             <button
                               type="submit"
                               disabled={searchSubmitting}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-500 disabled:to-gray-600 text-white px-4 py-2 rounded-md flex items-center space-x-1.5 transition-all duration-300 shadow-md hover:shadow-blue-500/25 disabled:opacity-50"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-500 disabled:to-gray-600 text-white px-4 py-2 rounded-md flex items-center space-x-1.5 transition-all duration-300 shadow-md hover:shadow-blue-500/25 disabled:opacity-50"
                             >
                               {searchSubmitting ? (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -206,7 +206,7 @@ export default function Home() {
 
               {/* 右側終端機 - 改進設計 */}
               <div className="relative z-10 hidden lg:block">
-                <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden border border-gray-700/30 transition-all duration-300 hover:shadow-blue-900/30 group">
+                <div className="bg-linear-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden border border-gray-700/30 transition-all duration-300 hover:shadow-blue-900/30 group">
                   {/* 終端機頂部 - 優化設計 */}
                   <div className="bg-gray-800/90 px-4 py-2.5 flex items-center border-b border-gray-700/40 backdrop-blur-sm">
                     <div className="flex space-x-2 mr-4">
@@ -229,7 +229,7 @@ export default function Home() {
                           d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
                         />
                       </svg>
-                      <span className="bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent group-hover:from-blue-200 group-hover:to-indigo-300 transition-all">
+                      <span className="bg-linear-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent group-hover:from-blue-200 group-hover:to-indigo-300 transition-all">
                         FinTech Terminal
                       </span>
                       <span className="ml-1.5 text-xs px-1.5 py-0.5 bg-blue-600/30 rounded-md text-blue-300 border border-blue-500/20">
@@ -263,7 +263,7 @@ export default function Home() {
                 </div>
 
                 {/* 浮動資訊卡片 */}
-                <div className="absolute -right-8 bottom-20 transform rotate-6 bg-gradient-to-r from-blue-600/90 to-blue-500/90 px-3 py-2 rounded-lg shadow-lg text-white text-xs flex items-center backdrop-blur-sm border border-blue-400/30 group-hover:scale-105 transition-transform">
+                <div className="absolute -right-8 bottom-20 transform rotate-6 bg-linear-to-r from-blue-600/90 to-blue-500/90 px-3 py-2 rounded-lg shadow-lg text-white text-xs flex items-center backdrop-blur-sm border border-blue-400/30 group-hover:scale-105 transition-transform">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-3.5 w-3.5 mr-1.5 text-blue-200"
@@ -282,7 +282,7 @@ export default function Home() {
                 </div>
 
                 {/* 新增第二個資訊卡片 */}
-                <div className="absolute -right-8 top-44 transform -rotate-6 bg-gradient-to-r from-emerald-600/80 to-emerald-500/80 px-3 py-2 rounded-lg shadow-lg text-white text-xs flex items-center backdrop-blur-sm border border-emerald-400/30">
+                <div className="absolute -right-8 top-44 transform -rotate-6 bg-linear-to-r from-emerald-600/80 to-emerald-500/80 px-3 py-2 rounded-lg shadow-lg text-white text-xs flex items-center backdrop-blur-sm border border-emerald-400/30">
                   <svg
                     className="h-3.5 w-3.5 mr-1.5 text-emerald-200"
                     fill="none"
@@ -300,7 +300,7 @@ export default function Home() {
                 </div>
 
                 {/* 新增第三個資訊卡片 */}
-                <div className="absolute -right-8 top-20 transform rotate-6 bg-gradient-to-r from-purple-600/80 to-purple-500/80 px-3 py-2 rounded-lg shadow-lg text-white text-xs flex items-center backdrop-blur-sm border border-purple-400/30">
+                <div className="absolute -right-8 top-20 transform rotate-6 bg-linear-to-r from-purple-600/80 to-purple-500/80 px-3 py-2 rounded-lg shadow-lg text-white text-xs flex items-center backdrop-blur-sm border border-purple-400/30">
                   <svg
                     className="h-3.5 w-3.5 mr-1.5 text-purple-200"
                     fill="none"

@@ -87,6 +87,8 @@ export default async function handler(
     res.status(200).json(data.slice(0, 50)); // 最多回傳 50 筆
   } catch (err) {
     console.error("[market_data] DB error:", err);
-    res.status(500).json({ error: "Database query error", detail: String(err) });
+    res
+      .status(500)
+      .json({ error: "Database query error", detail: String(err) });
   }
 }

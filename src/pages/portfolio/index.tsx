@@ -278,7 +278,7 @@ const PortfolioPage: React.FC = () => {
   // 如果應用程式未初始化，顯示載入畫面
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">正在初始化應用程式...</p>
@@ -309,7 +309,7 @@ const PortfolioPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* 統一的頁面標題區域 */}
-        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-xl relative overflow-hidden">
+        <div className="bg-linear-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-xl relative overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
             <div className="text-center">
               <h1 className="text-4xl font-bold text-white tracking-tight">
@@ -324,7 +324,7 @@ const PortfolioPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-xl shadow-lg border border-red-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-red-500 to-pink-500 px-6 py-4">
+              <div className="bg-linear-to-r from-red-500 to-pink-500 px-6 py-4">
                 <h2 className="text-xl font-bold text-white">載入失敗</h2>
               </div>
               <div className="p-6">
@@ -342,7 +342,7 @@ const PortfolioPage: React.FC = () => {
                 </ul>
                 <button
                   onClick={() => window.location.reload()}
-                  className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105"
+                  className="w-full bg-linear-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105"
                 >
                   重新載入
                 </button>
@@ -357,7 +357,7 @@ const PortfolioPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 統一的頁面標題區域 */}
-      <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 shadow-xl relative overflow-hidden">
+      <div className="bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 shadow-xl relative overflow-hidden">
         {/* 裝飾性背景元素 */}
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute top-10 left-10 w-20 h-20 bg-white opacity-5 rounded-full"></div>

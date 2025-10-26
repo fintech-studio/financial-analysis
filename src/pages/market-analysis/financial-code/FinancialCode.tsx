@@ -239,9 +239,13 @@ const FinancialCodeTabs: React.FC = () => {
           return false;
         // 美股專屬篩選
         if (activeTab === "us-stock") {
-          if (sectorTypeFilter && (row as USStockRow).sector_type !== sectorTypeFilter)
+          if (
+            sectorTypeFilter &&
+            (row as USStockRow).sector_type !== sectorTypeFilter
+          )
             return false;
-          if (countryFilter && (row as USStockRow).country !== countryFilter) return false;
+          if (countryFilter && (row as USStockRow).country !== countryFilter)
+            return false;
           // if (ipoYearFilter && String(row.ipo_year) !== ipoYearFilter)
           //   return false;
         }
@@ -331,12 +335,12 @@ const FinancialCodeTabs: React.FC = () => {
   }, [jumpPage, totalPages]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col items-center py-10">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 flex flex-col items-center py-10">
       <div className="bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl w-full max-w-7xl border border-white/20 relative overflow-hidden">
         {/* 背景裝飾 */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-indigo-200/30 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-100/30 to-pink-200/30 rounded-full translate-y-24 -translate-x-24 blur-3xl"></div>
-        
+        <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-br from-blue-100/30 to-indigo-200/30 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-linear-to-tr from-purple-100/30 to-pink-200/30 rounded-full translate-y-24 -translate-x-24 blur-3xl"></div>
+
         {/* 返回按鈕 */}
         <button
           className="absolute left-4 top-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/90 hover:bg-white hover:scale-105 text-gray-700 hover:text-blue-600 border border-gray-200 shadow-lg transition-all duration-200 backdrop-blur-sm z-50"
@@ -369,7 +373,7 @@ const FinancialCodeTabs: React.FC = () => {
               key={tab.key}
               className={`relative px-6 py-3 mx-1 rounded-t-2xl font-semibold border-b-3 transition-all duration-300 focus:outline-none group ${
                 activeTab === tab.key
-                  ? `bg-gradient-to-b ${tab.color} text-white border-transparent shadow-lg transform -translate-y-1`
+                  ? `bg-linear-to-b ${tab.color} text-white border-transparent shadow-lg transform -translate-y-1`
                   : "bg-white/70 text-gray-600 border-transparent hover:bg-white hover:text-gray-800 hover:shadow-md"
               }`}
               onClick={() => setActiveTab(tab.key)}
@@ -379,23 +383,27 @@ const FinancialCodeTabs: React.FC = () => {
                 <span>{tab.label}</span>
               </div>
               {activeTab !== tab.key && (
-                <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-white/20 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-linear-to-b from-white/50 to-white/20 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               )}
             </button>
           ))}
         </div>
 
         <div className="relative z-10">
-          <h1 className={`text-3xl font-bold bg-gradient-to-r ${currentTab.color} bg-clip-text text-transparent mb-8 text-center`}>
+          <h1
+            className={`text-3xl font-bold bg-linear-to-r ${currentTab.color} bg-clip-text text-transparent mb-8 text-center`}
+          >
             {currentTab.title}
           </h1>
 
           {/* 搜尋、篩選與每頁顯示筆數 */}
-          <div className="bg-gradient-to-r from-gray-50 to-blue-50/50 rounded-2xl p-6 mb-6 border border-gray-100 shadow-sm">
+          <div className="bg-linear-to-r from-gray-50 to-blue-50/50 rounded-2xl p-6 mb-6 border border-gray-100 shadow-sm">
             <div className="flex flex-wrap justify-between items-end mb-4 gap-4">
               <div className="flex items-end gap-4 flex-wrap">
                 {/* 市場類別篩選 */}
-                {currentTab.columns.some((col) => col.key === "market_type") && (
+                {currentTab.columns.some(
+                  (col) => col.key === "market_type"
+                ) && (
                   <FilterSelect
                     label="市場類別"
                     value={marketTypeFilter}
@@ -407,7 +415,9 @@ const FinancialCodeTabs: React.FC = () => {
                   />
                 )}
                 {/* 產業類別篩選 */}
-                {currentTab.columns.some((col) => col.key === "industry_type") && (
+                {currentTab.columns.some(
+                  (col) => col.key === "industry_type"
+                ) && (
                   <FilterSelect
                     label="產業類別"
                     value={industryTypeFilter}
@@ -444,7 +454,9 @@ const FinancialCodeTabs: React.FC = () => {
                 {/* 日期範圍篩選 */}
                 {currentTab.columns.some((col) => col.key === "date") && (
                   <div className="flex flex-col gap-1">
-                    <span className="text-gray-600 text-xs font-medium">日期範圍</span>
+                    <span className="text-gray-600 text-xs font-medium">
+                      日期範圍
+                    </span>
                     <div className="flex items-center gap-2">
                       <input
                         type="date"
@@ -461,7 +473,9 @@ const FinancialCodeTabs: React.FC = () => {
                           setPage(1);
                         }}
                       />
-                      <span className="text-gray-400 text-sm font-medium">至</span>
+                      <span className="text-gray-400 text-sm font-medium">
+                        至
+                      </span>
                       <input
                         type="date"
                         className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
@@ -482,10 +496,12 @@ const FinancialCodeTabs: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               <div className="flex items-end gap-4">
                 <div className="flex flex-col gap-1">
-                  <span className="text-gray-600 text-xs font-medium">每頁顯示</span>
+                  <span className="text-gray-600 text-xs font-medium">
+                    每頁顯示
+                  </span>
                   <div className="flex items-center gap-1">
                     <select
                       className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
@@ -501,12 +517,16 @@ const FinancialCodeTabs: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    <span className="text-gray-500 text-sm font-medium">筆</span>
+                    <span className="text-gray-500 text-sm font-medium">
+                      筆
+                    </span>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-col gap-1">
-                  <span className="text-gray-600 text-xs font-medium">搜尋</span>
+                  <span className="text-gray-600 text-xs font-medium">
+                    搜尋
+                  </span>
                   <div className="relative">
                     <input
                       type="text"
@@ -540,12 +560,16 @@ const FinancialCodeTabs: React.FC = () => {
                 <div className="w-16 h-16 border-4 border-blue-100 rounded-full animate-spin border-t-blue-500"></div>
                 <div className="absolute inset-0 w-16 h-16 border-4 border-transparent rounded-full animate-ping border-t-blue-300"></div>
               </div>
-              <div className="mt-4 text-blue-600 font-medium animate-pulse">載入中...</div>
+              <div className="mt-4 text-blue-600 font-medium animate-pulse">
+                載入中...
+              </div>
             </div>
           ) : error ? (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">❌</div>
-              <div className="text-red-500 text-lg font-medium mb-2">{error}</div>
+              <div className="text-red-500 text-lg font-medium mb-2">
+                {error}
+              </div>
               <div className="text-gray-500">請檢查網路連線或稍後再試</div>
             </div>
           ) : (
@@ -577,7 +601,9 @@ const FinancialCodeTabs: React.FC = () => {
                       ))}
                     </colgroup>
                     <thead>
-                      <tr className={`bg-gradient-to-r ${currentTab.color} text-white`}>
+                      <tr
+                        className={`bg-linear-to-r ${currentTab.color} text-white`}
+                      >
                         {currentTab.columns.map((col) => (
                           <th
                             key={col.key}
@@ -637,7 +663,9 @@ const FinancialCodeTabs: React.FC = () => {
                                 {value !== undefined &&
                                 value !== null &&
                                 value !== "" ? (
-                                  <span className="font-medium text-gray-700">{value}</span>
+                                  <span className="font-medium text-gray-700">
+                                    {value}
+                                  </span>
                                 ) : (
                                   <span className="text-gray-300">-</span>
                                 )}
@@ -650,7 +678,7 @@ const FinancialCodeTabs: React.FC = () => {
                   </table>
                 </div>
               </div>
-              
+
               {/* 分頁按鈕 */}
               <div className="flex flex-wrap justify-center items-center gap-3 mt-6">
                 <button
@@ -667,13 +695,15 @@ const FinancialCodeTabs: React.FC = () => {
                 >
                   上一頁
                 </button>
-                
+
                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
                   <span className="text-gray-600 text-sm font-medium">第</span>
                   <span className="text-blue-600 font-bold">{page}</span>
-                  <span className="text-gray-600 text-sm font-medium">/ {totalPages} 頁</span>
+                  <span className="text-gray-600 text-sm font-medium">
+                    / {totalPages} 頁
+                  </span>
                 </div>
-                
+
                 <input
                   type="number"
                   min={1}
@@ -700,7 +730,7 @@ const FinancialCodeTabs: React.FC = () => {
                 >
                   跳頁
                 </button>
-                
+
                 <button
                   className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
                   onClick={() => setPage(page + 1)}
@@ -718,14 +748,16 @@ const FinancialCodeTabs: React.FC = () => {
               </div>
             </>
           )}
-          
+
           <div className="mt-8 pt-6 border-t border-gray-200 text-center space-y-2">
             <div className="text-sm text-gray-500">
-              共 <span className="font-bold text-blue-600">{filteredData.length}</span> 筆資料
+              共{" "}
+              <span className="font-bold text-blue-600">
+                {filteredData.length}
+              </span>{" "}
+              筆資料
             </div>
-            <div className="text-xs text-gray-400">
-              資料更新：2025-06-26
-            </div>
+            <div className="text-xs text-gray-400">資料更新：2025-06-26</div>
           </div>
         </div>
       </div>

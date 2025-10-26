@@ -12,7 +12,7 @@ import AttachPreview from "@/components/pages/ChatPage/AttachPreview";
 import ChatInput from "@/components/pages/ChatPage/ChatInput";
 import { sendMessageService } from "@/services/ChatService";
 
-const MODEL_NAME = "fincoach";
+const MODEL_NAME = "FinCoach";
 
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -26,9 +26,9 @@ const Chat: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<string>(MODEL_NAME);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [availableModels] = useState<string[]>([
-    "fincoach",
-    "fincoach-hf",
-    "taide",
+    "FinCoach",
+    "FinCoach-HF",
+    "Taide",
   ]);
   const [attachedFiles, setAttachedFiles] = useState<
     {
@@ -255,12 +255,12 @@ const Chat: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="w-full max-w-7xl h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 mt-20">
           <div className="flex h-full">
             <div className="flex-1 flex flex-col">
               <div
-                className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-50/50 to-white"
+                className="flex-1 overflow-y-auto p-6 bg-linear-to-b from-gray-50/50 to-white"
                 ref={containerRef}
               >
                 <AnimatePresence>
@@ -271,7 +271,7 @@ const Chat: React.FC = () => {
                       exit={{ opacity: 0, y: -20 }}
                       className="flex flex-col items-center justify-center h-full text-center"
                     >
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg text-white">
+                      <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg text-white">
                         <Icons.Bot />
                       </div>
                       <h2 className="text-2xl font-bold text-gray-800 mb-3">
@@ -323,7 +323,7 @@ const Chat: React.FC = () => {
                       className="flex justify-start mb-6"
                     >
                       <div className="flex items-center gap-4 bg-white border border-gray-200 rounded-2xl rounded-bl-md px-5 py-3 shadow-md">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                        <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
                           <Icons.Bot />
                         </div>
                         <div className="flex items-center gap-2">

@@ -234,7 +234,7 @@ const Navigation: React.FC = () => {
     <>
       {/* 重新設計的導覽列 - 固定白色背景 */}
       <nav
-        className={`sticky top-0 left-0 right-0 z-[100] transition-all duration-500 ${
+        className={`sticky top-0 left-0 right-0 z-100 transition-all duration-500 ${
           scrolled
             ? "bg-white shadow-xl border-b border-gray-200/50"
             : "bg-white shadow-lg border-b border-gray-200"
@@ -246,10 +246,10 @@ const Navigation: React.FC = () => {
             <div className="flex items-center space-x-8">
               <Link href="/" className="flex items-center space-x-3 group">
                 <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300">
+                  <div className="w-10 h-10 bg-linear-to-br from-blue-500 via-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300">
                     <ArrowTrendingUpIcon className="h-6 w-6 text-white" />
                   </div>
-                  <div className="absolute -inset-1 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+                  <div className="absolute -inset-1 bg-linear-to-br from-blue-400 to-indigo-500 rounded-xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
@@ -292,7 +292,7 @@ const Navigation: React.FC = () => {
                     )}
 
                     {/* 懸停效果背景 */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-linear-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </Link>
 
                   {/* 下拉選單 */}
@@ -394,7 +394,7 @@ const Navigation: React.FC = () => {
                 {/* 通知下拉選單（popover dropdown，僅桌面顯示） */}
                 {isNotificationsOpen && window.innerWidth >= 1024 && (
                   <div
-                    className="absolute right-0 left-auto mt-2 w-80 max-w-[95vw] bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-0 animate-fade-in-down z-[300]"
+                    className="absolute right-0 left-auto mt-2 w-80 max-w-[95vw] bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-0 animate-fade-in-down z-300"
                     style={{ minWidth: "260px" }}
                   >
                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -513,7 +513,7 @@ const Navigation: React.FC = () => {
 
           {/* 手機版下拉選單 - 右上角浮動選單 */}
           {isMobileMenuOpen && (
-            <div className="lg:hidden absolute right-4 top-16 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/50 z-[200] animate-fade-in-down">
+            <div className="lg:hidden absolute right-4 top-16 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200/50 z-200 animate-fade-in-down">
               <div className="relative">
                 <div
                   className="px-4 py-4 space-y-1"

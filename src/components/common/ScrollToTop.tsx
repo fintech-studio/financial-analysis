@@ -57,7 +57,7 @@ const ScrollToTop: React.FC<ScrollToTopProps> = ({
     <div
       data-fixed-element
       className={`
-        fixed bottom-5 right-5 z-[10000] transition-opacity duration-500 ease-in-out
+        fixed bottom-5 right-5 z-10000 transition-opacity duration-500 ease-in-out
         ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none"}
       `}
       style={{
@@ -72,7 +72,7 @@ const ScrollToTop: React.FC<ScrollToTopProps> = ({
       <button
         onClick={scrollToTop}
         className={`
-          w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 
+          w-12 h-12 bg-linear-to-r from-blue-500 to-blue-600 
           hover:from-blue-600 hover:to-blue-700 text-white rounded-full 
           shadow-lg hover:shadow-xl transition-all duration-300 
           hover:scale-110 flex items-center justify-center

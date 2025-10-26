@@ -467,11 +467,11 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
       {/* 主要配置圖表卡片 */}
       <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 relative overflow-hidden">
         {/* 背景裝飾 */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-indigo-100/30 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-br from-blue-100/30 to-indigo-100/30 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
 
         <div className="flex items-center justify-between mb-8 relative z-10">
           <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+            <div className="p-3 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
               <ChartPieIcon className="h-7 w-7 text-white" />
             </div>
             <div>
@@ -561,7 +561,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
               {activeTab === "assetClass" && (
                 <div className="overflow-hidden bg-white rounded-xl shadow-sm">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <thead className="bg-linear-to-r from-gray-50 to-gray-100">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                           資產類別
@@ -713,10 +713,10 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* 配置風險分析 */}
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-red-100/40 to-orange-100/40 rounded-full blur-2xl -translate-y-16 -translate-x-16"></div>
+          <div className="absolute top-0 left-0 w-32 h-32 bg-linear-to-br from-red-100/40 to-orange-100/40 rounded-full blur-2xl -translate-y-16 -translate-x-16"></div>
 
           <div className="flex items-center mb-6 relative z-10">
-            <div className="p-2 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl mr-3">
+            <div className="p-2 bg-linear-to-br from-red-500 to-orange-500 rounded-xl mr-3">
               <PresentationChartLineIcon className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -726,7 +726,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
           </div>
 
           <div className="space-y-4 relative z-10">
-            <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200">
+            <div className="p-4 bg-linear-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-semibold text-gray-800">
                   集中度風險
@@ -738,7 +738,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
               </div>
               <div className="w-full bg-yellow-200 rounded-full h-2 mb-2">
                 <div
-                  className="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full transition-all duration-1000"
+                  className="bg-linear-to-r from-yellow-500 to-orange-500 h-2 rounded-full transition-all duration-1000"
                   style={{ width: "60%" }}
                 ></div>
               </div>
@@ -747,7 +747,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
               </p>
             </div>
 
-            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+            <div className="p-4 bg-linear-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-semibold text-gray-800">
                   區域風險
@@ -759,7 +759,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
               </div>
               <div className="w-full bg-blue-200 rounded-full h-2 mb-2">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-1000"
+                  className="bg-linear-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-1000"
                   style={{ width: "55%" }}
                 ></div>
               </div>
@@ -768,7 +768,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
               </p>
             </div>
 
-            <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border border-red-200">
+            <div className="p-4 bg-linear-to-r from-red-50 to-pink-50 rounded-xl border border-red-200">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-semibold text-gray-800">
                   通膨抵禦力
@@ -780,7 +780,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
               </div>
               <div className="w-full bg-red-200 rounded-full h-2 mb-2">
                 <div
-                  className="bg-gradient-to-r from-red-500 to-pink-500 h-2 rounded-full transition-all duration-1000"
+                  className="bg-linear-to-r from-red-500 to-pink-500 h-2 rounded-full transition-all duration-1000"
                   style={{ width: "30%" }}
                 ></div>
               </div>
@@ -793,11 +793,11 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
 
         {/* 配置優化建議 */}
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-100/40 to-blue-100/40 rounded-full blur-2xl -translate-y-16 translate-x-16"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-br from-green-100/40 to-blue-100/40 rounded-full blur-2xl -translate-y-16 translate-x-16"></div>
 
           <div className="flex items-center justify-between mb-6 relative z-10">
             <div className="flex items-center">
-              <div className="p-2 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl mr-3">
+              <div className="p-2 bg-linear-to-br from-green-500 to-blue-500 rounded-xl mr-3">
                 <AdjustmentsHorizontalIcon className="h-6 w-6 text-white" />
               </div>
               <div>
@@ -823,7 +823,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
                 {unbalancedAssets.map((item, index) => (
                   <div
                     key={index}
-                    className="p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200"
+                    className="p-4 bg-linear-to-r from-gray-50 to-white rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -876,7 +876,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
                 ))}
 
                 <div className="pt-4 mt-4 border-t border-gray-200">
-                  <button className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg">
+                  <button className="w-full px-6 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg">
                     <SparklesSolidIcon className="h-4 w-4 inline mr-2" />
                     生成AI再平衡計畫
                   </button>
@@ -891,7 +891,7 @@ const AssetAllocation: React.FC<AssetAllocationProps> = ({ data }) => {
                       className="flex items-start space-x-3 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all duration-200"
                     >
                       <span
-                        className={`flex-shrink-0 p-2 rounded-lg mt-0.5 ${
+                        className={`shrink-0 p-2 rounded-lg mt-0.5 ${
                           recommendation.type === "positive"
                             ? "bg-green-100"
                             : recommendation.type === "neutral"

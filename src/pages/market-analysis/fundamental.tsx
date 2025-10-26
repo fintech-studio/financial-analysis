@@ -316,7 +316,7 @@ export default function FundamentalPage(): React.ReactElement {
         </Head>
 
         {/* Header Section (仿 finance-code/index.tsx) */}
-        <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+        <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
           {/* 動態網格背景 */}
           <div className="absolute inset-0 opacity-20">
             <div
@@ -400,11 +400,11 @@ export default function FundamentalPage(): React.ReactElement {
         </section>
 
         {/* Main Content Area */}
-        <div className="relative bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
+        <div className="relative bg-linear-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
           {/* Decorative background elements */}
           <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full opacity-30 blur-3xl"></div>
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full opacity-20 blur-3xl"></div>
+            <div className="absolute top-20 left-20 w-64 h-64 bg-linear-to-br from-blue-100 to-indigo-100 rounded-full opacity-30 blur-3xl"></div>
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-linear-to-br from-indigo-100 to-purple-100 rounded-full opacity-20 blur-3xl"></div>
           </div>
           <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
             {/* 綜合指標卡片 */}
@@ -736,7 +736,7 @@ export default function FundamentalPage(): React.ReactElement {
                 {stockData && (
                   <div className="space-y-6">
                     {/* 股票基本資訊 */}
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                    <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="text-2xl font-bold text-blue-900">

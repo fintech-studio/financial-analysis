@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
     <footer className="bg-gray-900 text-gray-300 relative overflow-hidden">
       {/* 背景裝飾 */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-blue-500/20 to-purple-500/20"></div>
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10 pt-12">
@@ -15,7 +15,7 @@ const Footer: React.FC = () => {
           {/* 品牌資訊 */}
           <div className="lg:col-span-2">
             <div className="flex items-center mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mr-4">
+              <div className="w-12 h-12 bg-linear-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mr-4">
                 <SparklesIcon className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -50,9 +50,13 @@ const Footer: React.FC = () => {
               {["市場分析", "財經新聞", "AI 預測", "AI 助理"].map((item) => (
                 <li key={item}>
                   <a
-                    href={["/market-analysis", "/news", "/predict", "/chat"][
-                      ["市場分析", "財經新聞", "AI 預測", "AI 助理"].indexOf(item)
-                    ]}
+                    href={
+                      ["/market-analysis", "/news", "/predict", "/chat"][
+                        ["市場分析", "財經新聞", "AI 預測", "AI 助理"].indexOf(
+                          item
+                        )
+                      ]
+                    }
                     className="text-gray-400 hover:text-white transition-colors"
                   >
                     {item}

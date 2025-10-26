@@ -149,7 +149,8 @@ export default async function handler(
         ...resultObj,
         data: resultObj.data || [],
         count: resultObj.count || 0,
-        message: resultObj.message || (resultObj.success ? "操作成功" : "操作失敗"),
+        message:
+          resultObj.message || (resultObj.success ? "操作成功" : "操作失敗"),
       });
     } else {
       return res.status(200).json({

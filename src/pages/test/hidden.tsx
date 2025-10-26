@@ -11,7 +11,7 @@ const HiddenPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 頁面標題區域 */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+      <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
         {/* subtle grid background */}
         <div className="absolute inset-0 opacity-20">
           <div
@@ -108,7 +108,7 @@ const HiddenPage: React.FC = () => {
                   className="group block bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-lg transition transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
                   <article className="flex items-center gap-4 p-4">
-                    <div className="flex-shrink-0 w-14 h-14 rounded-lg bg-indigo-50 flex items-center justify-center">
+                    <div className="shrink-0 w-14 h-14 rounded-lg bg-indigo-50 flex items-center justify-center">
                       <FingerPrintIcon className="w-7 h-7 text-indigo-500" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -135,7 +135,7 @@ const HiddenPage: React.FC = () => {
                   className="group block bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-lg transition transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
                   <article className="flex items-center gap-4 p-4">
-                    <div className="flex-shrink-0 w-14 h-14 rounded-lg bg-emerald-50 flex items-center justify-center">
+                    <div className="shrink-0 w-14 h-14 rounded-lg bg-emerald-50 flex items-center justify-center">
                       <DevicePhoneMobileIcon className="w-7 h-7 text-emerald-500" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -162,7 +162,7 @@ const HiddenPage: React.FC = () => {
                   className="group block bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-lg transition transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
                   <article className="flex items-center gap-4 p-4">
-                    <div className="flex-shrink-0 w-14 h-14 rounded-lg bg-rose-50 flex items-center justify-center">
+                    <div className="shrink-0 w-14 h-14 rounded-lg bg-rose-50 flex items-center justify-center">
                       <DevicePhoneMobileIcon className="w-7 h-7 text-rose-500" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -189,7 +189,7 @@ const HiddenPage: React.FC = () => {
                   className="group block bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-lg transition transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
                   <article className="flex items-center gap-4 p-4">
-                    <div className="flex-shrink-0 w-14 h-14 rounded-lg bg-violet-50 flex items-center justify-center">
+                    <div className="shrink-0 w-14 h-14 rounded-lg bg-violet-50 flex items-center justify-center">
                       <DevicePhoneMobileIcon className="w-7 h-7 text-violet-500" />
                     </div>
                     <div className="flex-1 min-w-0">

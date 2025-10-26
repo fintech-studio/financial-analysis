@@ -792,7 +792,7 @@ const TechnicalAnalysisPanel: React.FC<TechnicalAnalysisPanelProps> = ({
                     </span>
                   )}
                 </div>
-                <div className="h-8 w-32 flex-shrink-0 flex items-center justify-end">
+                <div className="h-8 w-32 shrink-0 flex items-center justify-end">
                   <Sparklines
                     data={(() => {
                       if (

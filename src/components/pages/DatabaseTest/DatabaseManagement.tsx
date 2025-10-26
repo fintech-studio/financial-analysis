@@ -313,11 +313,16 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
     }
     setPage(1);
     await executeQuery(async () => {
-      const result = await databaseController.executeQuery(currentConfig, query.trim());
+      const result = await databaseController.executeQuery(
+        currentConfig,
+        query.trim()
+      );
       // 型別轉換：將 unknown[] 轉為 Record<string, unknown>[]
       return {
         ...result,
-        data: Array.isArray(result.data) ? (result.data as Record<string, unknown>[]) : [],
+        data: Array.isArray(result.data)
+          ? (result.data as Record<string, unknown>[])
+          : [],
       };
     });
   }, [query, currentConfig, executeQuery, databaseController]);
@@ -382,7 +387,9 @@ const DatabaseManagementPage: React.FC<DatabaseManagementPageProps> = ({
   const handleGetDatabaseList = useCallback(async () => {
     try {
       const result = await databaseController.getDatabaseList(currentConfig);
-      setDatabaseList(Array.isArray(result.data) ? (result.data as string[]) : []);
+      setDatabaseList(
+        Array.isArray(result.data) ? (result.data as string[]) : []
+      );
       setShowDbSwitcher(true);
     } catch {
       alert("獲取資料庫列表失敗");

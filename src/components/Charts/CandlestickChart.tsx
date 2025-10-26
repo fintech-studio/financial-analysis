@@ -124,8 +124,10 @@ const cleanAndValidateData = (
           const low = Number(item.low);
           const close = Number(item.close);
 
-          if ([open, high, low, close].some(val => isNaN(val) || val <= 0)) {
-            warnings.push(`索引 ${index}: 無效的價格數據 OHLC=[${open},${high},${low},${close}]`);
+          if ([open, high, low, close].some((val) => isNaN(val) || val <= 0)) {
+            warnings.push(
+              `索引 ${index}: 無效的價格數據 OHLC=[${open},${high},${low},${close}]`
+            );
             return null;
           }
 
@@ -140,10 +142,12 @@ const cleanAndValidateData = (
             ohlcCorrectionCount++;
             if (high !== correctedHigh) highCorrectionCount++;
             if (low !== correctedLow) lowCorrectionCount++;
-            
+
             // 只在開發模式下詳細記錄到控制台
-            if (process.env.NODE_ENV === 'development') {
-              console.log(`靜默修正 索引 ${index}: H: ${high}→${correctedHigh}, L: ${low}→${correctedLow}`);
+            if (process.env.NODE_ENV === "development") {
+              console.log(
+                `靜默修正 索引 ${index}: H: ${high}→${correctedHigh}, L: ${low}→${correctedLow}`
+              );
             }
           }
 
@@ -181,10 +185,12 @@ const cleanAndValidateData = (
           const priceRange = correctedHigh - correctedLow;
           const avgPrice = (open + correctedHigh + correctedLow + close) / 4;
           const rangePercentage = (priceRange / avgPrice) * 100;
-          
+
           // 只對極端異常波動（超過50%）發出警告
           if (rangePercentage > 50) {
-            warnings.push(`索引 ${index}: 極端價格波動 ${rangePercentage.toFixed(2)}%`);
+            warnings.push(
+              `索引 ${index}: 極端價格波動 ${rangePercentage.toFixed(2)}%`
+            );
           }
 
           return {
@@ -201,26 +207,29 @@ const cleanAndValidateData = (
             wasHighCorrected: high !== correctedHigh,
             wasLowCorrected: low !== correctedLow,
             originalHigh,
-            originalLow
+            originalLow,
           };
-
         } catch (error) {
           warnings.push(`索引 ${index}: 處理失敗 - ${error}`);
           return null;
         }
       })
-      .filter(item => item !== null);
+      .filter((item) => item !== null);
 
     if (processedItems.length === 0) {
       errors.push("所有數據都無效");
       return { candleData: [], volumeData: [], warnings, errors };
     }
 
-    console.log(`✅ 基本處理完成: ${processedItems.length}/${rawData.length} 筆有效數據`);
-    
+    console.log(
+      `✅ 基本處理完成: ${processedItems.length}/${rawData.length} 筆有效數據`
+    );
+
     // 在控制台輸出OHLC修正統計（不影響UI警告）
     if (ohlcCorrectionCount > 0) {
-      console.log(`🔧 OHLC自動修正統計: 總共 ${ohlcCorrectionCount} 筆 (高價修正: ${highCorrectionCount}, 低價修正: ${lowCorrectionCount})`);
+      console.log(
+        `🔧 OHLC自動修正統計: 總共 ${ohlcCorrectionCount} 筆 (高價修正: ${highCorrectionCount}, 低價修正: ${lowCorrectionCount})`
+      );
     }
 
     // Step 2: 按時間排序
@@ -237,9 +246,10 @@ const cleanAndValidateData = (
         uniqueItems.push(item);
       } else if (item) {
         duplicateCount++;
-        const timeStr = timeframe === "1d" 
-          ? item.timeValue as string
-          : new Date((item.timeValue as number) * 1000).toISOString();
+        const timeStr =
+          timeframe === "1d"
+            ? (item.timeValue as string)
+            : new Date((item.timeValue as number) * 1000).toISOString();
         warnings.push(`移除重複時間戳: ${timeStr}`);
       }
     }
@@ -252,7 +262,7 @@ const cleanAndValidateData = (
     for (let i = 1; i < uniqueItems.length; i++) {
       const current = uniqueItems[i]!.sortKey;
       const previous = uniqueItems[i - 1]!.sortKey;
-      
+
       if (current <= previous) {
         errors.push(`時間順序錯誤 at index ${i}: ${current} <= ${previous}`);
       }
@@ -263,18 +273,24 @@ const cleanAndValidateData = (
     }
 
     // Step 5: 生成最終圖表數據
-    const candleData: LightweightCandlestickData[] = uniqueItems.map(item => ({
-      time: (timeframe === "1d" ? item!.timeValue as string : item!.timeValue as number) as LightweightCandlestickData['time'],
-      open: item!.open,
-      high: item!.high,
-      low: item!.low,
-      close: item!.close,
-    }));
+    const candleData: LightweightCandlestickData[] = uniqueItems.map(
+      (item) => ({
+        time: (timeframe === "1d"
+          ? (item!.timeValue as string)
+          : (item!.timeValue as number)) as LightweightCandlestickData["time"],
+        open: item!.open,
+        high: item!.high,
+        low: item!.low,
+        close: item!.close,
+      })
+    );
 
     const volumeData: HistogramData[] = uniqueItems
-      .filter(item => item!.volume !== undefined)
-      .map(item => ({
-        time: (timeframe === "1d" ? item!.timeValue as string : item!.timeValue as number) as HistogramData['time'],
+      .filter((item) => item!.volume !== undefined)
+      .map((item) => ({
+        time: (timeframe === "1d"
+          ? (item!.timeValue as string)
+          : (item!.timeValue as number)) as HistogramData["time"],
         value: item!.volume!,
         color: item!.close >= item!.open ? "#ef444460" : "#10b98160",
       }));
@@ -285,10 +301,11 @@ const cleanAndValidateData = (
     console.log(`   - 用戶警告: ${warnings.length} 個 (OHLC修正已靜默處理)`);
 
     return { candleData, volumeData, warnings, errors };
-
   } catch (error) {
-    console.error('❌ 數據清理失敗:', error);
-    errors.push(`數據處理異常: ${error instanceof Error ? error.message : String(error)}`);
+    console.error("❌ 數據清理失敗:", error);
+    errors.push(
+      `數據處理異常: ${error instanceof Error ? error.message : String(error)}`
+    );
     return { candleData: [], volumeData: [], warnings, errors };
   }
 };
@@ -311,250 +328,260 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showIndicators, setShowIndicators] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("移動平均");
-  const [hoveredCandle, setHoveredCandle] = useState<CandlestickData | null>(null);
-  const [hoveredPosition, setHoveredPosition] = useState<{ x: number; y: number; } | null>(null);
-  
+  const [hoveredCandle, setHoveredCandle] = useState<CandlestickData | null>(
+    null
+  );
+  const [hoveredPosition, setHoveredPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
   // 新增錯誤和警告狀態
   const [dataWarnings, setDataWarnings] = useState<string[]>([]);
   const [dataErrors, setDataErrors] = useState<string[]>([]);
   const [showWarningDetails, setShowWarningDetails] = useState(false);
 
   // 技術指標配置
-  const defaultTechnicalIndicators = useMemo<TechnicalIndicator[]>(() => [
-    // 移動平均線組
-    {
-      key: "ma5",
-      name: "MA5",
-      color: "#3b82f6",
-      enabled: true,
-      lineWidth: 2,
-      category: "移動平均",
-      description: "5日移動平均線",
-      overlay: true,
-    },
-    {
-      key: "ma10",
-      name: "MA10",
-      color: "#f59e0b",
-      enabled: true,
-      lineWidth: 2,
-      category: "移動平均",
-      description: "10日移動平均線",
-      overlay: true,
-    },
-    {
-      key: "ma20",
-      name: "MA20",
-      color: "#ef4444",
-      enabled: false,
-      lineWidth: 2,
-      category: "移動平均",
-      description: "20日移動平均線",
-      overlay: true,
-    },
-    {
-      key: "ma60",
-      name: "MA60",
-      color: "#8b5cf6",
-      enabled: false,
-      lineWidth: 2,
-      category: "移動平均",
-      description: "60日移動平均線",
-      overlay: true,
-    },
-    {
-      key: "ema12",
-      name: "EMA12",
-      color: "#06b6d4",
-      enabled: false,
-      lineWidth: 2,
-      category: "移動平均",
-      description: "12日指數移動平均",
-      overlay: true,
-    },
-    {
-      key: "ema26",
-      name: "EMA26",
-      color: "#84cc16",
-      enabled: false,
-      lineWidth: 2,
-      category: "移動平均",
-      description: "26日指數移動平均",
-      overlay: true,
-    },
+  const defaultTechnicalIndicators = useMemo<TechnicalIndicator[]>(
+    () => [
+      // 移動平均線組
+      {
+        key: "ma5",
+        name: "MA5",
+        color: "#3b82f6",
+        enabled: true,
+        lineWidth: 2,
+        category: "移動平均",
+        description: "5日移動平均線",
+        overlay: true,
+      },
+      {
+        key: "ma10",
+        name: "MA10",
+        color: "#f59e0b",
+        enabled: true,
+        lineWidth: 2,
+        category: "移動平均",
+        description: "10日移動平均線",
+        overlay: true,
+      },
+      {
+        key: "ma20",
+        name: "MA20",
+        color: "#ef4444",
+        enabled: false,
+        lineWidth: 2,
+        category: "移動平均",
+        description: "20日移動平均線",
+        overlay: true,
+      },
+      {
+        key: "ma60",
+        name: "MA60",
+        color: "#8b5cf6",
+        enabled: false,
+        lineWidth: 2,
+        category: "移動平均",
+        description: "60日移動平均線",
+        overlay: true,
+      },
+      {
+        key: "ema12",
+        name: "EMA12",
+        color: "#06b6d4",
+        enabled: false,
+        lineWidth: 2,
+        category: "移動平均",
+        description: "12日指數移動平均",
+        overlay: true,
+      },
+      {
+        key: "ema26",
+        name: "EMA26",
+        color: "#84cc16",
+        enabled: false,
+        lineWidth: 2,
+        category: "移動平均",
+        description: "26日指數移動平均",
+        overlay: true,
+      },
 
-    // 布林通道組
-    {
-      key: "bb_upper",
-      name: "布林上軌",
-      color: "#f87171",
-      enabled: false,
-      lineWidth: 1,
-      category: "布林通道",
-      description: "布林帶上軌",
-      overlay: true,
-    },
-    {
-      key: "bb_middle",
-      name: "布林中軌",
-      color: "#fbbf24",
-      enabled: false,
-      lineWidth: 2,
-      category: "布林通道",
-      description: "布林帶中軌",
-      overlay: true,
-    },
-    {
-      key: "bb_lower",
-      name: "布林下軌",
-      color: "#34d399",
-      enabled: false,
-      lineWidth: 1,
-      category: "布林通道",
-      description: "布林帶下軌",
-      overlay: true,
-    },
+      // 布林通道組
+      {
+        key: "bb_upper",
+        name: "布林上軌",
+        color: "#f87171",
+        enabled: false,
+        lineWidth: 1,
+        category: "布林通道",
+        description: "布林帶上軌",
+        overlay: true,
+      },
+      {
+        key: "bb_middle",
+        name: "布林中軌",
+        color: "#fbbf24",
+        enabled: false,
+        lineWidth: 2,
+        category: "布林通道",
+        description: "布林帶中軌",
+        overlay: true,
+      },
+      {
+        key: "bb_lower",
+        name: "布林下軌",
+        color: "#34d399",
+        enabled: false,
+        lineWidth: 1,
+        category: "布林通道",
+        description: "布林帶下軌",
+        overlay: true,
+      },
 
-    // RSI指標組
-    {
-      key: "rsi_5",
-      name: "RSI(5)",
-      color: "#ef4444",
-      enabled: false,
-      lineWidth: 2,
-      category: "震盪指標",
-      description: "5日相對強弱指標",
-      overlay: false,
-    },
-    {
-      key: "rsi_7",
-      name: "RSI(7)",
-      color: "#f59e0b",
-      enabled: false,
-      lineWidth: 2,
-      category: "震盪指標",
-      description: "7日相對強弱指標",
-      overlay: false,
-    },
-    {
-      key: "rsi_14",
-      name: "RSI(14)",
-      color: "#8b5cf6",
-      enabled: false,
-      lineWidth: 2,
-      category: "震盪指標",
-      description: "14日相對強弱指標",
-      overlay: false,
-    },
-    {
-      key: "rsi_21",
-      name: "RSI(21)",
-      color: "#06b6d4",
-      enabled: false,
-      lineWidth: 2,
-      category: "震盪指標",
-      description: "21日相對強弱指標",
-      overlay: false,
-    },
+      // RSI指標組
+      {
+        key: "rsi_5",
+        name: "RSI(5)",
+        color: "#ef4444",
+        enabled: false,
+        lineWidth: 2,
+        category: "震盪指標",
+        description: "5日相對強弱指標",
+        overlay: false,
+      },
+      {
+        key: "rsi_7",
+        name: "RSI(7)",
+        color: "#f59e0b",
+        enabled: false,
+        lineWidth: 2,
+        category: "震盪指標",
+        description: "7日相對強弱指標",
+        overlay: false,
+      },
+      {
+        key: "rsi_14",
+        name: "RSI(14)",
+        color: "#8b5cf6",
+        enabled: false,
+        lineWidth: 2,
+        category: "震盪指標",
+        description: "14日相對強弱指標",
+        overlay: false,
+      },
+      {
+        key: "rsi_21",
+        name: "RSI(21)",
+        color: "#06b6d4",
+        enabled: false,
+        lineWidth: 2,
+        category: "震盪指標",
+        description: "21日相對強弱指標",
+        overlay: false,
+      },
 
-    // MACD指標組
-    {
-      key: "macd",
-      name: "MACD",
-      color: "#3b82f6",
-      enabled: false,
-      lineWidth: 2,
-      category: "趨勢指標",
-      description: "MACD快線",
-      overlay: false,
-    },
-    {
-      key: "dif",
-      name: "DIF",
-      color: "#ef4444",
-      enabled: false,
-      lineWidth: 2,
-      category: "趨勢指標",
-      description: "MACD慢線",
-      overlay: false,
-    },
+      // MACD指標組
+      {
+        key: "macd",
+        name: "MACD",
+        color: "#3b82f6",
+        enabled: false,
+        lineWidth: 2,
+        category: "趨勢指標",
+        description: "MACD快線",
+        overlay: false,
+      },
+      {
+        key: "dif",
+        name: "DIF",
+        color: "#ef4444",
+        enabled: false,
+        lineWidth: 2,
+        category: "趨勢指標",
+        description: "MACD慢線",
+        overlay: false,
+      },
 
-    // KD指標組
-    {
-      key: "k_value",
-      name: "K值",
-      color: "#3b82f6",
-      enabled: false,
-      lineWidth: 2,
-      category: "隨機指標",
-      description: "隨機指標K值",
-      overlay: false,
-    },
-    {
-      key: "d_value",
-      name: "D值",
-      color: "#ef4444",
-      enabled: false,
-      lineWidth: 2,
-      category: "隨機指標",
-      description: "隨機指標D值",
-      overlay: false,
-    },
-    {
-      key: "j_value",
-      name: "J值",
-      color: "#f59e0b",
-      enabled: false,
-      lineWidth: 2,
-      category: "隨機指標",
-      description: "隨機指標J值",
-      overlay: false,
-    },
+      // KD指標組
+      {
+        key: "k_value",
+        name: "K值",
+        color: "#3b82f6",
+        enabled: false,
+        lineWidth: 2,
+        category: "隨機指標",
+        description: "隨機指標K值",
+        overlay: false,
+      },
+      {
+        key: "d_value",
+        name: "D值",
+        color: "#ef4444",
+        enabled: false,
+        lineWidth: 2,
+        category: "隨機指標",
+        description: "隨機指標D值",
+        overlay: false,
+      },
+      {
+        key: "j_value",
+        name: "J值",
+        color: "#f59e0b",
+        enabled: false,
+        lineWidth: 2,
+        category: "隨機指標",
+        description: "隨機指標J值",
+        overlay: false,
+      },
 
-    // 其他技術指標
-    {
-      key: "atr",
-      name: "ATR",
-      color: "#84cc16",
-      enabled: false,
-      lineWidth: 2,
-      category: "其他指標",
-      description: "平均真實波幅",
-      overlay: false,
-    },
-    {
-      key: "cci",
-      name: "CCI",
-      color: "#06b6d4",
-      enabled: false,
-      lineWidth: 2,
-      category: "其他指標",
-      description: "順勢指標",
-      overlay: false,
-    },
-    {
-      key: "willr",
-      name: "WillR",
-      color: "#8b5cf6",
-      enabled: false,
-      lineWidth: 2,
-      category: "其他指標",
-      description: "威廉指標",
-      overlay: false,
-    },
-    {
-      key: "mom",
-      name: "MOM",
-      color: "#f87171",
-      enabled: false,
-      lineWidth: 2,
-      category: "其他指標",
-      description: "動量指標",
-      overlay: false,
-    },
-  ], []);
+      // 其他技術指標
+      {
+        key: "atr",
+        name: "ATR",
+        color: "#84cc16",
+        enabled: false,
+        lineWidth: 2,
+        category: "其他指標",
+        description: "平均真實波幅",
+        overlay: false,
+      },
+      {
+        key: "cci",
+        name: "CCI",
+        color: "#06b6d4",
+        enabled: false,
+        lineWidth: 2,
+        category: "其他指標",
+        description: "順勢指標",
+        overlay: false,
+      },
+      {
+        key: "willr",
+        name: "WillR",
+        color: "#8b5cf6",
+        enabled: false,
+        lineWidth: 2,
+        category: "其他指標",
+        description: "威廉指標",
+        overlay: false,
+      },
+      {
+        key: "mom",
+        name: "MOM",
+        color: "#f87171",
+        enabled: false,
+        lineWidth: 2,
+        category: "其他指標",
+        description: "動量指標",
+        overlay: false,
+      },
+    ],
+    []
+  );
 
-  const [technicalIndicators, setTechnicalIndicators] = useState<TechnicalIndicator[]>(defaultTechnicalIndicators);
+  const [technicalIndicators, setTechnicalIndicators] = useState<
+    TechnicalIndicator[]
+  >(defaultTechnicalIndicators);
 
   // 按類別分組指標
   const groupedIndicators = useMemo(() => {
@@ -578,27 +605,30 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
     try {
       const result = cleanAndValidateData(data, timeframe);
-      
+
       setDataErrors(result.errors);
       setDataWarnings(result.warnings);
 
       if (result.errors.length > 0) {
-        console.error('❌ 數據驗證失敗:', result.errors);
+        console.error("❌ 數據驗證失敗:", result.errors);
         return null;
       }
 
       if (result.warnings.length > 0) {
-        console.warn('⚠️  數據警告:', result.warnings);
+        console.warn("⚠️  數據警告:", result.warnings);
       }
 
       return {
         candleData: result.candleData,
-        volumeData: result.volumeData
+        volumeData: result.volumeData,
       };
-
     } catch (error) {
-      console.error('❌ chartData 處理失敗:', error);
-      setDataErrors([`數據處理異常: ${error instanceof Error ? error.message : String(error)}`]);
+      console.error("❌ chartData 處理失敗:", error);
+      setDataErrors([
+        `數據處理異常: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      ]);
       setDataWarnings([]);
       return null;
     }
@@ -614,8 +644,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
     const separateData: Record<string, LineData[]> = {};
 
     try {
-      const enabledIndicators = technicalIndicators.filter((ind) => ind.enabled);
-      
+      const enabledIndicators = technicalIndicators.filter(
+        (ind) => ind.enabled
+      );
+
       enabledIndicators.forEach((indicator) => {
         try {
           const indicatorValues = technicalData[indicator.key];
@@ -627,20 +659,22 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
           const lineData: LineData[] = [];
           const dataLength = data.length;
           const indicatorLength = indicatorValues.length;
-          
+
           // 右對齊技術指標數據
           for (let i = 0; i < dataLength; i++) {
             const indicatorIdx = i - (dataLength - indicatorLength);
-            const value = indicatorIdx >= 0 ? indicatorValues[indicatorIdx] : null;
+            const value =
+              indicatorIdx >= 0 ? indicatorValues[indicatorIdx] : null;
             const dateItem = data[i];
-            
+
             if (value != null && !isNaN(Number(value)) && dateItem?.date) {
-              const timeValue = timeframe === "1d"
-                ? dateItem.date.split("T")[0]
-                : Math.floor(new Date(dateItem.date).getTime() / 1000);
-              
+              const timeValue =
+                timeframe === "1d"
+                  ? dateItem.date.split("T")[0]
+                  : Math.floor(new Date(dateItem.date).getTime() / 1000);
+
               lineData.push({
-                time: timeValue as LineData['time'],
+                time: timeValue as LineData["time"],
                 value: Number(value),
               });
             }
@@ -658,7 +692,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
           // 移除重複的時間戳
           const uniqueLineData: LineData[] = [];
           const timeSet = new Set<string | number>();
-          
+
           for (const item of lineData) {
             if (!timeSet.has(item.time as string | number)) {
               timeSet.add(item.time as string | number);
@@ -672,18 +706,18 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
             } else {
               separateData[indicator.key] = uniqueLineData;
             }
-            console.log(`✅ 指標 ${indicator.key} 處理完成: ${uniqueLineData.length} 個數據點`);
+            console.log(
+              `✅ 指標 ${indicator.key} 處理完成: ${uniqueLineData.length} 個數據點`
+            );
           } else {
             console.warn(`⚠️  指標 ${indicator.key} 沒有有效數據點`);
           }
-
         } catch (error) {
           console.error(`❌ 處理指標 ${indicator.key} 失敗:`, error);
         }
       });
-
     } catch (error) {
-      console.error('❌ 技術指標數據處理失敗:', error);
+      console.error("❌ 技術指標數據處理失敗:", error);
     }
 
     return { overlay: overlayData, separate: separateData };
@@ -703,7 +737,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         try {
           chartRef.current.remove();
         } catch (error) {
-          console.warn('清理舊圖表時出現警告:', error);
+          console.warn("清理舊圖表時出現警告:", error);
         }
       }
 
@@ -731,14 +765,18 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         },
         crosshair: { mode: 1 },
         rightPriceScale: {
-          borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)",
+          borderColor: isDark
+            ? "rgba(255, 255, 255, 0.2)"
+            : "rgba(0, 0, 0, 0.2)",
           scaleMargins: {
             top: 0.1,
             bottom: showVolume ? 0.3 : 0.1,
           },
         },
         timeScale: {
-          borderColor: isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.2)",
+          borderColor: isDark
+            ? "rgba(255, 255, 255, 0.2)"
+            : "rgba(0, 0, 0, 0.2)",
           timeVisible: timeframe === "1h",
           secondsVisible: false,
         },
@@ -766,7 +804,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         candlestickSeries.setData(chartData.candleData);
         console.log(`✅ K線數據設置成功: ${chartData.candleData.length} 筆`);
       } catch (error) {
-        console.error('❌ K線數據設置失敗:', error);
+        console.error("❌ K線數據設置失敗:", error);
         throw new Error(`K線數據設置失敗: ${error}`);
       }
 
@@ -786,9 +824,11 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
 
           volumeSeriesRef.current = volumeSeries;
           volumeSeries.setData(chartData.volumeData);
-          console.log(`✅ 成交量數據設置成功: ${chartData.volumeData.length} 筆`);
+          console.log(
+            `✅ 成交量數據設置成功: ${chartData.volumeData.length} 筆`
+          );
         } catch (error) {
-          console.error('❌ 成交量設置失敗:', error);
+          console.error("❌ 成交量設置失敗:", error);
           // 成交量失敗不影響主圖表
         }
       }
@@ -801,7 +841,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         overlayIndicators.forEach((key) => {
           try {
             const indicatorData = technicalChartData.overlay[key];
-            const indicator = technicalIndicators.find((ind) => ind.key === key);
+            const indicator = technicalIndicators.find(
+              (ind) => ind.key === key
+            );
 
             if (indicator && indicatorData && indicatorData.length > 0) {
               const lineSeries = chart.addSeries(LineSeries, {
@@ -833,7 +875,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         separateIndicators.forEach((key) => {
           try {
             const indicatorData = technicalChartData.separate[key];
-            const indicator = technicalIndicators.find((ind) => ind.key === key);
+            const indicator = technicalIndicators.find(
+              (ind) => ind.key === key
+            );
 
             if (indicator && indicatorData && indicatorData.length > 0) {
               const priceScaleId = `indicator_${key}`;
@@ -855,7 +899,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
               });
 
               lineSeries.setData(indicatorData);
-              
+
               if (!technicalSeriesRef.current) {
                 technicalSeriesRef.current = new Map();
               }
@@ -872,9 +916,13 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       chart.subscribeCrosshairMove((param) => {
         try {
           if (param && param.time && param.point) {
-            const candle = chartData.candleData.find((c) => c.time === param.time);
+            const candle = chartData.candleData.find(
+              (c) => c.time === param.time
+            );
             if (candle) {
-              const idx = chartData.candleData.findIndex((c) => c.time === param.time);
+              const idx = chartData.candleData.findIndex(
+                (c) => c.time === param.time
+              );
               const origin = data[idx];
               setHoveredCandle(origin || null);
               setHoveredPosition({ x: param.point.x, y: param.point.y });
@@ -887,15 +935,18 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
             setHoveredPosition(null);
           }
         } catch (error) {
-          console.error('滑鼠事件處理錯誤:', error);
+          console.error("滑鼠事件處理錯誤:", error);
         }
       });
 
-      console.log('🎯 圖表初始化成功');
-
+      console.log("🎯 圖表初始化成功");
     } catch (error) {
-      console.error('❌ 圖表初始化失敗:', error);
-      setDataErrors([`圖表初始化失敗: ${error instanceof Error ? error.message : String(error)}`]);
+      console.error("❌ 圖表初始化失敗:", error);
+      setDataErrors([
+        `圖表初始化失敗: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      ]);
     }
 
     return () => {
@@ -908,10 +959,20 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
         volumeSeriesRef.current = null;
         technicalSeriesRef.current.clear();
       } catch (error) {
-        console.warn('圖表清理時出現警告:', error);
+        console.warn("圖表清理時出現警告:", error);
       }
     };
-  }, [chartData, technicalChartData, showVolume, theme, height, isFullscreen, timeframe, technicalIndicators, data]);
+  }, [
+    chartData,
+    technicalChartData,
+    showVolume,
+    theme,
+    height,
+    isFullscreen,
+    timeframe,
+    technicalIndicators,
+    data,
+  ]);
 
   // 響應式處理
   useEffect(() => {
@@ -923,7 +984,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
             height: isFullscreen ? window.innerHeight - 180 : height,
           });
         } catch (error) {
-          console.error('圖表大小調整失敗:', error);
+          console.error("圖表大小調整失敗:", error);
         }
       }
     };
@@ -935,21 +996,32 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
   }, [isFullscreen, height]);
 
   // 指標控制函數
-  const toggleIndicator = useCallback((indicatorKey: keyof TechnicalIndicatorData) => {
-    setTechnicalIndicators((prev) =>
-      prev.map((indicator) =>
-        indicator.key === indicatorKey
-          ? { ...indicator, enabled: !indicator.enabled }
-          : indicator
-      )
-    );
-  }, []);
+  const toggleIndicator = useCallback(
+    (indicatorKey: keyof TechnicalIndicatorData) => {
+      setTechnicalIndicators((prev) =>
+        prev.map((indicator) =>
+          indicator.key === indicatorKey
+            ? { ...indicator, enabled: !indicator.enabled }
+            : indicator
+        )
+      );
+    },
+    []
+  );
 
   const applyPreset = useCallback((presetName: string) => {
     const presetMappings: Record<string, string[]> = {
       基礎分析: ["ma5", "ma10", "ma20"],
       短線交易: ["ma5", "ma10", "rsi_14", "k_value", "d_value"],
-      趨勢分析: ["ma20", "ma60", "macd", "dif", "bb_upper", "bb_middle", "bb_lower"],
+      趨勢分析: [
+        "ma20",
+        "ma60",
+        "macd",
+        "dif",
+        "bb_upper",
+        "bb_middle",
+        "bb_lower",
+      ],
       全面分析: ["ma5", "ma10", "ma20", "rsi_14", "macd", "k_value", "d_value"],
     };
 
@@ -1009,10 +1081,15 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
   // 錯誤狀態渲染
   if (dataErrors.length > 0) {
     return (
-      <div className={`relative bg-white rounded-lg shadow-sm border border-red-200 overflow-hidden ${
-        isFullscreen ? "fixed inset-0 z-[9999] m-0 rounded-none shadow-lg" : ""
-      }`}>
-        <div className="flex items-center justify-center p-8" style={{ height: `${height}px` }}>
+      <div
+        className={`relative bg-white rounded-lg shadow-sm border border-red-200 overflow-hidden ${
+          isFullscreen ? "fixed inset-0 z-9999 m-0 rounded-none shadow-lg" : ""
+        }`}
+      >
+        <div
+          className="flex items-center justify-center p-8"
+          style={{ height: `${height}px` }}
+        >
           <div className="text-center max-w-md">
             <ExclamationTriangleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-red-700 mb-2">
@@ -1020,7 +1097,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
             </h3>
             <div className="text-sm text-red-600 mb-4">
               {dataErrors.map((error, index) => (
-                <div key={index} className="mb-1">• {error}</div>
+                <div key={index} className="mb-1">
+                  • {error}
+                </div>
               ))}
             </div>
             <button
@@ -1028,7 +1107,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
                 setDataErrors([]);
                 setDataWarnings([]);
                 // 觸發重新渲染
-                setTechnicalIndicators(prev => [...prev]);
+                setTechnicalIndicators((prev) => [...prev]);
               }}
               className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
             >
@@ -1049,7 +1128,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       >
         <div className="text-center">
           <ChartBarIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <h3 className="text-lg font-medium text-gray-700 mb-1">暫無圖表數據</h3>
+          <h3 className="text-lg font-medium text-gray-700 mb-1">
+            暫無圖表數據
+          </h3>
           <p className="text-sm text-gray-500">請提供有效的價格數據</p>
         </div>
       </div>
@@ -1057,27 +1138,31 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
   }
 
   return (
-    <div className={`relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${
-      isFullscreen ? "fixed inset-0 z-[9999] m-0 rounded-none shadow-lg" : ""
-    }`}>
+    <div
+      className={`relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${
+        isFullscreen ? "fixed inset-0 z-9999 m-0 rounded-none shadow-lg" : ""
+      }`}
+    >
       {/* 數據警告提示 - 修改顯示邏輯 */}
       {dataWarnings.length > 0 && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2">
           <div className="flex items-start">
-            <ExclamationTriangleIcon className="w-4 h-4 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
+            <ExclamationTriangleIcon className="w-4 h-4 text-yellow-500 mt-0.5 mr-2 shrink-0" />
             <div className="text-xs text-yellow-700">
-              <span className="font-medium">數據品質提醒:</span> 
+              <span className="font-medium">數據品質提醒:</span>
               發現 {dataWarnings.length} 個需要注意的數據問題。
               <button
                 onClick={() => setShowWarningDetails(!showWarningDetails)}
                 className="ml-2 underline hover:no-underline"
               >
-                {showWarningDetails ? '隱藏' : '查看'}詳情
+                {showWarningDetails ? "隱藏" : "查看"}詳情
               </button>
               {showWarningDetails && (
                 <div className="mt-2 max-h-24 overflow-y-auto text-xs bg-yellow-100 p-2 rounded">
                   {dataWarnings.slice(0, 8).map((warning, index) => (
-                    <div key={index} className="mb-1 leading-relaxed">• {warning}</div>
+                    <div key={index} className="mb-1 leading-relaxed">
+                      • {warning}
+                    </div>
                   ))}
                   {dataWarnings.length > 8 && (
                     <div className="font-medium text-yellow-800">
@@ -1085,7 +1170,8 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
                     </div>
                   )}
                   <div className="mt-2 pt-2 border-t border-yellow-200 text-yellow-600">
-                    <strong>說明:</strong> OHLC價格邏輯錯誤已自動修正，不會影響圖表顯示
+                    <strong>說明:</strong>{" "}
+                    OHLC價格邏輯錯誤已自動修正，不會影響圖表顯示
                   </div>
                 </div>
               )}
@@ -1103,7 +1189,8 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
             </div>
             <h3 className="text-2xl font-semibold text-gray-900">{title}</h3>
             <span className="text-sm text-gray-500">
-              {timeframe === "1d" ? "日線" : "小時線"} • {data.length} 筆數據 • {formatDateRange(data)}
+              {timeframe === "1d" ? "日線" : "小時線"} • {data.length} 筆數據 •{" "}
+              {formatDateRange(data)}
             </span>
           </div>
 
@@ -1148,16 +1235,20 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
               {/* 快速設定 */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-medium text-gray-700">快速設定:</span>
-                  {["基礎分析", "短線交易", "趨勢分析", "全面分析"].map((preset) => (
-                    <button
-                      key={preset}
-                      onClick={() => applyPreset(preset)}
-                      className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
-                    >
-                      {preset}
-                    </button>
-                  ))}
+                  <span className="text-sm font-medium text-gray-700">
+                    快速設定:
+                  </span>
+                  {["基礎分析", "短線交易", "趨勢分析", "全面分析"].map(
+                    (preset) => (
+                      <button
+                        key={preset}
+                        onClick={() => applyPreset(preset)}
+                        className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                      >
+                        {preset}
+                      </button>
+                    )
+                  )}
                   <button
                     onClick={clearAllIndicators}
                     className="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md transition-colors"
@@ -1245,34 +1336,50 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
             {hoveredCandle.volume !== undefined && (
               <div>成交量: {hoveredCandle.volume.toLocaleString()}</div>
             )}
-            
+
             {/* 技術指標資訊 */}
-            {technicalData && technicalIndicators.filter((ind) => ind.enabled).length > 0 && (
-              <div className="mt-2 border-t pt-1 border-gray-200">
-                <div className="font-semibold text-gray-700 mb-1">技術指標</div>
-                {(() => {
-                  const idx = data.findIndex((d) => d.date === hoveredCandle.date);
-                  return technicalIndicators
-                    .filter((ind) => ind.enabled)
-                    .slice(0, 5) // 限制顯示數量
-                    .map((ind) => {
-                      const valArr = technicalData[ind.key];
-                      const indicatorIdx = idx - (data.length - (valArr?.length ?? 0));
-                      const val = indicatorIdx >= 0 && valArr ? valArr[indicatorIdx] : undefined;
-                      return (
-                        <div key={ind.key} className="flex items-center gap-1">
-                          <span
-                            className="inline-block w-2 h-2 rounded-full"
-                            style={{ background: ind.color }}
-                          />
-                          <span>{ind.name}:</span>
-                          <span>{val !== undefined ? Number(val).toFixed(2) : "--"}</span>
-                        </div>
-                      );
-                    });
-                })()}
-              </div>
-            )}
+            {technicalData &&
+              technicalIndicators.filter((ind) => ind.enabled).length > 0 && (
+                <div className="mt-2 border-t pt-1 border-gray-200">
+                  <div className="font-semibold text-gray-700 mb-1">
+                    技術指標
+                  </div>
+                  {(() => {
+                    const idx = data.findIndex(
+                      (d) => d.date === hoveredCandle.date
+                    );
+                    return technicalIndicators
+                      .filter((ind) => ind.enabled)
+                      .slice(0, 5) // 限制顯示數量
+                      .map((ind) => {
+                        const valArr = technicalData[ind.key];
+                        const indicatorIdx =
+                          idx - (data.length - (valArr?.length ?? 0));
+                        const val =
+                          indicatorIdx >= 0 && valArr
+                            ? valArr[indicatorIdx]
+                            : undefined;
+                        return (
+                          <div
+                            key={ind.key}
+                            className="flex items-center gap-1"
+                          >
+                            <span
+                              className="inline-block w-2 h-2 rounded-full"
+                              style={{ background: ind.color }}
+                            />
+                            <span>{ind.name}:</span>
+                            <span>
+                              {val !== undefined
+                                ? Number(val).toFixed(2)
+                                : "--"}
+                            </span>
+                          </div>
+                        );
+                      });
+                  })()}
+                </div>
+              )}
           </div>
         )}
 
@@ -1291,16 +1398,19 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({
       <div className="bg-gray-50 px-6 py-2 border-t border-gray-200">
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>
-            數據點: {chartData?.candleData.length || 0} | 
-            成交量: {chartData?.volumeData.length || 0} | 
-            週期: {timeframe === "1d" ? "日線" : "小時線"}
+            數據點: {chartData?.candleData.length || 0} | 成交量:{" "}
+            {chartData?.volumeData.length || 0} | 週期:{" "}
+            {timeframe === "1d" ? "日線" : "小時線"}
             {dataWarnings.length > 0 && ` | 警告: ${dataWarnings.length} 個`}
           </span>
           <div className="text-center text-[12px] select-none">
             Charting By TradingView Lightweight Charts
           </div>
           {technicalIndicators.filter((ind) => ind.enabled).length > 0 && (
-            <span>啟用指標: {technicalIndicators.filter((ind) => ind.enabled).length}</span>
+            <span>
+              啟用指標:{" "}
+              {technicalIndicators.filter((ind) => ind.enabled).length}
+            </span>
           )}
         </div>
       </div>

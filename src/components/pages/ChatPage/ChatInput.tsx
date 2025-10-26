@@ -184,7 +184,7 @@ const ChatInput: React.FC<Props> = ({
               aria-label="傳送訊息"
               className={`flex items-center justify-center w-10 h-10 rounded-md text-white transition-all duration-200 ${
                 canSend
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-xl"
+                  ? "bg-linear-to-r from-blue-600 to-purple-600 hover:shadow-xl"
                   : "bg-gray-200 text-gray-500 cursor-not-allowed"
               }`}
             >

@@ -24,7 +24,7 @@ type Props = {
   onComplete?: (insights: string) => void;
 };
 
-const DEFAULT_MODEL = "fincoach";
+const DEFAULT_MODEL = "FinCoach";
 
 function buildPromptForSignals(
   data: unknown,
@@ -324,7 +324,7 @@ export default function AIInsights({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center">
                 <SparklesIcon className="h-5 w-5 text-gray-700" />
               </div>

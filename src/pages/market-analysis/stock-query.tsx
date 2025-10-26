@@ -117,7 +117,7 @@ const StockAnalysisPage: React.FC = () => {
         {/* AI 分析與見解 */}
         <div className="mt-4">
           <AIInsights
-            // model="fincoach"
+            model="FinCoach"
             data={latest}
             symbol={queryState.symbol}
             timeframe={timeframe}
@@ -200,7 +200,7 @@ const StockAnalysisPage: React.FC = () => {
   return (
     <>
       {/* Header Section */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+      <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
         {/* 動態網格背景 */}
         <div className="absolute inset-0 opacity-20">
           <div

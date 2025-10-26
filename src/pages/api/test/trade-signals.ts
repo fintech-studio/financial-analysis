@@ -26,16 +26,14 @@ interface TradeSignalResult {
     strength: string;
     price: number;
   }>;
-  latestData:
-    | {
-        date: string;
-        price: number;
-        signal: string;
-        strength: string;
-        buySignals: number;
-        sellSignals: number;
-      }
-    | null;
+  latestData: {
+    date: string;
+    price: number;
+    signal: string;
+    strength: string;
+    buySignals: number;
+    sellSignals: number;
+  } | null;
 }
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -82,21 +80,22 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   py.on("close", (code) => {
     // 先檢查輸出內容是否包含錯誤訊息
-    const hasDataError = outputData.includes("找不到") || 
-                        outputData.includes("沒有資料可分析") ||
-                        outputData.includes("錯誤:");
-    
+    const hasDataError =
+      outputData.includes("找不到") ||
+      outputData.includes("沒有資料可分析") ||
+      outputData.includes("錯誤:");
+
     if (code !== 0 || hasDataError) {
       // 區分不同類型的錯誤
       if (hasDataError) {
         const errorMatch = outputData.match(/錯誤:\s*([^\n]+)/);
         const errorMsg = errorMatch ? errorMatch[1] : "找不到該股票代號的資料";
-        
+
         // 資料不存在的情況返回404而非500
         res.status(404).json({
           error: errorMsg,
           details: "股票代號不存在或資料庫中無此資料",
-          suggestion: "請確認股票代號是否正確，或聯繫管理員確認資料狀態"
+          suggestion: "請確認股票代號是否正確，或聯繫管理員確認資料狀態",
         });
       } else {
         // 其他系統錯誤返回500
@@ -119,12 +118,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     } catch (error) {
       // 解析錯誤的情況
-      if (error instanceof Error && 
-          (error.message.includes("找不到") || error.message.includes("沒有資料"))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes("找不到") || error.message.includes("沒有資料"))
+      ) {
         res.status(404).json({
           error: error.message,
           details: "股票代號不存在或資料解析失敗",
-          suggestion: "請確認輸入的股票代號是否正確"
+          suggestion: "請確認輸入的股票代號是否正確",
         });
       } else {
         res.status(500).json({
@@ -169,8 +170,8 @@ function parseAnalysisOutput(output: string): TradeSignalResult {
 
   if (totalMatch) {
     // 移除千位分隔符號後轉換為數字
-    result.summary.totalRecords = parseInt(totalMatch[1].replace(/,/g, ''));
-    
+    result.summary.totalRecords = parseInt(totalMatch[1].replace(/,/g, ""));
+
     // 如果總資料筆數為0，表示沒有資料
     if (result.summary.totalRecords === 0) {
       throw new Error("該股票代號沒有任何歷史資料");
@@ -178,7 +179,7 @@ function parseAnalysisOutput(output: string): TradeSignalResult {
   }
 
   if (signalMatch) {
-    result.summary.signalRecords = parseInt(signalMatch[1].replace(/,/g, ''));
+    result.summary.signalRecords = parseInt(signalMatch[1].replace(/,/g, ""));
     result.summary.signalPercentage = parseFloat(signalMatch[2]);
   }
 
@@ -198,7 +199,7 @@ function parseAnalysisOutput(output: string): TradeSignalResult {
     const [, signal, count, percentage] = match;
     if (signal.trim()) {
       result.signals[signal.trim()] = {
-        count: parseInt(count.replace(/,/g, '')),
+        count: parseInt(count.replace(/,/g, "")),
         percentage: parseFloat(percentage),
       };
     }
@@ -252,8 +253,8 @@ function parseAnalysisOutput(output: string): TradeSignalResult {
       result.latestData = {
         date: dateMatch[1].trim(),
         price: parseFloat(priceMatch[1]),
-        signal: signalMatch ? signalMatch[1].trim() : '',
-        strength: strengthMatch ? strengthMatch[1].trim() : '',
+        signal: signalMatch ? signalMatch[1].trim() : "",
+        strength: strengthMatch ? strengthMatch[1].trim() : "",
         buySignals: buySignalsMatch ? parseFloat(buySignalsMatch[1]) : 0,
         sellSignals: sellSignalsMatch ? parseFloat(sellSignalsMatch[1]) : 0,
       };

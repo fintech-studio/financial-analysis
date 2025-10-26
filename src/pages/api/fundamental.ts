@@ -66,7 +66,7 @@ export default async function handler(
     const marketLower = market.toLowerCase();
     const suffix = MARKET_SUFFIX_MAP[marketLower] || "";
     let searchSymbol = symbol.toUpperCase().trim();
-    
+
     // 如果用戶已經輸入了後綴，不重複添加
     if (suffix && !searchSymbol.endsWith(suffix)) {
       searchSymbol = searchSymbol + suffix;

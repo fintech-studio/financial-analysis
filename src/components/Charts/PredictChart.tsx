@@ -48,17 +48,17 @@ const CombinedChart: React.FC<LineChartProps> = ({
     x: number;
     y: number;
   } | null>(null);
-  
+
   const [showMean, setShowMean] = useState(true);
 
   useEffect(() => {
     console.log("Chart initialization - data:", data?.length);
-    
+
     if (!chartContainerRef.current) {
       console.error("Chart container is null");
       return;
     }
-    
+
     if (!data?.length) {
       console.error("No data provided");
       return;
@@ -74,8 +74,11 @@ const CombinedChart: React.FC<LineChartProps> = ({
         chartRef.current = null;
       }
 
-      console.log("Creating chart with container width:", chartContainerRef.current.clientWidth);
-      
+      console.log(
+        "Creating chart with container width:",
+        chartContainerRef.current.clientWidth
+      );
+
       const chart = createChart(chartContainerRef.current, {
         layout: {
           background: {
@@ -119,10 +122,10 @@ const CombinedChart: React.FC<LineChartProps> = ({
 
       data.forEach((item, index) => {
         // 修改時間處理邏輯以支持小時級別
-        const timeValue = item.date.includes('T') 
+        const timeValue = item.date.includes("T")
           ? Math.floor(new Date(item.date).getTime() / 1000) // 轉換為 Unix 時間戳
-          : item.date.split('T')[0];
-        
+          : item.date.split("T")[0];
+
         console.log(`Processing data point ${index}:`, {
           date: item.date,
           timeValue,
@@ -139,7 +142,11 @@ const CombinedChart: React.FC<LineChartProps> = ({
         }
 
         // 預測線數據
-        if (showBothLines && item.predictValue != null && !isNaN(Number(item.predictValue))) {
+        if (
+          showBothLines &&
+          item.predictValue != null &&
+          !isNaN(Number(item.predictValue))
+        ) {
           predictData.push({
             time: timeValue as import("lightweight-charts").Time,
             value: Number(item.predictValue),
@@ -190,12 +197,12 @@ const CombinedChart: React.FC<LineChartProps> = ({
         if (param && param.time && param.point) {
           const timeStr = param.time.toString();
           const dataPoint = data.find((d) => {
-            const itemTime = d.date.includes('T') 
+            const itemTime = d.date.includes("T")
               ? Math.floor(new Date(d.date).getTime() / 1000).toString()
-              : d.date.split('T')[0];
+              : d.date.split("T")[0];
             return itemTime === timeStr;
           });
-          
+
           if (dataPoint) {
             setHoveredData(dataPoint);
             setHoveredPosition({ x: param.point.x, y: param.point.y });
@@ -212,7 +219,6 @@ const CombinedChart: React.FC<LineChartProps> = ({
       // 適配內容
       chart.timeScale().fitContent();
       console.log("Chart initialization completed successfully");
-
     } catch (error) {
       console.error("Chart initialization error:", error);
     }
@@ -255,19 +261,19 @@ const CombinedChart: React.FC<LineChartProps> = ({
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return dateStr;
-    
+
     // 統一格式化邏輯，支持 LineChart 的日期顯示需求
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hour = String(date.getHours()).padStart(2, '0');
-    const minute = String(date.getMinutes()).padStart(2, '0');
-    
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
+
     // 如果只是日期，不顯示時間
-    if (hour === '00' && minute === '00') {
+    if (hour === "00" && minute === "00") {
       return `${year}/${month}/${day}`;
     }
-    
+
     return `${year}/${month}/${day} ${hour}:${minute}`;
   };
 
@@ -280,7 +286,12 @@ const CombinedChart: React.FC<LineChartProps> = ({
   };
 
   // 調試信息
-  console.log("Render - data length:", data?.length, "chart ref exists:", !!chartRef.current);
+  console.log(
+    "Render - data length:",
+    data?.length,
+    "chart ref exists:",
+    !!chartRef.current
+  );
 
   // 空狀態
   if (!data?.length) {
@@ -303,7 +314,7 @@ const CombinedChart: React.FC<LineChartProps> = ({
   return (
     <div
       className={`relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${
-        isFullscreen ? "fixed inset-0 z-[9999] m-0 rounded-none shadow-lg" : ""
+        isFullscreen ? "fixed inset-0 z-9999 m-0 rounded-none shadow-lg" : ""
       }`}
     >
       {/* 頂部工具欄 */}
@@ -325,10 +336,16 @@ const CombinedChart: React.FC<LineChartProps> = ({
               <button
                 onClick={() => setShowMean(!showMean)}
                 className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-                  showMean ? "bg-blue-100 text-blue-700" : "text-gray-500 hover:text-gray-700"
+                  showMean
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-gray-500 hover:text-gray-700"
                 }`}
               >
-                {showMean ? <EyeIcon className="h-3 w-3" /> : <EyeSlashIcon className="h-3 w-3" />}
+                {showMean ? (
+                  <EyeIcon className="h-3 w-3" />
+                ) : (
+                  <EyeSlashIcon className="h-3 w-3" />
+                )}
                 <span>預測值</span>
               </button>
             </div>
@@ -364,7 +381,9 @@ const CombinedChart: React.FC<LineChartProps> = ({
             </div>
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600">{showBothLines ? "真實值:" : "預測值:"}</span>
+                <span className="text-gray-600">
+                  {showBothLines ? "真實值:" : "預測值:"}
+                </span>
                 <span className="font-medium text-blue-600">
                   {hoveredData.value.toFixed(4)}
                 </span>

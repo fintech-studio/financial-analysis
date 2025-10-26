@@ -14,7 +14,7 @@ const QuickFillPanel: React.FC<{
     { param: "--pattern", label: "重新辨識 K 線型態-歷史" },
     { param: "--show-all-stats", label: "顯示統計資訊" },
   ];
-  
+
   const fundamentalParamOptions = [
     { param: "--help", label: "顯示說明" },
     { param: "--nfp", label: "美國非農就業人數" },
@@ -22,7 +22,7 @@ const QuickFillPanel: React.FC<{
     { param: "--oil", label: "WTI原油價格" },
     { param: "--gold", label: "黃金期貨價格" },
   ];
-  
+
   const marketOptions = [
     { param: "--tw", label: "台股" },
     { param: "--us", label: "美股" },
@@ -40,9 +40,11 @@ const QuickFillPanel: React.FC<{
     { param: "--crypto", label: "加密貨幣" },
   ];
 
-  const currentParamOptions = mode === "fundamental" ? fundamentalParamOptions : technicalParamOptions;
+  const currentParamOptions =
+    mode === "fundamental" ? fundamentalParamOptions : technicalParamOptions;
 
-  const currentMarketOptions = mode === "fundamental" ? fundamentalOptions : marketOptions;
+  const currentMarketOptions =
+    mode === "fundamental" ? fundamentalOptions : marketOptions;
 
   const dateQuickOptions = [
     { param: "--start_date", label: "起始日期" },
@@ -95,7 +97,9 @@ const QuickFillPanel: React.FC<{
               key={param}
               type="button"
               className="px-3 py-1.5 rounded-lg bg-pink-100 text-pink-700 font-medium border border-pink-300 hover:bg-pink-200 transition text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-200"
-              onClick={() => setSymbol((prev) => (prev ? prev + " " + param : param))}
+              onClick={() =>
+                setSymbol((prev) => (prev ? prev + " " + param : param))
+              }
               disabled={loading}
             >
               {param.split(" ")[0]}{" "}
@@ -115,7 +119,7 @@ const LogBox = React.forwardRef<
 >(({ logs, error, loading, onCopy }, ref) => (
   <div
     ref={ref}
-    className="bg-slate-900 rounded-2xl p-5 min-h-[320px] max-h-[600px] h-[600px] overflow-y-auto text-green-200 font-mono text-base whitespace-pre-wrap shadow-lg border-2 border-slate-700 outline-none relative scrollbar-hide"
+    className="bg-slate-900 rounded-2xl p-5 min-h-80 max-h-[600px] h-[600px] overflow-y-auto text-green-200 font-mono text-base whitespace-pre-wrap shadow-lg border-2 border-slate-700 outline-none relative scrollbar-hide"
     tabIndex={-1}
     style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
   >
@@ -181,10 +185,7 @@ const RunPython: React.FC = () => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
-    const params = [
-      `symbol=${encodeURIComponent(symbol)}`,
-      `mode=${mode}`,
-    ]
+    const params = [`symbol=${encodeURIComponent(symbol)}`, `mode=${mode}`]
       .filter(Boolean)
       .join("&");
     const es = new EventSource(`/api/test/run-python?${params}`);
@@ -260,7 +261,7 @@ const RunPython: React.FC = () => {
               查看程式碼
             </a>
           </p>
-          
+
           {/* 模式選擇 */}
           <div className="mb-4">
             <label className="block text-blue-700 font-semibold mb-2">
@@ -311,7 +312,7 @@ const RunPython: React.FC = () => {
                     ? "基本面模式：輸入股票代號和市場參數，例：2330 --tw 或 AAPL --us"
                     : "技術指標模式：可輸入多個金融代號或參數，Enter換行，Ctrl+Enter執行"
                 }
-                className="w-full px-5 py-3 rounded-xl border-2 border-blue-200 focus:ring-4 focus:ring-blue-200 focus:outline-none text-lg bg-blue-50 placeholder-blue-300 text-blue-900 shadow-md pr-16 transition-all duration-200 resize-vertical min-h-[48px] max-h-[120px]"
+                className="w-full px-5 py-3 rounded-xl border-2 border-blue-200 focus:ring-4 focus:ring-blue-200 focus:outline-none text-lg bg-blue-50 placeholder-blue-300 text-blue-900 shadow-md pr-16 transition-all duration-200 resize-vertical min-h-12 max-h-[120px]"
                 disabled={loading}
                 rows={2}
                 spellCheck={false}
@@ -425,7 +426,7 @@ const RunPython: React.FC = () => {
           </div>
         </div>
         {/* 右側：LogBox 輸出結果 */}
-        <div className="w-full lg:w-[640px] flex-shrink-0 min-h-[600px] h-[600px]">
+        <div className="w-full lg:w-[640px] shrink-0 min-h-[600px] h-[600px]">
           <LogBox
             ref={logBoxRef}
             logs={logs}

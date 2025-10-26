@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ChartBarIcon,
   ArrowTrendingUpIcon,
@@ -55,7 +56,7 @@ const TestPage: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Header Section */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+      <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
         {/* 動態網格背景 */}
         <div className="absolute inset-0 opacity-20">
           <div
@@ -138,13 +139,13 @@ const TestPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
           {/* Section Header */}
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-slate-700 via-blue-700 to-indigo-700 bg-clip-text text-transparent mb-4">
+            <h2 className="text-4xl font-bold bg-linear-to-r from-slate-700 via-blue-700 to-indigo-700 bg-clip-text text-transparent mb-4">
               選擇分析工具
             </h2>
             <p className="text-gray-600 text-xl max-w-2xl mx-auto leading-relaxed">
               多種專業分析工具，滿足不同投資策略需求
             </p>
-            <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto mt-6 rounded-full"></div>
+            <div className="w-24 h-1 bg-linear-to-r from-blue-500 to-indigo-500 mx-auto mt-6 rounded-full"></div>
           </div>
 
           {/* Enhanced Test Items Grid */}
@@ -162,7 +163,7 @@ const TestPage: React.FC = () => {
                   <div className="relative z-10">
                     <div className="flex items-start space-x-8 mb-8">
                       <div
-                        className={`relative flex-shrink-0 w-20 h-20 ${item.bgColor} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-xl group-hover:shadow-2xl`}
+                        className={`relative shrink-0 w-20 h-20 ${item.bgColor} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-xl group-hover:shadow-2xl`}
                       >
                         {/* Enhanced icon background effects */}
                         <item.icon
@@ -228,12 +229,12 @@ const TestPage: React.FC = () => {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-100 rounded-3xl p-8 border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
+              <div className="bg-linear-to-br from-blue-50 via-white to-indigo-100 rounded-3xl p-8 border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
                 {/* Background decoration */}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
 
                 <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
                     <ArrowTrendingUpIcon className="w-7 h-7 text-white" />
                   </div>
                   <h4 className="text-xl font-bold text-gray-900">即時數據</h4>
@@ -244,11 +245,11 @@ const TestPage: React.FC = () => {
                 <div className="absolute bottom-4 right-4 w-3 h-3 bg-blue-500 rounded-full opacity-20 animate-pulse"></div>
               </div>
 
-              <div className="bg-gradient-to-br from-green-50 via-white to-emerald-100 rounded-3xl p-8 border-2 border-green-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
+              <div className="bg-linear-to-br from-green-50 via-white to-emerald-100 rounded-3xl p-8 border-2 border-green-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
 
                 <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-linear-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
                     <ChartBarIcon className="w-7 h-7 text-white" />
                   </div>
                   <h4 className="text-xl font-bold text-gray-900">深度分析</h4>
@@ -262,17 +263,20 @@ const TestPage: React.FC = () => {
                 ></div>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-50 via-white to-pink-100 rounded-3xl p-8 border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
+              <div className="bg-linear-to-br from-purple-50 via-white to-pink-100 rounded-3xl p-8 border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
 
                 <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-linear-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
                     <DocumentMagnifyingGlassIcon className="w-7 h-7 text-white" />
                   </div>
-                  <h4 className="text-xl font-bold text-gray-900">智能搜尋</h4>
+                  <h4 className="text-xl font-bold text-gray-900">
+                    AI 分析與見解
+                  </h4>
                 </div>
                 <p className="text-gray-600 leading-relaxed">
-                  快速查詢和篩選相關金融商品資訊，智能化的搜尋體驗提升分析效率
+                  利用先進的 AI
+                  技術，自動生成市場分析報告與投資見解，提升決策效率
                 </p>
                 <div
                   className="absolute bottom-4 right-4 w-3 h-3 bg-purple-500 rounded-full opacity-20 animate-pulse"
@@ -285,27 +289,29 @@ const TestPage: React.FC = () => {
           {/* Add Line Friend */}
           <div className="text-center mb-20">
             <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              加入我們的Line好友
+              加入我們的 Line 好友
             </h3>
             <p className="text-gray-600 mb-6 text-lg">
-              獲取最新市場分析資訊與專屬優惠
+              獲取最新市場分析資訊與專屬投資建議
             </p>
             <div className="inline-flex relative flex-col items-center space-y-6">
-              <div className="absolute -inset-4 bg-gradient-to-r from-green-400/20 via-green-500/20 to-green-600/20 rounded-3xl blur-xl animate-pulse"></div>
-              <img
-                src="https://qr-official.line.me/gs/M_415qhoyf_GW.png"
-                alt="Line Logo"
-                className="w-64 h-64 mb-4 relative z-10 rounded-2xl shadow-lg"
+              <div className="absolute -inset-4 bg-linear-to-br from-green-400/20 via-green-500/20 to-green-600/20 rounded-3xl blur-xl animate-pulse"></div>
+              <Image
+                src="/linebot-qrcode.png"
+                alt="LineBot QR Code"
+                width={256}
+                height={256}
+                className="mb-8 relative z-10 rounded-2xl shadow-lg"
               />
               <a
-                href="https://line.me/R/ti/p/@415qhoyf"
+                href="https://lin.ee/IWbTOCx"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-50 via-green-100 to-green-200 border-2 border-green-300 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group"
+                className="relative inline-flex items-center px-8 py-4 bg-linear-to-br from-green-50 via-green-100 to-green-200 border-2 border-green-300 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-green-100 via-green-200 to-green-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-linear-to-br from-green-100 via-green-200 to-green-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 <span className="text-lg font-bold text-green-800 relative z-10">
-                  加入Line好友
+                  加入 Line 好友
                 </span>
               </a>
             </div>
@@ -314,19 +320,19 @@ const TestPage: React.FC = () => {
           {/* Enhanced Call-to-Action Section */}
           <div className="text-center relative">
             {/* Enhanced decorative elements */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-12 w-20 h-px bg-gradient-to-r from-transparent via-blue-300 to-transparent"></div>
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-12 w-20 h-px bg-linear-to-br from-transparent via-blue-300 to-transparent"></div>
 
             <div className="inline-block relative">
-              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-slate-500/20 rounded-3xl blur-xl animate-pulse"></div>
+              <div className="absolute -inset-4 bg-linear-to-br from-blue-500/20 via-indigo-500/20 to-slate-500/20 rounded-3xl blur-xl animate-pulse"></div>
 
-              <div className="relative inline-flex items-center px-12 py-8 bg-gradient-to-r from-blue-50 via-indigo-50 to-slate-50 border-3 border-blue-200 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group cursor-pointer">
+              <div className="relative inline-flex items-center px-12 py-8 bg-linear-to-br from-blue-50 via-indigo-50 to-slate-50 border-3 border-blue-200 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group cursor-pointer">
                 {/* Enhanced background animation */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-100 via-indigo-100 to-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-indigo-600/5 to-slate-600/5 translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                <div className="absolute inset-0 bg-linear-to-br from-blue-100 via-indigo-100 to-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-linear-to-br from-blue-600/5 via-indigo-600/5 to-slate-600/5 translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
 
-                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mr-6 relative shadow-xl group-hover:scale-110 transition-transform">
+                <div className="shrink-0 w-12 h-12 bg-linear-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mr-6 relative shadow-xl group-hover:scale-110 transition-transform">
                   {/* Enhanced icon effects */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
+                  <div className="absolute inset-0 bg-linear-to-br from-blue-500 to-indigo-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
                   <svg
                     className="w-7 h-7 text-white relative z-10"
                     fill="none"
@@ -343,9 +349,9 @@ const TestPage: React.FC = () => {
                 </div>
 
                 <div className="text-left relative z-10">
-                  <p className="text-2xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2 relative">
+                  <p className="text-2xl font-bold bg-linear-to-br from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2 relative">
                     開始您的市場分析之旅
-                    <span className="absolute -right-10 top-0 w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full animate-ping"></span>
+                    <span className="absolute -right-10 top-0 w-3 h-3 bg-linear-to-br from-blue-400 to-indigo-400 rounded-full animate-ping"></span>
                   </p>
                   <p className="text-lg text-blue-700 font-semibold">
                     選擇合適的分析工具，發現投資機會

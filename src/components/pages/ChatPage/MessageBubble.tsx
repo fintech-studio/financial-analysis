@@ -31,7 +31,9 @@ const MessageBubble: React.FC<{
   }) => {
     if (inline) {
       return (
-        <code className="bg-gray-100 text-sm px-1 py-[2px] rounded-sm">{children}</code>
+        <code className="bg-gray-100 text-sm px-1 py-0.5 rounded-sm">
+          {children}
+        </code>
       );
     }
     return (
@@ -75,7 +77,13 @@ const MessageBubble: React.FC<{
       </ol>
     ),
     a: ({ children, href, ...props }) => (
-      <a className="text-blue-600 underline" target="_blank" rel="noopener noreferrer" href={href} {...props}>
+      <a
+        className="text-blue-600 underline"
+        target="_blank"
+        rel="noopener noreferrer"
+        href={href}
+        {...props}
+      >
         {children}
       </a>
     ),
@@ -97,7 +105,7 @@ const MessageBubble: React.FC<{
           initial={ANIMATION_CONFIG.avatarScale.initial}
           animate={ANIMATION_CONFIG.avatarScale.animate}
           transition={ANIMATION_CONFIG.avatarScale.transition}
-          className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center shadow-lg"
+          className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center shadow-lg"
         >
           <Icons.Bot />
         </motion.div>
@@ -144,13 +152,17 @@ const MessageBubble: React.FC<{
           transition={{ duration: 0.3, delay: 0.1 }}
           className={`px-5 py-3 rounded-2xl text-sm leading-relaxed transition-all duration-200 shadow-md hover:shadow-lg ${
             isUser
-              ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-md"
+              ? "bg-linear-to-br from-blue-600 to-blue-700 text-white rounded-br-md"
               : "bg-white text-gray-800 border border-gray-100 rounded-bl-md"
           }`}
         >
           {/* 使用 react-markdown + rehype-sanitize 安全渲染 markdown */}
-          <div className="break-words">
-            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} rehypePlugins={[rehypeSanitize]} components={mdComponents}>
+          <div className="wrap-break-words">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkBreaks]}
+              rehypePlugins={[rehypeSanitize]}
+              components={mdComponents}
+            >
               {msg.content}
             </ReactMarkdown>
           </div>
@@ -186,7 +198,7 @@ const MessageBubble: React.FC<{
           initial={ANIMATION_CONFIG.avatarScale.initial}
           animate={ANIMATION_CONFIG.avatarScale.animate}
           transition={ANIMATION_CONFIG.avatarScale.transition}
-          className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-blue-600 text-white flex items-center justify-center shadow-lg"
+          className="w-10 h-10 rounded-full bg-linear-to-br from-green-500 to-blue-600 text-white flex items-center justify-center shadow-lg"
         >
           <Icons.User />
         </motion.div>

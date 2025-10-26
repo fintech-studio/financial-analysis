@@ -100,7 +100,7 @@ const TestPage: React.FC = () => {
   return (
     <>
       {/* 頁面標題區域 */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
+      <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
         {/* subtle grid background */}
         <div className="absolute inset-0 opacity-20">
           <div
@@ -175,7 +175,7 @@ const TestPage: React.FC = () => {
                 <div className="relative z-10">
                   <div className="flex items-start space-x-6 mb-6">
                     <div
-                      className={`flex-shrink-0 w-16 h-16 ${item.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-md`}
+                      className={`shrink-0 w-16 h-16 ${item.bgColor} rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-md`}
                     >
                       <item.icon className={`h-8 w-8 ${item.color}`} />
                     </div>
@@ -225,7 +225,7 @@ const TestPage: React.FC = () => {
         {/* 開發資訊提示 */}
         <div className="text-center">
           <div className="inline-flex items-center px-6 py-4 bg-amber-50 border-2 border-amber-200 rounded-2xl shadow-md">
-            <div className="flex-shrink-0 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center mr-4">
+            <div className="shrink-0 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center mr-4">
               <svg
                 className="w-4 h-4 text-white"
                 fill="none"

@@ -476,11 +476,11 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
       {/* 主要摘要面板 */}
       <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 mb-8 relative overflow-hidden">
         {/* 背景裝飾 */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-linear-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
 
         <div className="flex items-center justify-between mb-6 relative z-10">
           <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+            <div className="p-3 bg-linear-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
               <DocumentChartBarIcon className="h-7 w-7 text-white" />
             </div>
             <div>
@@ -507,10 +507,10 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
                 <div className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                   總資產價值
                 </div>
-                <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent pb-2">
+                <div className="text-4xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent pb-2">
                   NT$ {formatCurrency(data.totalValue)}
                 </div>
-                <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full "></div>
+                <div className="h-1 w-20 bg-linear-to-r from-blue-500 to-purple-500 rounded-full "></div>
               </div>
 
               {/* 右側：總收益 */}
@@ -550,7 +550,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
             </div>
 
             {/* 資金運用進度 */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
+            <div className="bg-linear-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center space-x-2">
                   <KeyIcon className="h-5 w-5 text-blue-600" />
@@ -569,7 +569,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
               <div className="relative">
                 <div className="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full relative transition-all duration-1000 ease-out"
+                    className="h-full bg-linear-to-r from-blue-500 to-indigo-500 rounded-full relative transition-all duration-1000 ease-out"
                     style={{
                       width: `${investmentGoalProgress.progress}%`,
                     }}
@@ -583,7 +583,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
                     left: `${Math.min(investmentGoalProgress.progress, 95)}%`,
                   }}
                 >
-                  <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-linear-to-r from-blue-500 to-indigo-500 rounded-full"></div>
                 </div>
               </div>
 
@@ -608,9 +608,9 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
             </div>
 
             {/* 月度趨勢迷你圖 - 美化版本 */}
-            <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 rounded-2xl border border-blue-100 shadow-lg relative overflow-hidden">
+            <div className="bg-linear-to-br from-blue-50 via-white to-indigo-50 p-6 rounded-2xl border border-blue-100 shadow-lg relative overflow-hidden">
               {/* 背景裝飾 */}
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-200/20 to-indigo-200/20 rounded-full blur-xl"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-linear-to-br from-blue-200/20 to-indigo-200/20 rounded-full blur-xl"></div>
 
               <div className="flex justify-between items-start mb-6 relative z-10">
                 <div className="space-y-2">
@@ -692,8 +692,8 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
           </div>
 
           {/* 右側: 資產配置與關鍵指標 */}
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-full blur-2xl -translate-y-16 translate-x-16"></div>
+          <div className="bg-linear-to-br from-gray-50 to-gray-100 rounded-2xl p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-br from-blue-100/50 to-purple-100/50 rounded-full blur-2xl -translate-y-16 translate-x-16"></div>
 
             <div className="relative z-10">
               <div className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
@@ -757,7 +757,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
               </h3>
               <p className="text-xs text-gray-500">年度化收益表現</p>
             </div>
-            <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+            <div className="p-2 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl">
               <ChartBarIcon className="h-6 w-6 text-white" />
             </div>
           </div>
@@ -768,7 +768,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-1000 ease-out"
+              className="bg-linear-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-1000 ease-out"
               style={{ width: "75%" }}
             ></div>
           </div>
@@ -783,7 +783,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
               </h3>
               <p className="text-xs text-gray-500">分散投資程度</p>
             </div>
-            <div className="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl">
+            <div className="p-2 bg-linear-to-br from-indigo-500 to-indigo-600 rounded-xl">
               <CurrencyDollarIcon className="h-6 w-6 text-white" />
             </div>
           </div>
@@ -814,7 +814,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
               </h3>
               <p className="text-xs text-gray-500">市場波動敏感度</p>
             </div>
-            <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
+            <div className="p-2 bg-linear-to-br from-purple-500 to-purple-600 rounded-xl">
               <ScaleIcon className="h-6 w-6 text-white" />
             </div>
           </div>
@@ -822,7 +822,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
           <div className="text-sm text-gray-500 mb-3">較低市場波動敏感度</div>
           <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-1000 ease-out"
+              className="bg-linear-to-r from-purple-500 to-purple-600 h-2 rounded-full transition-all duration-1000 ease-out"
               style={{ width: "42%" }}
             ></div>
           </div>
@@ -835,7 +835,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
               <h3 className="text-lg font-semibold text-gray-900">最近交易</h3>
               <p className="text-xs text-gray-500">近期活動統計</p>
             </div>
-            <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-xl">
+            <div className="p-2 bg-linear-to-br from-green-500 to-green-600 rounded-xl">
               <CalendarDaysIcon className="h-6 w-6 text-white" />
             </div>
           </div>
@@ -849,16 +849,16 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
       </div>
 
       {/* AI 投資建議摘要 */}
-      <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl shadow-2xl border border-white/20 p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-200/20 to-purple-200/20 rounded-full blur-3xl -translate-y-48 translate-x-48"></div>
+      <div className="bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-3xl shadow-2xl border border-white/20 p-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-linear-to-br from-blue-200/20 to-purple-200/20 rounded-full blur-3xl -translate-y-48 translate-x-48"></div>
 
         <div className="flex items-center justify-between mb-6 relative z-10">
           <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
+            <div className="p-3 bg-linear-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
               <SparklesSolidIcon className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 AI智能投資見解
               </h2>
               <p className="text-sm text-gray-600 mt-1">
@@ -876,7 +876,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
           {/* 再平衡建議 */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/30 transition-all duration-300">
             <div className="flex items-start space-x-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex-shrink-0">
+              <div className="p-2 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl shrink-0">
                 <LightBulbIcon className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -901,7 +901,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
           {/* 投資機會 */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/30 transition-all duration-300">
             <div className="flex items-start space-x-3">
-              <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex-shrink-0">
+              <div className="p-2 bg-linear-to-br from-green-500 to-green-600 rounded-xl shrink-0">
                 <ArrowUpRightIcon className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -926,7 +926,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
           {/* 風險提醒 */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/30 transition-all duration-300">
             <div className="flex items-start space-x-3">
-              <div className="p-2 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex-shrink-0">
+              <div className="p-2 bg-linear-to-br from-red-500 to-red-600 rounded-xl shrink-0">
                 <ShieldCheckIcon className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -960,7 +960,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
               <div className="text-sm text-blue-400">/100</div>
               <div className="w-16 h-2 bg-blue-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                  className="h-full bg-linear-to-r from-blue-500 to-blue-600 rounded-full"
                   style={{ width: "76%" }}
                 ></div>
               </div>
@@ -975,11 +975,11 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
       {/* 績效走勢分析 */}
       <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 mb-8 relative overflow-hidden">
         {/* 背景裝飾 */}
-        <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-green-100/30 to-blue-100/30 rounded-full blur-3xl -translate-y-32 -translate-x-32"></div>
+        <div className="absolute top-0 left-0 w-64 h-64 bg-linear-to-br from-green-100/30 to-blue-100/30 rounded-full blur-3xl -translate-y-32 -translate-x-32"></div>
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 relative z-10">
           <div className="flex items-center space-x-3 mb-4 lg:mb-0">
-            <div className="p-3 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl shadow-lg">
+            <div className="p-3 bg-linear-to-br from-green-500 to-blue-600 rounded-2xl shadow-lg">
               <DocumentChartBarIcon className="h-7 w-7 text-white" />
             </div>
             <div>
@@ -1103,7 +1103,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({ data }) => {
         </div>
 
         {/* 績效分析洞察 */}
-        <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 relative z-10">
+        <div className="mt-6 bg-linear-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 relative z-10">
           <div className="flex items-start space-x-3">
             <div className="p-2 bg-blue-500 rounded-lg">
               <ChartBarIcon className="h-5 w-5 text-white" />

@@ -53,7 +53,10 @@ export class DatabaseController extends BaseController {
       this.logError("資料庫連接測試失敗", error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : "資料庫連接測試失敗，請檢查連接設定",
+        message:
+          error instanceof Error
+            ? error.message
+            : "資料庫連接測試失敗，請檢查連接設定",
       };
     }
   }
@@ -87,7 +90,9 @@ export class DatabaseController extends BaseController {
       return result;
     } catch (error: unknown) {
       this.logError("SQL 查詢執行失敗", error);
-      return this.failResult(error instanceof Error ? error.message : "SQL 查詢執行失敗");
+      return this.failResult(
+        error instanceof Error ? error.message : "SQL 查詢執行失敗"
+      );
     }
   }
 
@@ -105,7 +110,9 @@ export class DatabaseController extends BaseController {
       return { success: true, data: tables, count: tables.length };
     } catch (error: unknown) {
       this.logError("獲取表列表失敗", error);
-      return this.failResult(error instanceof Error ? error.message : "獲取表列表失敗");
+      return this.failResult(
+        error instanceof Error ? error.message : "獲取表列表失敗"
+      );
     }
   }
 
@@ -133,7 +140,9 @@ export class DatabaseController extends BaseController {
       return { success: true, data: schema, count: schema.length };
     } catch (error: unknown) {
       this.logError("獲取表結構失敗", error);
-      return this.failResult(error instanceof Error ? error.message : "獲取表結構失敗");
+      return this.failResult(
+        error instanceof Error ? error.message : "獲取表結構失敗"
+      );
     }
   }
 
@@ -151,7 +160,9 @@ export class DatabaseController extends BaseController {
       return { success: true, data: databases, count: databases.length };
     } catch (error: unknown) {
       this.logError("獲取資料庫列表失敗", error);
-      return this.failResult(error instanceof Error ? error.message : "獲取資料庫列表失敗");
+      return this.failResult(
+        error instanceof Error ? error.message : "獲取資料庫列表失敗"
+      );
     }
   }
 }

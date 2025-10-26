@@ -211,7 +211,7 @@ const LoadingButton = React.memo<{
   <button
     type={type}
     disabled={isLoading}
-    className={`w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-70 disabled:transform-none flex items-center justify-center space-x-2 ${className}`}
+    className={`w-full bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-70 disabled:transform-none flex items-center justify-center space-x-2 ${className}`}
     aria-label={isLoading ? loadingText : undefined}
   >
     {isLoading ? (
@@ -257,7 +257,7 @@ const SuccessMessage = React.memo<{
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <CheckCircleIcon className="h-8 w-8 text-green-500" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">註冊成功！</h3>
@@ -304,7 +304,7 @@ const SuccessMessage = React.memo<{
         <div className="mt-6 flex space-x-3">
           <button
             onClick={onGoToLogin}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2.5 px-4 rounded-xl transition-all duration-200"
+            className="flex-1 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2.5 px-4 rounded-xl transition-all duration-200"
           >
             前往登入
           </button>
@@ -553,7 +553,7 @@ const AuthPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-gray-900 relative overflow-hidden">
       {/* 成功訊息 Modal */}
       {showSuccessMessage && (
         <SuccessMessage
@@ -593,7 +593,7 @@ const AuthPage = () => {
             <div className="space-y-6">
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  <div className="p-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg">
+                  <div className="p-4 bg-linear-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg">
                     <ArrowTrendingUpIcon className="h-10 w-10 text-white" />
                   </div>
                   <div className="absolute -top-1 -right-1">
@@ -610,7 +610,7 @@ const AuthPage = () => {
                 <h1 className="text-5xl font-bold leading-tight text-white">
                   {brandContent.title}
                   <br />
-                  <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent">
+                  <span className="bg-linear-to-r from-blue-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent">
                     {brandContent.subtitle}
                   </span>
                 </h1>
@@ -643,7 +643,7 @@ const AuthPage = () => {
           <div className="flex flex-col justify-center">
             <div className="bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
               {/* 移動端品牌 */}
-              <div className="lg:hidden bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center">
+              <div className="lg:hidden bg-linear-to-r from-blue-600 to-purple-600 p-6 text-center">
                 <div className="flex items-center justify-center space-x-3 mb-2">
                   <ChartBarIcon className="h-8 w-8 text-white" />
                   <span className="text-2xl font-bold text-white">FinTech</span>
@@ -761,7 +761,7 @@ const AuthPage = () => {
                       </LoadingButton>
 
                       {/* 測試帳號 */}
-                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-4 border border-blue-100">
+                      <div className="bg-linear-to-r from-blue-50 to-purple-50 rounded-2xl p-4 border border-blue-100">
                         <div className="flex items-center space-x-2 mb-3">
                           <UserCircleIcon className="h-5 w-5 text-blue-600" />
                           <span className="text-sm font-semibold text-blue-800">

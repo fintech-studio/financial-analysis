@@ -146,7 +146,9 @@ export default async function handler(
     res.status(200).json({ results });
   } catch (err: unknown) {
     const errorObj = err as { message?: string };
-    res.status(500).json({ error: errorObj.message || "查詢失敗，請稍後再試。" });
+    res
+      .status(500)
+      .json({ error: errorObj.message || "查詢失敗，請稍後再試。" });
   } finally {
     if (pool) await pool.close();
   }
