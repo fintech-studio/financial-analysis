@@ -84,10 +84,12 @@ export default async function handler(
       const isSSE = contentType.includes("text/event-stream");
 
       if (isSSE) {
-        // 若 upstream 使用 SSE (text/event-stream)，我們把 event 的 data 欄位抽出，
-        // 嘗試解析成 JSON（若成功則以一行 JSON 傳回），否則以純文字傳回。
+        // 若 upstream 使用 SSE (text/event-stream)，我們把 event 的 data 欄位抽出並聚合成最終內容
         const decoder = new TextDecoder();
         let buf = "";
+        const aggregatedParts: string[] = [];
+        const rawEvents: string[] = []; // for debugging: store raw data: lines
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -109,23 +111,38 @@ export default async function handler(
               }
             }
             const data = dataLines.join("\n").trim();
+            rawEvents.push(data);
             if (!data) continue;
 
             // 常見的控制訊息 [DONE] 可忽略
             if (data === "[DONE]") continue;
 
-            // 嘗試解析為 JSON
+            // 嘗試解析為 JSON，若成功則從常見欄位抽取文字並加入聚合陣列；若非 JSON 則視為純文字
             try {
               const parsed = JSON.parse(data);
-              res.write(Buffer.from(JSON.stringify(parsed) + "\n"));
+              // 優先抽取 message.data / output / result / text / content / choices
+              const candidates = [
+                parsed.message?.content,
+                parsed.output,
+                parsed.result,
+                parsed.text,
+                parsed.content,
+                parsed.choices?.[0]?.message?.content,
+                parsed.choices?.[0]?.text,
+              ];
+              for (const c of candidates) {
+                if (typeof c === "string" && c.trim()) {
+                  aggregatedParts.push(c);
+                }
+              }
             } catch {
-              // 非 JSON，直接以文字傳回（加換行以利前端以 line-delimited JSON 方式處理）
-              res.write(Buffer.from(data + "\n"));
+              // keep raw data for debugging
+              aggregatedParts.push(data);
             }
           }
         }
 
-        // 如果 buffer 還有殘留但 upstream 已結束，嘗試處理一次
+        // 處理殘留 buffer
         if (buf.trim()) {
           const lines = buf.split(/\r?\n/);
           const dataLines: string[] = [];
@@ -137,12 +154,38 @@ export default async function handler(
           if (data && data !== "[DONE]") {
             try {
               const parsed = JSON.parse(data);
-              res.write(Buffer.from(JSON.stringify(parsed) + "\n"));
+              const candidates = [
+                parsed.message?.content,
+                parsed.output,
+                parsed.result,
+                parsed.text,
+                parsed.content,
+                parsed.choices?.[0]?.message?.content,
+                parsed.choices?.[0]?.text,
+              ];
+              for (const c of candidates) {
+                if (typeof c === "string" && c.trim()) aggregatedParts.push(c);
+              }
             } catch {
-              res.write(Buffer.from(data + "\n"));
+              aggregatedParts.push(data);
             }
           }
         }
+
+        // 聚合後一次回傳完整 JSON（方便像 curl 的 client）
+        const final = aggregatedParts.join("").trim();
+        const reply: Record<string, unknown> = {
+          model: upstream.headers.get("x-model") || "ollama",
+          // created_at 由 proxy 產生
+          created_at: new Date().toISOString(),
+          message: { role: "assistant", content: final },
+          done: true,
+        };
+        // include raw_events for debugging so callers can inspect exactly what upstream sent
+        if (rawEvents.length) reply["raw_events"] = rawEvents;
+        res.setHeader("content-type", "application/json;charset=utf-8");
+        res.end(JSON.stringify(reply));
+        return;
       } else {
         // 非 SSE，直接把原始二進位 chunk stream 寫回 client
         while (true) {

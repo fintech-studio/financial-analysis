@@ -8,6 +8,7 @@ import {
   SignalIcon,
 } from "@heroicons/react/24/outline";
 import Footer from "@/components/Layout/Footer";
+import AIFinanceTrivia from "@/components/AIFinanceTrivia";
 
 const TestPage: React.FC = () => {
   const testItems = [
@@ -316,6 +317,9 @@ const TestPage: React.FC = () => {
               </a>
             </div>
           </div>
+
+          {/* AI Finance Trivia Component */}
+          <AIFinanceTrivia />
 
           {/* Enhanced Call-to-Action Section */}
           <div className="text-center relative">
