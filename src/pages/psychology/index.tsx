@@ -29,7 +29,7 @@ export default function QuestionnairePage(): React.ReactElement {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${apiBase}/start`, { method: "POST" });
+      const res = await fetch(`${apiBase}/questionnaire/start`, { method: "POST" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setSessionId(data.session_id);
@@ -53,7 +53,7 @@ export default function QuestionnairePage(): React.ReactElement {
     setQuestion(null);
     
     try {
-      const response = await fetch(`${apiBase}/stream-question`, {
+      const response = await fetch(`${apiBase}/questionnaire/stream-question`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: sessionId, question_number: questionNum }),
@@ -85,12 +85,7 @@ export default function QuestionnairePage(): React.ReactElement {
               if (data.done) {
                 setQuestion(accumulatedText);
                 setIsStreamingQuestion(false);
-                // 保存問題到後端
-                await fetch(`${apiBase}/save-question`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ session_id: sessionId, question: accumulatedText }),
-                });
+                // 不需要保存問題到後端
                 return;
               }
               accumulatedText += data.text;
@@ -112,14 +107,14 @@ export default function QuestionnairePage(): React.ReactElement {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${apiBase}/answer`, {
+      const res = await fetch(`${apiBase}/questionnaire/answer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, answer_text: answer }),
+        body: JSON.stringify({ session_id: sessionId, answer: answer }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (data.finished) {
+      if (!data.has_next_question) {
         setFinished(true);
         setAdvice(data.advice);  // 直接設定建議，不再串流
         setQuestion(null);
