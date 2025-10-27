@@ -16,6 +16,7 @@ import {
   DocumentMagnifyingGlassIcon,
   ChatBubbleLeftRightIcon,
   SparklesIcon,
+  BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
 
 // TypeScript 接口定義
@@ -86,7 +87,7 @@ const Navigation: React.FC = () => {
         {
           name: "基本面分析",
           href: "/market-analysis/fundamental",
-          icon: ChartBarIcon,
+          icon: BuildingOffice2Icon,
           description: "財務報表、營收獲利與基本面數據分析",
           color: "text-orange-600",
           bgColor: "bg-orange-50",

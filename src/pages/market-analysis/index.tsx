@@ -6,367 +6,269 @@ import {
   ArrowTrendingUpIcon,
   DocumentMagnifyingGlassIcon,
   SignalIcon,
+  SparklesIcon,
+  ChevronRightIcon,
+  BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
 import Footer from "@/components/Layout/Footer";
 import AIFinanceTrivia from "@/components/AIFinanceTrivia";
+import PageHeader from "@/components/Layout/PageHeader";
 
 const TestPage: React.FC = () => {
-  const testItems = [
+  const features = [
     {
       title: "技術分析",
       description: "股價走勢、技術指標與圖表分析",
-      href: "/market-analysis/stock-query",
+      link: "/market-analysis/stock-query",
       icon: ArrowTrendingUpIcon,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
-      hoverColor: "hover:border-blue-300",
+      iconColor: "text-blue-600",
+      iconBg: "bg-blue-50",
     },
     {
       title: "基本面分析",
       description: "財務報表、營收獲利與基本面數據分析",
-      href: "/market-analysis/fundamental",
-      icon: ChartBarIcon,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      borderColor: "border-orange-200",
-      hoverColor: "hover:border-orange-300",
+      link: "/market-analysis/fundamental",
+      icon: BuildingOffice2Icon,
+      iconColor: "text-orange-600",
+      iconBg: "bg-orange-50",
     },
     {
       title: "交易訊號分析",
       description: "智能交易建議與買賣點提示",
-      href: "/market-analysis/trade-signals",
+      link: "/market-analysis/trade-signals",
       icon: SignalIcon,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      borderColor: "border-green-200",
-      hoverColor: "hover:border-green-300",
+      iconColor: "text-green-600",
+      iconBg: "bg-green-50",
     },
     {
       title: "金融代號查詢",
       description: "查詢金融代號相關資訊",
-      href: "/market-analysis/financial-code",
+      link: "/market-analysis/financial-code",
       icon: DocumentMagnifyingGlassIcon,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50",
-      borderColor: "border-purple-200",
-      hoverColor: "hover:border-purple-300",
+      iconColor: "text-purple-600",
+      iconBg: "bg-purple-50",
     },
   ];
 
+  const Icon = ChartBarIcon;
+  const Title = "市場分析";
+  const Subtitle = "專業的金融市場分析工具平台";
+  const Description =
+    "提供完整的技術分析與基本面分析工具，助您洞察市場趨勢，做出明智的投資決策";
+  const panelTitle = features.length.toString();
+  const panelSubtitle = "分析工具";
+
   return (
-    <div className="min-h-screen">
-      {/* Header Section */}
-      <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
-        {/* 動態網格背景 */}
-        <div className="absolute inset-0 opacity-20">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `
-              linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
-            `,
-              backgroundSize: "50px 50px",
-            }}
-          />
-        </div>
+    <>
+      <PageHeader
+        icon={Icon}
+        title={Title}
+        subtitle={Subtitle}
+        description={Description}
+        panelTitle={panelTitle}
+        panelSubtitle={panelSubtitle}
+      />
 
-        {/* Enhanced Decorative Background */}
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-12 left-12 w-24 h-24 bg-white opacity-5 rounded-full animate-pulse"></div>
-          <div
-            className="absolute bottom-12 right-24 w-36 h-36 bg-white opacity-5 rounded-full animate-pulse"
-            style={{ animationDelay: "1s" }}
-          ></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
-
-          {/* Enhanced floating elements */}
-          <div className="absolute top-24 right-12 w-4 h-4 bg-white opacity-20 rounded-full animate-bounce"></div>
-          <div
-            className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-30 rounded-full animate-pulse"
-            style={{ animationDelay: "1.5s" }}
-          ></div>
-          <div
-            className="absolute top-48 left-1/4 w-5 h-5 bg-white opacity-15 rounded-full animate-bounce"
-            style={{ animationDelay: "2s" }}
-          ></div>
-          <div
-            className="absolute top-32 right-1/3 w-2 h-2 bg-white opacity-25 rounded-full animate-pulse"
-            style={{ animationDelay: "0.5s" }}
-          ></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10 w-full">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-            <div className="flex-1">
-              <div className="flex items-center mb-6">
-                <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300 shadow-lg">
-                  <ChartBarIcon className="h-10 w-10 text-white group-hover:scale-110 transition-transform duration-300" />
+      <div className="min-h-screen">
+        {/* Main Content Area */}
+        <div className="relative bg-slate-50">
+          <div className="mx-auto px-8 sm:px-8 lg:px-12 py-8">
+            {/* Section Header */}
+            <div className="container mx-auto">
+              <div className="max-w-4xl mx-auto text-center mb-16">
+                <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-4">
+                  <SparklesIcon className="w-4 h-4 mr-2" />
+                  核心分析工具
                 </div>
-                <div>
-                  <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
-                    市場分析
-                  </h1>
-                  <p className="text-blue-200 mt-3 text-xl font-medium">
-                    專業的金融市場分析工具平台
+                <div className="max-w-3xl mx-auto text-center">
+                  <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                    探索我們的市場分析工具
+                  </h2>
+                  <p className="text-xl text-gray-600">
+                    多種專業分析工具，滿足不同投資策略需求
                   </p>
                 </div>
               </div>
-              <p className="text-blue-200 text-xl max-w-3xl leading-relaxed">
-                提供完整的技術分析與基本面分析工具，助您洞察市場趨勢，做出明智的投資決策
-              </p>
-            </div>
 
-            {/* Enhanced Statistics Panel */}
-            <div className="flex flex-col lg:items-end space-y-4">
-              <div className="grid grid-cols-1 gap-6 lg:gap-8">
-                <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-                  <div className="text-3xl font-bold text-white">
-                    {testItems.length}
-                  </div>
-                  <div className="text-blue-200 text-sm font-medium">
-                    分析工具
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content Area */}
-      <div className="relative bg-white">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold bg-linear-to-r from-slate-700 via-blue-700 to-indigo-700 bg-clip-text text-transparent mb-4">
-              選擇分析工具
-            </h2>
-            <p className="text-gray-600 text-xl max-w-2xl mx-auto leading-relaxed">
-              多種專業分析工具，滿足不同投資策略需求
-            </p>
-            <div className="w-24 h-1 bg-linear-to-r from-blue-500 to-indigo-500 mx-auto mt-6 rounded-full"></div>
-          </div>
-
-          {/* Enhanced Test Items Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 mb-20">
-            {testItems.map((item) => (
-              <Link key={item.title} href={item.href} className="group block">
-                <div
-                  className={`relative bg-white/95 backdrop-blur-sm rounded-3xl border-2 ${item.borderColor} ${item.hoverColor} p-10 hover:shadow-2xl transition-all duration-500 hover:-translate-y-4 overflow-hidden shadow-xl`}
-                >
-                  {/* Enhanced corner decorations */}
-                  <div className="absolute top-6 right-6 w-4 h-4 border-t-2 border-r-2 border-gray-200 opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-110"></div>
-                  <div className="absolute bottom-6 left-6 w-4 h-4 border-b-2 border-l-2 border-gray-200 opacity-30 group-hover:opacity-60 transition-all duration-300 group-hover:scale-110"></div>
-
-                  {/* Content Area */}
-                  <div className="relative z-10">
-                    <div className="flex items-start space-x-8 mb-8">
+              {/* Feature Items Grid */}
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 px-4">
+                {features.map((feature) => (
+                  <Link
+                    key={feature.title}
+                    href={feature.link}
+                    className={`group bg-white rounded-xl p-8 shadow-lg border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-xl relative flex flex-col `}
+                  >
+                    <div>
                       <div
-                        className={`relative shrink-0 w-20 h-20 ${item.bgColor} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-xl group-hover:shadow-2xl`}
+                        className={`w-14 h-14 rounded-2xl flex items-center justify-center ${feature.iconBg} mb-6 group-hover:scale-110 transition-transform`}
                       >
-                        {/* Enhanced icon background effects */}
-                        <item.icon
-                          className={`h-10 w-10 ${item.color} relative z-10 group-hover:scale-110 transition-transform`}
+                        <feature.icon
+                          className={`h-7 w-7 ${feature.iconColor}`}
                         />
                       </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-3xl font-bold text-gray-900 mb-4 group-hover:text-gray-700 transition-colors relative leading-tight">
-                          {item.title}
-                          {/* Enhanced title underline */}
-                        </h3>
-                        <p className="text-gray-600 text-lg leading-relaxed group-hover:text-gray-800 transition-colors">
-                          {item.description}
-                        </p>
-                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-600 mb-6 leading-relaxed">
+                        {feature.description}
+                      </p>
                     </div>
 
-                    {/* Enhanced bottom action area */}
-                    <div className="flex items-center justify-between pt-6 border-t border-gray-100 relative">
-                      {/* Enhanced separator decoration */}
-                      <span
-                        className={`text-sm font-bold ${item.color} bg-white/90 px-6 py-3 rounded-xl border-2 ${item.borderColor} shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group/btn backdrop-blur-sm`}
-                      >
-                        {/* Enhanced button background animation */}
-                        <span className="relative z-10 flex items-center space-x-2">
-                          <span>點擊前往</span>
-                        </span>
-                      </span>
-
-                      <div
-                        className={`w-12 h-12 ${item.bgColor} rounded-2xl flex items-center justify-center group-hover:translate-x-3 transition-all duration-300 shadow-xl relative`}
-                      >
-                        {/* Enhanced arrow background effects */}
-                        <svg
-                          className={`w-6 h-6 ${item.color} relative z-10 group-hover:scale-110 transition-transform`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2.5}
-                            d="M13 7l5 5m0 0l-5 5m5-5H6"
-                          />
-                        </svg>
-                      </div>
+                    <div className="mt-auto inline-flex items-center text-blue-600 group-hover:text-blue-700 font-medium">
+                      探索功能
+                      <ChevronRightIcon className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
                     </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {/* Enhanced Feature Highlights Section */}
-          <div className="mb-20">
-            <h3 className="text-3xl font-bold text-center text-gray-900 mb-4">
-              平台特色
-            </h3>
-            <p className="text-center text-gray-600 mb-12 text-lg">
-              為投資者提供全方位的市場分析支援
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-linear-to-br from-blue-50 via-white to-indigo-100 rounded-3xl p-8 border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
-                {/* Background decoration */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
-
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
-                    <ArrowTrendingUpIcon className="w-7 h-7 text-white" />
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900">即時數據</h4>
-                </div>
-                <p className="text-gray-600 leading-relaxed">
-                  獲取最新的市場數據和即時價格更新，確保分析結果的準確性與時效性
-                </p>
-                <div className="absolute bottom-4 right-4 w-3 h-3 bg-blue-500 rounded-full opacity-20 animate-pulse"></div>
-              </div>
-
-              <div className="bg-linear-to-br from-green-50 via-white to-emerald-100 rounded-3xl p-8 border-2 border-green-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
-
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-linear-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
-                    <ChartBarIcon className="w-7 h-7 text-white" />
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900">深度分析</h4>
-                </div>
-                <p className="text-gray-600 leading-relaxed">
-                  專業的技術指標和基本面分析工具，提供多維度的市場洞察與投資建議
-                </p>
-                <div
-                  className="absolute bottom-4 right-4 w-3 h-3 bg-green-500 rounded-full opacity-20 animate-pulse"
-                  style={{ animationDelay: "0.5s" }}
-                ></div>
-              </div>
-
-              <div className="bg-linear-to-br from-purple-50 via-white to-pink-100 rounded-3xl p-8 border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
-
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-linear-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
-                    <DocumentMagnifyingGlassIcon className="w-7 h-7 text-white" />
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900">
-                    AI 分析與見解
-                  </h4>
-                </div>
-                <p className="text-gray-600 leading-relaxed">
-                  利用先進的 AI
-                  技術，自動生成市場分析報告與投資見解，提升決策效率
-                </p>
-                <div
-                  className="absolute bottom-4 right-4 w-3 h-3 bg-purple-500 rounded-full opacity-20 animate-pulse"
-                  style={{ animationDelay: "1s" }}
-                ></div>
+                  </Link>
+                ))}
               </div>
             </div>
-          </div>
 
-          {/* Add Line Friend */}
-          <div className="text-center mb-20">
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              加入我們的 Line 好友
-            </h3>
-            <p className="text-gray-600 mb-6 text-lg">
-              獲取最新市場分析資訊與專屬投資建議
-            </p>
-            <div className="inline-flex relative flex-col items-center space-y-6">
-              <div className="absolute -inset-4 bg-linear-to-br from-green-400/20 via-green-500/20 to-green-600/20 rounded-3xl blur-xl animate-pulse"></div>
-              <Image
-                src={`${
-                  process.env.NEXT_PUBLIC_BASE_PATH || ""
-                }/linebot-qrcode.png`}
-                alt="LineBot QR Code"
-                width={256}
-                height={256}
-                className="mb-8 relative z-10 rounded-2xl shadow-lg"
-              />
-              <a
-                href="https://lin.ee/IWbTOCx"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative inline-flex items-center px-8 py-4 bg-linear-to-br from-green-50 via-green-100 to-green-200 border-2 border-green-300 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-linear-to-br from-green-100 via-green-200 to-green-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <span className="text-lg font-bold text-green-800 relative z-10">
-                  加入 Line 好友
-                </span>
-              </a>
+            {/* Enhanced Feature Highlights Section */}
+            <div className="my-16 px-22">
+              <h2 className="text-3xl font-bold text-center text-gray-900 my-4">
+                平台特色
+              </h2>
+              <p className="text-center text-gray-600 mb-12 text-lg">
+                為投資者提供全方位的市場分析支援
+              </p>
+
+              {/* Feature Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="bg-linear-to-br from-blue-50 via-white to-indigo-100 rounded-3xl p-8 border-2 border-blue-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
+                  {/* Background decoration */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
+
+                  <div className="flex items-center mb-6">
+                    <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
+                      <ArrowTrendingUpIcon className="w-7 h-7 text-white" />
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900">
+                      即時數據
+                    </h4>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed">
+                    獲取最新的市場數據和即時價格更新，確保分析結果的準確性與時效性
+                  </p>
+                  <div className="absolute bottom-4 right-4 w-3 h-3 bg-blue-500 rounded-full opacity-20 animate-pulse"></div>
+                </div>
+
+                <div className="bg-linear-to-br from-green-50 via-white to-emerald-100 rounded-3xl p-8 border-2 border-green-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
+
+                  <div className="flex items-center mb-6">
+                    <div className="w-12 h-12 bg-linear-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
+                      <ChartBarIcon className="w-7 h-7 text-white" />
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900">
+                      深度分析
+                    </h4>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed">
+                    專業的技術指標和基本面分析工具，提供多維度的市場洞察與投資建議
+                  </p>
+                  <div
+                    className="absolute bottom-4 right-4 w-3 h-3 bg-green-500 rounded-full opacity-20 animate-pulse"
+                    style={{ animationDelay: "0.5s" }}
+                  ></div>
+                </div>
+
+                <div className="bg-linear-to-br from-purple-50 via-white to-pink-100 rounded-3xl p-8 border-2 border-purple-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
+
+                  <div className="flex items-center mb-6">
+                    <div className="w-12 h-12 bg-linear-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform">
+                      <DocumentMagnifyingGlassIcon className="w-7 h-7 text-white" />
+                    </div>
+                    <h4 className="text-xl font-bold text-gray-900">
+                      AI 分析與見解
+                    </h4>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed">
+                    利用先進的 AI
+                    技術，自動生成市場分析報告與投資見解，提升決策效率
+                  </p>
+                  <div
+                    className="absolute bottom-4 right-4 w-3 h-3 bg-purple-500 rounded-full opacity-20 animate-pulse"
+                    style={{ animationDelay: "1s" }}
+                  ></div>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* AI Finance Trivia Component */}
-          <AIFinanceTrivia />
+            {/* Add Line Friend */}
+            <div className="text-center mb-20">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                加入我們的 Line 好友
+              </h2>
+              <p className="text-gray-600 mb-6 text-lg">
+                獲取最新市場分析資訊與專屬投資建議
+              </p>
+              <div className="inline-flex relative flex-col items-center space-y-6">
+                <div className="absolute -inset-4 bg-linear-to-br from-green-400/20 via-green-500/20 to-green-600/20 rounded-3xl blur-xl animate-pulse"></div>
+                <Image
+                  src={`${
+                    process.env.NEXT_PUBLIC_BASE_PATH || ""
+                  }/linebot-qrcode.png`}
+                  alt="LineBot QR Code"
+                  width={256}
+                  height={256}
+                  className="mb-8 relative z-10 rounded-2xl shadow-lg"
+                />
+                <a
+                  href="https://lin.ee/IWbTOCx"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative inline-flex items-center px-8 py-4 bg-linear-to-br from-green-50 via-green-100 to-green-200 border-2 border-green-300 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-linear-to-br from-green-100 via-green-200 to-green-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <span className="text-lg font-bold text-green-800 relative z-10">
+                    加入 Line 好友
+                  </span>
+                </a>
+              </div>
+            </div>
 
-          {/* Enhanced Call-to-Action Section */}
-          <div className="text-center relative">
-            {/* Enhanced decorative elements */}
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-12 w-20 h-px bg-linear-to-br from-transparent via-blue-300 to-transparent"></div>
+            {/* AI Finance Trivia Component */}
+            <AIFinanceTrivia />
 
-            <div className="inline-block relative">
-              <div className="absolute -inset-4 bg-linear-to-br from-blue-500/20 via-indigo-500/20 to-slate-500/20 rounded-3xl blur-xl animate-pulse"></div>
+            {/* Enhanced Call-to-Action Section */}
+            <div className="text-center relative mb-8">
+              {/* Enhanced decorative elements */}
+              <div className="inline-block relative">
+                <div className="absolute -inset-4 bg-linear-to-br from-blue-500/20 via-indigo-500/20 to-slate-500/20 rounded-3xl blur-xl animate-pulse"></div>
 
-              <div className="relative inline-flex items-center px-12 py-8 bg-linear-to-br from-blue-50 via-indigo-50 to-slate-50 border-3 border-blue-200 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group cursor-pointer">
-                {/* Enhanced background animation */}
-                <div className="absolute inset-0 bg-linear-to-br from-blue-100 via-indigo-100 to-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="absolute inset-0 bg-linear-to-br from-blue-600/5 via-indigo-600/5 to-slate-600/5 translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
-
-                <div className="shrink-0 w-12 h-12 bg-linear-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mr-6 relative shadow-xl group-hover:scale-110 transition-transform">
+                <div className="relative inline-flex items-center px-12 py-8 bg-linear-to-br from-blue-50 via-indigo-50 to-slate-50 border-3 border-blue-200 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden group cursor-pointer">
                   {/* Enhanced icon effects */}
-                  <div className="absolute inset-0 bg-linear-to-br from-blue-500 to-indigo-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
-                  <svg
-                    className="w-7 h-7 text-white relative z-10"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
+                  <div className="shrink-0 w-12 h-12 bg-linear-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mr-6 relative shadow-xl group-hover:scale-110 transition-transform">
+                    <div className="absolute inset-0 bg-linear-to-br from-blue-500 to-indigo-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
+                    <svg
+                      className="w-7 h-7 text-white relative z-10"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
 
-                <div className="text-left relative z-10">
-                  <p className="text-2xl font-bold bg-linear-to-br from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2 relative">
-                    開始您的市場分析之旅
-                    <span className="absolute -right-10 top-0 w-3 h-3 bg-linear-to-br from-blue-400 to-indigo-400 rounded-full animate-ping"></span>
-                  </p>
-                  <p className="text-lg text-blue-700 font-semibold">
-                    選擇合適的分析工具，發現投資機會
-                  </p>
-                </div>
+                  <div className="text-left relative z-10">
+                    <p className="text-2xl font-bold bg-linear-to-br from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2 relative">
+                      開始您的市場分析之旅
+                    </p>
+                    <p className="text-lg text-blue-700 font-semibold">
+                      選擇合適的分析工具，發現投資機會
+                    </p>
+                  </div>
 
-                {/* Enhanced corner decorations */}
-                <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-blue-300 opacity-40 group-hover:opacity-70 transition-opacity group-hover:scale-110"></div>
-                <div className="absolute bottom-4 left-4 w-3 h-3 border-b-2 border-l-2 border-blue-300 opacity-40 group-hover:opacity-70 transition-opacity group-hover:scale-110"></div>
+                  {/* Enhanced corner decorations */}
+                  <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-blue-300 opacity-40 group-hover:opacity-70 transition-opacity group-hover:scale-110"></div>
+                  <div className="absolute bottom-4 left-4 w-3 h-3 border-b-2 border-l-2 border-blue-300 opacity-40 group-hover:opacity-70 transition-opacity group-hover:scale-110"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -374,7 +276,7 @@ const TestPage: React.FC = () => {
       </div>
 
       <Footer />
-    </div>
+    </>
   );
 };
 export default TestPage;

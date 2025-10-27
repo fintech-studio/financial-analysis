@@ -5,11 +5,6 @@ import { FaGithub } from "react-icons/fa";
 const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-900 text-gray-300 relative overflow-hidden">
-      {/* 背景裝飾 */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-blue-500/20 to-purple-500/20"></div>
-      </div>
-
       <div className="container mx-auto px-4 py-8 relative z-10 pt-12">
         <div className="grid lg:grid-cols-4 gap-8">
           {/* 品牌資訊 */}

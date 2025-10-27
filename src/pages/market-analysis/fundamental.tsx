@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Head from "next/head";
 import Footer from "@/components/Layout/Footer";
-import { ChartBarIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import {
+  BuildingOffice2Icon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
+import PageHeader from "@/components/Layout/PageHeader";
 
 type DataPoint = { date: string; value: number };
 type IndicatorKey = "oil" | "gold" | "cpi" | "nfp";
@@ -308,97 +311,25 @@ export default function FundamentalPage(): React.ReactElement {
     }
   };
 
+  const Title = "基本面分析";
+  const Subtitle = "深入解析市場基本面指標與股票財務數據";
+  const Description =
+    "探索影響市場走勢的核心基本面指標，提供全面的市場分析與投資決策支持";
+  const panelTitle = agg.index.toString();
+  const panelSubtitle = "基本面綜合指數";
+
   return (
     <>
+      <PageHeader
+        icon={BuildingOffice2Icon}
+        title={Title}
+        subtitle={Subtitle}
+        description={Description}
+        panelTitle={panelTitle}
+        panelSubtitle={panelSubtitle}
+      />
+
       <div className="min-h-screen">
-        <Head>
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-        </Head>
-
-        {/* Header Section (仿 finance-code/index.tsx) */}
-        <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
-          {/* 動態網格背景 */}
-          <div className="absolute inset-0 opacity-20">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `
-                  linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
-                `,
-                backgroundSize: "50px 50px",
-              }}
-            />
-          </div>
-          {/* Enhanced Decorative Background */}
-          <div className="absolute top-0 left-0 w-full h-full">
-            <div className="absolute top-12 left-12 w-24 h-24 bg-white opacity-5 rounded-full animate-pulse"></div>
-            <div
-              className="absolute bottom-12 right-24 w-36 h-36 bg-white opacity-5 rounded-full animate-pulse"
-              style={{ animationDelay: "1s" }}
-            ></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
-            <div className="absolute top-24 right-12 w-4 h-4 bg-white opacity-20 rounded-full animate-bounce"></div>
-            <div
-              className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-30 rounded-full animate-pulse"
-              style={{ animationDelay: "1.5s" }}
-            ></div>
-            <div
-              className="absolute top-48 left-1/4 w-5 h-5 bg-white opacity-15 rounded-full animate-bounce"
-              style={{ animationDelay: "2s" }}
-            ></div>
-            <div
-              className="absolute top-32 right-1/3 w-2 h-2 bg-white opacity-25 rounded-full animate-pulse"
-              style={{ animationDelay: "0.5s" }}
-            ></div>
-          </div>
-          <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10 w-full">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-              <div className="flex-1">
-                <div className="flex items-center mb-6">
-                  <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300 shadow-lg">
-                    <div className="w-10 h-10 flex items-center justify-center">
-                      <ChartBarIcon className="h-8 w-8 text-white group-hover:scale-110 transition-transform duration-300" />
-                    </div>
-                  </div>
-                  <div>
-                    <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
-                      基本面指標總覽
-                    </h1>
-                    <p className="text-blue-200 mt-3 text-xl font-medium">
-                      快速掌握石油、黃金、CPI、NFP等重要經濟指標
-                    </p>
-                  </div>
-                </div>
-                <p className="text-blue-200 text-xl max-w-3xl leading-relaxed mb-8">
-                  本頁提供美國與全球市場重要基本面指標的即時查詢與趨勢分析，協助你做出更精準的投資決策。
-                </p>
-              </div>
-              {/* 統計面板 */}
-              <div className="flex flex-col lg:items-end space-y-4">
-                <div className="grid grid-cols-2 gap-6 lg:gap-8">
-                  <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-                    <div className="text-3xl font-bold text-white">
-                      {agg.index}
-                    </div>
-                    <div className="text-blue-200 text-sm font-medium">
-                      基本面綜合指數
-                    </div>
-                  </div>
-                  <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-                    <div className="text-3xl font-bold text-white">
-                      {new Date().toISOString().slice(0, 10)}
-                    </div>
-                    <div className="text-blue-200 text-sm font-medium">
-                      資料更新
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Main Content Area */}
         <div className="relative bg-linear-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
           {/* Decorative background elements */}
@@ -1155,6 +1086,7 @@ export default function FundamentalPage(): React.ReactElement {
           </div>
         </div>
       </div>
+
       <Footer />
     </>
   );

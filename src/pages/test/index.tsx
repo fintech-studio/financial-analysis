@@ -11,6 +11,7 @@ import {
   DevicePhoneMobileIcon,
   CommandLineIcon,
 } from "@heroicons/react/24/outline";
+import PageHeader from "@/components/Layout/PageHeader";
 import Footer from "@/components/Layout/Footer";
 
 const TestPage: React.FC = () => {
@@ -97,71 +98,25 @@ const TestPage: React.FC = () => {
     },
   ];
 
+  const Icon = CommandLineIcon;
+  const Title = "開發測試專區";
+  const Subtitle = "僅供管理員使用的開發與測試工具";
+  const Description =
+    "此區域包含多種開發與測試工具，僅限授權管理員使用。請謹慎操作，避免影響系統穩定性";
+  const panelTitle = "DEV ONLY";
+  const panelSubtitle = "開發測試專用";
+
   return (
     <>
-      {/* 頁面標題區域 */}
-      <section className="relative bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center overflow-hidden shadow-2xl">
-        {/* subtle grid background */}
-        <div className="absolute inset-0 opacity-20">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)
-              `,
-              backgroundSize: "60px 60px",
-            }}
-          />
-        </div>
+      <PageHeader
+        icon={Icon}
+        title={Title}
+        subtitle={Subtitle}
+        description={Description}
+        panelTitle={panelTitle}
+        panelSubtitle={panelSubtitle}
+      />
 
-        <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-12 left-12 w-24 h-24 bg-white opacity-5 rounded-full animate-pulse"></div>
-          <div
-            className="absolute bottom-12 right-24 w-36 h-36 bg-white opacity-5 rounded-full animate-pulse"
-            style={{ animationDelay: "1s" }}
-          ></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-radial from-white/10 to-transparent rounded-full"></div>
-          <div className="absolute top-24 right-12 w-4 h-4 bg-white opacity-20 rounded-full animate-bounce"></div>
-          <div
-            className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-30 rounded-full animate-pulse"
-            style={{ animationDelay: "1.5s" }}
-          ></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 z-10 w-full">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-            <div className="flex-1">
-              <div className="flex items-center mb-6">
-                <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm mr-6 group hover:bg-white/20 transition-all duration-300 shadow-lg">
-                  <div className="w-10 h-10 flex items-center justify-center">
-                    <CommandLineIcon className="h-8 w-8 text-white" />
-                  </div>
-                </div>
-                <div>
-                  <h1 className="text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
-                    開發測試工具
-                  </h1>
-                  <p className="text-blue-100 mt-3 text-lg font-medium">
-                    僅供管理員使用，非管理員請勿使用
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col lg:items-end space-y-4">
-              <div className="grid grid-cols-1 gap-6 lg:gap-8">
-                <div className="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20 shadow-lg">
-                  <div className="text-3xl font-bold text-white">DEV ONLY</div>
-                  <div className="text-blue-200 text-sm font-medium">
-                    開發測試專用
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
       {/* 頁面容器 */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* 測試項目網格 */}
