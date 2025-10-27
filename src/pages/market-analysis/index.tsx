@@ -298,7 +298,9 @@ const TestPage: React.FC = () => {
             <div className="inline-flex relative flex-col items-center space-y-6">
               <div className="absolute -inset-4 bg-linear-to-br from-green-400/20 via-green-500/20 to-green-600/20 rounded-3xl blur-xl animate-pulse"></div>
               <Image
-                src="/linebot-qrcode.png"
+                src={`${
+                  process.env.NEXT_PUBLIC_BASE_PATH || ""
+                }/linebot-qrcode.png`}
                 alt="LineBot QR Code"
                 width={256}
                 height={256}
