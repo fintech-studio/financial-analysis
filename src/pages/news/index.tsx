@@ -108,7 +108,7 @@ export default function NewsPage() {
 
       <div className="min-h-screen">
         {/* Main Content Area */}
-        <div className="relative bg-linear-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
+        <div className="relative bg-slate-50 min-h-screen">
           {/* Decorative background elements */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-20 left-20 w-64 h-64 bg-linear-to-br from-blue-100 to-indigo-100 rounded-full opacity-30 blur-3xl"></div>

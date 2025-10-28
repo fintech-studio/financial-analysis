@@ -576,7 +576,7 @@ const TradeSignalsPage: React.FC = () => {
       />
 
       {/* 主要內容區域 */}
-      <div className="relative bg-linear-to-br from-gray-50 via-blue-50 to-indigo-50 min-h-screen">
+      <div className="relative bg-slate-50 min-h-screen">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-20 w-64 h-64 bg-linear-to-br from-blue-100 to-indigo-100 rounded-full opacity-30 blur-3xl"></div>
           <div className="absolute bottom-20 right-20 w-96 h-96 bg-linear-to-br from-indigo-100 to-purple-100 rounded-full opacity-20 blur-3xl"></div>
