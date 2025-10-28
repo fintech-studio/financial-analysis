@@ -165,7 +165,7 @@ export default function QuestionnairePage(): React.ReactElement {
 
       <div className="min-h-screen bg-gray-50">
         {/* 主要內容區域 */}
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* 開始測驗卡片 */}
           {!sessionId && (
             <div className="bg-white rounded-xl shadow-lg animate-slideIn">
@@ -465,7 +465,7 @@ export default function QuestionnairePage(): React.ReactElement {
 
         {/* 諮詢資訊區塊 */}
         <div className="bg-gray-50 pb-8">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
                 {/* 測評方法 */}
@@ -555,15 +555,14 @@ export default function QuestionnairePage(): React.ReactElement {
                   </p>
                 </div>
               </div>
+              {/* 頁腳資訊 */}
+              <div className="text-center pb-8 pt-4">
+                <p className="text-sm text-gray-500">
+                  © 2025 理財心理測評系統 | 數據安全受到保護
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* 頁腳資訊 */}
-        <div className="text-center pb-8">
-          <p className="text-sm text-gray-500">
-            © 2025 理財心理測評系統 | 數據安全受到保護
-          </p>
         </div>
       </div>
 

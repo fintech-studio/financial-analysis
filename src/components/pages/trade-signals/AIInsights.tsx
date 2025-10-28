@@ -66,7 +66,7 @@ export default function AIInsights({
   data,
   symbol,
   timeframe,
-  nCandles = 40,
+  nCandles = 50,
   model = DEFAULT_MODEL,
   onComplete,
 }: Props) {
