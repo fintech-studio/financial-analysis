@@ -10,7 +10,7 @@ import {
   BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 // 型別定義與守衛（放在檔案頂部）
-import type { RiskData, AIData, ChartData } from "../../types/portfolio";
+import type { RiskData, AIData, ChartData } from "@/types/portfolio";
 
 // 重新定義 AssetAllocationData 與 PortfolioOverviewData 型別（保留原本結構，或考慮搬移到 types/portfolio.ts）
 interface AssetItem {
@@ -75,23 +75,23 @@ function isChartData(obj: unknown): obj is ChartData {
 }
 
 // 組件引入
-import PortfolioOverview from "../../components/pages/Portfolio/PortfolioOverview";
-import AssetAllocation from "../../components/pages/Portfolio/AssetAllocation";
-import HoldingsTable from "../../components/pages/Portfolio/HoldingsTable";
-import PerformanceChart from "../../components/pages/Portfolio/PerformanceChart";
-import TransactionHistory from "../../components/pages/Portfolio/TransactionHistory";
-import Footer from "../../components/Layout/Footer";
+import PortfolioOverview from "@/components/PageComponents/Portfolio/PortfolioOverview";
+import AssetAllocation from "@/components/PageComponents/Portfolio/AssetAllocation";
+import HoldingsTable from "@/components/PageComponents/Portfolio/HoldingsTable";
+import PerformanceChart from "@/components/PageComponents/Portfolio/PerformanceChart";
+import TransactionHistory from "@/components/PageComponents/Portfolio/TransactionHistory";
+import Footer from "@/components/Layout/Footer";
 
 // 優化後的 MVC 架構引入
-import { PortfolioController } from "../../controllers/PortfolioController";
-import { UserController } from "../../controllers/UserController";
+import { PortfolioController } from "@/controllers/PortfolioController";
+import { UserController } from "@/controllers/UserController";
 
 // 增強的Hook引入
 import {
   useControllerWithRetry,
   usePreloadData,
-} from "../../hooks/useMvcController";
-import { useAppInitialization } from "../../utils/appInitializer";
+} from "@/hooks/useMvcController";
+import { useAppInitialization } from "@/utils/appInitializer";
 
 interface Tab {
   id: string;

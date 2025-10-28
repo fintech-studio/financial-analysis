@@ -80,7 +80,7 @@ const Navigation: React.FC = () => {
       children: [
         {
           name: "技術分析",
-          href: "/market-analysis/stock-query",
+          href: "/market-analysis/technical",
           icon: ArrowTrendingUpIcon,
           description: "股價走勢、技術指標與圖表分析",
           color: "text-blue-600",

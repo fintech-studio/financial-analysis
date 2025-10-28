@@ -1,4 +1,4 @@
-import type { Message } from "@/components/pages/ChatPage/ChatCommon";
+import type { Message } from "@/components/PageComponents/ChatPage/ChatCommon";
 
 const OLLAMA_API_URL = "/api/ollama-proxy";
 const MODEL_NAME = "gpt-oss";

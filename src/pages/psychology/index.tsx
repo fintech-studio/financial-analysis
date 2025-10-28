@@ -1,10 +1,7 @@
-"use client";
-
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
-  AcademicCapIcon,
   HeartIcon,
   ChartBarIcon,
   UserIcon,
@@ -49,7 +46,7 @@ export default function QuestionnairePage(): React.ReactElement {
 
       // 開始串流第一個問題
       await streamQuestion(data.session_id, 0);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(String(e));
       setLoading(false);
     }
@@ -101,13 +98,13 @@ export default function QuestionnairePage(): React.ReactElement {
               }
               accumulatedText += data.text;
               setStreamingQuestion(accumulatedText);
-            } catch (e) {
+            } catch {
               // 忽略 JSON 解析錯誤
             }
           }
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(`串流錯誤: ${String(e)}`);
       setIsStreamingQuestion(false);
     }
@@ -137,17 +134,17 @@ export default function QuestionnairePage(): React.ReactElement {
         // 串流下一個問題
         await streamQuestion(sessionId, questionNumber + 1);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(String(e));
       setLoading(false);
     }
   };
 
   const Icon = FaceSmileIcon;
-  const Title = "理財心理測評";
+  const Title = "投資心理檢測";
   const Subtitle = "基於心理學的投資性格分析";
   const Description =
-    "透過科學的心理測評，深入了解您的投資心理特質與風險偏好，為您量身打造最適合的理財策略與建議。";
+    "透過科學的心理檢測，深入了解您的投資心理特質與風險偏好，制定更適合的理財策略";
   const panelTitle = "AI 驅動";
   const panelSubtitle = "智能分析";
   const panelTitle2 = "個性化";
@@ -174,7 +171,7 @@ export default function QuestionnairePage(): React.ReactElement {
             <div className="bg-white rounded-xl shadow-lg animate-slideIn">
               <div className="p-8 text-center">
                 <div className="mb-8">
-                  <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mb-6 shadow-xl">
+                  <div className="inline-flex items-center justify-center w-24 h-24 bg-linear-to-r from-purple-500 to-indigo-500 rounded-full mb-6 shadow-xl">
                     <HeartIcon className="w-12 h-12 text-white" />
                   </div>
                   <h2 className="text-2xl font-semibold text-gray-800 mb-4">
@@ -189,7 +186,7 @@ export default function QuestionnairePage(): React.ReactElement {
                 <button
                   onClick={startTest}
                   disabled={loading}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-lg min-w-48 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow-lg"
+                  className="bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-lg min-w-48 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow-lg"
                 >
                   {loading ? (
                     <div className="flex items-center justify-center">
@@ -210,10 +207,10 @@ export default function QuestionnairePage(): React.ReactElement {
           {/* 問題回答卡片 */}
           {sessionId && !finished && (
             <div className="bg-white rounded-xl shadow-lg animate-slideIn">
-              <div className="border-b border-gray-200 px-6 py-4 bg-gradient-to-r from-purple-50 to-indigo-50">
+              <div className="border-b border-gray-200 px-6 py-4 bg-linear-to-r from-purple-50 to-indigo-50">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center mr-3">
+                    <div className="w-8 h-8 bg-linear-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center mr-3">
                       <DocumentTextIcon className="w-4 h-4 text-white" />
                     </div>
                     問卷題目
@@ -237,15 +234,15 @@ export default function QuestionnairePage(): React.ReactElement {
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     題目：
                   </label>
-                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-500 p-6 rounded-lg relative overflow-hidden">
+                  <div className="bg-linear-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-500 p-6 rounded-lg relative overflow-hidden">
                     {/* 串流背景動畫 */}
                     {isStreamingQuestion && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-100/30 to-transparent animate-shimmer"></div>
+                      <div className="absolute inset-0 bg-linear-to-r from-transparent via-purple-100/30 to-transparent animate-shimmer"></div>
                     )}
 
                     <div className="relative">
                       {isStreamingQuestion ? (
-                        <div className="min-h-[3rem]">
+                        <div className="min-h-12">
                           <div className="text-gray-800 text-lg leading-relaxed">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                               {streamingQuestion}
@@ -313,7 +310,7 @@ export default function QuestionnairePage(): React.ReactElement {
                   <button
                     onClick={submitAnswer}
                     disabled={loading || !answer.trim() || isStreamingQuestion}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow-lg"
+                    className="bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow-lg"
                   >
                     {loading ? (
                       <div className="flex items-center">
@@ -335,9 +332,9 @@ export default function QuestionnairePage(): React.ReactElement {
           {/* 結果展示卡片 */}
           {finished && (
             <div className="bg-white rounded-xl shadow-lg animate-slideIn">
-              <div className="border-b border-gray-200 px-6 py-4 bg-gradient-to-r from-green-50 to-emerald-50">
+              <div className="border-b border-gray-200 px-6 py-4 bg-linear-to-r from-green-50 to-emerald-50">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mr-3">
+                  <div className="w-8 h-8 bg-linear-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mr-3">
                     <svg
                       className="w-4 h-4 text-white"
                       fill="none"
@@ -360,7 +357,7 @@ export default function QuestionnairePage(): React.ReactElement {
 
               <div className="p-6">
                 <div className="mb-6">
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-6 rounded-lg">
+                  <div className="bg-linear-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-6 rounded-lg">
                     <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
                       <svg
                         className="w-5 h-5 mr-2"
@@ -398,7 +395,7 @@ export default function QuestionnairePage(): React.ReactElement {
                       setIsStreamingQuestion(false);
                       setQuestionNumber(0);
                     }}
-                    className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 font-medium rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg"
+                    className="bg-linear-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 font-medium rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg"
                   >
                     <svg
                       className="w-4 h-4 mr-2 inline"
@@ -435,7 +432,7 @@ export default function QuestionnairePage(): React.ReactElement {
             <div className="bg-white rounded-xl border-red-200 border shadow-lg animate-slideIn">
               <div className="p-6">
                 <div className="flex items-start">
-                  <div className="flex-shrink-0">
+                  <div className="shrink-0">
                     <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />
                   </div>
                   <div className="ml-3">
@@ -468,108 +465,6 @@ export default function QuestionnairePage(): React.ReactElement {
               </div>
             </div>
           )}
-        </div>
-
-        {/* 諮詢資訊區塊 */}
-        <div className="bg-gray-50 pb-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
-                {/* 測評方法 */}
-                <div>
-                  <div className="flex items-center mb-4">
-                    <div className="p-2 bg-purple-100 rounded-lg mr-3">
-                      <AcademicCapIcon className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      測評方法
-                    </h3>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm">
-                      <HeartIcon className="h-4 w-4 text-gray-400 mr-2" />
-                      <span className="text-gray-600">心理學理論：</span>
-                      <span className="ml-1 font-medium text-gray-900">
-                        行為金融學
-                      </span>
-                    </div>
-                    <span className="block mt-2 text-xs text-gray-500">
-                      基於認知偏差、風險偏好等心理因素進行投資性格分析
-                    </span>
-                  </div>
-                </div>
-
-                {/* 數據安全 */}
-                <div>
-                  <div className="flex items-center mb-4">
-                    <div className="p-2 bg-green-100 rounded-lg mr-3">
-                      <svg
-                        className="h-5 w-5 text-green-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                        />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      數據安全
-                    </h3>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm">
-                      <svg
-                        className="h-4 w-4 text-gray-400 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="text-gray-700">加密保護與匿名化</span>
-                    </div>
-                    <span className="block mt-2 text-xs text-gray-500">
-                      所有回答都經過加密處理，不會洩露個人隱私
-                    </span>
-                  </div>
-                </div>
-
-                {/* 免責聲明 */}
-                <div>
-                  <div className="flex items-center mb-4">
-                    <div className="p-2 bg-yellow-100 rounded-lg mr-3">
-                      <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      免責聲明
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    本測評結果僅供參考，投資決策請結合個人實際情況謹慎考慮。
-                    <span className="block mt-2 text-xs text-gray-500">
-                      建議搭配專業理財顧問的意見進行投資規劃。
-                    </span>
-                  </p>
-                </div>
-              </div>
-              {/* 頁腳資訊 */}
-              <div className="text-center pb-8 pt-4">
-                <p className="text-sm text-gray-500">
-                  © 2025 理財心理測評系統 | 數據安全受到保護
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

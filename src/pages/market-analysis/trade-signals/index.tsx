@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Footer from "@/components/Layout/Footer";
-import AIInsights from "@/components/pages/trade-signals/AIInsights";
+import AIInsights from "@/components/PageComponents/TradeSignals/AIInsights";
 import { DatabaseService, DatabaseConfig } from "@/services/DatabaseService";
 import { FiDownload } from "react-icons/fi";
 import {

@@ -1,7 +1,7 @@
 import React from "react";
 import { UserGroupIcon } from "@heroicons/react/24/outline";
-import PageHeader from "../../components/Layout/PageHeader";
-import Footer from "../../components/Layout/Footer";
+import PageHeader from "@/components/Layout/PageHeader";
+import Footer from "@/components/Layout/Footer";
 
 const CommunityPage: React.FC = () => {
   const Icon = UserGroupIcon;

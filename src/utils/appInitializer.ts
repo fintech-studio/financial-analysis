@@ -2,9 +2,9 @@
 import {
   DIContainer,
   initializeDIContainer,
-} from "../controllers/BaseController";
-import { ServiceFactory } from "../services/BaseService";
-import { globalCacheManager } from "../hooks/useMvcController";
+} from "@/controllers/BaseController";
+import { ServiceFactory } from "@/services/BaseService";
+import { globalCacheManager } from "@/hooks/useMvcController";
 
 // 應用程式配置
 export interface AppConfig {

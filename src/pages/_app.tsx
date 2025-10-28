@@ -1,10 +1,10 @@
 import type { AppProps } from "next/app";
 import type { ReactElement, ReactNode } from "react";
 import type { NextPage } from "next";
-import PageTransition from "../components/Layout/PageTransition";
-import Navigation from "../components/Layout/Navigation";
-import ScrollToTop from "../components/common/ScrollToTop";
-import "../styles/globals.css";
+import PageTransition from "@/components/Layout/PageTransition";
+import Navigation from "@/components/Layout/Navigation";
+import ScrollToTop from "@/components/Layout/ScrollToTop";
+import "@/styles/globals.css";
 import Head from "next/head";
 import React from "react";
 import { useAppInitialization } from "@/utils/appInitializer";

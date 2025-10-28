@@ -4,7 +4,7 @@ import {
   Message,
   ANIMATION_CONFIG,
   Icons,
-} from "@/components/pages/ChatPage/ChatCommon";
+} from "@/components/PageComponents/ChatPage/ChatCommon";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";

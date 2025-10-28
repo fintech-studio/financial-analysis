@@ -3,10 +3,12 @@ import { Routes, Route } from "react-router-dom";
 import HomePage from "./pages/index";
 import Portfolio from "./pages/portfolio";
 import MarketAnalysisPage from "./pages/market-analysis";
-import StockQueryPage from "./pages/market-analysis/stock-query";
+import StockQueryPage from "./pages/market-analysis/technical";
 import FundamentalPage from "./pages/market-analysis/fundamental";
 import TradeSignalsPage from "./pages/market-analysis/trade-signals";
+import BacktestingPage from "./pages/market-analysis/backtesting";
 import FinancialCodePage from "./pages/market-analysis/financial-code";
+import PsychologyPage from "./pages/psychology";
 import Education from "./pages/education";
 import Community from "./pages/community";
 import NewsPage from "./pages/news";
@@ -21,8 +23,10 @@ const AppRoutes = (): React.JSX.Element => {
         <Route path="stock-query" element={<StockQueryPage />} />
         <Route path="fundamental" element={<FundamentalPage />} />
         <Route path="trade-signals" element={<TradeSignalsPage />} />
+        <Route path="backtesting" element={<BacktestingPage />} />
         <Route path="financial-code" element={<FinancialCodePage />} />
       </Route>
+      <Route path="/psychology" element={<PsychologyPage />} />
       <Route path="/portfolio" element={<Portfolio />} />
       <Route path="/education" element={<Education />} />
       <Route path="/community" element={<Community />} />

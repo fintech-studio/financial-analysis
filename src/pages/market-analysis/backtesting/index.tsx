@@ -35,7 +35,7 @@ interface Question {
     close: number;
     volume: number;
   }>;
-  previous_indicates: { [key: string]: any };
+  previous_indicates: Record<string, unknown>;
   correct_ans: "buy" | "sell";
   explanations: Array<string>;
   profitLoss?: number;
@@ -187,7 +187,7 @@ const BacktestingPage: React.FC = () => {
   const Icon = BackwardIcon;
   const Title = "回測系統";
   const Subtitle = "模擬交易體驗";
-  const Description = "透過真實市場數據進行模擬交易，測試策略並累積經驗。";
+  const Description = "透過真實市場數據進行模擬交易，測試策略並累積經驗";
   const PanelTitle = "回測訓練系統";
   const PancelSubtitle = "提升您的市場分析與交易決策能力";
 
@@ -213,7 +213,7 @@ const BacktestingPage: React.FC = () => {
               className="flex flex-col items-center justify-center min-h-[60vh] bg-white rounded-3xl shadow-lg border border-gray-100 p-12"
             >
               <div className="text-center space-y-6 max-w-2xl">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-8">
+                <div className="w-24 h-24 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-8">
                   <PlayIcon className="h-12 w-12 text-white" />
                 </div>
                 <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -227,7 +227,7 @@ const BacktestingPage: React.FC = () => {
                   <button
                     onClick={startGame}
                     disabled={loading || loadingQuestions}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 text-white px-12 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                    className="bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 text-white px-12 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
                   >
                     {loading || loadingQuestions ? "生成問題中..." : "開始訓練"}
                   </button>
@@ -278,7 +278,7 @@ const BacktestingPage: React.FC = () => {
               </div>
               <button
                 onClick={resetGame}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-12 py-4 rounded-2xl font-semibold text-lg transition-all hover:scale-105"
+                className="bg-linear-to-r from-blue-600 to-purple-600 text-white px-12 py-4 rounded-2xl font-semibold text-lg transition-all hover:scale-105"
               >
                 重新訓練
               </button>

@@ -6,10 +6,13 @@ import React, {
   useMemo,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import MessageBubble from "@/components/pages/ChatPage/MessageBubble";
-import { Message, Icons } from "@/components/pages/ChatPage/ChatCommon";
-import AttachPreview from "@/components/pages/ChatPage/AttachPreview";
-import ChatInput from "@/components/pages/ChatPage/ChatInput";
+import MessageBubble from "@/components/PageComponents/ChatPage/MessageBubble";
+import {
+  Message,
+  Icons,
+} from "@/components/PageComponents/ChatPage/ChatCommon";
+import AttachPreview from "@/components/PageComponents/ChatPage/AttachPreview";
+import ChatInput from "@/components/PageComponents/ChatPage/ChatInput";
 import { sendMessageService } from "@/services/ChatService";
 
 const MODEL_NAME = "FinCoach";

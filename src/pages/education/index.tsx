@@ -1,7 +1,7 @@
 import React from "react";
 import { AcademicCapIcon } from "@heroicons/react/24/outline";
 import PageHeader from "@/components/Layout/PageHeader";
-import Footer from "../../components/Layout/Footer";
+import Footer from "@/components/Layout/Footer";
 
 const EducationPage: React.FC = () => {
   const Icon = AcademicCapIcon;

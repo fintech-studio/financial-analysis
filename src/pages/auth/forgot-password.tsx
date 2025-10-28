@@ -18,8 +18,8 @@ import {
 } from "@heroicons/react/24/outline";
 
 // MVC 架構引入
-import { UserController } from "../../controllers/UserController";
-import { useMvcController } from "../../hooks/useMvcController";
+import { UserController } from "@/controllers/UserController";
+import { useMvcController } from "@/hooks/useMvcController";
 
 // 類型定義
 interface ForgotPasswordForm {

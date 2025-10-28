@@ -5,10 +5,10 @@ import {
   Transaction,
   AssetAllocation,
   PerformanceData,
-} from "../models/PortfolioModel";
+} from "@/models/PortfolioModel";
 import { BaseController } from "./BaseController";
-import { PortfolioService } from "../services/PortfolioService";
-import * as PortfolioTypes from "../types/portfolio";
+import { PortfolioService } from "@/services/PortfolioService";
+import * as PortfolioTypes from "@/types/portfolio";
 
 export interface AddTransactionRequest {
   portfolioId?: string;

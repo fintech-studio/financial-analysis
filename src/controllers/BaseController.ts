@@ -1,5 +1,5 @@
 // 導入必要的 Model 類別
-import { UserModel, PortfolioModel } from "../models";
+import { UserModel, PortfolioModel } from "@/models";
 
 // 統一錯誤處理類
 export class ErrorHandler {

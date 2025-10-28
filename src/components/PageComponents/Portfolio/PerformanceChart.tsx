@@ -21,7 +21,7 @@ import {
   DocumentChartBarIcon,
 } from "@heroicons/react/24/outline";
 // 型別統一 import
-import type { ChartData, PerformanceData } from "../../../types/portfolio";
+import type { ChartData, PerformanceData } from "@/types/portfolio";
 
 // 註冊 Chart.js 組件
 ChartJS.register(

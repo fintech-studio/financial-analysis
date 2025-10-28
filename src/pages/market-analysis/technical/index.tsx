@@ -1,24 +1,24 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
-import SearchBar from "@/components/pages/stock-query/SearchBar";
-import TradingCard from "@/components/pages/stock-query/TradingCard";
-import ChartContainer from "@/components/pages/stock-query/ChartContainer";
-import DataTable from "@/components/pages/stock-query/DataTable";
-import LoadingSpinner from "@/components/pages/stock-query/LoadingSpinner";
+import SearchBar from "@/components/PageComponents/TechnicalAnalysis/SearchBar";
+import TradingCard from "@/components/PageComponents/TechnicalAnalysis/TradingCard";
+import ChartContainer from "@/components/PageComponents/TechnicalAnalysis/ChartContainer";
+import DataTable from "@/components/PageComponents/TechnicalAnalysis/DataTable";
+import LoadingSpinner from "@/components/PageComponents/TechnicalAnalysis/LoadingSpinner";
 import {
   EmptyState,
   ErrorState,
-} from "@/components/pages/stock-query/StateComponents";
+} from "@/components/PageComponents/TechnicalAnalysis/StateComponents";
 import { useStockData } from "@/hooks/useStockData";
 import {
   ArrowTrendingUpIcon,
   ChartBarIcon,
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
-import TechnicalAnalysisPanel from "@/components/pages/stock-query/TechnicalAnalysisPanel";
-import KLinePattern from "@/components/pages/stock-query/KLinePattern";
-import AIInsights from "@/components/pages/stock-query/AIInsights";
-import type { MarketType } from "@/components/pages/stock-query/SearchBar";
+import TechnicalAnalysisPanel from "@/components/PageComponents/TechnicalAnalysis/TechnicalAnalysisPanel";
+import KLinePattern from "@/components/PageComponents/TechnicalAnalysis/KLinePattern";
+import AIInsights from "@/components/PageComponents/TechnicalAnalysis/AIInsights";
+import type { MarketType } from "@/components/PageComponents/TechnicalAnalysis/SearchBar";
 import Footer from "@/components/Layout/Footer";
 import PageHeader from "@/components/Layout/PageHeader";
 

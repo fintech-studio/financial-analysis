@@ -8,7 +8,7 @@ import {
   ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import dynamic from "next/dynamic";
-import Wave from "@/components/Wave";
+import Wave from "@/components/Layout/Wave";
 import Footer from "@/components/Layout/Footer";
 
 // 增強的Hook引入

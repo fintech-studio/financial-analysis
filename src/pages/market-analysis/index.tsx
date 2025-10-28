@@ -12,7 +12,7 @@ import {
   BackwardIcon,
 } from "@heroicons/react/24/outline";
 import Footer from "@/components/Layout/Footer";
-import AIFinanceTrivia from "@/components/AIFinanceTrivia";
+import AIFinanceTrivia from "@/components/Widgets/AIFinanceTrivia";
 import PageHeader from "@/components/Layout/PageHeader";
 
 const TestPage: React.FC = () => {
@@ -20,7 +20,7 @@ const TestPage: React.FC = () => {
     {
       title: "技術分析",
       description: "股價走勢、技術指標與圖表分析",
-      link: "/market-analysis/stock-query",
+      link: "/market-analysis/technical",
       icon: ArrowTrendingUpIcon,
       iconColor: "text-blue-600",
       iconBg: "bg-blue-50",

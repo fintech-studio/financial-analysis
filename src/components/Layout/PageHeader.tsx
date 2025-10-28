@@ -1,6 +1,6 @@
 import React from "react";
 import { ChartBarIcon } from "@heroicons/react/24/outline";
-import Wave from "@/components/Wave";
+import Wave from "@/components/Layout/Wave";
 
 interface PageHeaderProps {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;

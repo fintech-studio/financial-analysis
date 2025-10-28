@@ -10,12 +10,9 @@ import {
   DocumentDuplicateIcon,
 } from "@heroicons/react/24/outline";
 import PredictionLineChart from "@/components/Charts/PredictChart";
-import {
-  DatabaseService,
-  DatabaseConfig,
-} from "../../services/DatabaseService";
-import PageHeader from "../../components/Layout/PageHeader";
-import Footer from "../../components/Layout/Footer";
+import { DatabaseService, DatabaseConfig } from "@/services/DatabaseService";
+import PageHeader from "@/components/Layout/PageHeader";
+import Footer from "@/components/Layout/Footer";
 
 interface PredictionData {
   mean: number[];

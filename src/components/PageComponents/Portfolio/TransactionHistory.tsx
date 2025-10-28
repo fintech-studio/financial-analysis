@@ -13,8 +13,8 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { PortfolioController } from "../../../controllers/PortfolioController";
-import { useMvcController } from "../../../hooks/useMvcController";
+import { PortfolioController } from "@/controllers/PortfolioController";
+import { useMvcController } from "@/hooks/useMvcController";
 import type {
   Transaction,
   TransactionStats,

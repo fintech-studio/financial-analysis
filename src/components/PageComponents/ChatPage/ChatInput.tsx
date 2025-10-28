@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Icons } from "@/components/pages/ChatPage/ChatCommon";
+import { Icons } from "@/components/PageComponents/ChatPage/ChatCommon";
 
 type SetBool = (v: boolean | ((s: boolean) => boolean)) => void;
 

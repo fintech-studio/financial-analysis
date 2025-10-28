@@ -26,9 +26,9 @@ import {
 import { SparklesIcon as SparklesSolidIcon } from "@heroicons/react/24/solid";
 
 // MVC 架構引入
-import { PortfolioController } from "../../../controllers/PortfolioController";
-import { useMvcController } from "../../../hooks/useMvcController";
-import { AssetAllocation as AssetAllocationType } from "../../../models/PortfolioModel";
+import { PortfolioController } from "@/controllers/PortfolioController";
+import { useMvcController } from "@/hooks/useMvcController";
+import { AssetAllocation as AssetAllocationType } from "@/models/PortfolioModel";
 
 // 註冊 Chart.js 組件
 ChartJS.register(

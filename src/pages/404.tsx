@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Footer from "@/components/Layout/Footer";
-import Wave from "@/components/Wave";
+import Wave from "@/components/Layout/Wave";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 const NotFoundPage: React.FC = () => {

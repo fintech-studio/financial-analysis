@@ -19,9 +19,9 @@ import {
 } from "@heroicons/react/24/outline";
 
 // MVC 架構 - 導入控制器和Hooks
-import { UserController } from "../../controllers/UserController";
-import { useMvcController } from "../../hooks/useMvcController";
-import { User } from "../../models/UserModel";
+import { UserController } from "@/controllers/UserController";
+import { useMvcController } from "@/hooks/useMvcController";
+import { User } from "@/models/UserModel";
 
 // 類型定義
 interface LoginForm {

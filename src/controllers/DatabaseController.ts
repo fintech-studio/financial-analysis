@@ -4,7 +4,7 @@ import {
   DatabaseConfig,
   QueryResult,
   ConnectionResult,
-} from "../services/DatabaseService";
+} from "@/services/DatabaseService";
 
 /**
  * 簡化的資料庫控制器 - 只支援 SQL Server 驗證

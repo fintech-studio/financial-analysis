@@ -3,7 +3,7 @@ import {
   User,
   UserActivity,
   UserPreferences,
-} from "../models/UserModel";
+} from "@/models/UserModel";
 
 export interface UserLoginRequest {
   email: string;
