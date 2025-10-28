@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   AcademicCapIcon,
   HeartIcon,
@@ -12,6 +14,7 @@ import {
 } from "@heroicons/react/24/outline";
 import PageHeader from "@/components/Layout/PageHeader";
 import Footer from "@/components/Layout/Footer";
+// import react-markdown
 
 export default function QuestionnairePage(): React.ReactElement {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -243,10 +246,12 @@ export default function QuestionnairePage(): React.ReactElement {
                     <div className="relative">
                       {isStreamingQuestion ? (
                         <div className="min-h-[3rem]">
-                          <p className="text-gray-800 text-lg leading-relaxed">
-                            {streamingQuestion}
+                          <div className="text-gray-800 text-lg leading-relaxed">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {streamingQuestion}
+                            </ReactMarkdown>
                             <span className="inline-block w-0.5 h-6 bg-purple-500 animate-pulse ml-1 align-middle"></span>
-                          </p>
+                          </div>
                           {streamingQuestion.length === 0 && (
                             <div className="flex items-center text-purple-600">
                               <div className="flex space-x-1">
@@ -267,9 +272,11 @@ export default function QuestionnairePage(): React.ReactElement {
                           )}
                         </div>
                       ) : (
-                        <p className="text-gray-800 text-lg leading-relaxed">
-                          {question}
-                        </p>
+                        <div className="text-gray-800 text-lg leading-relaxed">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {question || ""}
+                          </ReactMarkdown>
+                        </div>
                       )}
                     </div>
                   </div>
