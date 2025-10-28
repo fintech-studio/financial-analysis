@@ -36,7 +36,7 @@ function buildPromptForSignals(
     if (!data) return "未提供資料。";
     if (Array.isArray(data)) {
       const sample = (data as unknown[])
-        .slice(0, 40)
+        .slice(0, 50)
         .map((d) => {
           const item = d as Record<string, unknown>;
           const dt = item.datetime ?? item.date ?? item.time ?? "-";
@@ -47,7 +47,7 @@ function buildPromptForSignals(
         .join("\n");
       return `最近 ${Math.min(
         (data as unknown[]).length,
-        40
+        50
       )} 筆交易訊號（最近 -> 最遠）：\n${sample}`;
     }
     const single = data as Record<string, unknown>;
@@ -66,7 +66,7 @@ export default function AIInsights({
   data,
   symbol,
   timeframe,
-  nCandles = 40,
+  nCandles = 50,
   model = DEFAULT_MODEL,
   onComplete,
 }: Props) {

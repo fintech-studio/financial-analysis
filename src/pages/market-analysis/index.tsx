@@ -9,6 +9,7 @@ import {
   SparklesIcon,
   ChevronRightIcon,
   BuildingOffice2Icon,
+  BackwardIcon,
 } from "@heroicons/react/24/outline";
 import Footer from "@/components/Layout/Footer";
 import AIFinanceTrivia from "@/components/AIFinanceTrivia";
@@ -39,6 +40,14 @@ const TestPage: React.FC = () => {
       icon: SignalIcon,
       iconColor: "text-green-600",
       iconBg: "bg-green-50",
+    },
+    {
+      title: "回測系統",
+      description: "策略回測與績效評估工具",
+      link: "/market-analysis/backtesting",
+      icon: BackwardIcon,
+      iconColor: "text-red-600",
+      iconBg: "bg-red-50",
     },
     {
       title: "金融代號查詢",
@@ -91,7 +100,7 @@ const TestPage: React.FC = () => {
               </div>
 
               {/* Feature Items Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 px-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 px-8">
                 {features.map((feature) => (
                   <Link
                     key={feature.title}

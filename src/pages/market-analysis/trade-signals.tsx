@@ -298,7 +298,7 @@ const TradeSignalsPage: React.FC = () => {
       : undefined;
 
     const sparkValues = rows
-      .slice(0, 40)
+      .slice(0, 50)
       .map((r) => Number(r["close_price"] ?? r["close"]) || 0)
       .filter((v) => v > 0);
     const sparkFirst =

@@ -17,6 +17,8 @@ import {
   ChatBubbleLeftRightIcon,
   SparklesIcon,
   BuildingOffice2Icon,
+  BackwardIcon,
+  FaceSmileIcon,
 } from "@heroicons/react/24/outline";
 
 // TypeScript 接口定義
@@ -101,6 +103,14 @@ const Navigation: React.FC = () => {
           bgColor: "bg-green-50",
         },
         {
+          name: "股票回測",
+          href: "/market-analysis/backtesting",
+          icon: BackwardIcon,
+          description: "即時股票回測與策略建議",
+          color: "text-red-600",
+          bgColor: "bg-red-50",
+        },
+        {
           name: "金融代號查詢",
           href: "/market-analysis/financial-code",
           icon: DocumentMagnifyingGlassIcon,
@@ -115,6 +125,12 @@ const Navigation: React.FC = () => {
       href: "/news",
       icon: NewspaperIcon,
       description: "AI 精選全球財經資訊",
+    },
+    {
+      name: "投資心理檢測",
+      href: "/psychology",
+      icon: FaceSmileIcon,
+      description: "AI 預測",
     },
     {
       name: "AI 助理",
