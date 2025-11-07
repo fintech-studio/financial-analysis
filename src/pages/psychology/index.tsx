@@ -3,7 +3,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   HeartIcon,
-  ChartBarIcon,
   UserIcon,
   DocumentTextIcon,
   ExclamationTriangleIcon,
@@ -47,7 +46,7 @@ export default function QuestionnairePage(): React.ReactElement {
   const [investorType, setInvestorType] = useState<string | null>(null);
   // const [showServerProfile, setShowServerProfile] = useState<boolean>(false);
 
-  const apiBase = "http://172.25.1.24:8080";
+  const apiBase = process.env.NEXT_PUBLIC_PSYCHOLOGY_API_BASE;
 
   // 題型偵測與選項解析
   const detectQuestionType = (q: string) => {
@@ -76,7 +75,7 @@ export default function QuestionnairePage(): React.ReactElement {
     if (parts.length < 2) return [];
 
     // 清理前綴（編號、標點等）
-    parts = parts.map((p) => p.replace(/^[A-Za-z0-9:\-、\s]+/, "").trim());
+    parts = parts.map((p) => p.replace(/^[A-Za-z0-9).:、\s-]+/, "").trim());
 
     // 若第一段像題目（過長或含問號/冒號），嘗試從該段取出可能的選項或丟棄題目段
     const first = parts[0];
@@ -153,10 +152,13 @@ export default function QuestionnairePage(): React.ReactElement {
     }
   };
 
+  const [streamedOptions, setStreamedOptions] = useState<string[]>([]);
+
   const streamQuestion = async (sessionId: string, questionNum: number) => {
     setIsStreamingQuestion(true);
     setStreamingQuestion("");
     setQuestion(null);
+    setStreamedOptions([]); // 新增：每次串流前清空
     try {
       const response = await fetch(`${apiBase}/questionnaire/stream-question`, {
         method: "POST",
@@ -184,10 +186,20 @@ export default function QuestionnairePage(): React.ReactElement {
                 setQuestion(accumulatedText);
                 prepareQuestionUI(accumulatedText);
                 setIsStreamingQuestion(false);
+                setStreamedOptions([]); // 最終以正式選項為主
                 return;
               }
               accumulatedText += data.text;
               setStreamingQuestion(accumulatedText);
+
+              // 新增：即時判斷題型與選項
+              const type = detectQuestionType(accumulatedText);
+              if (type === "mc") {
+                const opts = extractOptions(accumulatedText);
+                setStreamedOptions(opts);
+              } else {
+                setStreamedOptions([]);
+              }
             } catch {
               // ignore
             }
@@ -197,6 +209,7 @@ export default function QuestionnairePage(): React.ReactElement {
     } catch (e: unknown) {
       setError(`串流錯誤: ${String(e)}`);
       setIsStreamingQuestion(false);
+      setStreamedOptions([]);
     }
   };
 
@@ -460,8 +473,14 @@ export default function QuestionnairePage(): React.ReactElement {
       "市場敏感度",
     ];
     const dims = Object.values(values);
-    const cx = size / 2;
-    const cy = size / 2;
+
+    // Add an explicit margin around the chart inside the SVG viewBox so labels
+    // are rendered within the SVG canvas (prevents parent clipping).
+    const margin = Math.max(0, Math.round(size * 0.2));
+    const total = size + margin * 2;
+    const cx = total / 2;
+    const cy = total / 2;
+    // radius uses the inner "size" area so visual proportions don't change
     const r = size / 2 - 20;
     const points = dims.map((v, i) => {
       const angle = (Math.PI * 2 * i) / dims.length - Math.PI / 2;
@@ -476,64 +495,85 @@ export default function QuestionnairePage(): React.ReactElement {
     });
 
     return (
-      <svg width={size} height={size} className="mx-auto">
-        {[0.2, 0.4, 0.6, 0.8, 1].map((s, idx) => {
-          const poly = labels
-            .map((_, i) => {
-              const angle = (Math.PI * 2 * i) / labels.length - Math.PI / 2;
-              const radius = s * r;
-              return `${cx + radius * Math.cos(angle)},${
-                cy + radius * Math.sin(angle)
-              }`;
-            })
-            .join(" ");
-          return (
-            <polygon
-              key={idx}
-              points={poly}
-              fill="none"
-              stroke="#E6E6E6"
-              strokeWidth={1}
-            />
-          );
-        })}
-        {outer.map((pt, i) => {
-          const [x, y] = pt.split(",").map(Number);
-          const dx = x > cx ? 8 : x < cx ? -8 : 0;
-          const anchor = x > cx ? "start" : x < cx ? "end" : "middle";
-          return (
-            <text
-              key={i}
-              x={x + dx}
-              y={y}
-              fontSize={Math.max(10, size * 0.045)}
-              fill="#374151"
-              textAnchor={anchor}
-              dominantBaseline="middle"
-            >
-              {labels[i]}
-            </text>
-          );
-        })}
-        <polygon
-          points={points.join(" ")}
-          fill="rgba(124,58,237,0.15)"
-          stroke="#7C3AED"
-          strokeWidth={2}
-        />
-        {points.map((pt, i) => {
-          const [x, y] = pt.split(",").map(Number);
-          return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r={Math.max(3, size * 0.01)}
-              fill="#7C3AED"
-            />
-          );
-        })}
-      </svg>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: size + margin * 2,
+          margin: "0 auto",
+          padding: 0,
+          boxSizing: "border-box",
+          overflow: "visible",
+        }}
+      >
+        <svg
+          width="100%"
+          height="auto"
+          viewBox={`0 0 ${total} ${total}`}
+          preserveAspectRatio="xMidYMid meet"
+          className="mx-auto block"
+        >
+          {[0.2, 0.4, 0.6, 0.8, 1].map((s, idx) => {
+            const poly = labels
+              .map((_, i) => {
+                const angle = (Math.PI * 2 * i) / labels.length - Math.PI / 2;
+                const radius = s * r;
+                return `${cx + radius * Math.cos(angle)},${
+                  cy + radius * Math.sin(angle)
+                }`;
+              })
+              .join(" ");
+            return (
+              <polygon
+                key={idx}
+                points={poly}
+                fill="none"
+                stroke="#E6E6E6"
+                strokeWidth={1}
+              />
+            );
+          })}
+          {outer.map((pt, i) => {
+            const [x, y] = pt.split(",").map(Number);
+            // scale label offset with total to give enough space from the
+            // outer vertex; use a slightly larger offset now that we have a
+            // viewBox margin available
+            const offset = Math.max(10, Math.round(total * 0.03));
+            const dx = x > cx ? offset : x < cx ? -offset : 0;
+            const anchor = x > cx ? "start" : x < cx ? "end" : "middle";
+            return (
+              <text
+                key={i}
+                x={x + dx}
+                y={y}
+                fontSize={Math.max(10, Math.round(size * 0.04))}
+                fill="#374151"
+                textAnchor={anchor}
+                dominantBaseline="middle"
+              >
+                {labels[i]}
+              </text>
+            );
+          })}
+          <polygon
+            points={points.join(" ")}
+            fill="rgba(124,58,237,0.15)"
+            stroke="#7C3AED"
+            strokeWidth={2}
+          />
+          {points.map((pt, i) => {
+            const [x, y] = pt.split(",").map(Number);
+            return (
+              <circle
+                key={i}
+                cx={x}
+                cy={y}
+                r={Math.max(3, size * 0.01)}
+                fill="#7C3AED"
+              />
+            );
+          })}
+        </svg>
+      </div>
     );
   };
 
@@ -618,9 +658,6 @@ export default function QuestionnairePage(): React.ReactElement {
                     <div className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
                       第 {questionNumber + 1} 題
                     </div>
-                    <div className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
-                      已回答 {responses.length} 題
-                    </div>
                     {isStreamingQuestion && (
                       <div className="flex items-center text-sm text-purple-600">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-2"></div>
@@ -658,13 +695,33 @@ export default function QuestionnairePage(): React.ReactElement {
                     您的回答：
                   </label>
 
-                  {questionType === "mc" && (
+                  {/* 串流時即顯示選項（streamedOptions），否則用正式 options */}
+                  {isStreamingQuestion && streamedOptions.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-xs text-gray-500 mb-2">
+                        （選項預覽，AI生成中）
+                      </div>
+                      <div className="space-y-3">
+                        {streamedOptions.map((opt, idx) => (
+                          <button
+                            key={idx}
+                            disabled
+                            className="w-full text-left px-4 py-3 rounded-lg border bg-gray-100 text-gray-400 border-gray-200"
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {questionType === "mc" && !isStreamingQuestion && (
                     <div className="mb-4">{renderOptions()}</div>
                   )}
-                  {questionType === "likert" && (
+                  {questionType === "likert" && !isStreamingQuestion && (
                     <div className="mb-4">{renderLikert()}</div>
                   )}
-                  {questionType === "open" && (
+                  {questionType === "open" && !isStreamingQuestion && (
                     <textarea
                       value={answer}
                       onChange={(e) => setAnswer(e.target.value)}
@@ -714,7 +771,6 @@ export default function QuestionnairePage(): React.ReactElement {
                     ) : (
                       <>
                         <span>送出回答</span>
-                        <ChartBarIcon className="w-4 h-4 ml-2 inline" />
                       </>
                     )}
                   </button>
@@ -723,10 +779,13 @@ export default function QuestionnairePage(): React.ReactElement {
             </div>
           )}
 
-          {/* 完成結果：AI 建議 + 互動分析雷達圖 */}
+          {/* 完成結果：AI 建議 + 互動分析雷達圖（重構版） */}
           {finished && (
-            <div className="bg-white rounded-xl shadow-lg animate-slideIn">
-              <div className="border-b border-gray-200 px-6 py-4 bg-linear-to-r from-green-50 to-emerald-50">
+            <section
+              aria-labelledby="result-heading"
+              className="bg-white rounded-xl shadow-lg animate-slideIn"
+            >
+              <header className="border-b border-gray-200 px-6 py-4 bg-linear-to-r from-green-50 to-emerald-50">
                 <div className="flex items-center">
                   <div className="w-8 h-8 bg-linear-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mr-3">
                     <svg
@@ -743,11 +802,14 @@ export default function QuestionnairePage(): React.ReactElement {
                       />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    測驗完成 - 個人化建議
+                  <h2
+                    id="result-heading"
+                    className="text-xl font-semibold text-gray-800"
+                  >
+                    測驗完成 — 個人化建議
                   </h2>
                 </div>
-              </div>
+              </header>
 
               <div className="p-6">
                 <div className="mb-6">
@@ -755,17 +817,32 @@ export default function QuestionnairePage(): React.ReactElement {
                     <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
                       您的理財心理分析報告
                     </h3>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-white rounded-lg p-4 shadow-sm">
+                      {/* 左：AI 建議 */}
+                      <aside
+                        className="bg-white rounded-lg p-4 shadow-sm"
+                        aria-label="AI 建議"
+                      >
                         <h4 className="text-sm font-medium text-gray-700 mb-2">
                           AI 建議
                         </h4>
-                        <pre className="whitespace-pre-wrap text-gray-700 leading-relaxed font-sans">
-                          {advice}
-                        </pre>
-                      </div>
+                        <div className="text-gray-700 leading-relaxed font-sans text-lg">
+                          {advice ? (
+                            <pre className="whitespace-pre-wrap">{advice}</pre>
+                          ) : (
+                            <div className="text-gray-500">
+                              目前沒有建議內容。
+                            </div>
+                          )}
+                        </div>
+                      </aside>
 
-                      <div className="bg-white rounded-lg p-4 shadow-sm text-center">
+                      {/* 右：互動分析 + 雷達圖 */}
+                      <div
+                        className="bg-white rounded-lg p-4 shadow-sm text-center"
+                        aria-label="互動分析"
+                      >
                         <h4 className="text-sm font-medium text-gray-700 mb-2">
                           互動分析
                         </h4>
@@ -777,12 +854,40 @@ export default function QuestionnairePage(): React.ReactElement {
                             />
                           </div>
                         </div>
+
                         <div className="mt-4">
                           <div className="text-sm text-gray-600">
                             投資者類型
                           </div>
                           <div className="text-lg font-semibold text-gray-800">
-                            {investorType || classifyInvestor(profile)}
+                            {investorType ||
+                              (serverProfile
+                                ? classifyInvestor(serverProfile)
+                                : classifyInvestor(profile))}
+                          </div>
+                        </div>
+
+                        {/* 顯示伺服器 profile（若有）或本地計算值 */}
+                        <div className="mt-4 text-left">
+                          <div className="text-xs text-gray-500 mb-2">
+                            指標（0-100）
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
+                            {Object.entries(serverProfile || profile).map(
+                              ([k, v]) => (
+                                <div
+                                  key={k}
+                                  className="flex justify-between items-center bg-gray-50 rounded-md px-3 py-2"
+                                >
+                                  <div className="capitalize text-gray-600">
+                                    {k.replace(/([A-Z])/g, " $1")}
+                                  </div>
+                                  <div className="font-medium text-gray-800">
+                                    {v}
+                                  </div>
+                                </div>
+                              )
+                            )}
                           </div>
                         </div>
                       </div>
@@ -815,7 +920,7 @@ export default function QuestionnairePage(): React.ReactElement {
                   </button>
                 </div>
               </div>
-            </div>
+            </section>
           )}
 
           {/* 載入指示器 */}

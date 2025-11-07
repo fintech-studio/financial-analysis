@@ -6,6 +6,7 @@ import {
   ChatBubbleLeftRightIcon,
   ChevronRightIcon,
   ChartBarIcon,
+  FaceSmileIcon,
 } from "@heroicons/react/24/outline";
 import dynamic from "next/dynamic";
 import Wave from "@/components/Layout/Wave";
@@ -442,7 +443,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
               {features.map((feature) => (
                 <Link
                   key={feature.title}
@@ -532,6 +533,15 @@ const features = [
     iconBg: "bg-purple-100",
     iconColor: "text-purple-600",
     link: "/news",
+  },
+  {
+    title: "投資心理檢測",
+    description:
+      "透過問卷調查與心理測評，深入了解您的投資風格與風險承受能力，提供個性化的投資建議",
+    icon: FaceSmileIcon,
+    iconBg: "bg-red-100",
+    iconColor: "text-red-600",
+    link: "/chat",
   },
   {
     title: "AI 助理",

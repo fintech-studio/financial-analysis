@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-gray-900 text-gray-300 relative overflow-hidden">
       <div className="container mx-auto px-4 py-8 relative z-10 pt-12">
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-5 gap-8">
           {/* 品牌資訊 */}
           <div className="lg:col-span-2">
             <div className="flex items-center mb-6">
@@ -42,14 +42,30 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-white font-semibold mb-6">功能</h4>
             <ul className="space-y-3">
-              {["市場分析", "財經新聞", "AI 預測", "AI 助理"].map((item) => (
+              {[
+                "市場分析",
+                "財經新聞",
+                "投資心理檢測",
+                "AI 預測",
+                "AI 助理",
+              ].map((item) => (
                 <li key={item}>
                   <a
                     href={
-                      ["/market-analysis", "/news", "/predict", "/chat"][
-                        ["市場分析", "財經新聞", "AI 預測", "AI 助理"].indexOf(
-                          item
-                        )
+                      [
+                        "/market-analysis",
+                        "/news",
+                        "/psychology",
+                        "/predict",
+                        "/chat",
+                      ][
+                        [
+                          "市場分析",
+                          "財經新聞",
+                          "投資心理檢測",
+                          "AI 預測",
+                          "AI 助理",
+                        ].indexOf(item)
                       ]
                     }
                     className="text-gray-400 hover:text-white transition-colors"
