@@ -541,7 +541,7 @@ const features = [
     icon: FaceSmileIcon,
     iconBg: "bg-red-100",
     iconColor: "text-red-600",
-    link: "/chat",
+    link: "/psychology",
   },
   {
     title: "AI 助理",
