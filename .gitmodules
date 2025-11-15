@@ -1,0 +1,4 @@
+[submodule "public/python-app/Technical-Indicators"]
+	path = public/python-app/Technical-Indicators
+	url = https://github.com/fintech-studio/technical-indicators
+	branch = main
