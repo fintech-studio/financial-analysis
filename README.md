@@ -37,9 +37,7 @@
 
 ### UI/UX 組件
 
-- **Headless UI 2.2** - 無樣式 UI 組件庫
 - **Heroicons 2.2** - 精美的 SVG 圖標集
-- **Ant Design 5.28** - 企業級 UI 設計語言
 - **React Icons 5.5** - 豐富的圖標庫
 - **GSAP 3.13** - 強大的動畫工具
 - **Framer Motion 12** - 高效能動畫庫
@@ -49,8 +47,6 @@
 - **Chart.js 4.5** - 靈活的圖表庫
 - **Lightweight Charts 5.0** - 專業金融圖表
 - **React Sparklines 1.7** - 迷你圖表組件
-- **Chartjs Adapter Date-fns** - 時間軸適配器
-- **Chartjs Plugin Annotation** - 圖表註解插件
 
 ### 後端與資料庫
 
