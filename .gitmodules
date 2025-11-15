@@ -6,3 +6,7 @@
 	path = public/python-app/Fundamental
 	url = https://github.com/fintech-studio/fundamental
 	branch = main
+[submodule "public/python-app/Backtesting"]
+	path = public/python-app/Backtesting
+	url = https://github.com/fintech-studio/backtesting
+	branch = main
