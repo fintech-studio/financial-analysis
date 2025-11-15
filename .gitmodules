@@ -2,3 +2,7 @@
 	path = public/python-app/Technical-Indicators
 	url = https://github.com/fintech-studio/technical-indicators
 	branch = main
+[submodule "public/python-app/Fundamental"]
+	path = public/python-app/Fundamental
+	url = https://github.com/fintech-studio/fundamental
+	branch = main
