@@ -107,8 +107,14 @@ financial-analysis/
 1. **複製專案**
 
    ```bash
-   git clone https://github.com/fintech-studio/financial-analysis.git
+   git clone --recurse-submodules https://github.com/fintech-studio/financial-analysis.git
    cd financial-analysis
+   ```
+
+   如果未使用 `--recurse-submodules`，請手動初始化 submodule：
+
+   ```bash
+   git submodule update --init --recursive
    ```
 
 2. **安裝依賴**
