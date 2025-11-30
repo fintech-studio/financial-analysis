@@ -1,8 +1,8 @@
-[submodule "public/python-app/Technical-Indicators"]
-	path = public/python-app/Technical-Indicators
+[submodule "backend/Technical-Indicators"]
+	path = backend/Technical-Indicators
 	url = https://github.com/fintech-studio/technical-indicators
 	branch = main
-[submodule "public/python-app/Fundamental"]
-	path = public/python-app/Fundamental
+[submodule "backend/Fundamental"]
+	path = backend/Fundamental
 	url = https://github.com/fintech-studio/fundamental
 	branch = main
