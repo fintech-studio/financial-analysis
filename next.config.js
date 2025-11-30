@@ -12,6 +12,9 @@ const nextConfig = {
         trailingSlash: true,
         basePath: "/financial-analysis",
         assetPrefix: "/financial-analysis",
+        images: {
+          unoptimized: true,
+        },
       }
     : {}),
   async rewrites() {
