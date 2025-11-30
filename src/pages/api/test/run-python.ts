@@ -25,15 +25,12 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   // 根據模式選擇不同的腳本入口
   let scriptPath: string;
   if (mode === "fundamental") {
-    scriptPath = path.resolve(
-      process.cwd(),
-      "public/python-app/Fundamental/main.py"
-    );
+    scriptPath = path.resolve(process.cwd(), "backend/Fundamental/main.py");
   } else {
     // 預設為技術指標模式
     scriptPath = path.resolve(
       process.cwd(),
-      "public/python-app/Technical-Indicators/main.py"
+      "backend/Technical-Indicators/main.py"
     );
   }
 
