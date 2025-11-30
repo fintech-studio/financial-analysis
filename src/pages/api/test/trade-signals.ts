@@ -52,8 +52,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const scriptPath = path.join(
     process.cwd(),
-    "public",
-    "python-app",
+    "backend",
     "Trade-Signals",
     "analyze_signals.py"
   );

@@ -65,9 +65,9 @@ financial-analysis/
 │   └── 📄 status-check.yml            # 狀態檢查配置
 ├── 📁 public/                         # 靜態資源
 │   ├── 📁 kline-patterns/             # K線型態圖片資源
-│   ├── 📁 python-app/                 # Python 程式
-│   │   ├── 📁 Technical-Indicators/   # 技術指標分析系統
-│   │   ├── 📁 Fundamental/            # 基本面分析系統
+├── 📁 backend/                        # Python 程式
+│   ├── 📁 Technical-Indicators/       # 技術指標分析系統
+│   ├── 📁 Fundamental/                # 基本面分析系統
 ├── 📁 src/                            # 主要源碼
 │   ├── 📁 components/                 # React 組件
 │   ├── 📁 controllers/                # MVC 控制器
@@ -187,15 +187,15 @@ OLLAMA_LOCAL = http://localhost:11434/api/chat     # 本地 LLM 模型
 
 ### 技術分析系統
 
-位於 `public/python-app/`，提供完整的金融分析功能：
+位於 `backend/`，提供完整的金融分析功能：
 
 ```bash
 # 技術指標分析系統
-cd public/python-app/Technical-Indicators/
+cd backend/Technical-Indicators/
 pip install -r requirements.txt     # 安裝依賴
 
 # 基本面分析系統
-cd public/python-app/Fundamental/
+cd backend/Fundamental/
 pip install -r requirements.txt     # 安裝依賴
 
 # 環境變數配置（各系統目錄下）

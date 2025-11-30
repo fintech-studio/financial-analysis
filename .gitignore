@@ -138,11 +138,11 @@ dist
 .pnp.*
 
 # python-app specific ignores
-public/python-app/**/__pycache__/
+backend/**/__pycache__/
 
-!public/python-app/Trade-Signals/.env
-!public/python-app/Technical-Indicators/.env
-!public/python-app/Fundamental/.env
+!backend/Trade-Signals/.env
+!backend/Technical-Indicators/.env
+!backend/Fundamental/.env
 
 # JetBrains IDEs
 .idea

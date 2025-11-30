@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import sql from "mssql";
+import { getPool } from "@/utils/dbPool";
 
 export default async function handler(
   req: NextApiRequest,
@@ -72,8 +73,8 @@ export default async function handler(
     let pool: sql.ConnectionPool | null = null;
 
     try {
-      pool = new sql.ConnectionPool(sqlConfig);
-      await pool.connect();
+      // reuse pooled connection
+      pool = await getPool(sqlConfig);
       const request = pool.request();
       if (params && typeof params === "object") {
         Object.keys(params).forEach((key) => {
@@ -126,13 +127,7 @@ export default async function handler(
         count: 0,
       });
     } finally {
-      if (pool) {
-        try {
-          await pool.close();
-        } catch (closeError) {
-          console.error("[API] 關閉連接池時發生錯誤", closeError);
-        }
-      }
+      // Do not close pooled connections here; keep them for reuse
     }
   } catch (error: unknown) {
     console.error("[API] 查詢執行發生錯誤", error);
