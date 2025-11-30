@@ -14,9 +14,6 @@ const nextConfig = {
         assetPrefix: "/financial-analysis",
       }
     : {}),
-  images: {
-    unoptimized: true,
-  },
   async rewrites() {
     return [
       {

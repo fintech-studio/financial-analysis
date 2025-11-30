@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import sql from "mssql";
+import { getPool } from "@/utils/dbPool";
 
 export default async function handler(
   req: NextApiRequest,
@@ -61,8 +62,7 @@ export default async function handler(
           ...config,
           database: "master",
         };
-        const checkPool = new sql.ConnectionPool(checkConfig);
-        await checkPool.connect();
+        const checkPool = await getPool(checkConfig);
         const checkRequest = checkPool.request();
         checkRequest.input("dbName", sql.VarChar, database);
         const result = await checkRequest.query(`
@@ -89,8 +89,8 @@ export default async function handler(
       }
       // 如果資料庫存在（或使用master），嘗試連接到目標資料庫
       console.log("[API] 嘗試連接到目標資料庫");
-      pool = new sql.ConnectionPool(config);
-      await pool.connect();
+      // use pooled connection
+      pool = await getPool(config);
       const request = pool.request();
       await request.query("SELECT 1 as test");
       console.log("[API] 連接測試結果", { success: true });
@@ -122,10 +122,8 @@ export default async function handler(
               ...config,
               database: "master",
             };
-            const masterPool = new sql.ConnectionPool(masterConfig);
-            await masterPool.connect();
+            const masterPool = await getPool(masterConfig);
             await masterPool.request().query("SELECT 1 as test");
-            await masterPool.close();
             console.log("[API] 帳號密碼正確，判定為權限問題");
             errorMessage =
               "權限不足：使用者沒有存取此資料庫的權限，請聯繫資料庫管理員";
@@ -166,13 +164,7 @@ export default async function handler(
         count: 0,
       });
     } finally {
-      if (pool) {
-        try {
-          await pool.close();
-        } catch (closeError) {
-          console.error("[API] 關閉連接池時發生錯誤", closeError);
-        }
-      }
+      // Do not close pooled connections here; reuse across requests
     }
   } catch (error: unknown) {
     console.error("[API] 連接測試發生錯誤", error);
