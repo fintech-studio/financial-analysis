@@ -10,7 +10,6 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --ext .js,.ts,.tsx --fix",
     "export": "next build && next export",
-    "deploy": "npm run build:static && touch out/.nojekyll",
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
