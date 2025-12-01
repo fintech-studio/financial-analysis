@@ -52,7 +52,7 @@
 
 - **MS SQL Server** - 關聯式資料庫
 - **Python 3.10+** - 技術分析與數據處理引擎
-- **Node.js 22+** - 伺服器端 JavaScript 運行環境
+- **Node.js 24+** - 伺服器端 JavaScript 運行環境
 - **Axios 1.13** - HTTP 客戶端
 - **Cheerio** - 網頁爬蟲與解析
 
@@ -60,36 +60,37 @@
 
 ```
 financial-analysis/
-├── 📁 .github/workflows/              # GitHub Actions CI/CD
-│   ├── 📄 deploy.yml                  # 自動部署配置
-│   └── 📄 status-check.yml            # 狀態檢查配置
-├── 📁 public/                         # 靜態資源
-│   ├── 📁 kline-patterns/             # K線型態圖片資源
-├── 📁 backend/                        # Python 程式
-│   ├── 📁 Technical-Indicators/       # 技術指標分析系統
-│   ├── 📁 Fundamental/                # 基本面分析系統
-├── 📁 src/                            # 主要源碼
-│   ├── 📁 components/                 # React 組件
-│   ├── 📁 controllers/                # MVC 控制器
-│   ├── 📁 hooks/                      # React Hooks
-│   ├── 📁 models/                     # 資料模型
-│   ├── 📁 pages/                      # Next.js 頁面路由
-│   │   ├── 📁 api/                    # API 路由
-│   │   ├── 📄 _app.tsx                # App 入口
-│   │   ├── 📄 _document.tsx           # Document 配置
-│   │   └── 📄 index.tsx               # 首頁
-│   ├── 📁 services/                   # 業務邏輯服務
-│   ├── 📁 styles/                     # 全域樣式
-│   ├── 📁 types/                      # TypeScript 型別定義
-│   └── 📁 utils/                      # 工具函數
-├── 📄 .env                            # 環境變數配置
-├── 📄 .gitignore                      # Git 忽略配置
-├── 📄 eslint.config.mts               # ESLint 配置
-├── 📄 next.config.js                  # Next.js 配置
-├── 📄 package.json                    # 專案依賴與腳本
-├── 📄 postcss.config.js               # PostCSS 配置
-├── 📄 tailwind.config.js              # Tailwind CSS 配置
-└── 📄 tsconfig.json                   # TypeScript 配置
+├── 📁 .github/workflows/                 # GitHub Actions CI/CD
+│   ├── 📄 deploy-vercel-preview.yml      # 自動部屬預覽環境
+│   ├── 📄 deploy-vercel-production.yml   # 自動部屬生產環境
+│   └── 📄 status-check.yml               # 狀態檢查配置
+├── 📁 public/                            # 靜態資源
+│   ├── 📁 kline-patterns/                # K線型態圖片資源
+├── 📁 backend/                           # 後端程式
+│   ├── 📁 Technical-Indicators/          # 技術指標分析系統
+│   ├── 📁 Fundamental/                   # 基本面分析系統
+├── 📁 src/                               # 主要源碼
+│   ├── 📁 components/                    # React 組件
+│   ├── 📁 controllers/                   # MVC 控制器
+│   ├── 📁 hooks/                         # React Hooks
+│   ├── 📁 models/                        # 資料模型
+│   ├── 📁 pages/                         # Next.js 頁面路由
+│   │   ├── 📁 api/                       # API 路由
+│   │   ├── 📄 _app.tsx                   # App 入口
+│   │   ├── 📄 _document.tsx              # Document 配置
+│   │   └── 📄 index.tsx                  # 首頁
+│   ├── 📁 services/                      # 業務邏輯服務
+│   ├── 📁 styles/                        # 全域樣式
+│   ├── 📁 types/                         # TypeScript 型別定義
+│   └── 📁 utils/                         # 工具函數
+├── 📄 .env                               # 環境變數配置
+├── 📄 .gitignore                         # Git 忽略配置
+├── 📄 eslint.config.mts                  # ESLint 配置
+├── 📄 next.config.js                     # Next.js 配置
+├── 📄 package.json                       # 專案依賴與腳本
+├── 📄 postcss.config.js                  # PostCSS 配置
+├── 📄 tailwind.config.js                 # Tailwind CSS 配置
+└── 📄 tsconfig.json                      # TypeScript 配置
 ```
 
 ## 🚀 快速開始
@@ -149,9 +150,6 @@ npm run dev
 
 # 建置生產版本
 npm run build
-
-# 建置靜態版本（用於 GitHub Pages）
-npm run build:static
 
 # 啟動生產伺服器
 npm start
@@ -214,15 +212,6 @@ cp .env .env.local  # 複製環境變數範本
 - [股票預測及回測系統](https://github.com/fintech-studio/py_backend)
 - [投資心理壓力檢測系統](https://github.com/fintech-studio/psychology)
 - [LINE Bot 通知系統](https://github.com/fintech-studio/line-bot)
-
-## 🌐 GitHub Pages 自動部署
-
-專案已配置完整的 CI/CD 流程：
-
-1. **推送觸發**：推送到 `main` 分支自動觸發部署
-2. **自動建置**：GitHub Actions 執行建置腳本
-3. **靜態部署**：自動部署到 `gh-pages` 分支
-4. **即時更新**：網站自動更新
 
 ---
 
