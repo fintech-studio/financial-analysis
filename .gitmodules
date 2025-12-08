@@ -6,3 +6,6 @@
 	path = backend/Fundamental
 	url = https://github.com/fintech-studio/fundamental
 	branch = main
+[submodule "backend/Psychology"]
+	path = backend/Psychology
+	url = https://github.com/fintech-studio/psychology
