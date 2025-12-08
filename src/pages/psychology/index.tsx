@@ -9,6 +9,7 @@ import {
   FaceSmileIcon,
 } from "@heroicons/react/24/outline";
 import PageHeader from "@/components/Layout/PageHeader";
+import * as PsychologyService from "@/services/PsychologyService";
 import Footer from "@/components/Layout/Footer";
 
 export default function QuestionnairePage(): React.ReactElement {
@@ -45,8 +46,6 @@ export default function QuestionnairePage(): React.ReactElement {
   } | null>(null);
   const [investorType, setInvestorType] = useState<string | null>(null);
   // const [showServerProfile, setShowServerProfile] = useState<boolean>(false);
-
-  const apiBase = process.env.NEXT_PUBLIC_PSYCHOLOGY_API_BASE;
 
   // 題型偵測與選項解析
   const detectQuestionType = (q: string) => {
@@ -133,11 +132,7 @@ export default function QuestionnairePage(): React.ReactElement {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${apiBase}/questionnaire/start`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await PsychologyService.startQuestionnaire();
       setSessionId(data.session_id);
       setFinished(false);
       setAdvice(null);
@@ -160,14 +155,10 @@ export default function QuestionnairePage(): React.ReactElement {
     setQuestion(null);
     setStreamedOptions([]); // 新增：每次串流前清空
     try {
-      const response = await fetch(`${apiBase}/questionnaire/stream-question`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          question_number: questionNum,
-        }),
-      });
+      const response = await PsychologyService.streamQuestion(
+        sessionId,
+        questionNum
+      );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -235,13 +226,10 @@ export default function QuestionnairePage(): React.ReactElement {
     } else finalAnswer = answer;
 
     try {
-      const res = await fetch(`${apiBase}/questionnaire/answer`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, answer: finalAnswer }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await PsychologyService.answerQuestion(
+        sessionId,
+        finalAnswer
+      );
 
       // 儲存本地回應（用於備援分析）
       setResponses((prev) => [

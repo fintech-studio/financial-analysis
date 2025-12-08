@@ -61,9 +61,9 @@
 ```
 financial-analysis/
 ├── 📁 .github/workflows/                 # GitHub Actions CI/CD
-│   ├── 📄 deploy-vercel-preview.yml      # 自動部屬預覽環境
-│   ├── 📄 deploy-vercel-production.yml   # 自動部屬生產環境
-│   └── 📄 status-check.yml               # 狀態檢查配置
+│   ├── 📄 deploy-vercel-preview.yml      # 自動部署預覽環境
+│   ├── 📄 deploy-vercel-production.yml   # 自動部署生產環境
+│   └── 📄 status-check.yml               # 專案建置檢查
 ├── 📁 public/                            # 靜態資源
 │   ├── 📁 kline-patterns/                # K線型態圖片資源
 ├── 📁 backend/                           # 後端程式

@@ -2,14 +2,11 @@ import React from "react";
 import Link from "next/link";
 import {
   ServerIcon,
-  ChartBarIcon,
   CogIcon,
-  BeakerIcon,
-  ArrowTrendingUpIcon,
   CodeBracketIcon,
-  DocumentMagnifyingGlassIcon,
   DevicePhoneMobileIcon,
   CommandLineIcon,
+  ServerStackIcon,
 } from "@heroicons/react/24/outline";
 import PageHeader from "@/components/Layout/PageHeader";
 import Footer from "@/components/Layout/Footer";
@@ -27,16 +24,6 @@ const TestPage: React.FC = () => {
       hoverColor: "hover:border-blue-300",
     },
     {
-      title: "金融市場查詢",
-      description: "輸入金融代號查詢資料庫數據",
-      href: "/market-analysis/stock-query",
-      icon: ArrowTrendingUpIcon,
-      color: "text-pink-600",
-      bgColor: "bg-pink-50",
-      borderColor: "border-pink-200",
-      hoverColor: "hover:border-pink-300",
-    },
-    {
       title: "Python 測試",
       description: "Python 腳本執行與測試",
       href: "/test/run-python",
@@ -47,20 +34,10 @@ const TestPage: React.FC = () => {
       hoverColor: "hover:border-yellow-300",
     },
     {
-      title: "金融代號查詢",
-      description: "查詢金融代號相關資訊",
-      href: "/market-analysis/financial-code",
-      icon: DocumentMagnifyingGlassIcon,
-      color: "text-teal-600",
-      bgColor: "bg-teal-50",
-      borderColor: "border-teal-200",
-      hoverColor: "hover:border-teal-300",
-    },
-    {
-      title: "圖表測試",
-      description: "各種圖表組件測試",
-      href: "/test/charts",
-      icon: ChartBarIcon,
+      title: "系統狀態",
+      description: "系統狀態檢查與監控",
+      href: "/status",
+      icon: ServerStackIcon,
       color: "text-green-600",
       bgColor: "bg-green-50",
       borderColor: "border-green-200",
@@ -75,16 +52,6 @@ const TestPage: React.FC = () => {
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
       hoverColor: "hover:border-purple-300",
-    },
-    {
-      title: "API 測試",
-      description: "API 端點測試與調試",
-      href: "/test/api",
-      icon: BeakerIcon,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      borderColor: "border-orange-200",
-      hoverColor: "hover:border-orange-300",
     },
     {
       title: "未公開頁面",
