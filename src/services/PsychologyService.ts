@@ -11,7 +11,8 @@ export async function startQuestionnaire() {
 
 export async function streamQuestion(
   sessionId: string,
-  questionNumber: number
+  questionNumber: number,
+  signal?: AbortSignal
 ) {
   const res = await fetch(`${BASE}/stream-question`, {
     method: "POST",
@@ -20,6 +21,7 @@ export async function streamQuestion(
       session_id: sessionId,
       question_number: questionNumber,
     }),
+    signal,
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res; // caller handles streaming via res.body
