@@ -16,14 +16,17 @@ export async function streamQuestion(
 ) {
   const res = await fetch(`${BASE}/stream-question`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      // Request SSE/streaming from backend
+      Accept: "text/event-stream",
+    },
     body: JSON.stringify({
       session_id: sessionId,
       question_number: questionNumber,
     }),
     signal,
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res; // caller handles streaming via res.body
 }
 

@@ -148,7 +148,7 @@ export default function QuestionCard({
           </h2>
           <div className="flex items-center space-x-3">
             <div className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
-              第 {questionNumber + 1} 題
+              第 {questionNumber} 題
             </div>
             {isStreamingQuestion && (
               <div className="flex items-center text-sm text-purple-600">
@@ -159,7 +159,7 @@ export default function QuestionCard({
             {!isStreamingQuestion && onRegenerate && (
               <button
                 onClick={onRegenerate}
-                disabled={loading}
+                disabled={loading || isStreamingQuestion}
                 className="text-sm bg-white/10 hover:bg-white/20 text-gray-700 px-3 py-1 rounded-md"
                 aria-label="重新生成題目"
               >

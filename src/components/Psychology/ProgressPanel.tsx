@@ -30,9 +30,7 @@ export default function ProgressPanel({
           />
         </div>
 
-        <div className="text-sm text-indigo-100">
-          第 {questionNumber + 1} 題
-        </div>
+        <div className="text-sm text-indigo-100">第 {questionNumber} 題</div>
         <div className="mt-4 text-sm text-indigo-100">預估剩餘時間：5 分鐘</div>
         <div className="mt-6 text-sm text-indigo-100">
           請如實回答，系統將分析您的心理傾向與壓力來源。

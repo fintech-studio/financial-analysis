@@ -45,6 +45,7 @@ export default function QuestionnairePage(): React.ReactElement {
     submitAnswer,
     resetTest,
     computeProfile,
+    totalQuestions,
   } = usePsychology();
   // 新增：從後端取得的 profile 與 investor type
   // serverProfile, investorType from hook
@@ -80,7 +81,7 @@ export default function QuestionnairePage(): React.ReactElement {
   const panelSubtitle2 = "專屬建議";
 
   const profile = computeProfile();
-  const estimatedTotalQuestions = 8; // 用於進度條與預估時間（若後端有總題數可以改成動態）
+  const estimatedTotalQuestions = totalQuestions ?? 8; // 用於進度條與預估時間，預設為 8
 
   // 若用戶嘗試離開頁面，提示未保存之進度
   React.useEffect(() => {

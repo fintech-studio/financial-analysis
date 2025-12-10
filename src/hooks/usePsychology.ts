@@ -44,6 +44,7 @@ export default function usePsychology() {
   } | null>(null);
   const [investorType, setInvestorType] = useState<string | null>(null);
   const [streamedOptions, setStreamedOptions] = useState<string[]>([]);
+  const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -76,12 +77,21 @@ export default function usePsychology() {
       setFinished(false);
       setAdvice(null);
       setAnswer("");
-      setQuestionNumber(0);
+      // make the question index shown to user consistent with server (1-indexed)
+      const qn = data.question_number ?? 1;
+      setQuestionNumber(qn);
+      if (data.total_questions) setTotalQuestions(data.total_questions);
       setResponses([]);
       setServerProfile(null);
       setInvestorType(null);
       setLoading(false);
-      await streamQuestionInternal(data.session_id, 0);
+      // If server already returned a question text, use it directly, otherwise stream
+      if (data.question) {
+        setQuestion(data.question);
+        prepareQuestionUI(data.question);
+      } else {
+        await streamQuestionInternal(data.session_id, qn);
+      }
     } catch (e: unknown) {
       setError(String(e));
       setLoading(false);
@@ -92,6 +102,8 @@ export default function usePsychology() {
     sessionIdParam: string,
     questionNum: number
   ) => {
+    // update the UI's current question index to the requested streaming number
+    setQuestionNumber(questionNum);
     setIsStreamingQuestion(true);
     setStreamingQuestion("");
     setQuestion(null);
@@ -204,9 +216,18 @@ export default function usePsychology() {
         setLoading(false);
       } else {
         setAnswer("");
-        setQuestionNumber((qn) => qn + 1);
+        // rely on backend provided question_number to determine next index
+        const nextQn = data.question_number ?? questionNumber + 1;
+        if (data.total_questions) setTotalQuestions(data.total_questions);
+        setQuestionNumber(nextQn);
         setLoading(false);
-        await streamQuestionInternal(sessionId, questionNumber + 1);
+        // if server returned the next question body, use it; otherwise stream
+        if (data.question) {
+          setQuestion(data.question);
+          prepareQuestionUI(data.question);
+        } else {
+          await streamQuestionInternal(sessionId, nextQn);
+        }
       }
     } catch (e: unknown) {
       setError(String(e));
@@ -235,6 +256,7 @@ export default function usePsychology() {
     setServerProfile(null);
     setInvestorType(null);
     setStreamedOptions([]);
+    setTotalQuestions(null);
     setLoading(false);
     setError(null);
   };
@@ -263,6 +285,7 @@ export default function usePsychology() {
     responses,
     serverProfile,
     investorType,
+    totalQuestions,
 
     // operations
     startTest,
