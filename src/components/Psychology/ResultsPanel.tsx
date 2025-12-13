@@ -2,13 +2,7 @@ import React from "react";
 import RadarChart from "./RadarChart";
 import ShareExportButtons from "./ShareExportButtons";
 
-export default function ResultsPanel({
-  advice,
-  serverProfile,
-  profile,
-  investorType,
-  onReset,
-}: {
+type ResultsPanelProps = {
   advice: string | null;
   serverProfile: {
     risk: number;
@@ -17,6 +11,7 @@ export default function ResultsPanel({
     patience: number;
     sensitivity: number;
   } | null;
+  serverAnalysis?: Record<string, unknown> | null;
   profile: {
     risk: number;
     stability: number;
@@ -26,8 +21,28 @@ export default function ResultsPanel({
   };
   investorType: string | null;
   onReset: () => void;
-}) {
+};
+
+export default function ResultsPanel({
+  advice,
+  serverProfile,
+  serverAnalysis,
+  profile,
+  investorType,
+  onReset,
+}: ResultsPanelProps) {
+  // props are typed via ResultsPanelProps
   const finalProfile = serverProfile || profile;
+  const rawRadar = (serverAnalysis && serverAnalysis.radar) || finalProfile;
+  const radarValues: Record<string, number> = Object.fromEntries(
+    Object.entries(rawRadar || {}).map(([k, v]) => [k, Number(v ?? 0)])
+  ) as Record<string, number>;
+  const stressIndex = serverAnalysis ? serverAnalysis.stress_index : null;
+  const timeHorizon = serverAnalysis ? serverAnalysis.time_horizon : null;
+  const investorDesc = serverAnalysis
+    ? serverAnalysis.investor_description
+    : null;
+  const investorDescStr = investorDesc ? String(investorDesc) : null;
 
   return (
     <section
@@ -75,8 +90,10 @@ export default function ResultsPanel({
                   AI 建議
                 </h4>
                 <div className="text-gray-700 leading-relaxed font-sans text-lg">
-                  {advice ? (
-                    <pre className="whitespace-pre-wrap">{advice}</pre>
+                  {serverAnalysis?.advice || advice ? (
+                    <pre className="whitespace-pre-wrap">
+                      {String(serverAnalysis?.advice || advice)}
+                    </pre>
                   ) : (
                     <div className="text-gray-500">目前沒有建議內容。</div>
                   )}
@@ -92,7 +109,7 @@ export default function ResultsPanel({
                 </h4>
                 <div className="flex items-center justify-center">
                   <div className="w-full max-w-sm">
-                    <RadarChart values={finalProfile} size={280} />
+                    <RadarChart values={radarValues} size={280} />
                   </div>
                 </div>
 
@@ -103,20 +120,51 @@ export default function ResultsPanel({
                   </div>
                 </div>
 
+                {investorDescStr && (
+                  <div className="mt-3 text-left text-sm text-gray-700">
+                    {investorDescStr}
+                  </div>
+                )}
+
+                <div className="mt-4 text-left">
+                  {typeof stressIndex === "number" && (
+                    <div className="mb-2">
+                      <div className="text-xs text-gray-500">心理壓力指數</div>
+                      <div className="text-lg font-semibold text-red-600">
+                        {stressIndex}
+                      </div>
+                    </div>
+                  )}
+                  {typeof timeHorizon === "number" && (
+                    <div>
+                      <div className="text-xs text-gray-500">時域偏好</div>
+                      <div className="text-sm font-medium text-gray-800">
+                        {timeHorizon >= 75
+                          ? "偏向長期"
+                          : timeHorizon <= 25
+                          ? "偏向短期"
+                          : "中短期/中長期"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="mt-4 text-left">
                   <div className="text-xs text-gray-500 mb-2">
                     指標（0-100）
                   </div>
                   <div className="grid grid-cols-1 gap-2 text-sm text-gray-700">
-                    {Object.entries(finalProfile).map(([k, v]) => (
+                    {Object.entries(radarValues).map(([k, v]) => (
                       <div
                         key={k}
                         className="flex justify-between items-center bg-gray-50 rounded-md px-3 py-2"
                       >
                         <div className="capitalize text-gray-600">
-                          {k.replace(/([A-Z])/g, " $1")}
+                          {k.replace(/([A-Z_])/g, " $1").replaceAll("_", " ")}
                         </div>
-                        <div className="font-medium text-gray-800">{v}</div>
+                        <div className="font-medium text-gray-800">
+                          {String(v)}
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
-export default function QuestionCard({
+function QuestionCard({
   question,
   streamingQuestion,
   isStreamingQuestion,
@@ -15,12 +15,14 @@ export default function QuestionCard({
   likertValue,
   setLikertValue,
   likertDescriptor,
+  likertOptions,
   answer,
   setAnswer,
   submitAnswer,
   loading,
   onRegenerate,
   questionNumber,
+  questionMeta,
 }: {
   question: string | null;
   streamingQuestion: string | null;
@@ -33,95 +35,107 @@ export default function QuestionCard({
   likertValue: number;
   setLikertValue: (v: number) => void;
   likertDescriptor?: string | null;
+  likertOptions?: string[] | null;
   answer: string;
   setAnswer: (s: string) => void;
   submitAnswer: () => Promise<void>;
   loading: boolean;
   onRegenerate?: () => void;
   questionNumber: number;
+  questionMeta?: Record<string, unknown> | null;
 }) {
-  const renderOptions = () => (
-    <div
-      className="space-y-3"
-      role="listbox"
-      aria-label="選項列表"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "ArrowDown") {
-          e.preventDefault();
-          const cur = selectedIndex === null ? -1 : selectedIndex;
-          setSelectedIndex((cur + 1) % options.length);
-        } else if (e.key === "ArrowUp") {
-          e.preventDefault();
-          const cur = selectedIndex === null ? options.length : selectedIndex;
-          setSelectedIndex(cur - 1 < 0 ? options.length - 1 : cur - 1);
-        } else if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          // noop - selection is done on focus highlight
-        }
-      }}
-    >
-      {options.map((opt, idx) => (
-        <button
-          key={idx}
-          onClick={() => setSelectedIndex(idx)}
-          aria-selected={selectedIndex === idx}
-          role="option"
-          className={`w-full text-left px-4 py-3 rounded-lg border transition ${
-            selectedIndex === idx
-              ? "bg-purple-600 text-white border-transparent"
-              : "bg-white text-gray-800 border-gray-200 hover:shadow-sm"
-          }`}
-        >
-          {opt}
-        </button>
-      ))}
-    </div>
-  );
-
-  const labels = ["從不", "偶爾", "有時", "經常", "非常常"];
-  const renderLikert = () => (
-    <div className="flex flex-col items-center space-y-2">
-      <div className="text-sm text-gray-600 mb-1">
-        請依程度選擇（1 = 最低，5 = 最高）
-      </div>
+  const renderOptions = useCallback(
+    () => (
       <div
-        className="flex items-end justify-center space-x-3"
+        className="space-y-3"
+        role="listbox"
+        aria-label="選項列表"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === "ArrowLeft")
-            setLikertValue(Math.max(1, likertValue - 1));
-          else if (e.key === "ArrowRight")
-            setLikertValue(Math.min(5, likertValue + 1));
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            const cur = selectedIndex === null ? -1 : selectedIndex;
+            setSelectedIndex((cur + 1) % options.length);
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            const cur = selectedIndex === null ? options.length : selectedIndex;
+            setSelectedIndex(cur - 1 < 0 ? options.length - 1 : cur - 1);
+          } else if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            // noop - selection is done on focus highlight
+          }
         }}
       >
-        {labels.map((lbl, idx) => {
-          const v = idx + 1;
-          return (
-            <div key={v} className="flex flex-col items-center">
-              <button
-                onClick={() => setLikertValue(v)}
-                aria-label={`Likert ${v} - ${lbl}`}
-                className={`px-3 py-2 rounded-md border focus:outline-none transition ${
-                  likertValue === v
-                    ? "bg-purple-600 text-white border-transparent"
-                    : "bg-white text-gray-800 border-gray-200"
-                }`}
-              >
-                {v}
-              </button>
-              <div className="text-xs text-gray-500 mt-1">{lbl}</div>
-            </div>
-          );
-        })}
+        {options.map((opt, idx) => (
+          <button
+            key={idx}
+            onClick={() => setSelectedIndex(idx)}
+            aria-selected={selectedIndex === idx}
+            role="option"
+            className={`w-full text-left px-4 py-3 rounded-lg border transition ${
+              selectedIndex === idx
+                ? "bg-purple-600 text-white border-transparent"
+                : "bg-white text-gray-800 border-gray-200 hover:shadow-sm"
+            }`}
+          >
+            {opt}
+          </button>
+        ))}
       </div>
-      <div className="text-xs text-gray-500 mt-2">左：程度低 — 右：程度高</div>
-      {likertDescriptor && (
-        <div className="mt-2 text-sm text-gray-700 font-medium">
-          {likertDescriptor}
+    ),
+    [options, selectedIndex, setSelectedIndex]
+  );
+
+  const defaultLabels = ["非常不認同", "不認同", "中立", "認同", "非常認同"];
+  const labels =
+    likertOptions && likertOptions.length >= 1 ? likertOptions : defaultLabels;
+  const renderLikert = useCallback(
+    () => (
+      <div className="flex flex-col items-center space-y-2">
+        <div className="text-sm text-gray-600 mb-1">
+          請依程度選擇（1 = 最低，5 = 最高）
         </div>
-      )}
-    </div>
+        <div
+          className="flex items-end justify-center space-x-3"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft")
+              setLikertValue(Math.max(1, likertValue - 1));
+            else if (e.key === "ArrowRight")
+              setLikertValue(Math.min(5, likertValue + 1));
+          }}
+        >
+          {labels.map((lbl, idx) => {
+            const v = idx + 1;
+            return (
+              <div key={v} className="flex flex-col items-center">
+                <button
+                  onClick={() => setLikertValue(v)}
+                  aria-label={`Likert ${v} - ${lbl}`}
+                  className={`px-3 py-2 rounded-md border focus:outline-none transition ${
+                    likertValue === v
+                      ? "bg-purple-600 text-white border-transparent"
+                      : "bg-white text-gray-800 border-gray-200"
+                  }`}
+                >
+                  {v}
+                </button>
+                <div className="text-xs text-gray-500 mt-1">{lbl}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="text-xs text-gray-500 mt-2">
+          左：程度低 — 右：程度高
+        </div>
+        {likertDescriptor && (
+          <div className="mt-2 text-sm text-gray-700 font-medium">
+            {likertDescriptor}
+          </div>
+        )}
+      </div>
+    ),
+    [likertValue, setLikertValue, likertDescriptor]
   );
 
   return (
@@ -145,6 +159,16 @@ export default function QuestionCard({
               </svg>
             </div>
             問卷題目
+            {questionMeta && (questionMeta["dimension"] as string) && (
+              <span className="ml-3 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">
+                {String(questionMeta["dimension"])}
+              </span>
+            )}
+            {questionMeta && (questionMeta["option_type"] as string) && (
+              <span className="ml-3 px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs">
+                {String(questionMeta["option_type"])}
+              </span>
+            )}
           </h2>
           <div className="flex items-center space-x-3">
             <div className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
@@ -177,13 +201,19 @@ export default function QuestionCard({
           </label>
           <div className="bg-linear-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-500 p-6 rounded-lg relative overflow-hidden">
             {isStreamingQuestion ? (
-              <div className="text-gray-800 text-lg leading-relaxed">
+              <div
+                className="text-gray-800 text-lg leading-relaxed"
+                aria-live="polite"
+              >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {streamingQuestion || ""}
                 </ReactMarkdown>
               </div>
             ) : (
-              <div className="text-gray-800 text-lg leading-relaxed">
+              <div
+                className="text-gray-800 text-lg leading-relaxed"
+                aria-live="polite"
+              >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {question || ""}
                 </ReactMarkdown>
@@ -286,3 +316,5 @@ export default function QuestionCard({
     </div>
   );
 }
+
+export default React.memo(QuestionCard);

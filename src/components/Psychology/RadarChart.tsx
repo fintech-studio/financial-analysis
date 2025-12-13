@@ -4,23 +4,22 @@ export default function RadarChart({
   values,
   size = 300,
 }: {
-  values: {
-    risk: number;
-    stability: number;
-    confidence: number;
-    patience: number;
-    sensitivity: number;
-  };
+  values: Record<string, number>;
   size?: number;
 }) {
-  const labels = [
-    "風險承受度",
-    "情緒穩定度",
-    "決策信心",
-    "長期耐心",
-    "市場敏感度",
-  ];
-  const dims = Object.values(values);
+  const labelNames: Record<string, string> = {
+    risk: "風險承受度",
+    stability: "情緒穩定度",
+    confidence: "決策信心",
+    patience: "長期耐心",
+    sensitivity: "市場敏感度",
+    impulsivity: "衝動性",
+    time_horizon: "時域偏好",
+    stress: "心理壓力",
+  };
+  const keys = Object.keys(values);
+  const labels = keys.map((k) => labelNames[k] || k);
+  const dims = keys.map((k) => values[k] ?? 0);
 
   const margin = Math.max(0, Math.round(size * 0.2));
   const total = size + margin * 2;

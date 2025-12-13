@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as PsychologyService from "@/services/PsychologyService";
 import {
   detectQuestionType,
@@ -27,6 +27,7 @@ export default function usePsychology() {
   const [options, setOptions] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [likertValue, setLikertValue] = useState<number>(3);
+  const [likertOptions, setLikertOptions] = useState<string[] | null>(null);
   const [responses, setResponses] = useState<
     {
       question: string;
@@ -42,6 +43,14 @@ export default function usePsychology() {
     patience: number;
     sensitivity: number;
   } | null>(null);
+  const [currentQuestionMeta, setCurrentQuestionMeta] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+  const [serverAnalysis, setServerAnalysis] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [investorType, setInvestorType] = useState<string | null>(null);
   const [streamedOptions, setStreamedOptions] = useState<string[]>([]);
   const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
@@ -55,20 +64,127 @@ export default function usePsychology() {
     };
   }, []);
 
-  const prepareQuestionUI = (qText: string) => {
-    const t = detectQuestionType(qText);
-    setQuestionType(t as "open" | "mc" | "likert");
-    if (t === "mc") {
-      setOptions(extractOptions(qText));
-      setSelectedIndex(null);
-    } else {
-      setOptions([]);
-      setSelectedIndex(null);
-    }
-    if (t === "likert") setLikertValue(3);
-  };
+  const prepareQuestionUI = useCallback(
+    (qText: string, meta?: Record<string, unknown>) => {
+      if (meta && typeof meta === "object") {
+        const mtype = (meta["type"] as string) || undefined;
+        if (mtype === "mc") {
+          setQuestionType("mc");
+          const metaOpts = meta["options"] as unknown;
+          if (Array.isArray(metaOpts)) {
+            setOptions(metaOpts.map((o) => String(o)));
+          } else {
+            setOptions(extractOptions(qText));
+          }
+          setSelectedIndex(null);
+          return;
+        }
+        if (mtype === "likert") {
+          setQuestionType("likert");
+          setLikertValue(3);
+          setOptions([]);
+          const metaLikert =
+            meta && Array.isArray(meta["likert_option"])
+              ? (meta["likert_option"] as unknown[]).map((o) => String(o))
+              : null;
+          setLikertOptions(metaLikert);
+          setSelectedIndex(null);
+          return;
+        }
+      }
+      const t = detectQuestionType(qText);
+      setQuestionType(t as "open" | "mc" | "likert");
+      if (t === "mc") {
+        setOptions(extractOptions(qText));
+        setSelectedIndex(null);
+      } else {
+        setOptions([]);
+        setSelectedIndex(null);
+      }
+      if (t === "likert") {
+        setLikertValue(3);
+        setLikertOptions(null);
+      }
+    },
+    []
+  );
 
-  const startTest = async () => {
+  const streamQuestionInternal = useCallback(
+    async (sessionIdParam: string, questionNum: number) => {
+      // update the UI's current question index to the requested streaming number
+      setQuestionNumber(questionNum);
+      setIsStreamingQuestion(true);
+      setStreamingQuestion("");
+      setQuestion(null);
+      setStreamedOptions([]);
+
+      try {
+        // cancel previous stream
+        if (abortControllerRef.current) abortControllerRef.current.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        const response = await PsychologyService.streamQuestion(
+          sessionIdParam,
+          questionNum,
+          controller.signal
+        );
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        if (!reader) throw new Error("無法建立串流讀取器");
+        let accumulatedText = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n");
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.done) {
+                  setQuestion(accumulatedText);
+                  setCurrentQuestionMeta(data.meta || null);
+                  setLikertOptions(
+                    data.meta && Array.isArray(data.meta["likert_option"])
+                      ? (data.meta["likert_option"] as unknown[]).map((o) =>
+                          String(o)
+                        )
+                      : null
+                  );
+                  prepareQuestionUI(accumulatedText, data.meta || undefined);
+                  setIsStreamingQuestion(false);
+                  setStreamedOptions([]);
+                  abortControllerRef.current = null;
+                  return;
+                }
+                accumulatedText += data.text;
+                setStreamingQuestion(accumulatedText);
+
+                const type = detectQuestionType(accumulatedText);
+                if (type === "mc") {
+                  const opts = extractOptions(accumulatedText);
+                  setStreamedOptions(opts);
+                } else {
+                  setStreamedOptions([]);
+                }
+              } catch {
+                // ignore malformed
+              }
+            }
+          }
+        }
+      } catch (e: unknown) {
+        setError(`串流錯誤: ${String(e)}`);
+        setIsStreamingQuestion(false);
+        setStreamedOptions([]);
+      }
+    },
+    [prepareQuestionUI]
+  );
+
+  const startTest = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -88,7 +204,8 @@ export default function usePsychology() {
       // If server already returned a question text, use it directly, otherwise stream
       if (data.question) {
         setQuestion(data.question);
-        prepareQuestionUI(data.question);
+        setCurrentQuestionMeta(data.question_meta || null);
+        prepareQuestionUI(data.question, data.question_meta || undefined);
       } else {
         await streamQuestionInternal(data.session_id, qn);
       }
@@ -96,76 +213,9 @@ export default function usePsychology() {
       setError(String(e));
       setLoading(false);
     }
-  };
+  }, [streamQuestionInternal, prepareQuestionUI]);
 
-  const streamQuestionInternal = async (
-    sessionIdParam: string,
-    questionNum: number
-  ) => {
-    // update the UI's current question index to the requested streaming number
-    setQuestionNumber(questionNum);
-    setIsStreamingQuestion(true);
-    setStreamingQuestion("");
-    setQuestion(null);
-    setStreamedOptions([]);
-
-    try {
-      // cancel previous stream
-      if (abortControllerRef.current) abortControllerRef.current.abort();
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      const response = await PsychologyService.streamQuestion(
-        sessionIdParam,
-        questionNum,
-        controller.signal
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      if (!reader) throw new Error("無法建立串流讀取器");
-      let accumulatedText = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              if (data.done) {
-                setQuestion(accumulatedText);
-                prepareQuestionUI(accumulatedText);
-                setIsStreamingQuestion(false);
-                setStreamedOptions([]);
-                abortControllerRef.current = null;
-                return;
-              }
-              accumulatedText += data.text;
-              setStreamingQuestion(accumulatedText);
-
-              const type = detectQuestionType(accumulatedText);
-              if (type === "mc") {
-                const opts = extractOptions(accumulatedText);
-                setStreamedOptions(opts);
-              } else {
-                setStreamedOptions([]);
-              }
-            } catch {
-              // ignore malformed
-            }
-          }
-        }
-      }
-    } catch (e: unknown) {
-      setError(`串流錯誤: ${String(e)}`);
-      setIsStreamingQuestion(false);
-      setStreamedOptions([]);
-    }
-  };
-
-  const submitAnswer = async () => {
+  const submitAnswer = useCallback(async () => {
     if (!sessionId) return setError("尚未開始測驗");
     setLoading(true);
     setError(null);
@@ -180,7 +230,16 @@ export default function usePsychology() {
       finalAnswer = options[selectedIndex] || "";
     } else if (questionType === "likert") {
       const qText = question || streamingQuestion || "";
-      const descriptor = deriveLikertDescriptor(qText, likertValue);
+      let descriptor = deriveLikertDescriptor(qText, likertValue);
+      if (
+        currentQuestionMeta &&
+        Array.isArray(currentQuestionMeta["likert_option"])
+      ) {
+        const opts = (currentQuestionMeta["likert_option"] as unknown[]).map(
+          (o) => String(o)
+        );
+        if (opts.length >= likertValue) descriptor = opts[likertValue - 1];
+      }
       finalAnswer = `${likertValue} — ${descriptor}`;
     }
 
@@ -209,6 +268,9 @@ export default function usePsychology() {
         setFinished(true);
         setAdvice(data.advice || null);
         setServerProfile(data.profile || null);
+        setServerAnalysis(data.analysis || null);
+        setCurrentQuestionMeta(null);
+        setLikertOptions(null);
         setInvestorType(data.investor_type || null);
         setQuestion(null);
         setStreamingQuestion("");
@@ -224,18 +286,38 @@ export default function usePsychology() {
         // if server returned the next question body, use it; otherwise stream
         if (data.question) {
           setQuestion(data.question);
-          prepareQuestionUI(data.question);
+          setCurrentQuestionMeta(data.question_meta || null);
+          setLikertOptions(
+            data.question_meta &&
+              Array.isArray(data.question_meta["likert_option"])
+              ? (data.question_meta["likert_option"] as unknown[]).map((o) =>
+                  String(o)
+                )
+              : null
+          );
+          prepareQuestionUI(data.question, data.question_meta || undefined);
         } else {
           await streamQuestionInternal(sessionId, nextQn);
         }
       }
     } catch (e: unknown) {
       setError(String(e));
+    } finally {
       setLoading(false);
     }
-  };
+  }, [
+    sessionId,
+    question,
+    streamingQuestion,
+    likertValue,
+    selectedIndex,
+    questionType,
+    options,
+    prepareQuestionUI,
+    streamQuestionInternal,
+  ]);
 
-  const resetTest = () => {
+  const resetTest = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -254,12 +336,20 @@ export default function usePsychology() {
     setSelectedIndex(null);
     setLikertValue(3);
     setServerProfile(null);
+    setCurrentQuestionMeta(null);
+    setLikertOptions(null);
     setInvestorType(null);
+    setServerAnalysis(null);
     setStreamedOptions([]);
     setTotalQuestions(null);
     setLoading(false);
     setError(null);
-  };
+  }, []);
+
+  const memoizedProfile = useMemo(
+    () => computeProfileFromResponses(responses),
+    [responses]
+  );
 
   return {
     sessionId,
@@ -282,8 +372,11 @@ export default function usePsychology() {
     setSelectedIndex,
     likertValue,
     setLikertValue,
+    likertOptions,
     responses,
     serverProfile,
+    serverAnalysis,
+    currentQuestionMeta,
     investorType,
     totalQuestions,
 
@@ -292,6 +385,6 @@ export default function usePsychology() {
     streamQuestion: streamQuestionInternal,
     submitAnswer,
     resetTest,
-    computeProfile: () => computeProfileFromResponses(responses),
+    computeProfile: () => memoizedProfile,
   } as const;
 }

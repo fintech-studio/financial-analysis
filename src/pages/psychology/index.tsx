@@ -36,8 +36,11 @@ export default function QuestionnairePage(): React.ReactElement {
     setSelectedIndex,
     likertValue,
     setLikertValue,
+    likertOptions,
     // responses,
     serverProfile,
+    serverAnalysis,
+    currentQuestionMeta,
     setError,
     investorType,
     startTest,
@@ -100,9 +103,29 @@ export default function QuestionnairePage(): React.ReactElement {
 
   const computedInvestorType =
     investorType ||
-    (serverProfile
+    (serverAnalysis && typeof serverAnalysis.investor_type === "string"
+      ? (serverAnalysis.investor_type as string)
+      : serverProfile
       ? classifyInvestorUtil(serverProfile)
       : classifyInvestorUtil(profile));
+
+  // prepare likert options from meta (serverAnalysis first, then currentQuestionMeta)
+  const questionMeta =
+    (serverAnalysis?.question_meta as Record<string, unknown> | undefined) ||
+    currentQuestionMeta;
+
+  // prefer likertOptions from hook (already parsed from meta), fallback to meta
+  const likertOptionsComputed =
+    likertOptions ||
+    (questionMeta && Array.isArray(questionMeta["likert_option"])
+      ? (questionMeta["likert_option"] as unknown[]).map((o) => String(o))
+      : null);
+
+  const likertDescriptorComputed = (qText: string | null, v: number) => {
+    if (likertOptionsComputed && likertOptionsComputed.length >= v && v >= 1)
+      return likertOptionsComputed[v - 1];
+    return deriveLikertDescriptorUtil(qText || "", v);
+  };
 
   return (
     <>
@@ -220,13 +243,14 @@ export default function QuestionnairePage(): React.ReactElement {
                     options={options}
                     streamedOptions={streamedOptions}
                     selectedIndex={selectedIndex}
-                    setSelectedIndex={(idx) => setSelectedIndex(idx)}
+                    setSelectedIndex={setSelectedIndex}
                     likertValue={likertValue}
-                    setLikertValue={(v) => setLikertValue(v)}
-                    likertDescriptor={deriveLikertDescriptor(
+                    setLikertValue={setLikertValue}
+                    likertDescriptor={likertDescriptorComputed(
                       question || streamingQuestion,
                       likertValue
                     )}
+                    likertOptions={likertOptionsComputed}
                     onRegenerate={() => {
                       if (sessionId) streamQuestion(sessionId, questionNumber);
                     }}
@@ -235,6 +259,7 @@ export default function QuestionnairePage(): React.ReactElement {
                     submitAnswer={submitAnswer}
                     loading={loading}
                     questionNumber={questionNumber}
+                    questionMeta={questionMeta}
                   />
                 </main>
               </div>
@@ -246,6 +271,7 @@ export default function QuestionnairePage(): React.ReactElement {
             <ResultsPanel
               advice={advice}
               serverProfile={serverProfile}
+              serverAnalysis={serverAnalysis}
               profile={profile}
               investorType={computedInvestorType}
               onReset={resetTest}
