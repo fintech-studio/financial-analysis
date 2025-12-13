@@ -37,7 +37,7 @@ export default function QuestionnairePage(): React.ReactElement {
     likertValue,
     setLikertValue,
     likertOptions,
-    // responses,
+    likertRange,
     serverProfile,
     serverAnalysis,
     currentQuestionMeta,
@@ -50,29 +50,6 @@ export default function QuestionnairePage(): React.ReactElement {
     computeProfile,
     totalQuestions,
   } = usePsychology();
-  // 新增：從後端取得的 profile 與 investor type
-  // serverProfile, investorType from hook
-  // const [showServerProfile, setShowServerProfile] = useState<boolean>(false);
-
-  // 題型偵測與選項解析
-  // helper for showing likert descriptor in UI
-  const deriveLikertDescriptor = (questionText: string | null, value: number) =>
-    deriveLikertDescriptorUtil(questionText || "", value);
-
-  // keep streamedOptions from hook (streamedOptions variable is from usePsychology)
-
-  // hook handles submission/streaming logic
-
-  // 相關 UI 已移至 QuestionCard 元件
-
-  // computeProfile moved to hook
-
-  // classification moved to util/hook
-  // use util classification
-
-  // Radar chart 已拆出為 `components/Psychology/RadarChart.tsx`
-
-  // UI constants & JSX — 保留原有整體邏輯，但改為全新版面格局（左側進度/摘要，右側題目）
   const Icon = FaceSmileIcon;
   const Title = "投資心理檢測";
   const Subtitle = "基於心理學的投資性格分析";
@@ -84,7 +61,10 @@ export default function QuestionnairePage(): React.ReactElement {
   const panelSubtitle2 = "專屬建議";
 
   const profile = computeProfile();
-  const estimatedTotalQuestions = totalQuestions ?? 8; // 用於進度條與預估時間，預設為 8
+  const estimatedTotalQuestions =
+    typeof totalQuestions === "number" && !isNaN(totalQuestions)
+      ? totalQuestions
+      : 0;
 
   // 若用戶嘗試離開頁面，提示未保存之進度
   React.useEffect(() => {
@@ -121,6 +101,12 @@ export default function QuestionnairePage(): React.ReactElement {
       ? (questionMeta["likert_option"] as unknown[]).map((o) => String(o))
       : null);
 
+  const likertRangeComputed =
+    likertRange ||
+    (questionMeta && typeof questionMeta["likert_range"] === "string"
+      ? String(questionMeta["likert_range"])
+      : null);
+
   const likertDescriptorComputed = (qText: string | null, v: number) => {
     if (likertOptionsComputed && likertOptionsComputed.length >= v && v >= 1)
       return likertOptionsComputed[v - 1];
@@ -142,6 +128,7 @@ export default function QuestionnairePage(): React.ReactElement {
 
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Quick profile snapshot has been moved to ProgressPanel */}
           {/* 新版開場與左側進度面板 */}
           {!sessionId && (
             <div className="bg-white rounded-xl shadow-lg animate-slideIn p-8">
@@ -154,7 +141,7 @@ export default function QuestionnairePage(): React.ReactElement {
                     準備開始
                   </h2>
                   <p className="text-gray-600 text-center">
-                    心理壓力與投資決策分析，約 5-10 分鐘。
+                    心理壓力與投資決策分析，約 3-5 分鐘。
                   </p>
                 </div>
                 <div className="lg:col-span-2">
@@ -168,7 +155,7 @@ export default function QuestionnairePage(): React.ReactElement {
                       </p>
                     </div>
                     <div className="text-sm text-gray-500">
-                      預估用時：5 - 10 分鐘
+                      預估用時：3 - 5 分鐘
                     </div>
                   </div>
                   <div className="rounded-lg border border-gray-100 bg-linear-to-r from-purple-50 to-indigo-50 p-4">
@@ -232,6 +219,8 @@ export default function QuestionnairePage(): React.ReactElement {
                   }}
                   sessionId={sessionId}
                   finished={finished}
+                  serverProfile={serverProfile}
+                  profile={profile}
                 />
                 {/* 右側大區塊：題目與回答 */}
                 <main className="md:col-span-3 p-6">
@@ -251,6 +240,7 @@ export default function QuestionnairePage(): React.ReactElement {
                       likertValue
                     )}
                     likertOptions={likertOptionsComputed}
+                    likertRange={likertRangeComputed}
                     onRegenerate={() => {
                       if (sessionId) streamQuestion(sessionId, questionNumber);
                     }}

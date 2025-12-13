@@ -70,6 +70,53 @@ export const extractOptions = (q: string) => {
   return opts.length >= 2 ? opts : [];
 };
 
+export const stripOptionsFromQuestion = (q: string) => {
+  if (!q) return q;
+  const opts = extractOptions(q);
+  if (!opts || opts.length < 2) return q;
+
+  const lastPunc = Math.max(
+    q.lastIndexOf("?"),
+    q.lastIndexOf("？"),
+    q.lastIndexOf(":"),
+    q.lastIndexOf("："),
+    q.lastIndexOf("."),
+    q.lastIndexOf("。")
+  );
+  if (lastPunc !== -1) {
+    const tail = q.slice(lastPunc + 1);
+    const sepRegex = /\s*\/\s*|\r?\n|;|；|、|\s+or\s+|\|/i;
+    const parts = tail
+      .split(sepRegex)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length >= 2 && parts.every((p) => p.length <= 80)) {
+      return q.slice(0, lastPunc + 1).trim();
+    }
+  }
+
+  // fallback: attempt to remove trailing slash-separated options
+  const slashParts = q
+    .split(/\s*\/\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (slashParts.length >= 2) {
+    // if the last several slashParts match the extracted options, remove them
+    const lastParts = slashParts.slice(-opts.length);
+    const matches = lastParts.every(
+      (p, i) =>
+        p === opts[i + (opts.length - lastParts.length)] || p === opts[i]
+    );
+    if (matches) {
+      // return everything before the first of that series
+      const startOfOptions = q.indexOf(lastParts[0]);
+      if (startOfOptions !== -1) return q.slice(0, startOfOptions).trim();
+    }
+  }
+
+  return q;
+};
+
 export const deriveLikertDescriptor = (questionText: string, value: number) => {
   const q = (questionText || "").toLowerCase();
   const stressKeywords = ["壓力", "焦慮", "緊張", "擔心", "煩躁", "壓力大"];

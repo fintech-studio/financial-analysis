@@ -7,6 +7,16 @@ import {
   computeProfileFromResponses,
 } from "@/utils/psychologyQuestionUtils";
 
+export interface QuestionMeta {
+  question?: string;
+  type?: "mc" | "likert" | "open" | string;
+  option_type?: string;
+  options?: string[];
+  likert_range?: string;
+  likert_option?: string[];
+  dimension?: string;
+}
+
 export default function usePsychology() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [question, setQuestion] = useState<string | null>(null);
@@ -28,6 +38,7 @@ export default function usePsychology() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [likertValue, setLikertValue] = useState<number>(3);
   const [likertOptions, setLikertOptions] = useState<string[] | null>(null);
+  const [likertRange, setLikertRange] = useState<string | null>(null);
   const [responses, setResponses] = useState<
     {
       question: string;
@@ -56,43 +67,102 @@ export default function usePsychology() {
   const [totalQuestions, setTotalQuestions] = useState<number | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  // Reduce streaming state updates by buffering incoming text
+  const streamingBufferRef = useRef<string>("");
+  const streamingTimerRef = useRef<number | null>(null);
+  const STREAM_THROTTLE_MS = 100; // ms between UI updates
 
   useEffect(() => {
     return () => {
       // cleanup streaming when unmount
       if (abortControllerRef.current) abortControllerRef.current.abort();
+      if (streamingTimerRef.current) {
+        window.clearTimeout(streamingTimerRef.current);
+        streamingTimerRef.current = null;
+      }
     };
   }, []);
 
   const prepareQuestionUI = useCallback(
     (qText: string, meta?: Record<string, unknown>) => {
-      if (meta && typeof meta === "object") {
-        const mtype = (meta["type"] as string) || undefined;
+      // If server returned JSON in the question text itself, try to parse it as meta
+      let effectiveMeta = meta;
+      if (!effectiveMeta && qText && qText.trim().startsWith("{")) {
+        try {
+          const parsed = JSON.parse(qText);
+          if (parsed && typeof parsed === "object")
+            effectiveMeta = parsed as Record<string, unknown>;
+        } catch {
+          // ignore
+        }
+      }
+      // prefer effective meta extracted from text; otherwise fallback to provided meta
+      setCurrentQuestionMeta(effectiveMeta ?? meta ?? null);
+      // prefer meta.question when present
+      let q = qText;
+      // Will set the question text after we normalize `q`
+      if (effectiveMeta && typeof effectiveMeta === "object") {
+        const m = effectiveMeta as QuestionMeta;
+        if (m.question && typeof m.question === "string") q = m.question;
+        const mtype = m.type;
+        // if type is not provided but `options` exist, treat as mc
+        if (!mtype && Array.isArray(m.options) && m.options.length >= 2) {
+          setQuestionType("mc");
+          setOptions(m.options.map((o) => String(o)));
+          setSelectedIndex(null);
+          setLikertOptions(null);
+          setLikertRange(null);
+          return;
+        }
+        if (
+          !mtype &&
+          Array.isArray(m.likert_option) &&
+          m.likert_option.length >= 1
+        ) {
+          setQuestionType("likert");
+          setLikertOptions(
+            Array.isArray(m.likert_option)
+              ? m.likert_option.map((o) => String(o))
+              : null
+          );
+          setLikertRange(m.likert_range ? String(m.likert_range) : null);
+          setOptions([]);
+          setSelectedIndex(null);
+          return;
+        }
         if (mtype === "mc") {
           setQuestionType("mc");
-          const metaOpts = meta["options"] as unknown;
-          if (Array.isArray(metaOpts)) {
-            setOptions(metaOpts.map((o) => String(o)));
-          } else {
-            setOptions(extractOptions(qText));
-          }
+          if (Array.isArray(m.options))
+            setOptions(m.options.map((o) => String(o)));
+          else setOptions(extractOptions(q));
           setSelectedIndex(null);
+          setLikertOptions(null);
+          setLikertRange(null);
           return;
         }
         if (mtype === "likert") {
           setQuestionType("likert");
           setLikertValue(3);
           setOptions([]);
-          const metaLikert =
-            meta && Array.isArray(meta["likert_option"])
-              ? (meta["likert_option"] as unknown[]).map((o) => String(o))
-              : null;
-          setLikertOptions(metaLikert);
+          setSelectedIndex(null);
+          setLikertOptions(
+            Array.isArray(m.likert_option)
+              ? m.likert_option.map((o) => String(o))
+              : null
+          );
+          setLikertRange(m.likert_range ? String(m.likert_range) : null);
+          return;
+        }
+        if (mtype === "open") {
+          setQuestionType("open");
+          setOptions([]);
+          setLikertOptions(null);
+          setLikertRange(null);
           setSelectedIndex(null);
           return;
         }
       }
-      const t = detectQuestionType(qText);
+      const t = detectQuestionType(q);
       setQuestionType(t as "open" | "mc" | "likert");
       if (t === "mc") {
         setOptions(extractOptions(qText));
@@ -105,6 +175,8 @@ export default function usePsychology() {
         setLikertValue(3);
         setLikertOptions(null);
       }
+      // set the final computed question text to UI (may be changed above)
+      setQuestion(q);
     },
     []
   );
@@ -144,7 +216,11 @@ export default function usePsychology() {
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.done) {
-                  setQuestion(accumulatedText);
+                  const finalQ =
+                    data.meta && data.meta.question
+                      ? String(data.meta.question)
+                      : accumulatedText;
+                  setQuestion(finalQ);
                   setCurrentQuestionMeta(data.meta || null);
                   setLikertOptions(
                     data.meta && Array.isArray(data.meta["likert_option"])
@@ -153,22 +229,37 @@ export default function usePsychology() {
                         )
                       : null
                   );
-                  prepareQuestionUI(accumulatedText, data.meta || undefined);
+                  setLikertRange(
+                    data.meta && data.meta.likert_range
+                      ? String(data.meta.likert_range)
+                      : null
+                  );
+                  prepareQuestionUI(finalQ, data.meta || undefined);
                   setIsStreamingQuestion(false);
                   setStreamedOptions([]);
+                  // flush any pending timer updates and reset buffer
+                  if (streamingTimerRef.current) {
+                    window.clearTimeout(streamingTimerRef.current);
+                    streamingTimerRef.current = null;
+                  }
+                  streamingBufferRef.current = "";
                   abortControllerRef.current = null;
                   return;
                 }
                 accumulatedText += data.text;
-                setStreamingQuestion(accumulatedText);
-
-                const type = detectQuestionType(accumulatedText);
-                if (type === "mc") {
-                  const opts = extractOptions(accumulatedText);
-                  setStreamedOptions(opts);
-                } else {
-                  setStreamedOptions([]);
+                // Buffer and throttle UI updates to reduce re-renders
+                streamingBufferRef.current = accumulatedText;
+                if (streamingTimerRef.current) {
+                  window.clearTimeout(streamingTimerRef.current);
                 }
+                streamingTimerRef.current = window.setTimeout(() => {
+                  const text = streamingBufferRef.current || "";
+                  setStreamingQuestion(text);
+                  const type = detectQuestionType(text);
+                  if (type === "mc") setStreamedOptions(extractOptions(text));
+                  else setStreamedOptions([]);
+                  streamingTimerRef.current = null;
+                }, STREAM_THROTTLE_MS);
               } catch {
                 // ignore malformed
               }
@@ -179,6 +270,11 @@ export default function usePsychology() {
         setError(`串流錯誤: ${String(e)}`);
         setIsStreamingQuestion(false);
         setStreamedOptions([]);
+        if (streamingTimerRef.current) {
+          window.clearTimeout(streamingTimerRef.current);
+          streamingTimerRef.current = null;
+        }
+        streamingBufferRef.current = "";
       }
     },
     [prepareQuestionUI]
@@ -202,10 +298,15 @@ export default function usePsychology() {
       setInvestorType(null);
       setLoading(false);
       // If server already returned a question text, use it directly, otherwise stream
-      if (data.question) {
-        setQuestion(data.question);
+      if (data.question || data.question_meta) {
+        const qFromMeta =
+          data.question_meta && data.question_meta.question
+            ? String(data.question_meta.question)
+            : undefined;
+        const qtext = qFromMeta || data.question;
+        setQuestion(qtext || null);
         setCurrentQuestionMeta(data.question_meta || null);
-        prepareQuestionUI(data.question, data.question_meta || undefined);
+        prepareQuestionUI(qtext || "", data.question_meta || undefined);
       } else {
         await streamQuestionInternal(data.session_id, qn);
       }
@@ -284,8 +385,13 @@ export default function usePsychology() {
         setQuestionNumber(nextQn);
         setLoading(false);
         // if server returned the next question body, use it; otherwise stream
-        if (data.question) {
-          setQuestion(data.question);
+        if (data.question || data.question_meta) {
+          const qFromMeta =
+            data.question_meta && data.question_meta.question
+              ? String(data.question_meta.question)
+              : undefined;
+          const qtext = qFromMeta || data.question;
+          setQuestion(qtext || null);
           setCurrentQuestionMeta(data.question_meta || null);
           setLikertOptions(
             data.question_meta &&
@@ -295,7 +401,7 @@ export default function usePsychology() {
                 )
               : null
           );
-          prepareQuestionUI(data.question, data.question_meta || undefined);
+          prepareQuestionUI(qtext || "", data.question_meta || undefined);
         } else {
           await streamQuestionInternal(sessionId, nextQn);
         }
@@ -322,6 +428,11 @@ export default function usePsychology() {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    if (streamingTimerRef.current) {
+      window.clearTimeout(streamingTimerRef.current);
+      streamingTimerRef.current = null;
+    }
+    streamingBufferRef.current = "";
     setSessionId(null);
     setQuestion(null);
     setAnswer("");
@@ -373,6 +484,7 @@ export default function usePsychology() {
     likertValue,
     setLikertValue,
     likertOptions,
+    likertRange,
     responses,
     serverProfile,
     serverAnalysis,

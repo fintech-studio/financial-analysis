@@ -1,7 +1,11 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import {
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/outline";
+import { stripOptionsFromQuestion } from "@/utils/psychologyQuestionUtils";
 
 function QuestionCard({
   question,
@@ -36,6 +40,7 @@ function QuestionCard({
   setLikertValue: (v: number) => void;
   likertDescriptor?: string | null;
   likertOptions?: string[] | null;
+  likertRange?: string | null;
   answer: string;
   setAnswer: (s: string) => void;
   submitAnswer: () => Promise<void>;
@@ -44,6 +49,75 @@ function QuestionCard({
   questionNumber: number;
   questionMeta?: Record<string, unknown> | null;
 }) {
+  const { incompleteReason, hasIncompleteQuestion } = useMemo(() => {
+    const qText = (isStreamingQuestion ? streamingQuestion : question) || "";
+    const trimmed = qText.trim();
+    // heuristics: empty / too short / contains imbalance / placeholder pattern
+    if (!trimmed)
+      return { incompleteReason: "題目為空", hasIncompleteQuestion: true };
+    const tooShort = trimmed.length > 0 && trimmed.length < 8;
+    const placeholders1 = /\b(?:選擇|選項)\s*[A-D]\b/u;
+    const placeholders2 = /\b[A-D]\b\s*\/\s*\b[A-D]\b/u;
+    const containsPlaceholders =
+      placeholders1.test(qText) || placeholders2.test(qText);
+    const ellipsis = /\.{2,}|…/.test(qText);
+    // check options presence
+    const mcOptionsCount =
+      (options?.length || 0) + (streamedOptions?.length || 0);
+    const mcOptionsInsufficient = questionType === "mc" && mcOptionsCount < 2;
+    // check likert options
+    const likertOptsCount =
+      (Array.isArray(likertOptions) ? likertOptions.length : 0) +
+      (Array.isArray(questionMeta?.["likert_option"])
+        ? (questionMeta?.["likert_option"] as unknown[]).length
+        : 0);
+    const likertMissing = questionType === "likert" && likertOptsCount < 1;
+    const metaIncomplete =
+      (questionMeta &&
+        typeof questionMeta === "object" &&
+        ((String(questionMeta["type"]) === "mc" &&
+          (!Array.isArray(questionMeta["options"]) ||
+            questionMeta["options"].length < 2)) ||
+          (String(questionMeta["type"]) === "likert" &&
+            (!Array.isArray(questionMeta["likert_option"]) ||
+              questionMeta["likert_option"].length < 1)))) ||
+      false;
+
+    if (mcOptionsInsufficient)
+      return { incompleteReason: "選項不足", hasIncompleteQuestion: true };
+    if (likertMissing)
+      return {
+        incompleteReason: "Likert 選項缺失",
+        hasIncompleteQuestion: true,
+      };
+    if (tooShort)
+      return { incompleteReason: "題目過短", hasIncompleteQuestion: true };
+    if (containsPlaceholders)
+      return {
+        incompleteReason: "題目包含占位符",
+        hasIncompleteQuestion: true,
+      };
+    if (ellipsis)
+      return {
+        incompleteReason: "題目似乎被截斷",
+        hasIncompleteQuestion: true,
+      };
+    if (metaIncomplete)
+      return {
+        incompleteReason: "Meta 資訊不完整",
+        hasIncompleteQuestion: true,
+      };
+    return { incompleteReason: null, hasIncompleteQuestion: false };
+  }, [
+    question,
+    streamingQuestion,
+    isStreamingQuestion,
+    questionMeta,
+    options,
+    streamedOptions,
+    likertOptions,
+    questionType,
+  ]);
   const renderOptions = useCallback(
     () => (
       <div
@@ -72,13 +146,18 @@ function QuestionCard({
             onClick={() => setSelectedIndex(idx)}
             aria-selected={selectedIndex === idx}
             role="option"
-            className={`w-full text-left px-4 py-3 rounded-lg border transition ${
+            className={`w-full text-left px-4 py-3 rounded-lg border transition flex items-center gap-3 ${
               selectedIndex === idx
                 ? "bg-purple-600 text-white border-transparent"
                 : "bg-white text-gray-800 border-gray-200 hover:shadow-sm"
             }`}
           >
-            {opt}
+            <div className="flex-1 text-left">{opt}</div>
+            {selectedIndex === idx && (
+              <div className="text-xs bg-white/20 px-2 py-1 rounded-full">
+                已選擇
+              </div>
+            )}
           </button>
         ))}
       </div>
@@ -92,9 +171,7 @@ function QuestionCard({
   const renderLikert = useCallback(
     () => (
       <div className="flex flex-col items-center space-y-2">
-        <div className="text-sm text-gray-600 mb-1">
-          請依程度選擇（1 = 最低，5 = 最高）
-        </div>
+        <div className="text-sm text-gray-600 mb-2">請依程度選擇</div>
         <div
           className="flex items-end justify-center space-x-3"
           tabIndex={0}
@@ -177,7 +254,7 @@ function QuestionCard({
             {isStreamingQuestion && (
               <div className="flex items-center text-sm text-purple-600">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-2"></div>
-                AI 正在思考...
+                AI 正在生成...
               </div>
             )}
             {!isStreamingQuestion && onRegenerate && (
@@ -205,9 +282,18 @@ function QuestionCard({
                 className="text-gray-800 text-lg leading-relaxed"
                 aria-live="polite"
               >
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {streamingQuestion || ""}
-                </ReactMarkdown>
+                {streamingQuestion ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {stripOptionsFromQuestion(streamingQuestion || "")}
+                  </ReactMarkdown>
+                ) : (
+                  /* streaming skeleton */
+                  <div className="space-y-2 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/6"></div>
+                  </div>
+                )}
               </div>
             ) : (
               <div
@@ -215,8 +301,27 @@ function QuestionCard({
                 aria-live="polite"
               >
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {question || ""}
+                  {stripOptionsFromQuestion(question || "")}
                 </ReactMarkdown>
+              </div>
+            )}
+            {/* If question is incomplete or may be malformed, show a hint and allow regeneration */}
+            {!isStreamingQuestion && hasIncompleteQuestion && onRegenerate && (
+              <div className="mt-3 p-3 bg-amber-50 border-l-4 border-amber-300 rounded-md flex items-center justify-between">
+                <div className="text-amber-700 text-sm">
+                  {incompleteReason
+                    ? `題目問題：${incompleteReason} — 可重新生成題目。`
+                    : "似乎題目未完整生成或有問題：可重新生成題目"}
+                </div>
+                <div>
+                  <button
+                    onClick={onRegenerate}
+                    disabled={loading || isStreamingQuestion}
+                    className="bg-amber-200 text-amber-900 px-3 py-1 rounded-md text-sm hover:bg-amber-300 disabled:opacity-60"
+                  >
+                    重新生成
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -258,23 +363,15 @@ function QuestionCard({
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               rows={6}
+              minLength={5}
+              aria-invalid={answer.trim().length < 5}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md"
-              placeholder="請在此輸入您的想法和回答（中文）..."
+              placeholder="請在此輸入您的想法和回答（至少 5 個字）..."
               disabled={isStreamingQuestion}
             />
           )}
 
           <div className="mt-2 flex justify-between items-center">
-            <div className="text-sm text-gray-500">
-              字數：
-              {questionType === "open"
-                ? answer.length
-                : questionType === "likert"
-                ? likertValue
-                : selectedIndex !== null
-                ? selectedIndex + 1
-                : 0}
-            </div>
             {isStreamingQuestion && (
               <div className="text-sm text-amber-600 flex items-center">
                 <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
@@ -289,7 +386,21 @@ function QuestionCard({
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="text-sm text-gray-500">覺得題目或選項有問題？</div>
+            {onRegenerate && (
+              <button
+                onClick={onRegenerate}
+                disabled={loading || isStreamingQuestion}
+                className="inline-flex items-center space-x-2 bg-white/10 hover:bg-white/20 text-gray-700 px-3 py-1 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="重新生成題目"
+              >
+                <ArrowPathIcon className="w-4 h-4" />
+                <span>重新生成</span>
+              </button>
+            )}
+          </div>
           <button
             onClick={submitAnswer}
             disabled={
