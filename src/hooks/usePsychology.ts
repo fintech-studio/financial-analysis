@@ -3,17 +3,14 @@ import * as PsychologyService from "@/services/PsychologyService";
 import {
   detectQuestionType,
   extractOptions,
-  deriveLikertDescriptor,
   computeProfileFromResponses,
 } from "@/utils/psychologyQuestionUtils";
 
 export interface QuestionMeta {
   question?: string;
-  type?: "mc" | "likert" | "open" | string;
+  type?: "single" | string;
   option_type?: string;
   options?: string[];
-  likert_range?: string;
-  likert_option?: string[];
   dimension?: string;
 }
 
@@ -31,20 +28,15 @@ export default function usePsychology() {
   const [error, setError] = useState<string | null>(null);
 
   // 新增狀態
-  const [questionType, setQuestionType] = useState<"open" | "mc" | "likert">(
-    "open"
-  );
+  const [questionType, setQuestionType] = useState<"single">("single");
   const [options, setOptions] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [likertValue, setLikertValue] = useState<number>(3);
-  const [likertOptions, setLikertOptions] = useState<string[] | null>(null);
-  const [likertRange, setLikertRange] = useState<string | null>(null);
   const [responses, setResponses] = useState<
     {
       question: string;
       answer: string;
       type: string;
-      value?: number | null;
+      value?: number | number[] | null;
     }[]
   >([]);
   const [serverProfile, setServerProfile] = useState<{
@@ -105,76 +97,26 @@ export default function usePsychology() {
         const m = effectiveMeta as QuestionMeta;
         if (m.question && typeof m.question === "string") q = m.question;
         const mtype = m.type;
-        // if type is not provided but `options` exist, treat as mc
-        if (!mtype && Array.isArray(m.options) && m.options.length >= 2) {
-          setQuestionType("mc");
+        // If `options` exist, treat as single-choice by default
+        if (Array.isArray(m.options) && m.options.length >= 2) {
+          setQuestionType("single");
           setOptions(m.options.map((o) => String(o)));
           setSelectedIndex(null);
-          setLikertOptions(null);
-          setLikertRange(null);
           return;
         }
-        if (
-          !mtype &&
-          Array.isArray(m.likert_option) &&
-          m.likert_option.length >= 1
-        ) {
-          setQuestionType("likert");
-          setLikertOptions(
-            Array.isArray(m.likert_option)
-              ? m.likert_option.map((o) => String(o))
-              : null
-          );
-          setLikertRange(m.likert_range ? String(m.likert_range) : null);
-          setOptions([]);
-          setSelectedIndex(null);
-          return;
-        }
-        if (mtype === "mc") {
-          setQuestionType("mc");
+        if (mtype === "single") {
+          setQuestionType("single");
           if (Array.isArray(m.options))
             setOptions(m.options.map((o) => String(o)));
           else setOptions(extractOptions(q));
-          setSelectedIndex(null);
-          setLikertOptions(null);
-          setLikertRange(null);
-          return;
-        }
-        if (mtype === "likert") {
-          setQuestionType("likert");
-          setLikertValue(3);
-          setOptions([]);
-          setSelectedIndex(null);
-          setLikertOptions(
-            Array.isArray(m.likert_option)
-              ? m.likert_option.map((o) => String(o))
-              : null
-          );
-          setLikertRange(m.likert_range ? String(m.likert_range) : null);
-          return;
-        }
-        if (mtype === "open") {
-          setQuestionType("open");
-          setOptions([]);
-          setLikertOptions(null);
-          setLikertRange(null);
           setSelectedIndex(null);
           return;
         }
       }
       const t = detectQuestionType(q);
-      setQuestionType(t as "open" | "mc" | "likert");
-      if (t === "mc") {
-        setOptions(extractOptions(qText));
-        setSelectedIndex(null);
-      } else {
-        setOptions([]);
-        setSelectedIndex(null);
-      }
-      if (t === "likert") {
-        setLikertValue(3);
-        setLikertOptions(null);
-      }
+      setQuestionType(t as "single");
+      setOptions(extractOptions(qText));
+      setSelectedIndex(null);
       // set the final computed question text to UI (may be changed above)
       setQuestion(q);
     },
@@ -222,18 +164,6 @@ export default function usePsychology() {
                       : accumulatedText;
                   setQuestion(finalQ);
                   setCurrentQuestionMeta(data.meta || null);
-                  setLikertOptions(
-                    data.meta && Array.isArray(data.meta["likert_option"])
-                      ? (data.meta["likert_option"] as unknown[]).map((o) =>
-                          String(o)
-                        )
-                      : null
-                  );
-                  setLikertRange(
-                    data.meta && data.meta.likert_range
-                      ? String(data.meta.likert_range)
-                      : null
-                  );
                   prepareQuestionUI(finalQ, data.meta || undefined);
                   setIsStreamingQuestion(false);
                   setStreamedOptions([]);
@@ -255,9 +185,7 @@ export default function usePsychology() {
                 streamingTimerRef.current = window.setTimeout(() => {
                   const text = streamingBufferRef.current || "";
                   setStreamingQuestion(text);
-                  const type = detectQuestionType(text);
-                  if (type === "mc") setStreamedOptions(extractOptions(text));
-                  else setStreamedOptions([]);
+                  setStreamedOptions(extractOptions(text));
                   streamingTimerRef.current = null;
                 }, STREAM_THROTTLE_MS);
               } catch {
@@ -322,26 +250,13 @@ export default function usePsychology() {
     setError(null);
 
     let finalAnswer = answer;
-    if (questionType === "mc") {
+    if (questionType === "single") {
       if (selectedIndex === null) {
         setError("請選擇一個選項");
         setLoading(false);
         return;
       }
       finalAnswer = options[selectedIndex] || "";
-    } else if (questionType === "likert") {
-      const qText = question || streamingQuestion || "";
-      let descriptor = deriveLikertDescriptor(qText, likertValue);
-      if (
-        currentQuestionMeta &&
-        Array.isArray(currentQuestionMeta["likert_option"])
-      ) {
-        const opts = (currentQuestionMeta["likert_option"] as unknown[]).map(
-          (o) => String(o)
-        );
-        if (opts.length >= likertValue) descriptor = opts[likertValue - 1];
-      }
-      finalAnswer = `${likertValue} — ${descriptor}`;
     }
 
     try {
@@ -356,12 +271,7 @@ export default function usePsychology() {
           question: question || streamingQuestion || "",
           answer: finalAnswer as string,
           type: questionType,
-          value:
-            questionType === "likert"
-              ? Number(likertValue)
-              : questionType === "mc"
-              ? selectedIndex
-              : null,
+          value: selectedIndex,
         },
       ]);
 
@@ -371,7 +281,6 @@ export default function usePsychology() {
         setServerProfile(data.profile || null);
         setServerAnalysis(data.analysis || null);
         setCurrentQuestionMeta(null);
-        setLikertOptions(null);
         setInvestorType(data.investor_type || null);
         setQuestion(null);
         setStreamingQuestion("");
@@ -393,14 +302,6 @@ export default function usePsychology() {
           const qtext = qFromMeta || data.question;
           setQuestion(qtext || null);
           setCurrentQuestionMeta(data.question_meta || null);
-          setLikertOptions(
-            data.question_meta &&
-              Array.isArray(data.question_meta["likert_option"])
-              ? (data.question_meta["likert_option"] as unknown[]).map((o) =>
-                  String(o)
-                )
-              : null
-          );
           prepareQuestionUI(qtext || "", data.question_meta || undefined);
         } else {
           await streamQuestionInternal(sessionId, nextQn);
@@ -415,7 +316,6 @@ export default function usePsychology() {
     sessionId,
     question,
     streamingQuestion,
-    likertValue,
     selectedIndex,
     questionType,
     options,
@@ -442,13 +342,11 @@ export default function usePsychology() {
     setIsStreamingQuestion(false);
     setQuestionNumber(0);
     setResponses([]);
-    setQuestionType("open");
+    setQuestionType("single");
     setOptions([]);
     setSelectedIndex(null);
-    setLikertValue(3);
     setServerProfile(null);
     setCurrentQuestionMeta(null);
-    setLikertOptions(null);
     setInvestorType(null);
     setServerAnalysis(null);
     setStreamedOptions([]);
@@ -481,10 +379,7 @@ export default function usePsychology() {
     streamedOptions,
     selectedIndex,
     setSelectedIndex,
-    likertValue,
-    setLikertValue,
-    likertOptions,
-    likertRange,
+
     responses,
     serverProfile,
     serverAnalysis,

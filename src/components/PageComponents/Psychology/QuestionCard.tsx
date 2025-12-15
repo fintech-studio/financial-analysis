@@ -7,48 +7,40 @@ import {
 } from "@heroicons/react/24/outline";
 import { stripOptionsFromQuestion } from "@/utils/psychologyQuestionUtils";
 
-function QuestionCard({
-  question,
-  streamingQuestion,
-  isStreamingQuestion,
-  questionType,
-  options,
-  streamedOptions,
-  selectedIndex,
-  setSelectedIndex,
-  likertValue,
-  setLikertValue,
-  likertDescriptor,
-  likertOptions,
-  answer,
-  setAnswer,
-  submitAnswer,
-  loading,
-  onRegenerate,
-  questionNumber,
-  questionMeta,
-}: {
+type QuestionCardProps = {
   question: string | null;
   streamingQuestion: string | null;
   isStreamingQuestion: boolean;
-  questionType: "open" | "mc" | "likert";
+  questionType: "single";
   options: string[];
   streamedOptions: string[];
   selectedIndex: number | null;
   setSelectedIndex: (idx: number) => void;
-  likertValue: number;
-  setLikertValue: (v: number) => void;
-  likertDescriptor?: string | null;
-  likertOptions?: string[] | null;
-  likertRange?: string | null;
-  answer: string;
-  setAnswer: (s: string) => void;
   submitAnswer: () => Promise<void>;
   loading: boolean;
   onRegenerate?: () => void;
   questionNumber: number;
   questionMeta?: Record<string, unknown> | null;
-}) {
+  answer?: string | null;
+  setAnswer?: (s: string) => void;
+};
+
+function QuestionCard(props: QuestionCardProps) {
+  const {
+    question,
+    streamingQuestion,
+    isStreamingQuestion,
+    questionType,
+    options,
+    streamedOptions,
+    selectedIndex,
+    setSelectedIndex,
+    submitAnswer,
+    loading,
+    onRegenerate,
+    questionNumber,
+    questionMeta,
+  } = props;
   const { incompleteReason, hasIncompleteQuestion } = useMemo(() => {
     const qText = (isStreamingQuestion ? streamingQuestion : question) || "";
     const trimmed = qText.trim();
@@ -64,32 +56,19 @@ function QuestionCard({
     // check options presence
     const mcOptionsCount =
       (options?.length || 0) + (streamedOptions?.length || 0);
-    const mcOptionsInsufficient = questionType === "mc" && mcOptionsCount < 2;
-    // check likert options
-    const likertOptsCount =
-      (Array.isArray(likertOptions) ? likertOptions.length : 0) +
-      (Array.isArray(questionMeta?.["likert_option"])
-        ? (questionMeta?.["likert_option"] as unknown[]).length
-        : 0);
-    const likertMissing = questionType === "likert" && likertOptsCount < 1;
+    const mcOptionsInsufficient =
+      questionType === "single" && mcOptionsCount < 2;
     const metaIncomplete =
       (questionMeta &&
         typeof questionMeta === "object" &&
-        ((String(questionMeta["type"]) === "mc" &&
-          (!Array.isArray(questionMeta["options"]) ||
-            questionMeta["options"].length < 2)) ||
-          (String(questionMeta["type"]) === "likert" &&
-            (!Array.isArray(questionMeta["likert_option"]) ||
-              questionMeta["likert_option"].length < 1)))) ||
+        String(questionMeta["type"]) === "single" &&
+        (!Array.isArray(questionMeta["options"]) ||
+          questionMeta["options"].length < 2)) ||
       false;
 
     if (mcOptionsInsufficient)
       return { incompleteReason: "選項不足", hasIncompleteQuestion: true };
-    if (likertMissing)
-      return {
-        incompleteReason: "Likert 選項缺失",
-        hasIncompleteQuestion: true,
-      };
+
     if (tooShort)
       return { incompleteReason: "題目過短", hasIncompleteQuestion: true };
     if (containsPlaceholders)
@@ -115,7 +94,6 @@ function QuestionCard({
     questionMeta,
     options,
     streamedOptions,
-    likertOptions,
     questionType,
   ]);
   const renderOptions = useCallback(
@@ -140,79 +118,34 @@ function QuestionCard({
           }
         }}
       >
-        {options.map((opt, idx) => (
-          <button
-            key={idx}
-            onClick={() => setSelectedIndex(idx)}
-            aria-selected={selectedIndex === idx}
-            role="option"
-            className={`w-full text-left px-4 py-3 rounded-lg border transition flex items-center gap-3 ${
-              selectedIndex === idx
-                ? "bg-purple-600 text-white border-transparent"
-                : "bg-white text-gray-800 border-gray-200 hover:shadow-sm"
-            }`}
-          >
-            <div className="flex-1 text-left">{opt}</div>
-            {selectedIndex === idx && (
-              <div className="text-xs bg-white/20 px-2 py-1 rounded-full">
-                已選擇
-              </div>
-            )}
-          </button>
-        ))}
+        {options.map((opt, idx) => {
+          const isSelected = selectedIndex === idx;
+          return (
+            <button
+              key={idx}
+              onClick={() => {
+                setSelectedIndex(idx);
+              }}
+              aria-selected={isSelected}
+              role="option"
+              className={`w-full text-left px-4 py-3 rounded-lg border transition flex items-center gap-3 ${
+                isSelected
+                  ? "bg-purple-600 text-white border-transparent"
+                  : "bg-white text-gray-800 border-gray-200 hover:shadow-sm"
+              }`}
+            >
+              <div className="flex-1 text-left">{opt}</div>
+              {isSelected && (
+                <div className="text-xs bg-white/20 px-2 py-1 rounded-full">
+                  已選擇
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
     ),
     [options, selectedIndex, setSelectedIndex]
-  );
-
-  const defaultLabels = ["非常不認同", "不認同", "中立", "認同", "非常認同"];
-  const labels =
-    likertOptions && likertOptions.length >= 1 ? likertOptions : defaultLabels;
-  const renderLikert = useCallback(
-    () => (
-      <div className="flex flex-col items-center space-y-2">
-        <div className="text-sm text-gray-600 mb-2">請依程度選擇</div>
-        <div
-          className="flex items-end justify-center space-x-3"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowLeft")
-              setLikertValue(Math.max(1, likertValue - 1));
-            else if (e.key === "ArrowRight")
-              setLikertValue(Math.min(5, likertValue + 1));
-          }}
-        >
-          {labels.map((lbl, idx) => {
-            const v = idx + 1;
-            return (
-              <div key={v} className="flex flex-col items-center">
-                <button
-                  onClick={() => setLikertValue(v)}
-                  aria-label={`Likert ${v} - ${lbl}`}
-                  className={`px-3 py-2 rounded-md border focus:outline-none transition ${
-                    likertValue === v
-                      ? "bg-purple-600 text-white border-transparent"
-                      : "bg-white text-gray-800 border-gray-200"
-                  }`}
-                >
-                  {v}
-                </button>
-                <div className="text-xs text-gray-500 mt-1">{lbl}</div>
-              </div>
-            );
-          })}
-        </div>
-        <div className="text-xs text-gray-500 mt-2">
-          左：程度低 — 右：程度高
-        </div>
-        {likertDescriptor && (
-          <div className="mt-2 text-sm text-gray-700 font-medium">
-            {likertDescriptor}
-          </div>
-        )}
-      </div>
-    ),
-    [likertValue, setLikertValue, likertDescriptor]
   );
 
   return (
@@ -310,7 +243,7 @@ function QuestionCard({
               <div className="mt-3 p-3 bg-amber-50 border-l-4 border-amber-300 rounded-md flex items-center justify-between">
                 <div className="text-amber-700 text-sm">
                   {incompleteReason
-                    ? `題目問題：${incompleteReason} — 可重新生成題目。`
+                    ? `題目錯誤：${incompleteReason} — 可重新生成題目。若為誤判請忽略此訊息。`
                     : "似乎題目未完整生成或有問題：可重新生成題目"}
                 </div>
                 <div>
@@ -352,23 +285,8 @@ function QuestionCard({
             </div>
           )}
 
-          {questionType === "mc" && !isStreamingQuestion && (
+          {questionType === "single" && !isStreamingQuestion && (
             <div className="mb-4">{renderOptions()}</div>
-          )}
-          {questionType === "likert" && !isStreamingQuestion && (
-            <div className="mb-4">{renderLikert()}</div>
-          )}
-          {questionType === "open" && !isStreamingQuestion && (
-            <textarea
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              rows={6}
-              minLength={5}
-              aria-invalid={answer.trim().length < 5}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md"
-              placeholder="請在此輸入您的想法和回答（至少 5 個字）..."
-              disabled={isStreamingQuestion}
-            />
           )}
 
           <div className="mt-2 flex justify-between items-center">
@@ -380,11 +298,6 @@ function QuestionCard({
             )}
           </div>
         </div>
-        {questionType === "open" && answer.trim().length < 5 && (
-          <div className="text-sm text-amber-600 mt-2">
-            請輸入至少 5 個字以便 AI 有足夠的上下文分析
-          </div>
-        )}
 
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -404,10 +317,7 @@ function QuestionCard({
           <button
             onClick={submitAnswer}
             disabled={
-              loading ||
-              (questionType === "open" && answer.trim().length < 5) ||
-              (questionType === "mc" && selectedIndex === null) ||
-              (questionType === "likert" && !likertValue)
+              loading || (questionType === "single" && selectedIndex === null)
             }
             className="bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow-lg"
           >

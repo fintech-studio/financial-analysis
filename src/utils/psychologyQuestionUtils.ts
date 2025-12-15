@@ -1,16 +1,9 @@
-export type QuestionType = "open" | "mc" | "likert";
+export type QuestionType = "single";
 
-export const detectQuestionType = (q: string) => {
-  if (!q) return "open" as QuestionType;
-  if (/(1\s*到\s*5|1-5|1~5|1～5|likert|1[^\d]*5)/i.test(q))
-    return "likert" as QuestionType;
-  const chunks = q
-    .split(/[\n;/；、]| \/ | \| /)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return chunks.length >= 2 && chunks.length <= 10
-    ? ("mc" as QuestionType)
-    : ("open" as QuestionType);
+export const detectQuestionType = (q?: string) => {
+  if (!q) return "single" as QuestionType;
+  const hasOptions = /\n|\/|;|；|、|\bor\b|\|/i.test(q);
+  return hasOptions ? ("single" as QuestionType) : ("single" as QuestionType);
 };
 
 export const extractOptions = (q: string) => {
@@ -117,45 +110,12 @@ export const stripOptionsFromQuestion = (q: string) => {
   return q;
 };
 
-export const deriveLikertDescriptor = (questionText: string, value: number) => {
-  const q = (questionText || "").toLowerCase();
-  const stressKeywords = ["壓力", "焦慮", "緊張", "擔心", "煩躁", "壓力大"];
-  const agreementKeywords = ["認同", "同意", "贊同"];
-  const riskKeywords = ["風險", "風險承受", "冒險", "風險偏好"];
-
-  const baseLabels = ["從不", "偶爾", "有時", "經常", "非常常"];
-  const label = baseLabels[Math.max(0, Math.min(4, value - 1))];
-
-  if (stressKeywords.some((k) => q.includes(k))) {
-    const suffix = [
-      "不會感到壓力",
-      "偶爾感到壓力",
-      "有時感到壓力",
-      "經常感到壓力",
-      "非常常感到壓力",
-    ];
-    return suffix[Math.max(0, Math.min(4, value - 1))];
-  }
-
-  if (riskKeywords.some((k) => q.includes(k))) {
-    const suffix = ["非常保守", "偏保守", "中性", "偏冒險", "非常冒險"];
-    return `${label}（${suffix[Math.max(0, Math.min(4, value - 1))]}）`;
-  }
-
-  if (agreementKeywords.some((k) => q.includes(k))) {
-    const suffix = ["非常不認同", "不認同", "中立/有保留", "認同", "非常認同"];
-    return `${label}（${suffix[Math.max(0, Math.min(4, value - 1))]}）`;
-  }
-
-  return `${label}`;
-};
-
 export const computeProfileFromResponses = (
   responses: {
     question: string;
     answer: string;
     type: string;
-    value?: number | null;
+    value?: number | number[] | null;
   }[]
 ) => {
   let risk = 50,
@@ -165,14 +125,15 @@ export const computeProfileFromResponses = (
     sensitivity = 50;
 
   for (const r of responses) {
-    if (r.type === "likert" && typeof r.value === "number") {
+    // Treat single-choice numeric values as a numeric scale
+    if (typeof r.value === "number") {
       const v = r.value;
       risk += (v - 3) * 8;
       stability += (3 - v) * 6;
       confidence += (v - 3) * 6;
       patience += (v - 3) * 4;
       sensitivity += (3 - v) * 6;
-    } else if (r.type === "mc") {
+    } else if (r.type === "single") {
       const text = (r.answer || "").toLowerCase();
       if (/(加碼|買入|進場|冒險)/.test(text)) {
         risk += 12;

@@ -71,7 +71,7 @@ export default function Home() {
     <>
       <main>
         {/* Hero Section - 漸變背景與波浪效果 */}
-        <section className="relative min-h-screen bg-linear-to-br from-slate-950 via-blue-950 to-slate-900 flex items-center overflow-hidden mt-[-60px]">
+        <section className="relative min-h-screen bg-linear-to-br from-slate-950 via-blue-950 to-slate-900 flex items-center overflow-hidden -mt-15]">
           {/* 動態網格背景 */}
           <div className="absolute inset-0 opacity-20 animate-pulse">
             <div

@@ -7,14 +7,11 @@ import {
 } from "@heroicons/react/24/outline";
 import PageHeader from "@/components/Layout/PageHeader";
 import usePsychology from "@/hooks/usePsychology";
-import {
-  deriveLikertDescriptor as deriveLikertDescriptorUtil,
-  classifyInvestor as classifyInvestorUtil,
-} from "@/utils/psychologyQuestionUtils";
+import { classifyInvestor as classifyInvestorUtil } from "@/utils/psychologyQuestionUtils";
 import Footer from "@/components/Layout/Footer";
-import ProgressPanel from "@/components/Psychology/ProgressPanel";
-import QuestionCard from "@/components/Psychology/QuestionCard";
-import ResultsPanel from "@/components/Psychology/ResultsPanel";
+import ProgressPanel from "@/components/PageComponents/Psychology/ProgressPanel";
+import QuestionCard from "@/components/PageComponents/Psychology/QuestionCard";
+import ResultsPanel from "@/components/PageComponents/Psychology/ResultsPanel";
 
 export default function QuestionnairePage(): React.ReactElement {
   const {
@@ -34,10 +31,7 @@ export default function QuestionnairePage(): React.ReactElement {
     streamedOptions,
     selectedIndex,
     setSelectedIndex,
-    likertValue,
-    setLikertValue,
-    likertOptions,
-    likertRange,
+
     serverProfile,
     serverAnalysis,
     currentQuestionMeta,
@@ -89,29 +83,9 @@ export default function QuestionnairePage(): React.ReactElement {
       ? classifyInvestorUtil(serverProfile)
       : classifyInvestorUtil(profile));
 
-  // prepare likert options from meta (serverAnalysis first, then currentQuestionMeta)
   const questionMeta =
     (serverAnalysis?.question_meta as Record<string, unknown> | undefined) ||
     currentQuestionMeta;
-
-  // prefer likertOptions from hook (already parsed from meta), fallback to meta
-  const likertOptionsComputed =
-    likertOptions ||
-    (questionMeta && Array.isArray(questionMeta["likert_option"])
-      ? (questionMeta["likert_option"] as unknown[]).map((o) => String(o))
-      : null);
-
-  const likertRangeComputed =
-    likertRange ||
-    (questionMeta && typeof questionMeta["likert_range"] === "string"
-      ? String(questionMeta["likert_range"])
-      : null);
-
-  const likertDescriptorComputed = (qText: string | null, v: number) => {
-    if (likertOptionsComputed && likertOptionsComputed.length >= v && v >= 1)
-      return likertOptionsComputed[v - 1];
-    return deriveLikertDescriptorUtil(qText || "", v);
-  };
 
   return (
     <>
@@ -233,14 +207,6 @@ export default function QuestionnairePage(): React.ReactElement {
                     streamedOptions={streamedOptions}
                     selectedIndex={selectedIndex}
                     setSelectedIndex={setSelectedIndex}
-                    likertValue={likertValue}
-                    setLikertValue={setLikertValue}
-                    likertDescriptor={likertDescriptorComputed(
-                      question || streamingQuestion,
-                      likertValue
-                    )}
-                    likertOptions={likertOptionsComputed}
-                    likertRange={likertRangeComputed}
                     onRegenerate={() => {
                       if (sessionId) streamQuestion(sessionId, questionNumber);
                     }}
@@ -258,14 +224,33 @@ export default function QuestionnairePage(): React.ReactElement {
 
           {/* 完成結果（新版卡片）：AI 建議 + 互動分析雷達圖 */}
           {finished && (
-            <ResultsPanel
-              advice={advice}
-              serverProfile={serverProfile}
-              serverAnalysis={serverAnalysis}
-              profile={profile}
-              investorType={computedInvestorType}
-              onReset={resetTest}
-            />
+            <div className="bg-white rounded-xl shadow-lg animate-slideIn p-0 overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-0">
+                <ProgressPanel
+                  questionNumber={questionNumber}
+                  estimatedTotalQuestions={estimatedTotalQuestions}
+                  onCancel={() => {
+                    if (confirm("確定要取消測驗，所有進度將會遺失？"))
+                      resetTest();
+                  }}
+                  sessionId={sessionId}
+                  finished={finished}
+                  serverProfile={serverProfile}
+                  profile={profile}
+                />
+
+                <main className="md:col-span-3 p-6">
+                  <ResultsPanel
+                    advice={advice}
+                    serverProfile={serverProfile}
+                    serverAnalysis={serverAnalysis}
+                    profile={profile}
+                    investorType={computedInvestorType}
+                    onReset={resetTest}
+                  />
+                </main>
+              </div>
+            </div>
           )}
 
           {/* 載入指示器 */}

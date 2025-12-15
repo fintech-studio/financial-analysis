@@ -36,6 +36,8 @@ export default function RadarChart({
     return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
   });
 
+  const [hovered, setHovered] = React.useState<number | null>(null);
+
   return (
     <div
       style={{
@@ -54,6 +56,14 @@ export default function RadarChart({
         preserveAspectRatio="xMidYMid meet"
         className="mx-auto block"
       >
+        <defs>
+          <linearGradient id="radarGrad" x1="0" x2="1">
+            <stop offset="0%" stopColor="#7C3AED" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.08" />
+          </linearGradient>
+        </defs>
+
+        {/* grid rings */}
         {[0.2, 0.4, 0.6, 0.8, 1].map((s, idx) => {
           const poly = labels
             .map((_, i) => {
@@ -70,18 +80,37 @@ export default function RadarChart({
               points={poly}
               fill="none"
               stroke="#E6E6E6"
+              strokeWidth={idx === 4 ? 1.5 : 1}
+              opacity={idx === 4 ? 0.9 : 0.8}
+            />
+          );
+        })}
+
+        {/* axis lines */}
+        {outer.map((pt, i) => {
+          const [x, y] = pt.split(",").map(Number);
+          return (
+            <line
+              key={`axis-${i}`}
+              x1={cx}
+              y1={cy}
+              x2={x}
+              y2={y}
+              stroke="#F3F4F6"
               strokeWidth={1}
             />
           );
         })}
+
+        {/* labels */}
         {outer.map((pt, i) => {
           const [x, y] = pt.split(",").map(Number);
-          const offset = Math.max(10, Math.round(total * 0.03));
+          const offset = Math.max(8, Math.round(total * 0.025));
           const dx = x > cx ? offset : x < cx ? -offset : 0;
           const anchor = x > cx ? "start" : x < cx ? "end" : "middle";
           return (
             <text
-              key={i}
+              key={`label-${i}`}
               x={x + dx}
               y={y}
               fontSize={Math.max(10, Math.round(size * 0.04))}
@@ -93,22 +122,56 @@ export default function RadarChart({
             </text>
           );
         })}
+
+        {/* filled polygon */}
         <polygon
           points={points.join(" ")}
-          fill="rgba(124,58,237,0.15)"
+          fill="url(#radarGrad)"
           stroke="#7C3AED"
           strokeWidth={2}
+          style={{ transition: "all 350ms ease" }}
         />
+
+        {/* points with hover interaction */}
         {points.map((pt, i) => {
           const [x, y] = pt.split(",").map(Number);
+          const val = dims[i] ?? 0;
           return (
-            <circle
-              key={i}
-              cx={x}
-              cy={y}
-              r={Math.max(3, size * 0.01)}
-              fill="#7C3AED"
-            />
+            <g key={`pt-${i}`}>
+              <circle
+                cx={x}
+                cy={y}
+                r={Math.max(3, size * 0.01)}
+                fill={hovered === i ? "#06B6D4" : "#7C3AED"}
+                stroke="#fff"
+                strokeWidth={1}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+              />
+              {hovered === i && (
+                <g>
+                  <rect
+                    x={x + 6}
+                    y={y - 14}
+                    width={40}
+                    height={22}
+                    rx={6}
+                    fill="#111827"
+                    opacity={0.9}
+                  />
+                  <text
+                    x={x + 26}
+                    y={y}
+                    fill="#fff"
+                    fontSize={12}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                  >
+                    {String(val)}
+                  </text>
+                </g>
+              )}
+            </g>
           );
         })}
       </svg>

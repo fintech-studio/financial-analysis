@@ -94,7 +94,7 @@ export default function ProgressPanel({
           </div>
         </div>
         <div className="text-xs text-indigo-200 wrap-break-words">
-          {sessionId ? `會話: ${sessionId.slice(0, 8)}…` : "尚未啟動"}
+          {sessionId ? `Section ID: ${sessionId}` : "尚未啟動"}
         </div>
         <button
           className="w-full bg-white/10 border border-white/20 px-4 py-2 rounded-md text-sm hover:bg-white/20 text-left"
