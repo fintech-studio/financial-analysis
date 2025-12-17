@@ -2,7 +2,7 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import RadarChart from "./RadarChart";
-import ShareExportButtons from "./ShareExportButtons";
+// import ShareExportButtons from "./ShareExportButtons";
 import rehypeSanitize from "rehype-sanitize";
 
 type ResultsPanelProps = {
@@ -252,11 +252,11 @@ export default function ResultsPanel({
       </div>
 
       <div className="flex justify-center items-center space-x-4 mt-6">
-        <ShareExportButtons
+        {/* <ShareExportButtons
           exportRefId="psychology-report"
           title="我的心理檢測報告"
           description={advice || "我的投資心理檢測結果"}
-        />
+        /> */}
         <button
           onClick={onReset}
           className="bg-linear-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 font-medium rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg"

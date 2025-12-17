@@ -60,6 +60,9 @@ export default function QuestionnairePage(): React.ReactElement {
       ? totalQuestions
       : 0;
 
+  // 計算目前步驟（用於上方進度條）
+  const activeStep = sessionId ? (finished ? 2 : 1) : 0;
+
   // 若用戶嘗試離開頁面，提示未保存之進度
   React.useEffect(() => {
     if (typeof window === "undefined") return;
@@ -105,17 +108,17 @@ export default function QuestionnairePage(): React.ReactElement {
           {/* Quick profile snapshot has been moved to ProgressPanel */}
           {/* 新版開場與左側進度面板 */}
           {!sessionId && (
-            <div className="bg-white rounded-xl shadow-lg animate-slideIn p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 flex flex-col items-center justify-center">
-                  <div className="inline-flex items-center justify-center w-24 h-24 bg-linear-to-r from-purple-500 to-indigo-500 rounded-full mb-6 shadow-xl">
-                    <HeartIcon className="w-12 h-12 text-white" />
+            <div className="bg-white rounded-xl shadow-lg animate-slideIn p-8 md:p-10">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+                <div className="lg:col-span-1 flex flex-col items-center justify-center text-center">
+                  <div className="inline-flex items-center justify-center w-28 h-28 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mb-4 shadow-2xl">
+                    <HeartIcon className="w-14 h-14 text-white" />
                   </div>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                  <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-2">
                     準備開始
                   </h2>
-                  <p className="text-gray-600 text-center">
-                    心理壓力與投資決策分析，約 3-5 分鐘。
+                  <p className="text-gray-600 text-center max-w-xs">
+                    心理壓力與投資決策分析，約 3-5 分鐘，過程簡潔清晰。
                   </p>
                 </div>
                 <div className="lg:col-span-2">
@@ -132,34 +135,31 @@ export default function QuestionnairePage(): React.ReactElement {
                       預估用時：3 - 5 分鐘
                     </div>
                   </div>
-                  <div className="rounded-lg border border-gray-100 bg-linear-to-r from-purple-50 to-indigo-50 p-4">
+                  <div className="rounded-lg border border-gray-100 bg-gradient-to-r from-purple-50 to-indigo-50 p-4">
                     <ol className="flex items-center justify-between">
-                      {["啟動", "問答", "結果"].map((s, idx) => {
-                        const activeStep = sessionId ? (finished ? 2 : 1) : 0;
-                        return (
-                          <li key={s} className="flex-1 text-center">
-                            <div
-                              className={`mx-auto w-9 h-9 flex items-center justify-center rounded-full ${
-                                idx === activeStep
-                                  ? "bg-purple-600 text-white"
-                                  : "bg-white text-gray-600"
-                              } border`}
-                            >
-                              {idx + 1}
-                            </div>
-                            <div className="mt-2 text-xs text-gray-600">
-                              {s}
-                            </div>
-                          </li>
-                        );
-                      })}
+                      {["啟動", "問答", "結果"].map((s, idx) => (
+                        <li key={s} className="flex-1 text-center">
+                          <div
+                            className={`mx-auto w-10 h-10 flex items-center justify-center rounded-full ${
+                              idx === activeStep
+                                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow"
+                                : "bg-white text-gray-500 border"
+                            }`}
+                            aria-hidden
+                          >
+                            {idx + 1}
+                          </div>
+                          <div className="mt-2 text-xs text-gray-600">{s}</div>
+                        </li>
+                      ))}
                     </ol>
                   </div>
                   <div className="mt-6 flex justify-start">
                     <button
                       onClick={startTest}
                       disabled={loading}
-                      className="bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 text-lg font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200 shadow"
+                      aria-label="開始測驗"
+                      className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 text-lg font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-4 focus:ring-purple-200 transform hover:scale-105 transition-all duration-200 shadow"
                     >
                       {loading ? (
                         <div className="flex items-center">
@@ -167,10 +167,10 @@ export default function QuestionnairePage(): React.ReactElement {
                           準備中...
                         </div>
                       ) : (
-                        <>
+                        <div className="flex items-center">
                           <UserIcon className="w-5 h-5 mr-2 inline" />
-                          開始測驗
-                        </>
+                          <span>開始測驗</span>
+                        </div>
                       )}
                     </button>
                   </div>
@@ -197,7 +197,11 @@ export default function QuestionnairePage(): React.ReactElement {
                   profile={profile}
                 />
                 {/* 右側大區塊：題目與回答 */}
-                <main className="md:col-span-3 p-6">
+                <main
+                  role="main"
+                  className="md:col-span-3 p-6"
+                  aria-live="polite"
+                >
                   <QuestionCard
                     question={question}
                     streamingQuestion={streamingQuestion}
@@ -239,7 +243,11 @@ export default function QuestionnairePage(): React.ReactElement {
                   profile={profile}
                 />
 
-                <main className="md:col-span-3 p-6">
+                <main
+                  role="main"
+                  className="md:col-span-3 p-6"
+                  aria-live="polite"
+                >
                   <ResultsPanel
                     advice={advice}
                     serverProfile={serverProfile}
@@ -255,24 +263,35 @@ export default function QuestionnairePage(): React.ReactElement {
 
           {/* 載入指示器 */}
           {loading && (
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+            <div
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50"
+              role="status"
+              aria-live="polite"
+            >
               <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-purple-500 mx-auto mb-4"></div>
+                <div
+                  className="animate-spin rounded-full h-12 w-12 border-b-4 border-purple-500 mx-auto mb-4"
+                  aria-hidden
+                ></div>
                 <p className="text-gray-700 font-medium">處理中，請稍候...</p>
+                <span className="sr-only">系統正在處理，請稍候</span>
               </div>
             </div>
           )}
 
           {/* 錯誤提示 */}
           {error && (
-            <div className="bg-white rounded-xl border-red-200 border shadow-lg animate-slideIn">
+            <div
+              className="bg-white rounded-xl border border-red-100 shadow-lg animate-slideIn"
+              role="alert"
+            >
               <div className="p-6">
-                <div className="flex items-start">
-                  <div className="shrink-0">
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 mt-0.5">
                     <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />
                   </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">
+                  <div className="ml-0">
+                    <h3 className="text-sm font-semibold text-red-800">
                       發生錯誤
                     </h3>
                     <p className="mt-1 text-sm text-red-700">{error}</p>
@@ -280,7 +299,8 @@ export default function QuestionnairePage(): React.ReactElement {
                   <div className="ml-auto pl-3">
                     <button
                       onClick={() => setError(null)}
-                      className="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 transition-colors duration-200"
+                      aria-label="關閉錯誤提示"
+                      className="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-200"
                     >
                       <svg
                         className="w-4 h-4"

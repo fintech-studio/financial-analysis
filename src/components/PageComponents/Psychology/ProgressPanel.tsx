@@ -6,9 +6,9 @@ export default function ProgressPanel({
   onCancel,
   sessionId,
   finished,
-  profile,
-  serverProfile,
-}: {
+}: // profile,
+// serverProfile,
+{
   questionNumber: number;
   estimatedTotalQuestions: number;
   onCancel: () => void;
@@ -23,7 +23,7 @@ export default function ProgressPanel({
     (questionNumber / Math.max(1, estimatedTotalQuestions)) * 100 || 5
   );
   const remaining = Math.max(0, estimatedTotalQuestions - questionNumber);
-  const snapshotSource = serverProfile || profile || {};
+  // const snapshotSource = serverProfile || profile || {};
   return (
     <aside
       className="md:col-span-1 bg-linear-to-b from-indigo-700 to-purple-700 text-white p-6 flex flex-col justify-between shadow-2xl"
@@ -76,7 +76,7 @@ export default function ProgressPanel({
 
       <div className="mt-6 flex flex-col gap-3">
         {/* quick profile snapshot */}
-        <div className="mb-4 bg-white/5 rounded-md p-3 text-sm">
+        {/* <div className="mb-4 bg-white/5 rounded-md p-3 text-sm">
           <div className="text-xs text-indigo-100 mb-2">快速檢視</div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(snapshotSource).length === 0 ? (
@@ -92,7 +92,7 @@ export default function ProgressPanel({
               ))
             )}
           </div>
-        </div>
+        </div> */}
         <div className="text-xs text-indigo-200 wrap-break-words">
           {sessionId ? `Section ID: ${sessionId}` : "尚未啟動"}
         </div>
