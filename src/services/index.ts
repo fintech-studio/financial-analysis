@@ -4,3 +4,4 @@ export * from "./BaseService";
 export * from "./ChatService";
 export * from "./DatabaseService";
 export * from "./PortfolioService";
+export * from "./PsychologyService";

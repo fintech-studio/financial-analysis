@@ -12,7 +12,7 @@ export default defineConfig([
     languageOptions: { globals: globals.browser },
     settings: { react: { version: "detect" } },
   },
-  globalIgnores(["node_modules/", "dist/", "build/", ".next/"]),
+  globalIgnores(["node_modules/", "dist/", "build/", ".next/", "**/.venv/"]),
   tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,
 ]);
